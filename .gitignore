@@ -1,3 +1,8 @@
 /StockFlow/bin
 /StockFlow/obj
 /StockFlow/.vs
+/YahooFinanceApi/bin
+/YahooFinanceApi/obj
+/YahooFinanceApi/.vs
+/.vs
+/packages
