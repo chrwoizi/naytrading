@@ -6,9 +6,10 @@
 /YahooFinanceApi/.vs
 /.vs
 /packages
-/StockFlow.Web/App_Data/aspnet-StockFlow.Web-20171124073234.mdf
-/StockFlow.Web/App_Data/aspnet-StockFlow.Web-20171124073234_log.ldf
+/StockFlow.Web/App_Data/*.mdf
+/StockFlow.Web/App_Data/*.ldf
 /StockFlow.Web/*.user
 /StockFlow.Web/bin
 /StockFlow.Web/obj
 /StockFlow.Web/bower_components
+/StockFlow.Web/.bowerrc
