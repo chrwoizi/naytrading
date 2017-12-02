@@ -14,3 +14,4 @@
 /StockFlow.Web/bower_components
 /StockFlow.Web/.bowerrc
 /StockFlow/StockFlow.csproj.user
+/StockFlow.Web/Properties/PublishProfiles/*.user
