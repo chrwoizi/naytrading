@@ -18,3 +18,4 @@
 /StockFlow.Web/App_Data/curl/dump.json
 /StockFlow.Web/App_Data/curl/export_azure.bat
 /StockFlow.Web/App_Data/curl/import_gms.bat
+/StockFlow.Web/App_Data/curl/export_gms.bat
