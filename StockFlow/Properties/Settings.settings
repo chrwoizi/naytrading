@@ -11,5 +11,8 @@
     <Setting Name="ProxyPassword" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
+    <Setting Name="Python" Type="System.String" Scope="User">
+      <Value Profile="(Default)">C:\Program Files\Python\Python36\python.exe</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

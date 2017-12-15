@@ -15,12 +15,15 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <TextBlock Text="Proxy URL:" VerticalAlignment="Center"/>
         <TextBlock Text="Proxy User:" Grid.Row="1" VerticalAlignment="Center"/>
         <TextBlock Text="Proxy Password:" Grid.Row="2" VerticalAlignment="Center"/>
+        <TextBlock Text="Python:" Grid.Row="3" VerticalAlignment="Center"/>
         <TextBox Text="{Binding Path=ProxyAddress}" Grid.Column="1"></TextBox>
         <TextBox Text="{Binding Path=ProxyUser}" Grid.Column="1" Grid.Row="1"></TextBox>
         <PasswordBox x:Name="PasswordBox" PasswordChanged="PasswordBox_OnPasswordChanged" Grid.Column="1" Grid.Row="2"></PasswordBox>
+        <TextBox Text="{Binding Path=Python}" Grid.Column="1" Grid.Row="3"></TextBox>
     </Grid>
 </Window>

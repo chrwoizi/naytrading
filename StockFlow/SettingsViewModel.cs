@@ -56,6 +56,20 @@ namespace StockFlow
             }
         }
 
+        public string Python
+        {
+            get
+            {
+                return Settings.Default.Python;
+            }
+            set
+            {
+                Settings.Default.Python = value;
+                Settings.Default.Save();
+                this.OnPropertyChanged();
+            }
+        }
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         [NotifyPropertyChangedInvocator]
