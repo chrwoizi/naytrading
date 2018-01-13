@@ -15,7 +15,5 @@
 /StockFlow.Web/.bowerrc
 /StockFlow/StockFlow.csproj.user
 /StockFlow.Web/Properties/PublishProfiles/*.user
-/StockFlow.Web/App_Data/curl/dump.json
-/StockFlow.Web/App_Data/curl/export_azure.bat
-/StockFlow.Web/App_Data/curl/import_gms.bat
-/StockFlow.Web/App_Data/curl/export_gms.bat
+/StockFlow.Web/App_Data/curl/*.bat
+/StockFlow.Web/App_Data/curl/*.json

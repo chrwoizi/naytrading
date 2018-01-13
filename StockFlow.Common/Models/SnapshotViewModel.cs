@@ -33,7 +33,7 @@ namespace StockFlow.Web.Models
         {
             get
             {
-                return Model.ModifiedTime.ToString("dd.MM.yy HH:mm:ss");
+                return Model.ModifiedTime.ToString("yyMMddHHmmss");
             }
         }
         
