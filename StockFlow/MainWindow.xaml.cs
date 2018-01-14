@@ -16,6 +16,7 @@
     using System.Text;
     using System.Globalization;
     using System.Diagnostics;
+    using Microsoft.Win32;
 
     /// <summary>
     /// Interaction logic for MainWindow.xaml
@@ -30,6 +31,7 @@
         public MainWindow()
         {
             InitializeComponent();
+            UpdateFileInfo();
         }
 
         private void Settings_OnClick(object sender, RoutedEventArgs e)
@@ -37,19 +39,70 @@
             new SettingsWindow() { DataContext = new SettingsViewModel() }.ShowDialog();
         }
 
+        private void UpdateFileInfo()
+        {
+            if (File.Exists(TemporarySnapshotsFile))
+            {
+                var lines = 0;
+                using (var stream = File.OpenRead(TemporarySnapshotsFile))
+                {
+                    using (var reader = new StreamReader(stream))
+                    {
+                        while (reader.ReadLine() != null)
+                        {
+                            lines++;
+                        }
+                    }
+                }
+
+                FileInfoTextBlock.Text = lines + " datasets available";
+            }
+            else
+            {
+                FileInfoTextBlock.Text = "No dataset file";
+            }
+        }
+
         private async void DownloadButton_Click(object sender, RoutedEventArgs e)
         {
             DownloadButton.IsEnabled = false;
+            LoadFileButton.IsEnabled = false;
             LearnButton.IsEnabled = false;
 
             try
             {
                 var stream = await Download(UrlTextBox.Text);
-                DumpSnapshotsToFile(stream, TemporarySnapshotsFile);
+                if (stream != null)
+                {
+                    DumpSnapshotsToFile(stream, TemporarySnapshotsFile);
+                }
             }
             finally
             {
                 DownloadButton.IsEnabled = true;
+                LoadFileButton.IsEnabled = true;
+                LearnButton.IsEnabled = true;
+            }
+        }
+
+        private void LoadFileButton_Click(object sender, RoutedEventArgs e)
+        {
+            DownloadButton.IsEnabled = false;
+            LoadFileButton.IsEnabled = false;
+            LearnButton.IsEnabled = false;
+
+            try
+            {
+                var stream = LoadFile();
+                if (stream != null)
+                {
+                    DumpSnapshotsToFile(stream, TemporarySnapshotsFile);
+                }
+            }
+            finally
+            {
+                DownloadButton.IsEnabled = true;
+                LoadFileButton.IsEnabled = true;
                 LearnButton.IsEnabled = true;
             }
         }
@@ -75,7 +128,18 @@
             }
         }
 
-        private static void DumpSnapshotsToFile(Stream stream, string filePath)
+        private Stream LoadFile()
+        {
+            var dialog = new OpenFileDialog();
+            if (dialog.ShowDialog(this) == true)
+            {
+                return dialog.OpenFile();
+            }
+
+            return null;
+        }
+
+        private void DumpSnapshotsToFile(Stream stream, string filePath)
         {
             using (var writer = new StreamWriter(File.Open(filePath, FileMode.Create)))
             {
@@ -92,13 +156,13 @@
 
                 Importer.Import<Snapshot>(stream, snapshot =>
                 {
-                    if (!string.IsNullOrEmpty(snapshot.Decision))
+                    if (!string.IsNullOrEmpty(snapshot.Decision) && snapshot.Rates != null)
                     {
                         var rates = snapshot.Rates.Where(x => x.Close.HasValue).ToList();
 
                         var firstDate = snapshot.Time.Date.AddDays(-Days + 1);
 
-                        if (rates.First().Time.Date <= firstDate)
+                        if (rates.Any() && rates.First().Time.Date <= firstDate)
                         {
                             writer.WriteLine();
                             writer.Write(snapshot.Decision);
@@ -143,11 +207,14 @@
                     }
                 });
             }
+
+            UpdateFileInfo();
         }
 
         private void LearnButton_OnClick(object sender, RoutedEventArgs e)
         {
             DownloadButton.IsEnabled = false;
+            LoadFileButton.IsEnabled = false;
             LearnButton.IsEnabled = false;
             TextBlock.Clear();
 
@@ -169,6 +236,7 @@
             catch (Exception ex)
             {
                 DownloadButton.IsEnabled = true;
+                LoadFileButton.IsEnabled = true;
                 LearnButton.IsEnabled = true;
                 TextBlock.Text += "\n" + ex.ToString();
             }
@@ -197,7 +265,7 @@
 
                 this.TextBlock.Text += result;
             }
-            
+
             //using (Py.GIL())
             //{
             //    dynamic learn = Py.Import("learn");
