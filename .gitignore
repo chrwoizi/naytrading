@@ -17,3 +17,4 @@
 /StockFlow.Web/Properties/PublishProfiles/*.user
 /StockFlow.Web/App_Data/curl/*.bat
 /StockFlow.Web/App_Data/curl/*.json
+/StockFlow.Web/Properties/PublishProfiles/*.pubxml
