@@ -4,6 +4,9 @@
 /StockFlow.Common/bin
 /StockFlow.Common/obj
 /StockFlow.Common/.vs
+/StockFlow.Trader/bin
+/StockFlow.Trader/obj
+/StockFlow.Trader/.vs
 /.vs
 /packages
 /StockFlow.Web/App_Data/*.mdf
