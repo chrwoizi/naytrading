@@ -32,28 +32,21 @@ namespace StockFlow.Trader
 
         public static decimal GetAvailableFunds(ChromeDriver chrome)
         {
-            var fundsElement = chrome.FindElementByXPath("//tr[td/text()='Gesamt Verfügbar']/td/table/tbody/tr/td/span");
-            if (fundsElement != null)
-            {
-                var fundsText = fundsElement.GetAttribute("innerText");
+            var fundsElement = chrome.FindElementByXPath("//div[@id='accountOverviewForm_accountOverviewTableSmall']/div/div/div[div/text()='Cashkonto']/div[contains(@class,'SimpleBalance')]/span");
+            var fundsText = fundsElement.GetAttribute("innerText");
 
-                var regex = new Regex("^([\\d\\.]+)(,(\\d{0,3}))?(&nbsp;|\\s+)EUR$");
-                var match = regex.Match(fundsText);
-                if (match.Success)
-                {
-                    var euros = match.Groups[1].Value.Replace(".", "");
-                    var cents = match.Groups[3].Value;
-                    var amount = decimal.Parse(euros + "." + cents, CultureInfo.InvariantCulture);
-                    return amount;
-                }
-                else
-                {
-                    throw new Exception("Available funds cannot be parsed from " + fundsText);
-                }
+            var regex = new Regex("^([\\d\\.]+)(,(\\d{0,3}))?(&nbsp;|\\s+)EUR$");
+            var match = regex.Match(fundsText);
+            if (match.Success)
+            {
+                var euros = match.Groups[1].Value.Replace(".", "");
+                var cents = match.Groups[3].Value;
+                var amount = decimal.Parse(euros + "." + cents, CultureInfo.InvariantCulture);
+                return amount;
             }
             else
             {
-                throw new Exception("Available funds element cannot be found");
+                throw new Exception("Available funds cannot be parsed from " + fundsText);
             }
         }
 
