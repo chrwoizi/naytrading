@@ -1,4 +1,6 @@
-﻿namespace StockFlow.Web.Models
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace StockFlow.Web.Models
 {
     public class Instrument
     {
@@ -15,7 +17,11 @@
         public decimal? Capitalization { get; set; }
 
         public string User { get; set; }
-
+        
         public int Strikes { get; set; }
+        
+        public string Isin { get; set; }
+        
+        public string Wkn { get; set; }
     }
 }
