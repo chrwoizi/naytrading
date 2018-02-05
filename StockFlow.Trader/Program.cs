@@ -3,6 +3,7 @@ using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Remote;
 using System;
 using System.Configuration;
+using System.IO;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,14 +14,34 @@ namespace StockFlow.Trader
     {
         static void Main(string[] args)
         {
-            var task = Do("US0378331005", TradingAction.Buy);
-            task.Wait();
+            if (args.Length == 1 && args[0] == "settan")
+            {
+                Console.Write("TANs: ");
+                var tans = ConsoleHelper.ReadPassword('*');
+                Console.Write("Password: ");
+                var password = ConsoleHelper.ReadPassword('*');
+                var cipher = StringCipher.Encrypt(tans, password);
+                File.WriteAllText(ConfigurationManager.AppSettings["TanFilePath"], cipher);
+            }
+            else if (args.Length == 1 && args[0] == "gettan")
+            {
+                Console.Write("Challenge: ");
+                var challenge = Console.ReadLine().Split(' ');
+                Console.Write("Password: ");
+                var password = ConsoleHelper.ReadPassword('*');
+                var tan = new TanProvider().GetTan(challenge[0], challenge[1], challenge[2], password);
+                Console.WriteLine("TAN: " + tan);
+            }
+            else if (args.Length == 1 && args[0] == "buy")
+            {
+                Order("US0378331005", TradingAction.Buy);
+            }
 
             Console.WriteLine("Exit.");
             Console.ReadLine();
         }
 
-        private static async Task Do(string isin, TradingAction action)
+        private static void Order(string isin, TradingAction action)
         {
             Console.Write("Account: ");
             var user = Console.ReadLine();
