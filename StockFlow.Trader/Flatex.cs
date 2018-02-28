@@ -239,8 +239,7 @@ namespace StockFlow.Trader
                 chrome.FindElementByXPath("//div[@data-widgetname='sessionControlComponent.logoutLink']").Click();
             }
 
-            var wait = new WebDriverWait(chrome, TimeSpan.FromSeconds(30));
-            wait.Until(x => x.FindElement(By.XPath("//li[contains(text(),'abgemeldet')]")));
+            WaitForElementByXPath(chrome, "//li[contains(text(),'abgemeldet')]", x => true);
         }
 
         private static IWebElement WaitForElementByXPath(ChromeDriver chrome, string xpath, Func<IWebElement, bool> validate)
