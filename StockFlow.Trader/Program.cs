@@ -50,7 +50,8 @@ namespace StockFlow.Trader
                 var challenge = Console.ReadLine().Split(' ');
                 Console.Write("TAN file password: ");
                 var password = ConsoleHelper.ReadPassword('*');
-                var tan = new TanProvider().GetTan(challenge[0], challenge[1], challenge[2], password);
+                var tanProvider = new FlatexTanProvider(password);
+                var tan = tanProvider.GetTan(challenge[0], challenge[1], challenge[2]);
                 Console.WriteLine("TAN: " + tan);
             }
             else if (args.Length == 1 && args[0] == "buy")
@@ -61,7 +62,160 @@ namespace StockFlow.Trader
                 Console.Write("Broker password: ");
                 var password = ConsoleHelper.ReadPassword('*');
 
-                OrderController.Order("US0378331005", TradingAction.Buy, 1.23m, 1, user, password, false);
+                var globalLogger = new ConsoleLogger();
+
+                var db = new TradeDBContext();
+
+                var oldestSuggestionTime = DateTime.Today.AddDays(-7);
+                var maxRetryCount = 10;
+                var minBuyOrderPrice = 500;
+                var maxBuyOrderPrice = 1000;
+
+                var suggestionsQuery =
+                    from suggestion in db.TradeSuggestions
+                    where suggestion.Time >= oldestSuggestionTime
+                    where suggestion.Logs.All(x => x.Status != Status.Complete.ToString())
+                    let lastLog = suggestion.Logs.OrderByDescending(x => x.Time).FirstOrDefault()
+                    where lastLog == null || lastLog.Status == Status.Initial.ToString() || lastLog.Status == Status.TemporaryError.ToString()
+                    where suggestion.Logs.Count(x => x.Status == Status.TemporaryError.ToString()) < maxRetryCount
+                    select suggestion;
+
+                var suggestions = suggestionsQuery.ToList();
+
+                if (suggestions.Any())
+                {
+                    using (var controller = new OrderController(user, password, false, new Flatex(), globalLogger, new ConsoleTanProvider()))
+                    {
+                        var availableFunds = controller.AvailableFunds;
+
+                        foreach (var suggestion in suggestions)
+                        {
+                            globalLogger.WriteLine(string.Format("Processing snapshot {0}: {1} {2} at {3} EUR", suggestion.SnapshotId, suggestion.Action, suggestion.InstrumentName, suggestion.Price));
+
+                            var suggestionLogger = new BaseLogger(globalLogger);
+
+                            var log = new TradeLog();
+                            log.Price = suggestion.Price;
+                            log.Time = DateTime.UtcNow;
+                            log.TradeSuggestion = suggestion;
+
+                            int quantity = 0;
+
+                            try
+                            {
+                                try
+                                {
+                                    string instrumentId = suggestion.Isin;
+
+                                    if (string.IsNullOrEmpty(instrumentId))
+                                    {
+                                        instrumentId = suggestion.Wkn;
+                                    }
+
+                                    if (string.IsNullOrEmpty(instrumentId))
+                                    {
+                                        throw new CancelOrderException(Status.FatalError, "No ISIN or WKN given");
+                                    }
+
+                                    TradingAction action;
+
+                                    switch (suggestion.Action)
+                                    {
+                                        case "buy":
+                                            action = TradingAction.Buy;
+
+                                            if (availableFunds < minBuyOrderPrice)
+                                            {
+                                                suggestionLogger.WriteLine("Insufficient funds to buy anything: " + availableFunds + " EUR");
+                                                continue;
+                                            }
+
+                                            suggestionLogger.WriteLine("Available funds: " + availableFunds + " EUR");
+                                            var upperLimit = Math.Min(availableFunds, maxBuyOrderPrice);
+                                            suggestionLogger.WriteLine("Desired buy order total: " + upperLimit + " EUR");
+
+                                            quantity = (int)(upperLimit / suggestion.Price);
+                                            suggestionLogger.WriteLine("Calculated quantity to buy: " + quantity + " at " + suggestion.Price + " EUR each");
+
+                                            var total = quantity * suggestion.Price;
+                                            suggestionLogger.WriteLine("Calculated buy order total: " + total + " EUR");
+
+                                            if (total < minBuyOrderPrice)
+                                            {
+                                                throw new CancelOrderException(Status.TemporaryError, "Buy order total is too low");
+                                            }
+
+                                            break;
+
+                                        case "sell":
+                                            action = TradingAction.Sell;
+
+                                            var previousBuyOrders =
+                                                from buySuggestion in db.TradeSuggestions
+                                                where buySuggestion.Action == "buy"
+                                                where buySuggestion.Isin == suggestion.Isin || buySuggestion.Wkn == suggestion.Wkn
+                                                let buyLog = buySuggestion.Logs.OrderByDescending(x => x.Time).FirstOrDefault(x => x.Status == Status.Complete.ToString())
+                                                orderby buyLog.Time descending
+                                                select buyLog;
+                                            var previousBuyOrder = previousBuyOrders.FirstOrDefault();
+
+                                            if (previousBuyOrder == null)
+                                            {
+                                                throw new CancelOrderException(Status.FatalError, "No previous buy order found");
+                                            }
+
+                                            quantity = previousBuyOrder.Quantity;
+                                            suggestionLogger.WriteLine("Previously bought quantity: " + quantity);
+                                            break;
+
+                                        default:
+                                            throw new CancelOrderException(Status.FatalError, "Trading action " + suggestion.Action + " is unknown");
+                                    }
+
+                                    controller.Order(instrumentId, action, suggestion.Price, quantity);
+
+                                    if (action == TradingAction.Buy)
+                                    {
+                                        availableFunds -= quantity * suggestion.Price;
+                                    }
+
+                                    log.Status = Status.Complete.ToString();
+                                }
+                                catch (CancelOrderException)
+                                {
+                                    throw;
+                                }
+                                catch (Exception ex)
+                                {
+                                    throw new CancelOrderException(Status.FatalError, "Unhandled exception: " + ex);
+                                }
+                            }
+                            catch (CancelOrderException ex)
+                            {
+                                suggestionLogger.WriteLine("Order cancelled: [" + ex.Status + "] " + ex.Message);
+                                log.Status = ex.Status.ToString();
+                            }
+
+                            try
+                            {
+                                log.Quantity = quantity;
+                                log.Message = suggestionLogger.History.ToString();
+
+                                suggestion.Logs.Add(log);
+                                db.TradeLogs.Attach(log);
+                                db.SaveChanges();
+                            }
+                            catch (Exception ex)
+                            {
+                                globalLogger.WriteLine("Exception while saving log: " + ex.ToString());
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    globalLogger.WriteLine("Nothing to do");
+                }
             }
             else
             {

@@ -82,15 +82,24 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AbortException.cs" />
     <Compile Include="ConsoleHelper.cs" />
+    <Compile Include="BaseLogger.cs" />
+    <Compile Include="ConsoleLogger.cs" />
+    <Compile Include="Broker\ConsoleTanProvider.cs" />
     <Compile Include="HttpProvider.cs" />
+    <Compile Include="Broker\IBroker.cs" />
+    <Compile Include="ILogger.cs" />
+    <Compile Include="Broker\ITanProvider.cs" />
+    <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\TradeDBContext.cs" />
     <Compile Include="OrderController.cs" />
+    <Compile Include="Status.cs" />
     <Compile Include="StringCipher.cs" />
-    <Compile Include="Flatex.cs" />
+    <Compile Include="Broker\Flatex.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TanProvider.cs" />
+    <Compile Include="Broker\FlatexTanProvider.cs" />
     <Compile Include="Models\TradeSuggestion.cs" />
     <Compile Include="Models\TradeLog.cs" />
     <Compile Include="TradeSuggestionProvider.cs" />

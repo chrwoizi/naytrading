@@ -1,20 +1,30 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace StockFlow.Trader
 {
-    public class TanProvider
+    public class FlatexTanProvider : ITanProvider
     {
         private const char FirstRow = 'A';
         private const char LastRow = 'M';
         private const char FirstColumn = '1';
         private const char LastColumn = '9';
 
-        public string GetTan(string challenge1, string challenge2, string challenge3, string passwordHash)
+        private readonly string passwordHash;
+
+        public FlatexTanProvider(string passwordHash)
+        {
+            this.passwordHash = passwordHash;
+        }
+
+        public string GetTan(object tanChallenge)
+        {
+            var flatexTanChallenge = (Flatex.TanChallenge)tanChallenge;
+            return GetTan(flatexTanChallenge.TanChallenge1, flatexTanChallenge.TanChallenge2, flatexTanChallenge.TanChallenge3);
+        }
+
+        public string GetTan(string challenge1, string challenge2, string challenge3)
         {
             string cipher;
 

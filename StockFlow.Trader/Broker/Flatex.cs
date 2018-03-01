@@ -12,9 +12,10 @@ using System.Threading.Tasks;
 
 namespace StockFlow.Trader
 {
-    public class Flatex
+
+    public class Flatex : IBroker
     {
-        public static void Login(string user, string password, ChromeDriver chrome)
+        public void Login(string user, string password, ChromeDriver chrome)
         {
             chrome.Navigate().GoToUrl("https://www.flatex.de/kunden-login/");
 
@@ -30,7 +31,7 @@ namespace StockFlow.Trader
             wait.Until(x => x.FindElement(By.XPath("//tr[td/text()='Gesamt Verfügbar']/td/table/tbody/tr/td/span[text()!='']")));
         }
 
-        public static decimal GetAvailableFunds(ChromeDriver chrome)
+        public decimal GetAvailableFunds(ChromeDriver chrome)
         {
             var fundsElement = chrome.FindElementByXPath("//div[@id='accountOverviewForm_accountOverviewTableSmall']/div/div/div[div/text()='Cashkonto']/div[contains(@class,'SimpleBalance')]/span");
             var fundsText = fundsElement.GetAttribute("innerText");
@@ -50,7 +51,7 @@ namespace StockFlow.Trader
             }
         }
 
-        public static decimal GetPrice(string isin, TradingAction action, ChromeDriver chrome)
+        public decimal GetPrice(string isin, TradingAction action, ChromeDriver chrome)
         {
             var menuButton = chrome.FindElementById("ToggleSearchButton");
             if (menuButton != null && menuButton.Displayed)
@@ -106,7 +107,7 @@ namespace StockFlow.Trader
             }
         }
 
-        public static TanChallenge GetTanChallenge(int quantity, TradingAction action, ChromeDriver chrome)
+        public object GetTanChallenge(int quantity, TradingAction action, ChromeDriver chrome)
         {
             string xpath;
             if (chrome.FindElement(By.ClassName("DisplayMode-Large")).Displayed)
@@ -179,7 +180,7 @@ namespace StockFlow.Trader
             return result;
         }
 
-        public static decimal GetQuote(string tan, ChromeDriver chrome)
+        public decimal GetQuote(string tan, ChromeDriver chrome)
         {
             var wait = new WebDriverWait(chrome, TimeSpan.FromSeconds(30));
             wait.Until(x => x.FindElement(By.Id("paperOrderSubmissionForm_transactionSecuritySubForm_tan")));
@@ -211,7 +212,7 @@ namespace StockFlow.Trader
             }
         }
 
-        public static void PlaceOrder(ChromeDriver chrome)
+        public void PlaceOrder(ChromeDriver chrome)
         {
             var wait = new WebDriverWait(chrome, TimeSpan.FromSeconds(30));
             wait.Until(x => x.FindElement(By.Id("paperOrderSubmissionForm_transactionFlowSubForm_nextButton")));
@@ -219,7 +220,7 @@ namespace StockFlow.Trader
             chrome.FindElementById("paperOrderSubmissionForm_transactionFlowSubForm_nextButton").Click();
         }
 
-        public static void Logout(ChromeDriver chrome)
+        public void Logout(ChromeDriver chrome)
         {
             var menuButton = chrome.FindElementById("OpenMobileMenuIcon");
             if (menuButton != null && menuButton.Displayed)
@@ -303,6 +304,11 @@ namespace StockFlow.Trader
             public string TanChallenge1;
             public string TanChallenge2;
             public string TanChallenge3;
+
+            public override string ToString()
+            {
+                return string.Format("{0} {1} {2}", TanChallenge1, TanChallenge2, TanChallenge3);
+            }
         }
     }
 }
