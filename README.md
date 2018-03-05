@@ -6,3 +6,5 @@ The trading philosophy is chart-based only, i.e. the only resource data for a de
 A website shows current stock charts to the user and lets him/her choose whether to buy, ignore, or sell the stock. The chart data and the decision are stored in a database. 
 
 In future versions, a Tensorflow neural network is going to be trained on the recorded decisions. This neural network is going to be used to decide automatically whether to buy or sell a stock based on its current chart.
+
+The console application StockFlow.Trader can be used to actually buy or sell the stocks on a stock exchange.
