@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
 
@@ -6,10 +7,10 @@ namespace StockFlow.Trader
 {
     public class FlatexTanProvider : ITanProvider
     {
-        private const char FirstRow = 'A';
-        private const char LastRow = 'M';
         private const char FirstColumn = '1';
         private const char LastColumn = '9';
+
+        private static readonly List<char> Rows = new List<char>() { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'K', 'L', 'M' };
 
         private readonly string passwordHash;
 
@@ -43,7 +44,7 @@ namespace StockFlow.Trader
             {
                 var tansStr = StringCipher.Decrypt(cipher, passwordHash);
                 tans = tansStr.Split(',');
-                if (tans.Length != (LastColumn - FirstColumn + 1) * (LastRow - FirstRow + 1))
+                if (tans.Length != (LastColumn - FirstColumn + 1) * Rows.Count)
                 {
                     throw new Exception();
                 }
@@ -67,7 +68,7 @@ namespace StockFlow.Trader
         private string GetTan(string[] tans, string challenge)
         {
             // 1-9 A-M
-            int row = challenge[0] - FirstRow;
+            int row = Rows.IndexOf(challenge[0]);
             int column = challenge[1] - FirstColumn;
             return tans[row * (LastColumn - FirstColumn + 1) + column];
         }

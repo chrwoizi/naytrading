@@ -8,6 +8,8 @@ namespace StockFlow.Trader
 
         decimal GetAvailableFunds(ChromeDriver chrome);
 
+        int GetOwnedQuantity(string isin, string wkn, ChromeDriver chrome);
+
         decimal GetPrice(string isin, TradingAction action, ChromeDriver chrome);
 
         object GetTanChallenge(int quantity, TradingAction action, ChromeDriver chrome);

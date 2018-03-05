@@ -16,8 +16,6 @@ namespace StockFlow.Trader
 
         private ChromeDriver chrome;
 
-        public readonly decimal AvailableFunds;
-
         public OrderController(string user, string password, bool headless, IBroker broker, ILogger logger, ITanProvider tanProvider)
         {
             if (string.IsNullOrWhiteSpace(user))
@@ -38,6 +36,7 @@ namespace StockFlow.Trader
             service.SuppressInitialDiagnosticInformation = true;
             service.HideCommandPromptWindow = true;
             ChromeOptions option = new ChromeOptions();
+            option.AddArgument("--window-size=1920,1080");
             if (headless)
             {
                 option.AddArgument("--headless");
@@ -47,7 +46,7 @@ namespace StockFlow.Trader
 
             try
             {
-                logger.WriteLine("Signing in...");
+                logger.WriteLine("Signing in at broker...");
                 broker.Login(user, password, chrome);
                 logger.WriteLine("Signed in");
             }
@@ -65,25 +64,6 @@ namespace StockFlow.Trader
                 }
                 throw;
             }
-
-            try
-            {
-                logger.WriteLine("Getting available funds...");
-                this.AvailableFunds = broker.GetAvailableFunds(chrome);
-                logger.WriteLine("Available funds: " + AvailableFunds + " EUR");
-            }
-            catch (Exception ex)
-            {
-                try
-                {
-                    logger.WriteLine(ex.ToString());
-                }
-                finally
-                {
-                    Logout();
-                }
-                throw;
-            }
         }
 
         public void Dispose()
@@ -91,30 +71,52 @@ namespace StockFlow.Trader
             Logout();
         }
 
-        public void Order(string isin, TradingAction action, decimal price, int quantity)
+        public decimal GetAvailableFunds()
+        {
+            SleepRandom();
+            logger.WriteLine("Getting available funds...");
+            var availableFunds = broker.GetAvailableFunds(chrome);
+            logger.WriteLine("Available funds: " + availableFunds + " EUR");
+
+            return availableFunds;
+        }
+
+        public int GetOwnedQuantity(string isin, string wkn)
         {
             try
             {
                 SleepRandom();
-                logger.WriteLine("Getting price...");
-                var instrumentPrice = broker.GetPrice(isin, action, chrome);
-                logger.WriteLine("Price: " + instrumentPrice + " EUR");
+                logger.WriteLine("Getting owned quantity...");
+                var quantity = broker.GetOwnedQuantity(isin, wkn, chrome);
+                logger.WriteLine("Owned quantity: " + quantity);
 
-                if (action == TradingAction.Buy && instrumentPrice > price)
-                {
-                    throw new CancelOrderException(Status.TemporaryError, "Too expensive to buy. Expected price to be " + price + " EUR or less");
-                }
+                return quantity;
+            }
+            catch (Exception ex)
+            {
+                throw new CancelOrderException(Status.FatalError, ex.Message, ex);
+            }
+        }
 
-                if (action == TradingAction.Sell && instrumentPrice < price)
-                {
-                    throw new CancelOrderException(Status.TemporaryError, "Too cheap to sell. Expected price to be " + price + " EUR or more");
-                }
+        public decimal GetCurrentPrice(string isin, TradingAction action)
+        {
+            SleepRandom();
+            logger.WriteLine("Getting current price...");
+            var instrumentPrice = broker.GetPrice(isin, action, chrome);
+            logger.WriteLine("Current price: " + instrumentPrice + " EUR");
 
+            return instrumentPrice;
+        }
+
+        public void PrepareOrder(TradingAction action, decimal priceLimit, int quantity)
+        {
+            try
+            {
                 SleepRandom();
                 logger.WriteLine("Getting TAN challenge...");
                 var tanChallenge = broker.GetTanChallenge(quantity, action, chrome);
                 logger.WriteLine("TAN challenge: " + tanChallenge);
-                
+
                 var tan = tanProvider.GetTan(tanChallenge);
 
                 SleepRandom();
@@ -122,26 +124,37 @@ namespace StockFlow.Trader
                 var offer = broker.GetQuote(tan, chrome);
                 logger.WriteLine("Offer: " + offer + " EUR");
 
-                if (action == TradingAction.Buy && offer > price)
+                if (action == TradingAction.Buy && offer > priceLimit)
                 {
-                    throw new CancelOrderException(Status.TemporaryError, "Too expensive to buy. Expected price to be " + price + " EUR or less");
+                    throw new CancelOrderException(Status.TemporaryError, "Too expensive to buy. Expected price to be " + priceLimit + " EUR or less");
                 }
 
-                if (action == TradingAction.Sell && offer < price)
+                if (action == TradingAction.Sell && offer < priceLimit)
                 {
-                    throw new CancelOrderException(Status.TemporaryError, "Too cheap to sell. Expected price to be " + price + " EUR or more");
+                    throw new CancelOrderException(Status.TemporaryError, "Too cheap to sell. Expected price to be " + priceLimit + " EUR or more");
                 }
-
-                // TODO logger.WriteLine("Placing order...");
-                // TODO Flatex.PlaceOrder(chrome);
             }
-            catch (CancelOrderException ex)
+            catch (CancelOrderException)
             {
                 throw;
             }
             catch (Exception ex)
             {
-                throw new CancelOrderException(Status.FatalError, string.Empty, ex);
+                throw new CancelOrderException(Status.FatalError, ex.Message, ex);
+            }
+        }
+
+        public void PlaceOrder()
+        {
+            try
+            {
+                logger.WriteLine("Placing order...");
+                broker.PlaceOrder(chrome);
+                logger.WriteLine("Order complete...");
+            }
+            catch (Exception ex)
+            {
+                throw new CancelOrderException(Status.FatalError, ex.Message, ex);
             }
         }
 
@@ -152,7 +165,7 @@ namespace StockFlow.Trader
                 try
                 {
                     SleepRandom();
-                    logger.WriteLine("Signing out...");
+                    logger.WriteLine("Signing out from broker...");
                     broker.Logout(chrome);
                     logger.WriteLine("Signed out");
                 }

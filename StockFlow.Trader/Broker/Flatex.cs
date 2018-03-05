@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Net;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -33,8 +34,38 @@ namespace StockFlow.Trader
 
         public decimal GetAvailableFunds(ChromeDriver chrome)
         {
-            var fundsElement = chrome.FindElementByXPath("//div[@id='accountOverviewForm_accountOverviewTableSmall']/div/div/div[div/text()='Cashkonto']/div[contains(@class,'SimpleBalance')]/span");
-            var fundsText = fundsElement.GetAttribute("innerText");
+            chrome.Navigate().GoToUrl("https://konto.flatex.de/banking-flatex");
+
+            var xpath = "//div[@id='accountOverviewForm_accountOverviewTableSmall']/div/div/div[div/text()='Cashkonto']/div[contains(@class,'SimpleBalance')]/span";
+            var checkElement = WaitForElementByXPath(chrome, xpath, element =>
+            {
+                var x = element.GetAttribute("innerText");
+                return !string.IsNullOrWhiteSpace(x);
+            });
+
+            var refreshXpath = "//a[@id='accountOverviewForm_refreshButton']";
+            var refreshButton = WaitForElementByXPath(chrome, refreshXpath, x => true);
+            if (refreshButton == null)
+            {
+                throw new Exception("Could not find refresh button");
+            }
+
+            refreshButton.Click();
+
+            Thread.Sleep(5000);
+
+            var quantityElement = WaitForElementByXPath(chrome, xpath, element =>
+            {
+                var x = element.GetAttribute("innerText");
+                return !string.IsNullOrWhiteSpace(x);
+            });
+
+            if (quantityElement == null)
+            {
+                throw new Exception("Could not find funds element");
+            }
+
+            var fundsText = quantityElement.GetAttribute("innerText");
 
             var regex = new Regex("^([\\d\\.]+)(,(\\d{0,3}))?(&nbsp;|\\s+)EUR$");
             var match = regex.Match(fundsText);
@@ -48,6 +79,82 @@ namespace StockFlow.Trader
             else
             {
                 throw new Exception("Available funds cannot be parsed from " + fundsText);
+            }
+        }
+
+        public int GetOwnedQuantity(string isin, string wkn, ChromeDriver chrome)
+        {
+            var menu = WaitForElementByXPath(chrome, "//td[@id='menu_overviewMenu']", x => true);
+            if (menu == null)
+            {
+                throw new Exception("Could not find main menu element");
+            }
+
+            menu.Click();
+
+            var submenu = WaitForElementByXPath(chrome, "//td[@id='menu_overviewMenu']/div/div[text()='Depotbestand']", x => true);
+            if (submenu == null)
+            {
+                throw new Exception("Could not find Depotbestand menu element");
+            }
+
+            submenu.Click();
+
+            var refreshXpath = "//a[@id='depositStatementForm_refreshButton']";
+            var refreshButton = WaitForElementByXPath(chrome, refreshXpath, x => x.Displayed);
+            if (refreshButton == null)
+            {
+                throw new Exception("Could not find refresh button");
+            }
+
+            refreshButton.Click();
+
+            Thread.Sleep(5000);
+
+            var sb = new StringBuilder();
+            if (!string.IsNullOrEmpty(isin))
+            {
+                var tdIsin = string.Format("//table[@id='depositStatementForm_depositStatementTable']/tbody/tr/td/table/tbody/tr/td/table/tbody[contains(tr/td/a/text(),'{0}')]/../..", isin);
+                sb.Append(tdIsin);
+            }
+
+            if (!string.IsNullOrEmpty(wkn))
+            {
+                if (sb.Length > 0)
+                {
+                    sb.Append(" | ");
+                }
+
+                var tdWkn = string.Format("//table[@id='depositStatementForm_depositStatementTable']/tbody/tr/td/table/tbody/tr/td/table/tbody/tr/td[contains(text(),'{0}')]/../../../..", wkn);
+                sb.Append(tdWkn);
+            }
+
+            var xpath = string.Format("({0})/../preceding-sibling::tr[1]/td[2]/span", sb.ToString());
+            var quantityElement = WaitForElementByXPath(chrome, xpath, element =>
+            {
+                var x = element.GetAttribute("innerText");
+                return !string.IsNullOrWhiteSpace(x);
+            });
+
+            if (quantityElement == null)
+            {
+                return 0;
+            }
+
+            var text = quantityElement.GetAttribute("innerText");
+
+            var regex = new Regex("^([\\d\\.]+)(,(\\d{0,3}))? Stk.$");
+            var match = regex.Match(text);
+            if (match.Success)
+            {
+                var whole = match.Groups[1].Value.Replace(".", "");
+                var fractions = match.Groups[3].Value;
+                var amount = decimal.Parse(whole + "." + fractions, CultureInfo.InvariantCulture);
+                return (int)amount;
+            }
+            else
+            {
+                throw new Exception("Quantity cannot be parsed from " + text);
             }
         }
 
@@ -140,7 +247,7 @@ namespace StockFlow.Trader
                     default:
                         throw new Exception("Unknown trading action " + action);
                 }
-            }         
+            }
 
             var wait = new WebDriverWait(chrome, TimeSpan.FromSeconds(30));
             wait.Until(x => x.FindElement(By.XPath(xpath)));
@@ -160,6 +267,11 @@ namespace StockFlow.Trader
                 var text = element.GetAttribute("innerText");
                 return !string.IsNullOrWhiteSpace(text);
             });
+            if (challengeElement == null)
+            {
+                throw new Exception("Could not find TAN challenge element");
+            }
+
             var challengeText = challengeElement.GetAttribute("innerText");
 
             var result = new TanChallenge();
@@ -189,12 +301,30 @@ namespace StockFlow.Trader
 
             chrome.FindElementById("paperOrderSubmissionForm_quoteButton").Click();
 
-            var priceXpath = "//div[@id='PaperOrder_Quote']/div/div[@class='Value']";            
+            var priceXpath = "//div[@id='PaperOrder_Quote']/div/div[@class='Value']";
             var priceElement = WaitForElementByXPath(chrome, priceXpath, element =>
             {
                 var text = element.GetAttribute("innerText");
                 return !string.IsNullOrWhiteSpace(text);
-            });            
+            });
+
+            if (priceElement == null)
+            {
+                var element = chrome.FindElementByXPath("[@id=paperOrderSubmissionForm_transactionSecuritySubForm_tan_validationErrorText]");
+                if (element != null)
+                {
+                    var error = element.GetAttribute("innerText");
+                    if (!string.IsNullOrEmpty(error))
+                    {
+                        throw new Exception("Error message from broker: " + error);
+                    }
+                    else
+                    {
+                        throw new Exception("Could not get offer");
+                    }
+                }
+            }
+
             var priceText = priceElement.GetAttribute("innerText");
 
             var regex = new Regex("^([\\d\\.]+)(,(\\d{0,3}))?(&nbsp;|\\s+)EUR$");
@@ -214,10 +344,56 @@ namespace StockFlow.Trader
 
         public void PlaceOrder(ChromeDriver chrome)
         {
-            var wait = new WebDriverWait(chrome, TimeSpan.FromSeconds(30));
-            wait.Until(x => x.FindElement(By.Id("paperOrderSubmissionForm_transactionFlowSubForm_nextButton")));
+            var button = WaitForElementById(chrome, "paperOrderSubmissionForm_transactionFlowSubForm_nextButton", x => true);
+            if (button == null)
+            {
+                throw new Exception("Order button not found");
+            }
 
-            chrome.FindElementById("paperOrderSubmissionForm_transactionFlowSubForm_nextButton").Click();
+            if (!button.Displayed)
+            {
+                throw new CancelOrderException(Status.TemporaryError, "Order button not visible");
+            }
+
+            button.Click();
+
+            var messageElement = WaitForElementByXPath(chrome, "//div[@id='TransactionDetailsComponent']/div/div[contains(@class,'Title')]", element =>
+            {
+                if (!element.Displayed)
+                {
+                    return false;
+                }
+
+                var text = element.GetAttribute("innerText");
+                return !string.IsNullOrWhiteSpace(text);
+            });
+
+            if (messageElement != null)
+            {
+                var message = messageElement.GetAttribute("innerText");
+                if (message.Contains("wurde ausgeführt"))
+                {
+                    return;
+                }
+
+                throw new Exception("Order was not confirmed as expected: " + message);
+            }
+
+            var errorElement = WaitForElementByXPath(chrome, "//*[@id='serverErrors']/div/table/tbody/tr/td[2]/ul/li", element =>
+            {
+                if (!element.Displayed)
+                {
+                    return false;
+                }
+
+                var text = element.GetAttribute("innerText");
+                return !string.IsNullOrWhiteSpace(text);
+            });
+
+            if (errorElement != null)
+            {
+                throw new Exception("Error message from broker: " + errorElement.GetAttribute("innerText"));
+            }
         }
 
         public void Logout(ChromeDriver chrome)
@@ -245,7 +421,7 @@ namespace StockFlow.Trader
 
         private static IWebElement WaitForElementByXPath(ChromeDriver chrome, string xpath, Func<IWebElement, bool> validate)
         {
-            for (int i = 0; i < 300; i++)
+            for (int i = 0; i < 200; i++)
             {
                 Thread.Sleep(100);
 

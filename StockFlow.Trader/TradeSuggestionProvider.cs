@@ -4,6 +4,7 @@ using StockFlow.Web.Models;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -12,28 +13,11 @@ namespace StockFlow.Trader
 {
     public class TradeSuggestionProvider
     {
-        public static async Task Refresh()
+        public static async Task Refresh(string user, string password)
         {
-            string user = ConfigurationManager.AppSettings["TradeDecisionsUser"];
-            string password = ConfigurationManager.AppSettings["TradeDecisionsPassword"];
-
-            if (string.IsNullOrEmpty(user))
-            {
-                Console.Write("Stockflow User: ");
-                user = Console.ReadLine();
-                ConfigurationManager.AppSettings["TradeDecisionsUser"] = user;
-            }
-
-            if (string.IsNullOrEmpty(password))
-            {
-                Console.Write("Stockflow Password: ");
-                password = ConsoleHelper.ReadPassword('*');
-                ConfigurationManager.AppSettings["TradeDecisionsPassword"] = password;
-            }
-
             var httpProvider = new HttpProvider();
 
-            Console.WriteLine("Signing in...");
+            Console.WriteLine("Signing in at stockflow...");
             var response = await httpProvider.Login(ConfigurationManager.AppSettings["TradeDecisionsLoginAddress"], user, password);
             Console.WriteLine("Signed in");
 
@@ -43,7 +27,7 @@ namespace StockFlow.Trader
                 date = db.TradeSuggestions.Select(x => x.Time).OrderByDescending(x => x).FirstOrDefault();
                 if (date == DateTime.MinValue)
                 {
-                    date = DateTime.Today.AddDays(-7);
+                    date = DateTime.UtcNow.AddHours(-double.Parse(ConfigurationManager.AppSettings["MaxSuggestionAge"], CultureInfo.InvariantCulture));
                 }
             }
 
@@ -79,7 +63,10 @@ namespace StockFlow.Trader
                 }
             }
 
-            Console.WriteLine("Done");
+            if (trades.Any())
+            {
+                Console.WriteLine("All suggestions saved");
+            }
         }
     }
 }

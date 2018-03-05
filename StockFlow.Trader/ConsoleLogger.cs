@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Text;
 
 namespace StockFlow.Trader
@@ -15,6 +16,7 @@ namespace StockFlow.Trader
             base.Write(v);
 
             Console.Write(v);
+            Debug.Write(v);
         }
 
         public override void WriteLine(string v)
@@ -22,6 +24,7 @@ namespace StockFlow.Trader
             base.WriteLine(v);
 
             Console.WriteLine(v);
+            Debug.WriteLine(v);
         }
     }
 }

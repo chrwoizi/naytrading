@@ -7,6 +7,7 @@ namespace StockFlow.Trader
         Initial,
         FatalError,
         TemporaryError,
+        PlacingOrder,
         Complete
     }
 }
