@@ -2,6 +2,7 @@
 using StockFlow.Web.Models;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -17,8 +18,6 @@ namespace StockFlow
         public const string FlatDumpFile = "dump.csv";
         public const string FlatBuyFile = "buy.csv";
         public const string FlatSellFile = "sell.csv";
-        public const string FlatDontBuyFile = "no_buy.csv";
-        public const string FlatDontSellFile = "no_sell.csv";
 
         public static void Flatten(Stream stream, Action<double> reportProgress)
         {
@@ -26,7 +25,7 @@ namespace StockFlow
             {
                 reportProgress(0);
 
-                writer.Write("instrumentId;time;decision;");
+                writer.Write("instrument;time;decision;");
                 for (var day = -Days + 1; day <= 0; ++day)
                 {
                     writer.Write(day.ToString());
@@ -41,7 +40,7 @@ namespace StockFlow
                 try
                 {
                     var l = stream.Length;
-                    if(l > 0)
+                    if (l > 0)
                     {
                         hasLength = true;
                     }
@@ -178,6 +177,8 @@ namespace StockFlow
                     switch (meta.Decision)
                     {
                         case "buy":
+                            if (invested)
+                                Debugger.Break();
                             invested = true;
                             break;
                         case "sell":
@@ -204,44 +205,31 @@ namespace StockFlow
                 {
                     using (var sellWriter = new StreamWriter(File.Open(FlatSellFile, FileMode.Create)))
                     {
-                        using (var dontBuyWriter = new StreamWriter(File.Open(FlatDontBuyFile, FileMode.Create)))
+                        var header = reader.ReadLine();
+                        buyWriter.WriteLine("id;" + header);
+                        sellWriter.WriteLine("id;" + header);
+
+                        var linesRead = 1;
+                        foreach (var meta in distinctMetas.OrderBy(x => x.Line))
                         {
-                            using (var dontSellWriter = new StreamWriter(File.Open(FlatDontSellFile, FileMode.Create)))
+                            while (meta.Line > linesRead)
                             {
-                                var header = reader.ReadLine();
-                                buyWriter.WriteLine(header);
-                                sellWriter.WriteLine(header);
-                                dontBuyWriter.WriteLine(header);
-                                dontSellWriter.WriteLine(header);
+                                reader.ReadLine();
+                                ++linesRead;
+                            }
 
-                                var linesRead = 0;
-                                foreach (var meta in distinctMetas.OrderBy(x => x.Line))
+                            var line = reader.ReadLine();
+                            ++linesRead;
+
+                            if (!string.IsNullOrEmpty(line))
+                            {
+                                if (!meta.Invested)
                                 {
-                                    while (meta.Line > linesRead)
-                                    {
-                                        reader.ReadLine();
-                                        ++linesRead;
-                                    }
-
-                                    var line = reader.ReadLine();
-                                    ++linesRead;
-
-                                    if (!meta.Invested && meta.Decision == "ignore")
-                                    {
-                                        dontBuyWriter.WriteLine(line);
-                                    }
-                                    else if (!meta.Invested && meta.Decision == "buy")
-                                    {
-                                        buyWriter.WriteLine(line);
-                                    }
-                                    else if (meta.Invested && meta.Decision == "ignore")
-                                    {
-                                        dontSellWriter.WriteLine(line);
-                                    }
-                                    else if (meta.Invested && meta.Decision == "sell")
-                                    {
-                                        sellWriter.WriteLine(line);
-                                    }
+                                    buyWriter.WriteLine(linesRead + ";" + line);
+                                }
+                                else
+                                {
+                                    sellWriter.WriteLine(linesRead + ";" + line);
                                 }
                             }
                         }
@@ -250,7 +238,7 @@ namespace StockFlow
             }
         }
 
-        public static int CountLines(string path)
+        public static int CountLines(string path, Func<string, bool> expression)
         {
             var lines = 0;
             if (File.Exists(path))
@@ -259,15 +247,43 @@ namespace StockFlow
                 {
                     using (var reader = new StreamReader(stream))
                     {
-                        while (!reader.EndOfStream && !string.IsNullOrEmpty(reader.ReadLine()))
+                        while (true)
                         {
-                            lines++;
+                            if (reader.EndOfStream)
+                                break;
+                            var line = reader.ReadLine();
+                            if (line == null)
+                                break;
+                            if (expression(line))
+                                lines++;
                         }
                     }
                 }
             }
 
             return lines;
+        }
+
+        public static bool ContainsDecision(string line, string decision)
+        {
+            var begin = line.IndexOf(';');
+            if (begin == -1 || begin == line.Length - 1)
+                return false;
+
+            begin = line.IndexOf(';', begin + 1);
+            if (begin == -1 || begin == line.Length - 1)
+                return false;
+
+            begin = line.IndexOf(';', begin + 1);
+            if (begin == -1 || begin == line.Length - 1)
+                return false;
+
+            int end = line.IndexOf(';', begin + 1);
+            if (end == -1)
+                return false;
+
+            var d = line.Substring(begin + 1, end - begin - 1);
+            return d == decision;
         }
     }
 }

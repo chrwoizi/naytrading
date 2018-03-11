@@ -180,17 +180,17 @@
         {
             DumpFileInfoTextBlock.Text = string.Format(
                 "{0} datasets available",
-                DumpProcessor.CountLines(DumpProcessor.FlatDumpFile) - 1);
+                DumpProcessor.CountLines(DumpProcessor.FlatDumpFile, line => true) - 1);
         }
 
         private void UpdateSplitFileInfo()
         {
             SplitFileInfoTextBlock.Text = string.Format(
-                "{0} buy\n{2} don't buy\n{1} sell\n{3} don't sell",
-                DumpProcessor.CountLines(DumpProcessor.FlatBuyFile) - 1,
-                DumpProcessor.CountLines(DumpProcessor.FlatSellFile) - 1,
-                DumpProcessor.CountLines(DumpProcessor.FlatDontBuyFile) - 1,
-                DumpProcessor.CountLines(DumpProcessor.FlatDontSellFile) - 1);
+                "{0}/{1} buy\n{2}/{3} sell",
+                DumpProcessor.CountLines(DumpProcessor.FlatBuyFile, line => DumpProcessor.ContainsDecision(line, "buy")) - 1,
+                DumpProcessor.CountLines(DumpProcessor.FlatBuyFile, line => true) - 1,
+                DumpProcessor.CountLines(DumpProcessor.FlatSellFile, line => DumpProcessor.ContainsDecision(line, "sell")) - 1,
+                DumpProcessor.CountLines(DumpProcessor.FlatSellFile, line => true) - 1);
         }
 
         private void LearnButton_OnClick(object sender, RoutedEventArgs e)
