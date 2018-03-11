@@ -10,6 +10,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Menu>
             <MenuItem Header="Settings"
@@ -22,6 +23,8 @@
             </Grid.ColumnDefinitions>
             <Grid Grid.Column="0">
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
@@ -46,22 +49,35 @@
                         Grid.ColumnSpan="2"
                         x:Name="DownloadButton"
                         Click="DownloadButton_Click"
-                        Content="Download Snapshots"/>
+                        Content="Download and flatten"/>
 
                 <Button Grid.Row="2"
                         Grid.ColumnSpan="2"
                         Margin="0,10,0,0"
                         x:Name="LoadFileButton"
                         Click="LoadFileButton_Click"
-                        Content="Load Snapshots File"/>
+                        Content="Flatten"/>
 
                 <TextBlock Grid.Row="3"
                            Grid.ColumnSpan="2"
                            Margin="0,10,0,10"
-                           x:Name="FileInfoTextBlock"
+                           x:Name="DumpFileInfoTextBlock"
                            Text="File info unknown" />
 
-                <Slider Grid.Row="4"
+                <Button Grid.Row="4"
+                        Grid.ColumnSpan="2"
+                        Margin="0,10,0,0"
+                        x:Name="SplitFileButton"
+                        Click="SplitFileButton_Click"
+                        Content="Split"/>
+
+                <TextBlock Grid.Row="5"
+                           Grid.ColumnSpan="2"
+                           Margin="0,10,0,10"
+                           x:Name="SplitFileInfoTextBlock"
+                           Text="File info unknown" />
+
+                <Slider Grid.Row="6"
                         Grid.ColumnSpan="2"
                         Margin="0,10,0,0"
                         Minimum="0"
@@ -70,7 +86,7 @@
                         x:Name="TrainPercentageSlider"
                         Interval="1" />
 
-                <Button Grid.Row="5" 
+                <Button Grid.Row="7" 
                         Grid.ColumnSpan="2"
                         x:Name="LearnButton"
                         Click="LearnButton_OnClick" 
@@ -83,7 +99,13 @@
                      VerticalScrollBarVisibility="Auto"
                      AcceptsReturn="True"
                      AcceptsTab="True"/>
-            </Grid>
+        </Grid>
+        <ProgressBar Grid.Row="2"
+                     x:Name="ProgressBar"
+                     Minimum="0"
+                     Maximum="1"
+                     Height="16"
+                     HorizontalAlignment="Stretch" />
     </Grid>
 </Window>
 

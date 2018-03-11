@@ -24,14 +24,14 @@
     public partial class MainWindow : Window
     {
         const string TemporaryModelDir = "model";
-        const string TemporarySnapshotsFile = "snapshots.csv";
-        const int Days = 30;//5 * 365 - 10;
+
         private Process process;
 
         public MainWindow()
         {
             InitializeComponent();
-            UpdateFileInfo();
+            UpdateDumpFileInfo();
+            UpdateSplitFileInfo();
         }
 
         private void Settings_OnClick(object sender, RoutedEventArgs e)
@@ -39,72 +39,101 @@
             new SettingsWindow() { DataContext = new SettingsViewModel() }.ShowDialog();
         }
 
-        private void UpdateFileInfo()
-        {
-            if (File.Exists(TemporarySnapshotsFile))
-            {
-                var lines = 0;
-                using (var stream = File.OpenRead(TemporarySnapshotsFile))
-                {
-                    using (var reader = new StreamReader(stream))
-                    {
-                        while (reader.ReadLine() != null)
-                        {
-                            lines++;
-                        }
-                    }
-                }
-
-                FileInfoTextBlock.Text = lines + " datasets available";
-            }
-            else
-            {
-                FileInfoTextBlock.Text = "No dataset file";
-            }
-        }
-
-        private async void DownloadButton_Click(object sender, RoutedEventArgs e)
+        private void DisableUI()
         {
             DownloadButton.IsEnabled = false;
             LoadFileButton.IsEnabled = false;
+            SplitFileButton.IsEnabled = false;
             LearnButton.IsEnabled = false;
+        }
 
-            try
+        private void EnableUI()
+        {
+            DownloadButton.IsEnabled = true;
+            LoadFileButton.IsEnabled = true;
+            SplitFileButton.IsEnabled = true;
+            LearnButton.IsEnabled = true;
+        }
+
+        private void DownloadButton_Click(object sender, RoutedEventArgs e)
+        {
+            DisableUI();
+
+            Task.Run(() =>
             {
-                var stream = await Download(UrlTextBox.Text);
-                if (stream != null)
+                try
                 {
-                    DumpSnapshotsToFile(stream, TemporarySnapshotsFile);
+                    var download = Download(UrlTextBox.Text);
+                    download.Wait();
+
+                    var stream = download.Result;
+                    if (stream != null)
+                    {
+                        using (stream)
+                        {
+                            DumpProcessor.Flatten(stream, ReportProgress);
+                        }
+                    }
                 }
-            }
-            finally
-            {
-                DownloadButton.IsEnabled = true;
-                LoadFileButton.IsEnabled = true;
-                LearnButton.IsEnabled = true;
-            }
+                finally
+                {
+                    Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        EnableUI();
+                        UpdateDumpFileInfo();
+                    }));
+                }
+            });
         }
 
         private void LoadFileButton_Click(object sender, RoutedEventArgs e)
         {
-            DownloadButton.IsEnabled = false;
-            LoadFileButton.IsEnabled = false;
-            LearnButton.IsEnabled = false;
+            DisableUI();
 
-            try
+            var stream = LoadFile();
+
+            Task.Run(() =>
             {
-                var stream = LoadFile();
-                if (stream != null)
+                try
                 {
-                    DumpSnapshotsToFile(stream, TemporarySnapshotsFile);
+                    if (stream != null)
+                    {
+                        using (stream)
+                        {
+                            DumpProcessor.Flatten(stream, ReportProgress);
+                        }
+                    }
                 }
-            }
-            finally
+                finally
+                {
+                    Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        EnableUI();
+                        UpdateDumpFileInfo();
+                    }));
+                }
+            });
+        }
+
+        private void SplitFileButton_Click(object sender, RoutedEventArgs e)
+        {
+            DisableUI();
+            
+            Task.Run(() =>
             {
-                DownloadButton.IsEnabled = true;
-                LoadFileButton.IsEnabled = true;
-                LearnButton.IsEnabled = true;
-            }
+                try
+                {
+                    DumpProcessor.SplitByDecision();
+                }
+                finally
+                {
+                    Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        EnableUI();
+                        UpdateSplitFileInfo();
+                    }));
+                }
+            });
         }
 
         private async Task<Stream> Download(string url)
@@ -138,84 +167,35 @@
 
             return null;
         }
-
-        private void DumpSnapshotsToFile(Stream stream, string filePath)
+        
+        private void ReportProgress(double progress)
         {
-            using (var writer = new StreamWriter(File.Open(filePath, FileMode.Create)))
+            Dispatcher.BeginInvoke(new Action(() =>
             {
-                writer.Write("decision;");
-                for (var day = -Days + 1; day <= 0; ++day)
-                {
-                    writer.Write(day.ToString());
-                    if (day < 0)
-                    {
-                        writer.Write(";");
-                    }
-                }
-                writer.Flush();
+                ProgressBar.Value = progress;
+            }));
+        }
 
-                Importer.Import<Snapshot>(stream, snapshot =>
-                {
-                    if (!string.IsNullOrEmpty(snapshot.Decision) && snapshot.Rates != null)
-                    {
-                        var rates = snapshot.Rates.Where(x => x.Close.HasValue).ToList();
+        private void UpdateDumpFileInfo()
+        {
+            DumpFileInfoTextBlock.Text = string.Format(
+                "{0} datasets available",
+                DumpProcessor.CountLines(DumpProcessor.FlatDumpFile) - 1);
+        }
 
-                        var firstDate = snapshot.Time.Date.AddDays(-Days + 1);
-
-                        if (rates.Any() && rates.First().Time.Date <= firstDate)
-                        {
-                            writer.WriteLine();
-                            writer.Write(snapshot.Decision);
-                            writer.Write(";");
-
-                            var remainingRates = snapshot.Rates;
-                            var previousRate = remainingRates.First();
-                            for (DateTime date = firstDate; date <= snapshot.Time.Date; date = date.AddDays(1))
-                            {
-                                remainingRates = remainingRates.SkipWhile(x => x.Time.Date < date).ToList();
-
-                                var rate = previousRate;
-                                if (remainingRates.Any())
-                                {
-                                    var firstRate = remainingRates.First();
-                                    if (firstRate.Time.Date == date)
-                                    {
-                                        rate = firstRate;
-                                    }
-                                    else
-                                    {
-                                        // encountered future rate. use previous rate.
-                                    }
-                                }
-                                else
-                                {
-                                    // no remaining rates. use previous rate.
-                                }
-
-                                var value = rate.Close.Value.ToString("F2", CultureInfo.InvariantCulture);
-                                writer.Write(value);
-
-                                if (date < snapshot.Time.Date)
-                                {
-                                    writer.Write(";");
-                                }
-
-                                previousRate = rate;
-                            }
-                            writer.Flush();
-                        }
-                    }
-                });
-            }
-
-            UpdateFileInfo();
+        private void UpdateSplitFileInfo()
+        {
+            SplitFileInfoTextBlock.Text = string.Format(
+                "{0} buy\n{2} don't buy\n{1} sell\n{3} don't sell",
+                DumpProcessor.CountLines(DumpProcessor.FlatBuyFile) - 1,
+                DumpProcessor.CountLines(DumpProcessor.FlatSellFile) - 1,
+                DumpProcessor.CountLines(DumpProcessor.FlatDontBuyFile) - 1,
+                DumpProcessor.CountLines(DumpProcessor.FlatDontSellFile) - 1);
         }
 
         private void LearnButton_OnClick(object sender, RoutedEventArgs e)
         {
-            DownloadButton.IsEnabled = false;
-            LoadFileButton.IsEnabled = false;
-            LearnButton.IsEnabled = false;
+            DisableUI();
             TextBlock.Clear();
 
             try
@@ -225,7 +205,7 @@
                     Directory.CreateDirectory(Path.GetFullPath(TemporaryModelDir));
                 }
 
-                var lineCount = File.ReadLines(TemporarySnapshotsFile).Count();
+                var lineCount = File.ReadLines(DumpProcessor.FlatDumpFile).Count();
                 var snapshotCount = lineCount - 1;
                 var trainCount = (int)Math.Round((TrainPercentageSlider.Value / 100) * snapshotCount);
                 var testCount = snapshotCount - trainCount;
@@ -235,9 +215,7 @@
             }
             catch (Exception ex)
             {
-                DownloadButton.IsEnabled = true;
-                LoadFileButton.IsEnabled = true;
-                LearnButton.IsEnabled = true;
+                EnableUI();
                 TextBlock.Text += "\n" + ex.ToString();
             }
         }
@@ -254,13 +232,13 @@
                     train_epochs: 10,
                     epochs_per_eval: 2,
                     batch_size: 10,
-                    train_data: Path.GetFullPath(TemporarySnapshotsFile),
-                    test_data: Path.GetFullPath(TemporarySnapshotsFile),
+                    train_data: Path.GetFullPath(DumpProcessor.FlatDumpFile),
+                    test_data: Path.GetFullPath(DumpProcessor.FlatDumpFile),
                     train_skip_lines: 1,
                     test_skip_lines: 1 + trainCount,
                     train_count: trainCount,
                     test_count: testCount,
-                    first_day: -Days + 1,
+                    first_day: -DumpProcessor.Days + 1,
                     last_day: 0);
 
                 this.TextBlock.Text += result;
@@ -281,8 +259,7 @@
             //    this.TextBlock.Text += string.Format("W: {0} b: {1} loss: {2}", curr_W, curr_b, curr_loss);
             //}
 
-            DownloadButton.IsEnabled = true;
-            LearnButton.IsEnabled = true;
+            EnableUI();
         }
 
         private static PyList ToPyList(IEnumerable<float> v)
@@ -301,13 +278,13 @@
                 " --train_epochs 10" +
                 " --epochs_per_eval 2" +
                 " --batch_size 10" +
-                " --train_data \"" + Path.GetFullPath(TemporarySnapshotsFile) + "\"" +
-                " --test_data \"" + Path.GetFullPath(TemporarySnapshotsFile) + "\"" +
+                " --train_data \"" + Path.GetFullPath(DumpProcessor.FlatDumpFile) + "\"" +
+                " --test_data \"" + Path.GetFullPath(DumpProcessor.FlatDumpFile) + "\"" +
                 " --train_skip_lines 1" +
                 " --test_skip_lines " + (1 + trainCount) +
                 " --train_count " + trainCount +
                 " --test_count " + testCount +
-                " --first_day " + (-Days + 1) +
+                " --first_day " + (-DumpProcessor.Days + 1) +
                 " --last_day 0");
         }
 
@@ -353,8 +330,7 @@
             catch (Exception ex)
             {
                 TextBlock.Text += ex.ToString();
-                DownloadButton.IsEnabled = true;
-                LearnButton.IsEnabled = true;
+                EnableUI();
                 process = null;
             }
         }
@@ -363,8 +339,7 @@
         {
             Dispatcher.Invoke(() =>
             {
-                DownloadButton.IsEnabled = true;
-                LearnButton.IsEnabled = true;
+                EnableUI();
                 process = null;
             });
         }
