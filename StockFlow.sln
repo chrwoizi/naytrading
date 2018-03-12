@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26228.9
+VisualStudioVersion = 15.0.27004.2010
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StockFlow", "StockFlow\StockFlow.csproj", "{2033628D-FE43-4799-B5DC-1A47939E4030}"
 EndProject
@@ -10,6 +10,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StockFlow.Common", "StockFlow.Common\StockFlow.Common.csproj", "{3718C246-A6FC-49C9-BCEC-303E37F95197}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StockFlow.Trader", "StockFlow.Trader\StockFlow.Trader.csproj", "{2409CDFC-AFB9-4001-B4F3-A3817FE09971}"
+EndProject
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "StockFlow.Python", "StockFlow.Python\StockFlow.Python.pyproj", "{80491EF7-C24E-4231-9C31-8BF13238C253}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -123,6 +125,18 @@ Global
 		{2409CDFC-AFB9-4001-B4F3-A3817FE09971}.Release|Windows-x64.Build.0 = Release|Any CPU
 		{2409CDFC-AFB9-4001-B4F3-A3817FE09971}.Release|Windows-x86.ActiveCfg = Release|Any CPU
 		{2409CDFC-AFB9-4001-B4F3-A3817FE09971}.Release|Windows-x86.Build.0 = Release|Any CPU
+		{80491EF7-C24E-4231-9C31-8BF13238C253}.Debug|Android.ActiveCfg = Debug|Any CPU
+		{80491EF7-C24E-4231-9C31-8BF13238C253}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{80491EF7-C24E-4231-9C31-8BF13238C253}.Debug|iOS.ActiveCfg = Debug|Any CPU
+		{80491EF7-C24E-4231-9C31-8BF13238C253}.Debug|Windows-ARM.ActiveCfg = Debug|Any CPU
+		{80491EF7-C24E-4231-9C31-8BF13238C253}.Debug|Windows-x64.ActiveCfg = Debug|Any CPU
+		{80491EF7-C24E-4231-9C31-8BF13238C253}.Debug|Windows-x86.ActiveCfg = Debug|Any CPU
+		{80491EF7-C24E-4231-9C31-8BF13238C253}.Release|Android.ActiveCfg = Release|Any CPU
+		{80491EF7-C24E-4231-9C31-8BF13238C253}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{80491EF7-C24E-4231-9C31-8BF13238C253}.Release|iOS.ActiveCfg = Release|Any CPU
+		{80491EF7-C24E-4231-9C31-8BF13238C253}.Release|Windows-ARM.ActiveCfg = Release|Any CPU
+		{80491EF7-C24E-4231-9C31-8BF13238C253}.Release|Windows-x64.ActiveCfg = Release|Any CPU
+		{80491EF7-C24E-4231-9C31-8BF13238C253}.Release|Windows-x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

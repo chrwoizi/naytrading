@@ -219,73 +219,20 @@
                 TextBlock.Text += "\n" + ex.ToString();
             }
         }
-
-        private void LearnPyNet(int trainCount, int testCount)
-        {
-            using (Py.GIL())
-            {
-                dynamic learn = Py.Import("learn");
-
-                dynamic result = learn.Learn(
-                    model_dir: Path.GetFullPath(TemporaryModelDir),
-                    model_type: "deep",
-                    train_epochs: 10,
-                    epochs_per_eval: 2,
-                    batch_size: 10,
-                    train_data: Path.GetFullPath(DumpProcessor.FlatDumpFile),
-                    test_data: Path.GetFullPath(DumpProcessor.FlatDumpFile),
-                    train_skip_lines: 1,
-                    test_skip_lines: 1 + trainCount,
-                    train_count: trainCount,
-                    test_count: testCount,
-                    first_day: -DumpProcessor.Days + 1,
-                    last_day: 0);
-
-                this.TextBlock.Text += result;
-            }
-
-            //using (Py.GIL())
-            //{
-            //    dynamic learn = Py.Import("learn");
-
-            //    var x_train = ToPyList(new float[] { 1, 2, 3, 4 });
-            //    var y_train = ToPyList(new float[] { 0, -1, -2, -3 });
-
-            //    dynamic result = learn.Learn(x_train, y_train);
-
-            //    dynamic curr_W = result[0];
-            //    dynamic curr_b = result[1];
-            //    dynamic curr_loss = result[2];
-            //    this.TextBlock.Text += string.Format("W: {0} b: {1} loss: {2}", curr_W, curr_b, curr_loss);
-            //}
-
-            EnableUI();
-        }
-
-        private static PyList ToPyList(IEnumerable<float> v)
-        {
-            return new PyList(v.Select(x => new PyFloat(x)).Cast<PyObject>().ToArray());
-        }
-
+        
         public void LearnBat(int trainCount, int testCount)
         {
             Execute(
                 Path.GetFullPath("."),
                 Settings.Default.Python,
-                "\"" + Path.GetFullPath("learn.py") + "\"" +
+                "\"" + Path.GetFullPath("..\\..\\..\\StockFlow.Python\\StockFlow.Python.py") + "\"" +
                 " --model_dir \"" + Path.GetFullPath(TemporaryModelDir) + "\"" +
-                " --model_type wide" +
-                " --train_epochs 10" +
-                " --epochs_per_eval 2" +
                 " --batch_size 10" +
-                " --train_data \"" + Path.GetFullPath(DumpProcessor.FlatDumpFile) + "\"" +
-                " --test_data \"" + Path.GetFullPath(DumpProcessor.FlatDumpFile) + "\"" +
-                " --train_skip_lines 1" +
-                " --test_skip_lines " + (1 + trainCount) +
-                " --train_count " + trainCount +
-                " --test_count " + testCount +
+                " --data_file \"" + Path.GetFullPath(DumpProcessor.FlatBuyFile) + "\"" +
+                " --test_data_ratio 0.2" +
                 " --first_day " + (-DumpProcessor.Days + 1) +
-                " --last_day 0");
+                " --last_day 0" + 
+                " --label_true buy");
         }
 
         public void Execute(string workingDirectory, string file, string arguments)

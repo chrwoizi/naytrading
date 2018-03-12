@@ -46,7 +46,7 @@ namespace StockFlow
                     }
                 }
                 catch { }
-
+                
                 Importer.Import<Snapshot>(stream, (snapshot) =>
                 {
                     if (hasLength)
@@ -54,7 +54,7 @@ namespace StockFlow
                         var progress = stream.Position / (double)stream.Length;
                         reportProgress(progress);
                     }
-
+                    
                     if (!string.IsNullOrEmpty(snapshot.Decision) && snapshot.Rates != null)
                     {
                         var rates = snapshot.Rates.Where(x => x.Close.HasValue).ToList();
@@ -75,7 +75,7 @@ namespace StockFlow
                         if (rates.Any() && rates.First().Time.Date <= firstDate)
                         {
                             var remainingRates = snapshot.Rates;
-                            var previousRate = remainingRates.First();
+                            var previousRate = remainingRates.LastOrDefault(x => x.Time.Date < firstDate) ?? remainingRates.First();
                             for (DateTime date = firstDate; date <= snapshot.Time.Date; date = date.AddDays(1))
                             {
                                 remainingRates = remainingRates.SkipWhile(x => x.Time.Date < date).ToList();
