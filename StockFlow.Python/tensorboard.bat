@@ -1,0 +1,1 @@
+tensorboard.exe --logdir=model
