@@ -108,15 +108,17 @@ class Snapshots(object):
         self.train = buy_dataset.take(buy_train_count).concatenate(nobuy_dataset.take(nobuy_train_count))
         self.test = buy_dataset.skip(buy_train_count).concatenate(nobuy_dataset.skip(nobuy_train_count))
 
+        print('take batches')
+        self.train = self.train.take(self.train_batches * batch_size)
+        self.test = self.test.take(self.test_batches * batch_size)
+
         print('shuffle')
-        self.train = self.train.shuffle(self.train_count)
-        self.test = self.test.shuffle(self.test_count)
+        self.train = self.train.shuffle(self.train_count, seed = 42)
+        self.test = self.test.shuffle(self.test_count, seed = 42)
 
         print('take/batch/repeat/iter/next')
-        self.__train_iter = self.train.take(self.train_batches * batch_size).batch(batch_size).repeat(
-            epochs).make_one_shot_iterator().get_next()
-        self.__test_iter = self.test.take(self.test_batches * batch_size).batch(batch_size).repeat(
-            epochs + 1).make_one_shot_iterator().get_next()
+        self.__train_iter = self.train.repeat(epochs).batch(batch_size).make_one_shot_iterator().get_next()
+        self.__test_iter = self.test.repeat(epochs + 1).batch(batch_size).make_one_shot_iterator().get_next()
 
     def next_train_batch(self, sess):
         return self.__next_batch(sess, self.__train_iter)
@@ -176,18 +178,31 @@ class Model(object):
 
         with tf.variable_scope('loss'):
 
+            y_sg = tf.stop_gradient(self.y)
+
             aux_scale = tf.constant([[0.3,0.3]] * batch_size)
             logits = tf.add(tf.add(tf.multiply(inception4a_exit, aux_scale), tf.multiply(inception4e_exit, aux_scale)), exit)
 
-            y_sg = tf.stop_gradient(self.y)
             softmax = tf.nn.softmax_cross_entropy_with_logits_v2(labels = y_sg, logits = logits)
             self.loss = tf.reduce_mean(softmax)
-            Model.__variable_summaries('self.loss', self.loss)
+            tf.summary.scalar('loss_combined', self.loss)
+
+            softmax_exit = tf.nn.softmax_cross_entropy_with_logits_v2(labels = y_sg, logits = exit)
+            loss_exit = tf.reduce_mean(softmax_exit)
+            tf.summary.scalar('loss_exit', loss_exit)
+
+            softmax_inception4a_exit = tf.nn.softmax_cross_entropy_with_logits_v2(labels = y_sg, logits = inception4a_exit)
+            loss_inception4a_exit = tf.reduce_mean(softmax_inception4a_exit)
+            tf.summary.scalar('loss_inception4a_exit', loss_inception4a_exit)
+
+            softmax_inception4a_exit = tf.nn.softmax_cross_entropy_with_logits_v2(labels = y_sg, logits = inception4e_exit)
+            loss_inception4e_exit = tf.reduce_mean(softmax_inception4a_exit)
+            tf.summary.scalar('loss_inception4e_exit', loss_inception4e_exit)
 
         with tf.variable_scope('accuracy'):
             self.correct_prediction = tf.equal(tf.argmax(exit, 1), tf.argmax(self.y, 1))
             self.accuracy = tf.reduce_mean(tf.cast(self.correct_prediction, tf.float32))
-            Model.__variable_summaries('self.accuracy', self.accuracy)
+            tf.summary.scalar('accuracy', self.accuracy)
 
         with tf.variable_scope('pred'):
             self.pred = tf.argmax(exit, 1)
