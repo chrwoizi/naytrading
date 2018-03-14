@@ -186,11 +186,11 @@
         private void UpdateSplitFileInfo()
         {
             SplitFileInfoTextBlock.Text = string.Format(
-                "{0}/{1} buy\n{2}/{3} sell",
-                DumpProcessor.CountLines(DumpProcessor.FlatBuyFile, line => DumpProcessor.ContainsDecision(line, "buy")) - 1,
+                "{0} buy\n{1} nobuy\n{2} sell\n{3} nosell",
                 DumpProcessor.CountLines(DumpProcessor.FlatBuyFile, line => true) - 1,
-                DumpProcessor.CountLines(DumpProcessor.FlatSellFile, line => DumpProcessor.ContainsDecision(line, "sell")) - 1,
-                DumpProcessor.CountLines(DumpProcessor.FlatSellFile, line => true) - 1);
+                DumpProcessor.CountLines(DumpProcessor.FlatNoBuyFile, line => true) - 1,
+                DumpProcessor.CountLines(DumpProcessor.FlatSellFile, line => true) - 1,
+                DumpProcessor.CountLines(DumpProcessor.FlatNoSellFile, line => true) - 1);
         }
 
         private void LearnButton_OnClick(object sender, RoutedEventArgs e)

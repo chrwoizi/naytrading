@@ -17,7 +17,9 @@ namespace StockFlow
 
         public const string FlatDumpFile = "dump.csv";
         public const string FlatBuyFile = "buy.csv";
+        public const string FlatNoBuyFile = "nobuy.csv";
         public const string FlatSellFile = "sell.csv";
+        public const string FlatNoSellFile = "nosell.csv";
 
         public static void Flatten(Stream stream, Action<double> reportProgress)
         {
@@ -46,7 +48,7 @@ namespace StockFlow
                     }
                 }
                 catch { }
-                
+
                 Importer.Import<Snapshot>(stream, (snapshot) =>
                 {
                     if (hasLength)
@@ -54,7 +56,7 @@ namespace StockFlow
                         var progress = stream.Position / (double)stream.Length;
                         reportProgress(progress);
                     }
-                    
+
                     if (!string.IsNullOrEmpty(snapshot.Decision) && snapshot.Rates != null)
                     {
                         var rates = snapshot.Rates.Where(x => x.Close.HasValue).ToList();
@@ -203,33 +205,53 @@ namespace StockFlow
             {
                 using (var buyWriter = new StreamWriter(File.Open(FlatBuyFile, FileMode.Create)))
                 {
-                    using (var sellWriter = new StreamWriter(File.Open(FlatSellFile, FileMode.Create)))
+                    using (var nobuyWriter = new StreamWriter(File.Open(FlatNoBuyFile, FileMode.Create)))
                     {
-                        var header = reader.ReadLine();
-                        buyWriter.WriteLine("id;" + header);
-                        sellWriter.WriteLine("id;" + header);
-
-                        var linesRead = 1;
-                        foreach (var meta in distinctMetas.OrderBy(x => x.Line))
+                        using (var sellWriter = new StreamWriter(File.Open(FlatSellFile, FileMode.Create)))
                         {
-                            while (meta.Line > linesRead)
+                            using (var nosellWriter = new StreamWriter(File.Open(FlatNoSellFile, FileMode.Create)))
                             {
-                                reader.ReadLine();
-                                ++linesRead;
-                            }
+                                var header = reader.ReadLine();
+                                buyWriter.WriteLine("id;" + header);
+                                sellWriter.WriteLine("id;" + header);
 
-                            var line = reader.ReadLine();
-                            ++linesRead;
+                                var linesRead = 1;
+                                foreach (var meta in distinctMetas.OrderBy(x => x.Line))
+                                {
+                                    while (meta.Line > linesRead)
+                                    {
+                                        reader.ReadLine();
+                                        ++linesRead;
+                                    }
 
-                            if (!string.IsNullOrEmpty(line))
-                            {
-                                if (!meta.Invested)
-                                {
-                                    buyWriter.WriteLine(linesRead + ";" + line);
-                                }
-                                else
-                                {
-                                    sellWriter.WriteLine(linesRead + ";" + line);
+                                    var line = reader.ReadLine();
+                                    ++linesRead;
+
+                                    if (!string.IsNullOrEmpty(line))
+                                    {
+                                        if (!meta.Invested)
+                                        {
+                                            if (meta.Decision == "buy")
+                                            {
+                                                buyWriter.WriteLine(linesRead + ";" + line);
+                                            }
+                                            else
+                                            {
+                                                nobuyWriter.WriteLine(linesRead + ";" + line);
+                                            }
+                                        }
+                                        else
+                                        {
+                                            if (meta.Decision == "sell")
+                                            {
+                                                sellWriter.WriteLine(linesRead + ";" + line);
+                                            }
+                                            else
+                                            {
+                                                nosellWriter.WriteLine(linesRead + ";" + line);
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
