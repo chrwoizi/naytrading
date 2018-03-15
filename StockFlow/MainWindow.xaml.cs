@@ -26,12 +26,17 @@
         const string TemporaryModelDir = "model";
 
         private Process process;
+        private int buyCount;
+        private int noBuyCount;
+        private int sellCount;
+        private int noSellCount;
 
         public MainWindow()
         {
             InitializeComponent();
             UpdateDumpFileInfo();
             UpdateSplitFileInfo();
+            UpdateAugmentInfo();
         }
 
         private void Settings_OnClick(object sender, RoutedEventArgs e)
@@ -44,7 +49,14 @@
             DownloadButton.IsEnabled = false;
             LoadFileButton.IsEnabled = false;
             SplitFileButton.IsEnabled = false;
+            AugmentButton.IsEnabled = false;
+            AugmentSlider.IsEnabled = false;
+            AugmentBuySlider.IsEnabled = false;
+            AugmentNoBuySlider.IsEnabled = false;
+            AugmentSellSlider.IsEnabled = false;
+            AugmentNoSellSlider.IsEnabled = false;
             LearnButton.IsEnabled = false;
+            TrainPercentageSlider.IsEnabled = false;
         }
 
         private void EnableUI()
@@ -52,7 +64,14 @@
             DownloadButton.IsEnabled = true;
             LoadFileButton.IsEnabled = true;
             SplitFileButton.IsEnabled = true;
+            AugmentButton.IsEnabled = true;
+            AugmentSlider.IsEnabled = true;
+            AugmentBuySlider.IsEnabled = true;
+            AugmentNoBuySlider.IsEnabled = true;
+            AugmentSellSlider.IsEnabled = true;
+            AugmentNoSellSlider.IsEnabled = true;
             LearnButton.IsEnabled = true;
+            TrainPercentageSlider.IsEnabled = true;
         }
 
         private void DownloadButton_Click(object sender, RoutedEventArgs e)
@@ -118,7 +137,7 @@
         private void SplitFileButton_Click(object sender, RoutedEventArgs e)
         {
             DisableUI();
-            
+
             Task.Run(() =>
             {
                 try
@@ -134,6 +153,72 @@
                     }));
                 }
             });
+        }
+
+        private void AugmentButton_Click(object sender, RoutedEventArgs e)
+        {
+            DisableUI();
+
+            var buySliderValue = (int)AugmentBuySlider.Value;
+            var noBuySliderValue = (int)AugmentNoBuySlider.Value;
+            var sellSliderValue = (int)AugmentSellSlider.Value;
+            var noSellSliderValue = (int)AugmentNoSellSlider.Value;
+            var buySlidersValueSum = (double)(buySliderValue + noBuySliderValue);
+            var sellSlidersValueSum = (double)(sellSliderValue + noSellSliderValue);
+            var buySum = buyCount * buySliderValue + noBuyCount * noBuySliderValue;
+            var sellSum = sellCount * sellSliderValue + noSellCount * noSellSliderValue;
+            var buyRatio = buySum / (double)(buySum + sellSum);
+            var sellRatio = sellSum / (double)(buySum + sellSum);
+
+            var buyProgressScale = buyRatio * buySliderValue / buySlidersValueSum;
+            var noBuyProgressScale = buyRatio * noBuySliderValue / buySlidersValueSum;
+            var sellProgressScale = sellRatio * sellSliderValue / sellSlidersValueSum;
+            var noSellProgressScale = sellRatio * noSellSliderValue / sellSlidersValueSum;
+
+            Task.Run(() =>
+            {
+                try
+                {
+                    DumpProcessor.Augment(DumpProcessor.FlatBuyFile, DumpProcessor.FlatBuyAugFile, buySliderValue, x => ReportProgress(x * buyProgressScale));
+                    DumpProcessor.Augment(DumpProcessor.FlatNoBuyFile, DumpProcessor.FlatNoBuyAugFile, noBuySliderValue, x => ReportProgress(buyProgressScale + x * noBuyProgressScale));
+                    DumpProcessor.Augment(DumpProcessor.FlatSellFile, DumpProcessor.FlatSellAugFile, sellSliderValue, x => ReportProgress(buyProgressScale + noBuyProgressScale + x * sellProgressScale));
+                    DumpProcessor.Augment(DumpProcessor.FlatNoSellFile, DumpProcessor.FlatNoSellAugFile, noSellSliderValue, x => ReportProgress(buyProgressScale + noBuyProgressScale + sellProgressScale + x * noSellProgressScale));
+                }
+                finally
+                {
+                    Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        EnableUI();
+                        UpdateAugmentInfo();
+                    }));
+                }
+            });
+        }
+
+        private void AugmentSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            SetAugmentSliderValues();
+        }
+
+        private void SetAugmentSliderValues()
+        {
+            if (AugmentBuySlider != null)
+            {
+                var augmentBuySliderValue = (buyCount + noBuyCount) / (double)buyCount * AugmentSlider.Value;
+                var augmentNoBuySliderValue = (buyCount + noBuyCount) / (double)noBuyCount * AugmentSlider.Value;
+                var augmentSellSliderValue = (sellCount + noSellCount) / (double)sellCount * AugmentSlider.Value;
+                var augmentNoSellSliderValue = (sellCount + noSellCount) / (double)noSellCount * AugmentSlider.Value;
+
+                AugmentBuySlider.Maximum = Math.Max(AugmentBuySlider.Maximum, augmentBuySliderValue);
+                AugmentNoBuySlider.Maximum = Math.Max(AugmentNoBuySlider.Maximum, augmentNoBuySliderValue);
+                AugmentSellSlider.Maximum = Math.Max(AugmentSellSlider.Maximum, augmentSellSliderValue);
+                AugmentNoSellSlider.Maximum = Math.Max(AugmentNoSellSlider.Maximum, augmentNoSellSliderValue);
+
+                AugmentBuySlider.Value = augmentBuySliderValue;
+                AugmentNoBuySlider.Value = augmentNoBuySliderValue;
+                AugmentSellSlider.Value = augmentSellSliderValue;
+                AugmentNoSellSlider.Value = augmentNoSellSliderValue;
+            }
         }
 
         private async Task<Stream> Download(string url)
@@ -185,12 +270,25 @@
 
         private void UpdateSplitFileInfo()
         {
+            buyCount = DumpProcessor.CountLines(DumpProcessor.FlatBuyFile, line => true) - 1;
+            noBuyCount = DumpProcessor.CountLines(DumpProcessor.FlatNoBuyFile, line => true) - 1;
+            sellCount = DumpProcessor.CountLines(DumpProcessor.FlatSellFile, line => true) - 1;
+            noSellCount = DumpProcessor.CountLines(DumpProcessor.FlatNoSellFile, line => true) - 1;
+
             SplitFileInfoTextBlock.Text = string.Format(
+                "{0} buy\n{1} nobuy\n{2} sell\n{3} nosell", buyCount, noBuyCount, sellCount, noSellCount);
+
+            SetAugmentSliderValues();
+        }
+
+        private void UpdateAugmentInfo()
+        {
+            AugmentInfoTextBlock.Text = string.Format(
                 "{0} buy\n{1} nobuy\n{2} sell\n{3} nosell",
-                DumpProcessor.CountLines(DumpProcessor.FlatBuyFile, line => true) - 1,
-                DumpProcessor.CountLines(DumpProcessor.FlatNoBuyFile, line => true) - 1,
-                DumpProcessor.CountLines(DumpProcessor.FlatSellFile, line => true) - 1,
-                DumpProcessor.CountLines(DumpProcessor.FlatNoSellFile, line => true) - 1);
+                DumpProcessor.CountLines(DumpProcessor.FlatBuyAugFile, line => true) - 1,
+                DumpProcessor.CountLines(DumpProcessor.FlatNoBuyAugFile, line => true) - 1,
+                DumpProcessor.CountLines(DumpProcessor.FlatSellAugFile, line => true) - 1,
+                DumpProcessor.CountLines(DumpProcessor.FlatNoSellAugFile, line => true) - 1);
         }
 
         private void LearnButton_OnClick(object sender, RoutedEventArgs e)

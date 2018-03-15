@@ -1,4 +1,7 @@
-﻿using StockFlow.Common;
+﻿using SharpNoise;
+using SharpNoise.Builders;
+using SharpNoise.Modules;
+using StockFlow.Common;
 using StockFlow.Web.Models;
 using System;
 using System.Collections.Generic;
@@ -13,13 +16,19 @@ namespace StockFlow
 {
     public class DumpProcessor
     {
+        private static Random random = new Random();
+
         public const int Days = 5 * 365 - 10;
 
         public const string FlatDumpFile = "dump.csv";
         public const string FlatBuyFile = "buy.csv";
+        public const string FlatBuyAugFile = "buy_aug.csv";
         public const string FlatNoBuyFile = "nobuy.csv";
+        public const string FlatNoBuyAugFile = "nobuy_aug.csv";
         public const string FlatSellFile = "sell.csv";
+        public const string FlatSellAugFile = "sell_aug.csv";
         public const string FlatNoSellFile = "nosell.csv";
+        public const string FlatNoSellAugFile = "nosell_aug.csv";
 
         public static void Flatten(Stream stream, Action<double> reportProgress)
         {
@@ -257,6 +266,115 @@ namespace StockFlow
                         }
                     }
                 }
+            }
+        }
+
+        public static void Augment(string inPath, string outPath, int factor, Action<double> reportProgress)
+        {
+            var lineCount = CountLines(inPath, line => true);
+
+            reportProgress(0);
+
+            using (var reader = new StreamReader(File.Open(inPath, FileMode.Open)))
+            {
+                using (var writer = new StreamWriter(File.Open(outPath, FileMode.Create)))
+                {
+                    var header = reader.ReadLine();
+                    writer.WriteLine(header);
+
+                    int lineIndex = 1;
+                    int id = 1;
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        lineIndex++;
+
+                        if (!string.IsNullOrEmpty(line))
+                        {
+                            var split = line.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+
+                            var instrumentId = split[1];
+                            var time = split[2];
+                            var decision = split[3];
+                            var rates = split.Skip(4).Select(x => decimal.Parse(x, CultureInfo.InvariantCulture)).ToArray();
+
+                            var originalRates = rates.ToArray();
+                            NormalizeRates(originalRates);
+                            writer.WriteLine(Serialize(id, instrumentId, time, decision, originalRates));
+                            id++;
+
+                            for (int i = 1; i < factor; i++)
+                            {
+                                var augmentedRates = AugmentRates(rates, 0.2, 20, 0.05);
+                                NormalizeRates(augmentedRates);
+                                writer.WriteLine(Serialize(id, instrumentId, time, decision, augmentedRates));
+                                id++;
+                            }
+                        }
+
+                        reportProgress(lineIndex / (double)lineCount);
+                    }
+                }
+            }
+
+            reportProgress(1);
+        }
+
+        private static string Serialize(int id, string instrumentId, string time, string decision, decimal[] rates)
+        {
+            return string.Join(";", new[] { id.ToString(), instrumentId, time, decision }.Concat(rates.Select(x => x.ToString("F2", CultureInfo.InvariantCulture))));
+        }
+
+        private static decimal[] AugmentRates(decimal[] rates, double maxSkew, double maxJitterX, double maxJitterY)
+        {
+            var perlin1 = new Perlin { Seed = random.Next() };
+            var perlin2 = new Perlin { Seed = random.Next(), Frequency = Perlin.DefaultFrequency * 5 * random.NextDouble() };
+
+            var avg = rates.Average();
+
+            var maxSkewAbs = (decimal)maxSkew * rates.Last() / rates.Length;
+            var skew = maxSkewAbs * (decimal)RandomSphere();
+
+            var newRates = rates.ToArray();
+
+            for (int i = 0; i < rates.Length; i++)
+            {
+                var jitterX = maxJitterX * perlin1.GetValue(i / (double)rates.Length, 0, 0);
+
+                var jitterY = avg * (decimal)(maxJitterY * perlin2.GetValue(i / (double)rates.Length, 0, 0));
+
+                var x = i + jitterX;
+
+                newRates[i] = SampleRate(rates, x) + skew * (decimal)x + jitterY;
+            }
+
+            return newRates;
+        }
+
+        private static decimal SampleRate(decimal[] rates, double x)
+        {
+            var low = (int)Math.Floor(x);
+            var high = (int)Math.Ceiling(x);
+            var frac = (decimal)(x - low);
+            var rateLow = rates[Math.Min(Math.Max(0, low), rates.Length - 1)];
+            var rateHigh = rates[Math.Min(Math.Max(0, high), rates.Length - 1)];
+            return rateLow + frac * (rateHigh - rateLow);
+        }
+
+        private static double RandomSphere()
+        {
+            return (double)(random.NextDouble() * Math.Sin(random.NextDouble() * 2 * Math.PI));
+        }
+
+        private static void NormalizeRates(decimal[] rates)
+        {
+            var min = rates.Min();
+            var max = rates.Max();
+            var height = max - min;
+
+            for (int i = 0; i < rates.Length; i++)
+            {
+                rates[i] = (rates[i] - min) / height;
             }
         }
 

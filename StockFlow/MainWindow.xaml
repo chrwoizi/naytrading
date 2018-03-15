@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="MainWindow" Height="350" Width="525"
+        Title="MainWindow" Height="690.79" Width="735"
         Closing="Window_Closing">
     <Grid>
         <Grid.RowDefinitions>
@@ -23,6 +23,9 @@
             </Grid.ColumnDefinitions>
             <Grid Grid.Column="0">
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
@@ -77,7 +80,157 @@
                            x:Name="SplitFileInfoTextBlock"
                            Text="File info unknown" />
 
-                <Slider Grid.Row="6"
+                <Button Grid.Row="6"
+                        Grid.ColumnSpan="2"
+                        Margin="0,10,0,0"
+                        x:Name="AugmentButton"
+                        Click="AugmentButton_Click"
+                        Content="Augment"/>
+
+                <Grid Grid.Row="7"
+                      Grid.ColumnSpan="2">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="40"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Row="0"
+                               Grid.Column="0"
+                               Margin="0,10,10,0"
+                               HorizontalAlignment="Left"
+                               VerticalAlignment="Center"
+                               Text="All" />
+                    <TextBlock Grid.Row="1"
+                               Grid.Column="0"
+                               Margin="0,10,10,0"
+                               HorizontalAlignment="Left"
+                               VerticalAlignment="Center"
+                               Text="Buy" />
+                    <TextBlock Grid.Row="2"
+                               Grid.Column="0"
+                               Margin="0,10,10,0"
+                               HorizontalAlignment="Left"
+                               VerticalAlignment="Center"
+                               Text="No Buy" />
+                    <TextBlock Grid.Row="3"
+                               Grid.Column="0"
+                               Margin="0,10,10,0"
+                               HorizontalAlignment="Left"
+                               VerticalAlignment="Center"
+                               Text="Sell" />
+                    <TextBlock Grid.Row="4"
+                               Grid.Column="0"
+                               Margin="0,10,10,0"
+                               HorizontalAlignment="Left"
+                               VerticalAlignment="Center"
+                               Text="No Sell" />
+                    <Slider Grid.Row="0"
+                            Grid.Column="1"
+                            Margin="0,10,0,0"
+                            VerticalAlignment="Center"
+                            Minimum="1"
+                            Maximum="100"
+                            Value="4"
+                            x:Name="AugmentSlider"
+                            ValueChanged="AugmentSlider_ValueChanged"
+                            SmallChange="1"
+                            LargeChange="10"
+                            Interval="1" />
+                    <Slider Grid.Row="1"
+                            Grid.Column="1"
+                            Margin="0,10,0,0"
+                            VerticalAlignment="Center"
+                            Minimum="1"
+                            Maximum="1000"
+                            Value="1"
+                            x:Name="AugmentBuySlider"
+                            SmallChange="1"
+                            LargeChange="10"
+                            Interval="1" />
+                    <Slider Grid.Row="2"
+                            Grid.Column="1"
+                            Margin="0,10,0,0"
+                            VerticalAlignment="Center"
+                            Minimum="1"
+                            Maximum="1000"
+                            Value="1"
+                            x:Name="AugmentNoBuySlider"
+                            SmallChange="1"
+                            LargeChange="10"
+                            Interval="1" />
+                    <Slider Grid.Row="3"
+                            Grid.Column="1"
+                            Margin="0,10,0,0"
+                            VerticalAlignment="Center"
+                            Minimum="1"
+                            Maximum="1000"
+                            Value="1"
+                            x:Name="AugmentSellSlider"
+                            SmallChange="1"
+                            LargeChange="10"
+                            Interval="1" />
+                    <Slider Grid.Row="4"
+                            Grid.Column="1"
+                            Margin="0,10,0,0"
+                            VerticalAlignment="Center"
+                            Minimum="1"
+                            Maximum="1000"
+                            Value="1"
+                            x:Name="AugmentNoSellSlider"
+                            SmallChange="1"
+                            LargeChange="10"
+                            Interval="1" />
+                    <TextBlock Grid.Row="0"
+                               Grid.Column="2"
+                               Margin="0,10,0,0"
+                               HorizontalAlignment="Right"
+                               VerticalAlignment="Center"
+                               x:Name="AugmentLabel"
+                               Text="{Binding Path=Value, StringFormat='F0', ElementName=AugmentSlider}" />
+                    <TextBlock Grid.Row="1"
+                               Grid.Column="2"
+                               Margin="0,10,0,0"
+                               HorizontalAlignment="Right"
+                               VerticalAlignment="Center"
+                               x:Name="AugmentBuyLabel"
+                               Text="{Binding Path=Value, StringFormat='F0', ElementName=AugmentBuySlider}" />
+                    <TextBlock Grid.Row="2"
+                               Grid.Column="2"
+                               Margin="0,10,0,0"
+                               HorizontalAlignment="Right"
+                               VerticalAlignment="Center"
+                               x:Name="AugmentNoBuyLabel"
+                               Text="{Binding Path=Value, StringFormat='F0', ElementName=AugmentNoBuySlider}" />
+                    <TextBlock Grid.Row="3"
+                               Grid.Column="2"
+                               Margin="0,10,0,0"
+                               HorizontalAlignment="Right"
+                               VerticalAlignment="Center"
+                               x:Name="AugmentSellLabel"
+                               Text="{Binding Path=Value, StringFormat='F0', ElementName=AugmentSellSlider}" />
+                    <TextBlock Grid.Row="4"
+                               Grid.Column="2"
+                               Margin="0,10,0,0"
+                               HorizontalAlignment="Right"
+                               VerticalAlignment="Center"
+                               x:Name="AugmentNoSellLabel"
+                               Text="{Binding Path=Value, StringFormat='F0', ElementName=AugmentNoSellSlider}" />
+                </Grid>
+
+                <TextBlock Grid.Row="8"
+                           Grid.ColumnSpan="2"
+                           Margin="0,10,0,10"
+                           x:Name="AugmentInfoTextBlock"
+                           Text="File info unknown" />
+
+                <Slider Grid.Row="9"
                         Grid.ColumnSpan="2"
                         Margin="0,10,0,0"
                         Minimum="0"
@@ -86,7 +239,7 @@
                         x:Name="TrainPercentageSlider"
                         Interval="1" />
 
-                <Button Grid.Row="7" 
+                <Button Grid.Row="10" 
                         Grid.ColumnSpan="2"
                         x:Name="LearnButton"
                         Click="LearnButton_OnClick" 
