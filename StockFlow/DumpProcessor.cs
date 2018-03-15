@@ -222,7 +222,9 @@ namespace StockFlow
                             {
                                 var header = reader.ReadLine();
                                 buyWriter.WriteLine("id;" + header);
+                                nobuyWriter.WriteLine("id;" + header);
                                 sellWriter.WriteLine("id;" + header);
+                                nosellWriter.WriteLine("id;" + header);
 
                                 var linesRead = 1;
                                 foreach (var meta in distinctMetas.OrderBy(x => x.Line))
@@ -283,7 +285,6 @@ namespace StockFlow
                     writer.WriteLine(header);
 
                     int lineIndex = 1;
-                    int id = 1;
                     while (!reader.EndOfStream)
                     {
                         var line = reader.ReadLine();
@@ -293,6 +294,7 @@ namespace StockFlow
                         {
                             var split = line.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
 
+                            var originalId = split[0];
                             var instrumentId = split[1];
                             var time = split[2];
                             var decision = split[3];
@@ -300,15 +302,13 @@ namespace StockFlow
 
                             var originalRates = rates.ToArray();
                             NormalizeRates(originalRates);
-                            writer.WriteLine(Serialize(id, instrumentId, time, decision, originalRates));
-                            id++;
+                            writer.WriteLine(Serialize(originalId + "-0", instrumentId, time, decision, originalRates));
 
                             for (int i = 1; i < factor; i++)
                             {
                                 var augmentedRates = AugmentRates(rates, 0.2, 20, 0.05);
                                 NormalizeRates(augmentedRates);
-                                writer.WriteLine(Serialize(id, instrumentId, time, decision, augmentedRates));
-                                id++;
+                                writer.WriteLine(Serialize(originalId + "-" + i, instrumentId, time, decision, augmentedRates));
                             }
                         }
 
@@ -320,9 +320,9 @@ namespace StockFlow
             reportProgress(1);
         }
 
-        private static string Serialize(int id, string instrumentId, string time, string decision, decimal[] rates)
+        private static string Serialize(string id, string instrumentId, string time, string decision, decimal[] rates)
         {
-            return string.Join(";", new[] { id.ToString(), instrumentId, time, decision }.Concat(rates.Select(x => x.ToString("F2", CultureInfo.InvariantCulture))));
+            return string.Join(";", new[] { id, instrumentId, time, decision }.Concat(rates.Select(x => x.ToString("F2", CultureInfo.InvariantCulture))));
         }
 
         private static decimal[] AugmentRates(decimal[] rates, double maxSkew, double maxJitterX, double maxJitterY)
