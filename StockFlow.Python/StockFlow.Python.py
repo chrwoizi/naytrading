@@ -2,12 +2,15 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import os
 import argparse
 import sys
 import math
 import time
 import csv
 import shutil
+import datetime
+from shutil import copyfile
 
 import numpy as np
 import tensorflow as tf
@@ -37,14 +40,6 @@ parser.add_argument(
     help = 'Path to the nobuy data.')
 
 parser.add_argument(
-    '--buy_count', type = int, default = 171,
-    help = 'Number of rows in buy_file.')
-
-parser.add_argument(
-    '--nobuy_count', type = int, default = 1194,
-    help = 'Number of rows in nobuy_file.')
-
-parser.add_argument(
     '--test_data_ratio', type = float, default = 0.25,
     help = 'The ratio between test and train data sets taken from the train_data file randomly.')
 
@@ -62,13 +57,76 @@ parser.add_argument(
 
 
 class Snapshots(object):
-    def __init__(self, buy_file, nobuy_file, buy_count, nobuy_count, first_day, last_day, batch_size, epochs, test_data_ratio, column_names,
+    def __init__(self, model_dir, buy_file, nobuy_file, first_day, last_day, batch_size, epochs, test_data_ratio, column_names,
                  column_defaults, buy_label):
         self.days = last_day - first_day + 1
         self.batch_size = batch_size
 
         assert tf.gfile.Exists(buy_file), ('%s not found.' % buy_file)
         assert tf.gfile.Exists(nobuy_file), ('%s not found.' % nobuy_file)
+
+        buy_lines = Snapshots.__get_lines(buy_file)
+        buy_count = len(buy_lines.keys())
+
+        nobuy_lines = Snapshots.__get_lines(nobuy_file)
+        nobuy_count = len(nobuy_lines.keys())
+
+        buy_test_count = int(test_data_ratio * buy_count)
+        nobuy_test_count = int(test_data_ratio * nobuy_count)
+        buy_train_count = buy_count - buy_test_count
+        nobuy_train_count = nobuy_count - nobuy_test_count
+
+        def match_batch_size(a, b):
+            i = 1
+            while (a + b) % batch_size > 0:
+                if i % 2 == 0:
+                    a = a - 1
+                else:
+                    b = b - 1
+                i = i + 1
+            return a, b
+
+        buy_test_count, nobuy_test_count = match_batch_size(buy_test_count, nobuy_test_count)
+        buy_train_count, nobuy_train_count = match_batch_size(buy_train_count, nobuy_train_count)
+
+        self.test_batches = int((buy_test_count + nobuy_test_count) / batch_size)
+        self.train_batches = int((buy_train_count + nobuy_train_count) / batch_size)
+
+        self.test_count = self.test_batches * batch_size
+        self.train_count = self.train_batches * batch_size
+
+        train_file = model_dir + '\\train.csv'
+        test_file = model_dir + '\\test.csv'
+
+        with open(train_file, 'w') as train_writer:
+            with open(test_file, 'w') as test_writer:
+                with open(buy_file) as buy_reader:
+                    with open(nobuy_file) as nobuy_reader:
+                        header = buy_reader.readline()
+                        nobuy_reader.readline()
+                        train_writer.write(header)
+                        test_writer.write(header)
+
+                        items = list(map(lambda x: [buy_reader, buy_lines, x], range(buy_count))) + list(map(lambda x: [nobuy_reader, nobuy_lines, x], range(nobuy_count)))
+                        np.random.shuffle(items)
+
+                        for i in range(self.test_count):
+                            item = items[i]
+                            reader = item[0]
+                            line_dict = item[1]
+                            line_index = item[2]
+                            reader.seek(line_dict[line_index + 1])
+                            line = reader.readline()
+                            test_writer.write(line)
+
+                        for i in range(self.train_count):
+                            item = items[self.test_count + i]
+                            reader = item[0]
+                            line_dict = item[1]
+                            line_index = item[2]
+                            reader.seek(line_dict[line_index + 1])
+                            line = reader.readline()
+                            train_writer.write(line)
 
         def parse_csv(value):
             columns = tf.decode_csv(value, record_defaults = column_defaults, field_delim = ";")
@@ -81,44 +139,33 @@ class Snapshots(object):
             return features, labels
 
         print('TextLineDataset')
-        buy_dataset = tf.data.TextLineDataset(buy_file).skip(1)
-        nobuy_dataset = tf.data.TextLineDataset(nobuy_file).skip(1)
+        test_dataset = tf.data.TextLineDataset(test_file).skip(1)
+        train_dataset = tf.data.TextLineDataset(train_file).skip(1)
 
         print('map')
-        buy_dataset = buy_dataset.map(parse_csv, num_parallel_calls = 5)
-        nobuy_dataset = nobuy_dataset.map(parse_csv, num_parallel_calls = 5)
+        self.test = test_dataset.map(parse_csv, num_parallel_calls = 5)
+        self.train = train_dataset.map(parse_csv, num_parallel_calls = 5)
 
-        print('shuffle')
-        buy_dataset = buy_dataset.shuffle(buy_count, seed = 42)
-        nobuy_dataset = nobuy_dataset.shuffle(nobuy_count, seed = 42)
-
-        print('count')
-        buy_test_count = int(test_data_ratio * buy_count)
-        nobuy_test_count = int(test_data_ratio * nobuy_count)
-        buy_train_count = buy_count - buy_test_count
-        nobuy_train_count = nobuy_count - nobuy_test_count
-
-        self.test_count = buy_test_count + nobuy_test_count
-        self.train_count = buy_train_count + nobuy_train_count
-
-        self.test_batches = int(math.floor(self.test_count / batch_size))
-        self.train_batches = int(math.floor(self.train_count / batch_size))
-
-        print('take/skip')
-        self.train = buy_dataset.take(buy_train_count).concatenate(nobuy_dataset.take(nobuy_train_count))
-        self.test = buy_dataset.skip(buy_train_count).concatenate(nobuy_dataset.skip(nobuy_train_count))
-
-        print('take batches')
-        self.train = self.train.take(self.train_batches * batch_size)
-        self.test = self.test.take(self.test_batches * batch_size)
-
-        print('shuffle')
-        self.train = self.train.shuffle(self.train_count, seed = 42)
-        self.test = self.test.shuffle(self.test_count, seed = 42)
-
-        print('take/batch/repeat/iter/next')
-        self.__train_iter = self.train.repeat(epochs).batch(batch_size).make_one_shot_iterator().get_next()
+        print('repeat/batch/iter/next')
         self.__test_iter = self.test.repeat(epochs + 1).batch(batch_size).make_one_shot_iterator().get_next()
+        self.__train_iter = self.train.repeat(epochs).batch(batch_size).make_one_shot_iterator().get_next()
+
+    def __get_lines(file):
+
+        lines = {}
+
+        with open(file) as f:
+            i = 0
+            while True:
+                pos = f.tell()
+                line = f.readline()
+                if not line:
+                    break
+                if i > 0 and len(line) > 0:
+                    lines[i] = pos
+                i = i + 1
+
+        return lines
 
     def next_train_batch(self, sess):
         return self.__next_batch(sess, self.__train_iter)
@@ -363,25 +410,39 @@ def predict(sess, model, test_iter, batch_size, features_shape, output_file):
         print("Output prediction: {0}".format(f.read()))
 
 
-def main(model_dir, load_ckpt, epochs, batch_size, buy_file, nobuy_file, buy_count, nobuy_count, test_data_ratio, first_day, last_day, buy_label):
+def main(model_dir, load_ckpt, epochs, batch_size, buy_file, nobuy_file, test_data_ratio, first_day, last_day, buy_label):
     """
     :param str model_dir: Base directory for the model
     :param int load_ckpt: Whether to load an existing model
     :param int epochs: Number of cycles over the whole data
     :param int batch_size: Number of examples per batch
     :param str buy_file: Path to the buy data
-    :param int buy_count: Number of datasets in buy_file
     :param str nobuy_file: Path to the nobuy data
-    :param int nobuy_count: Number of datasets in nobuy_file
     :param float test_data_ratio: The ratio between test and train data sets taken from the train_data file randomly
     :param int first_day: The first day column name e.g. -1814
     :param int last_day: The last day column name e.g. 0
     :param str buy_label: The label used if the user decided on an action for this dataset, e.g. 'buy'
     """
 
+    model_dir = model_dir + datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+
+    if os.path.exists(model_dir):
+        if not load_ckpt:
+            shutil.rmtree(model_dir, ignore_errors = True)
+    else:
+        os.makedirs(model_dir)
+
     ckpt_file = model_dir + '\\model.ckpt'
     output_file = model_dir + '\\prediction.txt'
     log_dir = model_dir + '\\log'
+
+
+    print('Copying data to model dir')
+    copyfile('StockFlow.Python.py', model_dir + '\\main.py')	
+    copyfile(buy_file, model_dir + '\\buy.csv')
+    copyfile(nobuy_file, model_dir + '\\nobuy.csv')
+    buy_file = model_dir + '\\buy.csv'
+    nobuy_file = model_dir + '\\nobuy.csv'
 
     column_names = ['id', 'instrument', 'time', 'decision'] + [str(i) for i in range(first_day, last_day + 1)]
     column_defaults = [['0'], ['0'], ['19700101'], ['ignore']] + [[0.00] for i in range(first_day, last_day + 1)]
@@ -389,7 +450,7 @@ def main(model_dir, load_ckpt, epochs, batch_size, buy_file, nobuy_file, buy_cou
     tf.logging.set_verbosity(tf.logging.INFO)
 
     print('Loading data')
-    data = Snapshots(buy_file, nobuy_file, buy_count, nobuy_count, first_day, last_day, batch_size, epochs, test_data_ratio, column_names,
+    data = Snapshots(model_dir, buy_file, nobuy_file, first_day, last_day, batch_size, epochs, test_data_ratio, column_names,
                      column_defaults, buy_label)
 
     print('Model')
@@ -410,8 +471,6 @@ def main(model_dir, load_ckpt, epochs, batch_size, buy_file, nobuy_file, buy_cou
         if load_ckpt:
             print('Restoring parameters from', ckpt_file)
             saver.restore(sess, ckpt_file)
-        else:
-            shutil.rmtree(model_dir, ignore_errors = True)
 
         if epochs > 0:
 
@@ -452,8 +511,6 @@ if __name__ == '__main__':
           batch_size = FLAGS.batch_size,
           buy_file = FLAGS.buy_file,
           nobuy_file = FLAGS.nobuy_file,
-          buy_count = FLAGS.buy_count,
-          nobuy_count = FLAGS.nobuy_count,
           test_data_ratio = FLAGS.test_data_ratio,
           first_day = FLAGS.first_day,
           last_day = FLAGS.last_day,

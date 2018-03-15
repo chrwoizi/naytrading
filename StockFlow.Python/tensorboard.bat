@@ -1,1 +1,1 @@
-tensorboard.exe --logdir=model
+tensorboard.exe --logdir=%1

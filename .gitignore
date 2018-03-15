@@ -22,6 +22,6 @@
 /StockFlow.Web/App_Data/curl/*.json
 /StockFlow.Web/Properties/PublishProfiles/*.pubxml
 /StockFlow.Trader/*.user
-/StockFlow.Python/model
+/StockFlow.Python/model*
 /StockFlow.Python/.idea
 /StockFlow.Python/__pycache__
