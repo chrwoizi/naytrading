@@ -12,49 +12,48 @@ import shutil
 import datetime
 from shutil import copyfile
 
-#os.environ["CUDA_VISIBLE_DEVICES"]="-1"
+# os.environ["CUDA_VISIBLE_DEVICES"]="-1"
 
 import numpy as np
 import tensorflow as tf
 
-
 parser = argparse.ArgumentParser()
 
 parser.add_argument(
-    '--model_dir', type = str, default = 'model',
-    help = 'Base directory for the model.')
+    '--model_dir', type=str, default='model',
+    help='Base directory for the model.')
 
 parser.add_argument(
-    '--load', type = bool, default = False, help = 'Whether to load an existing model.')
+    '--load', type=bool, default=False, help='Whether to load an existing model.')
 
 parser.add_argument(
-    '--epochs', type = int, default = 1000, help = 'Number of cycles over the whole data.')
+    '--epochs', type=int, default=1000, help='Number of cycles over the whole data.')
 
 parser.add_argument(
-    '--start_epoch', type = int, default = 0, help = 'Start index in epochs.')
+    '--start_epoch', type=int, default=0, help='Start index in epochs.')
 
 parser.add_argument(
-    '--batch_size', type = int, default = 48, help = 'Number of examples per batch.')
+    '--batch_size', type=int, default=48, help='Number of examples per batch.')
 
 parser.add_argument(
-    '--test_file', type = str, default = '..\\StockFlow\\bin\\Debug\\test_buying.csv',
-    help = 'Path to the test data.')
+    '--test_file', type=str, default='..\\StockFlow\\bin\\Debug\\test_buying.csv',
+    help='Path to the test data.')
 
 parser.add_argument(
-    '--train_file', type = str, default = '..\\StockFlow\\bin\\Debug\\train_buying.csv',
-    help = 'Path to the train data.')
+    '--train_file', type=str, default='..\\StockFlow\\bin\\Debug\\train_buying.csv',
+    help='Path to the train data.')
 
 parser.add_argument(
-    '--first_day', type = int, default = -1814,
-    help = 'The first day column name e.g. -1814.')
+    '--first_day', type=int, default=-1814,
+    help='The first day column name e.g. -1814.')
 
 parser.add_argument(
-    '--last_day', type = int, default = 0,
-    help = 'The last day column name e.g. 0.')
+    '--last_day', type=int, default=0,
+    help='The last day column name e.g. 0.')
 
 parser.add_argument(
-    '--buy_label', type = str, default = 'buy',
-    help = 'The label used if the user decided on an action for this dataset, e.g. buy')
+    '--buy_label', type=str, default='buy',
+    help='The label used if the user decided on an action for this dataset, e.g. buy')
 
 
 class Snapshots(object):
@@ -73,11 +72,13 @@ class Snapshots(object):
         train_file_count = Snapshots.__get_line_count(train_file)
 
         if test_file_count < self.batch_size:
-            print('WARNING: batch_size is greater than available test datasets. Reducing batch size to %d' % test_file_count)
+            print(
+                'WARNING: batch_size is greater than available test datasets. Reducing batch size to %d' % test_file_count)
             self.batch_size = test_file_count
 
         if train_file_count < self.batch_size:
-            print('WARNING: batch_size is greater than available train datasets. Reducing batch size to %d' % train_file_count)
+            print(
+                'WARNING: batch_size is greater than available train datasets. Reducing batch size to %d' % train_file_count)
             self.batch_size = train_file_count
 
         self.test_batches = int(test_file_count / self.batch_size)
@@ -87,7 +88,7 @@ class Snapshots(object):
         self.train_count = self.train_batches * self.batch_size
 
         def parse_csv(value):
-            columns = tf.decode_csv(value, record_defaults = column_defaults, field_delim = ";")
+            columns = tf.decode_csv(value, record_defaults=column_defaults, field_delim=";")
 
             features = columns[4:len(columns)]
             labels = columns[3]
@@ -95,8 +96,8 @@ class Snapshots(object):
             features = tf.stack(features)
             features = tf.reshape(features, [features.get_shape()[0], 1, 1])
 
-            labels = tf.cast(tf.equal(labels, buy_label), dtype = tf.int32)
-            labels = tf.one_hot(indices = labels, depth = 2, on_value = 1.0, off_value = 0.0, axis = -1)
+            labels = tf.cast(tf.equal(labels, buy_label), dtype=tf.int32)
+            labels = tf.one_hot(indices=labels, depth=2, on_value=1.0, off_value=0.0, axis=-1)
 
             return features, labels
 
@@ -105,16 +106,14 @@ class Snapshots(object):
         train_dataset = tf.data.TextLineDataset(train_file).skip(1).take(self.train_count_tensor)
 
         print('map')
-        self.test = test_dataset.map(parse_csv, num_parallel_calls = 5)
-        self.train = train_dataset.map(parse_csv, num_parallel_calls = 5)
+        self.test = test_dataset.map(parse_csv, num_parallel_calls=5)
+        self.train = train_dataset.map(parse_csv, num_parallel_calls=5)
 
         print('repeat/batch/iter/next')
         self.test = self.test.repeat(tf.add(self.epochs_tensor, tf.constant(2, tf.int64))).batch(self.batch_size_tensor)
         self.train = self.train.repeat(self.epochs_tensor).batch(self.batch_size_tensor)
         self.test_iter = self.test.make_initializable_iterator()
         self.train_iter = self.train.make_initializable_iterator()
-        self.test_next = self.test_iter.get_next()
-        self.train_next = self.train_iter.get_next()
 
     def __get_line_count(file):
 
@@ -133,17 +132,23 @@ class Snapshots(object):
 
 
 class Model(object):
-    def __init__(self, summary_level, train_data, test_data):
+    def __init__(self, summary_level, train_iter, test_iter):
         self.summary_level = summary_level
         self.aux_fc_dropout_keep = tf.placeholder(tf.float32)
         self.fc_dropout_keep = tf.placeholder(tf.float32)
         self.is_train = tf.placeholder(tf.bool)
 
-        x, y = tf.cond(tf.equal(self.is_train, True), lambda: train_data, lambda: test_data)
+        def get_train_data():
+            return train_iter.get_next()
 
-        #days = tf.shape(x)[1]
-        #o = tf.one_hot(indices=tf.cast(tf.multiply(tf.reshape(x,[tf.shape(x)[0],days]),100), tf.int32), depth=100, on_value=1.0, off_value=0.0, axis=-1)
-        #self.__image_summary('x', o, days, 100, 1)
+        def get_test_data():
+            return test_iter.get_next()
+
+        x, y = tf.cond(tf.equal(self.is_train, True), lambda: get_train_data(), lambda: get_test_data())
+
+        # days = tf.shape(x)[1]
+        # o = tf.one_hot(indices=tf.cast(tf.multiply(tf.reshape(x,[tf.shape(x)[0],days]),100), tf.int32), depth=100, on_value=1.0, off_value=0.0, axis=-1)
+        # self.__image_summary('x', o, days, 100, 1)
 
         # https://hacktilldawn.com/2016/09/25/inception-modules-explained-and-implemented/
         # https://www.cc.gatech.edu/~hic/CS7616/Papers/Szegedy-et-al-2014.pdf
@@ -181,27 +186,30 @@ class Model(object):
         exit = self.__exit_layer('exit', inception5p, self.fc_dropout_keep)
 
         aux_scale = tf.constant(0.3, tf.float32)
-        logits = tf.add(tf.add(tf.scalar_mul(aux_scale, inception4a_exit), tf.scalar_mul(aux_scale, inception4e_exit)), exit)
+        logits = tf.add(tf.add(tf.scalar_mul(aux_scale, inception4a_exit), tf.scalar_mul(aux_scale, inception4e_exit)),
+                        exit)
 
         with tf.variable_scope('loss'):
 
             y_sg = tf.stop_gradient(y)
 
-            softmax = tf.nn.softmax_cross_entropy_with_logits_v2(labels = y_sg, logits = logits)
+            softmax = tf.nn.softmax_cross_entropy_with_logits_v2(labels=y_sg, logits=logits)
             self.loss = tf.reduce_mean(softmax)
             if self.summary_level >= 1:
                 tf.summary.scalar('loss_combined', self.loss)
 
             if self.summary_level >= 1:
-                softmax_exit = tf.nn.softmax_cross_entropy_with_logits_v2(labels = y_sg, logits = exit)
+                softmax_exit = tf.nn.softmax_cross_entropy_with_logits_v2(labels=y_sg, logits=exit)
                 loss_exit = tf.reduce_mean(softmax_exit)
                 tf.summary.scalar('loss_exit', loss_exit)
-                
-                softmax_inception4a_exit = tf.nn.softmax_cross_entropy_with_logits_v2(labels = y_sg, logits = inception4a_exit)
+
+                softmax_inception4a_exit = tf.nn.softmax_cross_entropy_with_logits_v2(labels=y_sg,
+                                                                                      logits=inception4a_exit)
                 loss_inception4a_exit = tf.reduce_mean(softmax_inception4a_exit)
                 tf.summary.scalar('loss_inception4a_exit', loss_inception4a_exit)
-                
-                softmax_inception4a_exit = tf.nn.softmax_cross_entropy_with_logits_v2(labels = y_sg, logits = inception4e_exit)
+
+                softmax_inception4a_exit = tf.nn.softmax_cross_entropy_with_logits_v2(labels=y_sg,
+                                                                                      logits=inception4e_exit)
                 loss_inception4e_exit = tf.reduce_mean(softmax_inception4a_exit)
                 tf.summary.scalar('loss_inception4e_exit', loss_inception4e_exit)
 
@@ -210,16 +218,16 @@ class Model(object):
             self.accuracy = tf.reduce_mean(tf.cast(self.correct_prediction, tf.float32))
             if self.summary_level >= 1:
                 tf.summary.scalar('accuracy_exit', self.accuracy)
-				
+
             if self.summary_level >= 1:
                 correct_prediction_inception4a_exit = tf.equal(tf.argmax(inception4a_exit, 1), tf.argmax(y, 1))
                 accuracy_inception4a_exit = tf.reduce_mean(tf.cast(correct_prediction_inception4a_exit, tf.float32))
                 tf.summary.scalar('accuracy_inception4a_exit', accuracy_inception4a_exit)
-				
+
                 correct_prediction_inception4e_exit = tf.equal(tf.argmax(inception4e_exit, 1), tf.argmax(y, 1))
                 accuracy_inception4e_exit = tf.reduce_mean(tf.cast(correct_prediction_inception4e_exit, tf.float32))
                 tf.summary.scalar('accuracy_inception4e_exit', accuracy_inception4e_exit)
-				
+
                 correct_prediction_combined = tf.equal(tf.argmax(logits, 1), tf.argmax(y, 1))
                 accuracy_combined = tf.reduce_mean(tf.cast(correct_prediction_combined, tf.float32))
                 tf.summary.scalar('accuracy_combined', accuracy_combined)
@@ -252,20 +260,20 @@ class Model(object):
             maxpool = self.__max_pool_layer(name + '_pool', x, 3, 1)
             conv_pool_reduce = self.__conv_layer(name + '_conv_pool_reduce', maxpool, 1, 1, out_pool, False)
 
-            return tf.nn.relu(tf.concat(axis = 3, values = [conv_1x1, conv_3x1, conv_5x1, conv_pool_reduce]))
+            return tf.nn.relu(tf.concat(axis=3, values=[conv_1x1, conv_3x1, conv_5x1, conv_pool_reduce]))
 
-    def __conv_layer(self, name, in_layer, width, stride, out_dim, relu, padding = 'SAME'):
+    def __conv_layer(self, name, in_layer, width, stride, out_dim, relu, padding='SAME'):
         with tf.variable_scope(name):
             in_layer_shape = int(in_layer.get_shape()[3])
 
-            W = tf.Variable(tf.truncated_normal([width, 1, in_layer_shape, out_dim], stddev = 0.1), name = name + '_W')
+            W = tf.Variable(tf.truncated_normal([width, 1, in_layer_shape, out_dim], stddev=0.1), name=name + '_W')
             self.__variable_summaries(name + '_W', W)
             # __image_summary(name + '_W', W, 5, 1 out_dim)
 
-            b = tf.Variable(tf.constant(0.1, shape = [out_dim]), name = name + '_b')
+            b = tf.Variable(tf.constant(0.1, shape=[out_dim]), name=name + '_b')
             self.__variable_summaries(name, b)
 
-            r = tf.nn.conv2d(in_layer, W, strides = [1, stride, 1, 1], padding = padding, name = name) + b
+            r = tf.nn.conv2d(in_layer, W, strides=[1, stride, 1, 1], padding=padding, name=name) + b
             if self.summary_level >= 2:
                 tf.summary.histogram(name + '_r', r)
 
@@ -280,12 +288,12 @@ class Model(object):
         with tf.variable_scope(name):
             in_layer_shape = int(np.prod(in_layer.get_shape()[1:]))
 
-            initializer = tf.truncated_normal_initializer(dtype = tf.float32, stddev = 1e-1)
-            W = tf.get_variable("weights", [in_layer_shape, out_dim], initializer = initializer, dtype = tf.float32)
+            initializer = tf.truncated_normal_initializer(dtype=tf.float32, stddev=1e-1)
+            W = tf.get_variable("weights", [in_layer_shape, out_dim], initializer=initializer, dtype=tf.float32)
             self.__variable_summaries(name + '_W', W)
 
             initializer = tf.constant_initializer(0.0)
-            b = tf.get_variable("biases", [out_dim], initializer = initializer, dtype = tf.float32)
+            b = tf.get_variable("biases", [out_dim], initializer=initializer, dtype=tf.float32)
             self.__variable_summaries(name + '_b', b)
 
             in_layer_flat = tf.reshape(in_layer, [-1, in_layer_shape])
@@ -303,14 +311,14 @@ class Model(object):
 
     def __max_pool_layer(self, name, x, width, stride):
         with tf.variable_scope(name):
-            pool = tf.nn.max_pool(x, ksize = [1, width, 1, 1], strides = [1, stride, 1, 1], padding = 'SAME', name = name)
+            pool = tf.nn.max_pool(x, ksize=[1, width, 1, 1], strides=[1, stride, 1, 1], padding='SAME', name=name)
             if self.summary_level >= 2:
                 tf.summary.histogram(name, pool)
             return pool
 
     def __avg_pool_layer(self, name, x, width, stride):
         with tf.variable_scope(name):
-            pool = tf.nn.avg_pool(x, ksize = [1, width, 1, 1], strides = [1, stride, 1, 1], padding = 'SAME', name = name)
+            pool = tf.nn.avg_pool(x, ksize=[1, width, 1, 1], strides=[1, stride, 1, 1], padding='SAME', name=name)
             if self.summary_level >= 2:
                 tf.summary.histogram(name, pool)
             return pool
@@ -348,7 +356,8 @@ def dump_step_data(name, x, y, epoch, i, batches):
             text_file.write('\n')
 
 
-def run(name, sess, model, data, epoch, epochs, optimizer, batches, aux_fc_dropout_keep, fc_dropout_keep, summary, summary_writer):
+def run(name, sess, model, data, epoch, epochs, optimizer, batches, aux_fc_dropout_keep, fc_dropout_keep, summary,
+        summary_writer):
     accuracies = []
     durations = []
     last_log = datetime.datetime.now()
@@ -365,19 +374,21 @@ def run(name, sess, model, data, epoch, epochs, optimizer, batches, aux_fc_dropo
                 remaining_epoch = seconds_per_batch * (batches - i)
                 remaining_total = remaining_epoch + seconds_per_batch * batches * (epochs - epoch - 1)
                 print("%s %d/%d # %.2f rows/s # %s remaining in epoch # %s remaining in training" % (
-                    name, i + 1, batches, rows_per_second, datetime.timedelta(seconds=remaining_epoch), datetime.timedelta(seconds=remaining_total)))
+                    name, i + 1, batches, rows_per_second, datetime.timedelta(seconds=remaining_epoch),
+                    datetime.timedelta(seconds=remaining_total)))
             else:
                 print("%s %d/%d avg=%.2frows/s" % (name, i + 1, batches, rows_per_second))
 
-        with tf.name_scope('train'):
+        with tf.name_scope(name):
 
-            #x, y = sess.run(data.train_iter)
-            #dump_step_data(name, x, y, epoch, i, data.train_batches)
+            # x, y = sess.run(data.train_iter)
+            # dump_step_data(name, x, y, epoch, i, data.train_batches)
 
-            feed_dict = {model.aux_fc_dropout_keep: aux_fc_dropout_keep, model.fc_dropout_keep: fc_dropout_keep, model.is_train: optimizer is not None }
+            feed_dict = {model.aux_fc_dropout_keep: aux_fc_dropout_keep, model.fc_dropout_keep: fc_dropout_keep,
+                         model.is_train: optimizer is not None}
 
             if optimizer is not None:
-                _, acc, sum = sess.run([optimizer, model.accuracy, summary], feed_dict = feed_dict)
+                _, acc, sum = sess.run([optimizer, model.accuracy, summary], feed_dict=feed_dict)
             else:
                 acc, sum = sess.run([model.accuracy, summary], feed_dict=feed_dict)
 
@@ -396,7 +407,8 @@ def run(name, sess, model, data, epoch, epochs, optimizer, batches, aux_fc_dropo
 
 
 def train(data, sess, model, optimizer, summary, summary_writer, epoch, epochs):
-    return run('Train', sess, model, data, epoch, epochs, optimizer, data.train_batches, 0.3, 0.4, summary, summary_writer)
+    return run('Train', sess, model, data, epoch, epochs, optimizer, data.train_batches, 0.3, 0.4, summary,
+               summary_writer)
 
 
 def measure_accuracy(data, sess, model, summary, summary_writer, epoch, epochs):
@@ -404,15 +416,14 @@ def measure_accuracy(data, sess, model, summary, summary_writer, epoch, epochs):
 
 
 def predict(sess, model, output_file):
-    feed_dict = {model.aux_fc_dropout_keep: 1.0, model.fc_dropout_keep: 1.0, model.is_train: True}
+    feed_dict = {model.aux_fc_dropout_keep: 1.0, model.fc_dropout_keep: 1.0, model.is_train: False}
     with tf.name_scope('prediction'):
-        prediction = sess.run(model.pred, feed_dict = feed_dict)
+        prediction = sess.run(model.pred, feed_dict=feed_dict)
 
-    with open(output_file, "w") as file:
-        writer = csv.writer(file, delimiter = ",")
-        writer.writerow(["id", "label"])
+    with open(output_file, 'w') as text_file:
+        text_file.write('id;label\n')
         for i in range(len(prediction)):
-            writer.writerow([str(i), str(prediction[i])])
+            text_file.write('%d;%d\n' % (i, prediction[i]))
 
     with open(output_file) as f:
         print("Output prediction: {0}".format(f.read()))
@@ -439,7 +450,7 @@ def main(model_dir, load_ckpt, epochs, start_epoch, batch_size, test_file, train
     if not load_ckpt:
         model_dir = model_dir + datetime.datetime.now().strftime("%Y%m%d%H%M%S")
         if os.path.exists(model_dir):
-            shutil.rmtree(model_dir, ignore_errors = True)
+            shutil.rmtree(model_dir, ignore_errors=True)
         if not os.path.exists(model_dir):
             os.makedirs(model_dir)
 
@@ -449,7 +460,8 @@ def main(model_dir, load_ckpt, epochs, start_epoch, batch_size, test_file, train
 
     def write_resume_bat(next_epoch):
         with open(model_dir + '\\resume.bat', 'w') as text_file:
-            text_file.write('python main.py --load=True --model_dir=. --test_file=test.csv --train_file=train.csv --start_epoch=%s\npause' % next_epoch)
+            text_file.write(
+                'python main.py --load=True --model_dir=. --test_file=test.csv --train_file=train.csv --start_epoch=%s\npause' % next_epoch)
 
     if not load_ckpt:
         print('Copying data to model dir')
@@ -471,7 +483,7 @@ def main(model_dir, load_ckpt, epochs, start_epoch, batch_size, test_file, train
     data = Snapshots(test_file, train_file, batch_size, column_defaults, buy_label)
 
     print('Model')
-    model = Model(1, data.train_next, data.test_next)
+    model = Model(1, data.train_iter, data.test_iter)
 
     print('Optimizer')
     with tf.name_scope('adam'):
@@ -483,7 +495,7 @@ def main(model_dir, load_ckpt, epochs, start_epoch, batch_size, test_file, train
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
     config.gpu_options.per_process_gpu_memory_fraction = 0.9
-    with tf.Session(config = config) as sess:
+    with tf.Session(config=config) as sess:
 
         print('Init')
         tf.global_variables_initializer().run()
@@ -493,7 +505,8 @@ def main(model_dir, load_ckpt, epochs, start_epoch, batch_size, test_file, train
             saver.restore(sess, ckpt_file)
 
         sess.run([data.test_iter.initializer, data.train_iter.initializer], feed_dict={
-            data.epochs_tensor: epochs, data.batch_size_tensor: data.batch_size, data.test_count_tensor: data.test_count, data.train_count_tensor: data.train_count})
+            data.epochs_tensor: epochs, data.batch_size_tensor: data.batch_size,
+            data.test_count_tensor: data.test_count, data.train_count_tensor: data.train_count})
 
         if epochs > 0:
 
@@ -531,13 +544,13 @@ if __name__ == '__main__':
     tf.logging.set_verbosity(tf.logging.INFO)
     FLAGS, unparsed = parser.parse_known_args()
 
-    main(model_dir = FLAGS.model_dir,
-          load_ckpt = FLAGS.load,
-          epochs = FLAGS.epochs,
-          start_epoch = FLAGS.start_epoch,
-          batch_size = FLAGS.batch_size,
-          test_file = FLAGS.test_file,
-          train_file = FLAGS.train_file,
-          first_day = FLAGS.first_day,
-          last_day = FLAGS.last_day,
-          buy_label = FLAGS.buy_label)
+    main(model_dir=FLAGS.model_dir,
+         load_ckpt=FLAGS.load,
+         epochs=FLAGS.epochs,
+         start_epoch=FLAGS.start_epoch,
+         batch_size=FLAGS.batch_size,
+         test_file=FLAGS.test_file,
+         train_file=FLAGS.train_file,
+         first_day=FLAGS.first_day,
+         last_day=FLAGS.last_day,
+         buy_label=FLAGS.buy_label)
