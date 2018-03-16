@@ -417,7 +417,9 @@ namespace StockFlow
                     using (var writer = new StreamWriter(File.Open(outPath, FileMode.Create)))
                     {
                         var header = reader1.ReadLine();
-                        writer.WriteLine(header);
+                        var splitHeader = header.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+                        var normalizedHeader = string.Join(";", splitHeader.Take(4).Concat(new string[1024].Select((x, k) => k.ToString())).ToArray());
+                        writer.WriteLine(normalizedHeader);
 
                         int i = 0;
                         foreach (var item in randomLinePositions)
@@ -435,6 +437,7 @@ namespace StockFlow
                             var rates = split.Skip(4).Select(x => decimal.Parse(x, CultureInfo.InvariantCulture)).ToArray();
 
                             NormalizeRates(rates);
+                            rates = new decimal[1024].Select((x, k) => SampleRate(rates, k / (double)rates.Length * 1024d)).ToArray();
                             writer.WriteLine(Serialize(id, instrumentId, time, decision, rates));
 
                             reportProgress(i / (double)randomLinePositions.Count);

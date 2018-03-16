@@ -33,7 +33,7 @@ parser.add_argument(
     '--start_epoch', type=int, default=0, help='Start index in epochs.')
 
 parser.add_argument(
-    '--batch_size', type=int, default=48, help='Number of examples per batch.')
+    '--batch_size', type=int, default=32, help='Number of examples per batch.')
 
 parser.add_argument(
     '--test_file', type=str, default='..\\StockFlow\\bin\\Debug\\test_buying.csv',
@@ -44,11 +44,11 @@ parser.add_argument(
     help='Path to the train data.')
 
 parser.add_argument(
-    '--first_day', type=int, default=-1814,
+    '--first_day', type=int, default=0,
     help='The first day column name e.g. -1814.')
 
 parser.add_argument(
-    '--last_day', type=int, default=0,
+    '--last_day', type=int, default=1023,
     help='The last day column name e.g. 0.')
 
 parser.add_argument(
@@ -109,9 +109,9 @@ class Snapshots(object):
         self.test = test_dataset.map(parse_csv, num_parallel_calls=5)
         self.train = train_dataset.map(parse_csv, num_parallel_calls=5)
 
-        print('repeat/batch/iter/next')
-        self.test = self.test.repeat(tf.add(self.epochs_tensor, tf.constant(2, tf.int64))).batch(self.batch_size_tensor)
-        self.train = self.train.repeat(self.epochs_tensor).batch(self.batch_size_tensor)
+        print('batch/prefetch/cache/repeat/iter')
+        self.test = self.test.batch(self.batch_size_tensor).prefetch(self.test_count_tensor).cache().repeat(tf.add(self.epochs_tensor, tf.constant(2, tf.int64)))
+        self.train = self.train.batch(self.batch_size_tensor).prefetch(self.train_count_tensor).cache().repeat(self.epochs_tensor)
         self.test_iter = self.test.make_initializable_iterator()
         self.train_iter = self.train.make_initializable_iterator()
 

@@ -42,6 +42,11 @@
         private int trainSellCount;
         private int trainNoSellCount;
 
+        private int trainBuyAugCount;
+        private int trainNoBuyAugCount;
+        private int trainSellAugCount;
+        private int trainNoSellAugCount;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -250,11 +255,11 @@
         {
             DisableUI();
 
-            var sum = testBuyCount + testNoBuyCount + testSellCount + testNoSellCount + trainBuyCount + trainNoBuyCount + trainSellCount + trainNoSellCount;
+            var sum = testBuyCount + testNoBuyCount + testSellCount + testNoSellCount + trainBuyAugCount + trainNoBuyAugCount + trainSellAugCount + trainNoSellAugCount;
             var testBuyingProgressScale = (testBuyCount + testNoBuyCount) / (double)sum;
             var testSellingProgressScale = (testSellCount + testNoSellCount) / (double)sum;
-            var trainBuyingProgressScale = (trainBuyCount + trainNoBuyCount) / (double)sum;
-            var trainSellingProgressScale = (trainSellCount + trainNoSellCount) / (double)sum;
+            var trainBuyingProgressScale = (trainBuyAugCount + trainNoBuyAugCount) / (double)sum;
+            var trainSellingProgressScale = (trainSellAugCount + trainNoSellAugCount) / (double)sum;
 
             Task.Run(() =>
             {
@@ -382,12 +387,14 @@
 
         private void UpdateAugmentInfo()
         {
+            trainBuyAugCount = DumpProcessor.CountLines(DumpProcessor.TrainBuyAugFile, line => true) - 1;
+            trainNoBuyAugCount = DumpProcessor.CountLines(DumpProcessor.TrainNoBuyAugFile, line => true) - 1;
+            trainSellAugCount = DumpProcessor.CountLines(DumpProcessor.TrainSellAugFile, line => true) - 1;
+            trainNoSellAugCount = DumpProcessor.CountLines(DumpProcessor.TrainNoSellAugFile, line => true) - 1;
+
             AugmentInfoTextBlock.Text = string.Format(
                 "{0} train buy\n{1} train nobuy\n{2} train sell\n{3} train nosell",
-                DumpProcessor.CountLines(DumpProcessor.TrainBuyAugFile, line => true) - 1,
-                DumpProcessor.CountLines(DumpProcessor.TrainNoBuyAugFile, line => true) - 1,
-                DumpProcessor.CountLines(DumpProcessor.TrainSellAugFile, line => true) - 1,
-                DumpProcessor.CountLines(DumpProcessor.TrainNoSellAugFile, line => true) - 1);
+                trainBuyAugCount, trainNoBuyAugCount, trainSellAugCount, trainNoSellAugCount);
         }
 
         private void UpdateMergeInfo()
