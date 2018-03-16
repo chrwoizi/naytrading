@@ -437,7 +437,7 @@ namespace StockFlow
                             var rates = split.Skip(4).Select(x => decimal.Parse(x, CultureInfo.InvariantCulture)).ToArray();
 
                             NormalizeRates(rates);
-                            rates = new decimal[1024].Select((x, k) => SampleRate(rates, k / (double)rates.Length * 1024d)).ToArray();
+                            rates = new decimal[1024].Select((x, k) => SampleRate(rates, k / 1024d * (double)rates.Length)).ToArray();
                             writer.WriteLine(Serialize(id, instrumentId, time, decision, rates));
 
                             reportProgress(i / (double)randomLinePositions.Count);
