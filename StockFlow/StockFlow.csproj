@@ -89,6 +89,7 @@
       <DependentUpon>SettingsWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="SnapshotMetadata.cs" />
+    <Compile Include="UnbufferedStreamReader.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

@@ -9,7 +9,6 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace StockFlow
@@ -21,14 +20,31 @@ namespace StockFlow
         public const int Days = 5 * 365 - 10;
 
         public const string FlatDumpFile = "dump.csv";
+
         public const string FlatBuyFile = "buy.csv";
-        public const string FlatBuyAugFile = "buy_aug.csv";
         public const string FlatNoBuyFile = "nobuy.csv";
-        public const string FlatNoBuyAugFile = "nobuy_aug.csv";
         public const string FlatSellFile = "sell.csv";
-        public const string FlatSellAugFile = "sell_aug.csv";
         public const string FlatNoSellFile = "nosell.csv";
-        public const string FlatNoSellAugFile = "nosell_aug.csv";
+
+        public const string TrainBuyFile = "train_buy.csv";
+        public const string TrainNoBuyFile = "train_nobuy.csv";
+        public const string TrainSellFile = "train_sell.csv";
+        public const string TrainNoSellFile = "train_nosell.csv";
+
+        public const string TestBuyFile = "test_buy.csv";
+        public const string TestNoBuyFile = "test_nobuy.csv";
+        public const string TestSellFile = "test_sell.csv";
+        public const string TestNoSellFile = "test_nosell.csv";
+
+        public const string TrainBuyAugFile = "train_buy_aug.csv";
+        public const string TrainNoBuyAugFile = "train_nobuy_aug.csv";
+        public const string TrainSellAugFile = "train_sell_aug.csv";
+        public const string TrainNoSellAugFile = "train_nosell_aug.csv";
+
+        public const string TestBuyingFile = "test_buying.csv";
+        public const string TestSellingFile = "test_selling.csv";
+        public const string TrainBuyingFile = "train_buying.csv";
+        public const string TrainSellingFile = "train_selling.csv";
 
         public static void Flatten(Stream stream, Action<double> reportProgress)
         {
@@ -271,6 +287,64 @@ namespace StockFlow
             }
         }
 
+        public static void SplitRandomTrainTest(string inPath, string testPath, string trainPath, double factor, Action<double> reportProgress)
+        {
+            reportProgress(0);
+
+            using (var reader = new UnbufferedStreamReader(File.Open(inPath, FileMode.Open)))
+            {
+                var linePositions = new Dictionary<int, long>();
+                GetLinePositions(linePositions, reader);
+
+                var randomLinePositions = linePositions.Select(x => new { r = random.NextDouble(), v = x }).OrderBy(x => x.r).Select(x => x.v).ToList();
+
+                Debug.Assert(reader.BaseStream.CanSeek);
+
+                reader.BaseStream.Seek(0, SeekOrigin.Begin);
+                var header = reader.ReadLine();
+
+                var testCount = (int)(randomLinePositions.Count * factor);
+
+                int i = 0;
+
+                reader.BaseStream.Seek(0, SeekOrigin.Begin);
+                using (var writer = new StreamWriter(File.Open(testPath, FileMode.Create)))
+                {
+                    writer.WriteLine(header);
+                    
+                    foreach (var item in randomLinePositions.Take(testCount))
+                    {
+                        reader.BaseStream.Seek(item.Value, SeekOrigin.Begin);
+                        var line = reader.ReadLine();
+                        Debug.Assert(line.Split(';').Length == 4 + 1815);
+                        writer.WriteLine(line);
+
+                        reportProgress(i / (double)randomLinePositions.Count);
+                        i++;
+                    }
+                }
+
+                reader.BaseStream.Seek(0, SeekOrigin.Begin);
+                using (var writer = new StreamWriter(File.Open(trainPath, FileMode.Create)))
+                {
+                    writer.WriteLine(header);
+
+                    foreach (var item in randomLinePositions.Skip(testCount))
+                    {
+                        reader.BaseStream.Seek(item.Value, SeekOrigin.Begin);
+                        var line = reader.ReadLine();
+                        Debug.Assert(line.Split(';').Length == 4 + 1815);
+                        writer.WriteLine(line);
+
+                        reportProgress(i / (double)randomLinePositions.Count);
+                        i++;
+                    }
+                }
+            }
+
+            reportProgress(1);
+        }
+
         public static void Augment(string inPath, string outPath, int factor, Action<double> reportProgress)
         {
             var lineCount = CountLines(inPath, line => true);
@@ -288,7 +362,6 @@ namespace StockFlow
                     while (!reader.EndOfStream)
                     {
                         var line = reader.ReadLine();
-                        lineIndex++;
 
                         if (!string.IsNullOrEmpty(line))
                         {
@@ -299,25 +372,96 @@ namespace StockFlow
                             var time = split[2];
                             var decision = split[3];
                             var rates = split.Skip(4).Select(x => decimal.Parse(x, CultureInfo.InvariantCulture)).ToArray();
-
-                            var originalRates = rates.ToArray();
-                            NormalizeRates(originalRates);
-                            writer.WriteLine(Serialize(originalId + "-0", instrumentId, time, decision, originalRates));
+                            
+                            writer.WriteLine(Serialize(originalId + "-0", instrumentId, time, decision, rates));
+                            lineIndex++;
+                            reportProgress(lineIndex / (double)(lineCount * factor));
 
                             for (int i = 1; i < factor; i++)
                             {
                                 var augmentedRates = AugmentRates(rates, 0.2, 20, 0.05);
-                                NormalizeRates(augmentedRates);
                                 writer.WriteLine(Serialize(originalId + "-" + i, instrumentId, time, decision, augmentedRates));
+                                lineIndex++;
+                                reportProgress(lineIndex / (double)(lineCount * factor));
                             }
                         }
-
-                        reportProgress(lineIndex / (double)lineCount);
                     }
                 }
             }
 
             reportProgress(1);
+        }
+
+        public static void MergeRandom(string inPath1, string inPath2, string outPath, Action<double> reportProgress)
+        {
+            var linePositions1 = new Dictionary<int, long>();
+            var linePositions2 = new Dictionary<int, long>();
+
+            reportProgress(0);
+
+            using (var reader1 = new UnbufferedStreamReader(File.Open(inPath1, FileMode.Open)))
+            {
+                using (var reader2 = new UnbufferedStreamReader(File.Open(inPath2, FileMode.Open)))
+                {
+                    GetLinePositions(linePositions1, reader1);
+                    GetLinePositions(linePositions2, reader2);
+
+                    var randomLinePositions =
+                        linePositions1.Select(x => new Tuple<UnbufferedStreamReader, KeyValuePair<int, long>>(reader1, x))
+                        .Concat(linePositions2.Select(x => new Tuple<UnbufferedStreamReader, KeyValuePair<int, long>>(reader2, x)))
+                        .Select(x => new { r = random.NextDouble(), v = x })
+                        .OrderBy(x => x.r)
+                        .Select(x => x.v)
+                        .ToList();
+
+                    using (var writer = new StreamWriter(File.Open(outPath, FileMode.Create)))
+                    {
+                        var header = reader1.ReadLine();
+                        writer.WriteLine(header);
+
+                        int i = 0;
+                        foreach (var item in randomLinePositions)
+                        {
+                            var reader = item.Item1;
+                            reader.BaseStream.Seek(item.Item2.Value, SeekOrigin.Begin);
+
+                            var line = reader.ReadLine();
+                            var split = line.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+
+                            var id = split[0];
+                            var instrumentId = split[1];
+                            var time = split[2];
+                            var decision = split[3];
+                            var rates = split.Skip(4).Select(x => decimal.Parse(x, CultureInfo.InvariantCulture)).ToArray();
+
+                            NormalizeRates(rates);
+                            writer.WriteLine(Serialize(id, instrumentId, time, decision, rates));
+
+                            reportProgress(i / (double)randomLinePositions.Count);
+                            i++;
+                        }
+                    }
+                }
+            }
+
+            reportProgress(1);
+        }
+
+        private static void GetLinePositions(Dictionary<int, long> linePositions1, UnbufferedStreamReader reader)
+        {
+            var lineIndex = 0;
+            while (reader.BaseStream.Position < reader.BaseStream.Length)
+            {
+                if (lineIndex > 0)
+                {
+                    linePositions1.Add(lineIndex, reader.BaseStream.Position);
+                }
+
+                reader.ReadLine();
+                lineIndex++;
+            }
+
+            reader.BaseStream.Seek(0, SeekOrigin.Begin);
         }
 
         private static string Serialize(string id, string instrumentId, string time, string decision, decimal[] rates)
@@ -427,3 +571,5 @@ namespace StockFlow
         }
     }
 }
+
+

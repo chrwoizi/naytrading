@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="MainWindow" Height="690.79" Width="735"
+        Title="MainWindow" Height="884.29" Width="735"
         Closing="Window_Closing">
     <Grid>
         <Grid.RowDefinitions>
@@ -23,6 +23,10 @@
             </Grid.ColumnDefinitions>
             <Grid Grid.Column="0">
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
@@ -72,7 +76,7 @@
                         Margin="0,10,0,0"
                         x:Name="SplitFileButton"
                         Click="SplitFileButton_Click"
-                        Content="Split"/>
+                        Content="Split by Action"/>
 
                 <TextBlock Grid.Row="5"
                            Grid.ColumnSpan="2"
@@ -83,11 +87,59 @@
                 <Button Grid.Row="6"
                         Grid.ColumnSpan="2"
                         Margin="0,10,0,0"
+                        x:Name="SplitTrainTestButton"
+                        Click="SplitTrainTestButton_Click"
+                        Content="Split train/test"/>
+
+                <Grid Grid.Row="7"
+                      Grid.ColumnSpan="2">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="40"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Row="0"
+                               Grid.Column="0"
+                               Margin="0,10,10,0"
+                               HorizontalAlignment="Left"
+                               VerticalAlignment="Center"
+                               Text="Ratio" />
+                    <Slider Grid.Row="0"
+                            Grid.Column="1"
+                            Margin="0,10,0,0"
+                            VerticalAlignment="Center"
+                            Minimum="0"
+                            Maximum="1"
+                            Value="0.2"
+                            x:Name="TrainTestSlider"
+                            SmallChange="0.01"
+                            LargeChange="0.1"
+                            Interval="1" />
+                    <TextBlock Grid.Row="0"
+                               Grid.Column="2"
+                               Margin="0,10,0,0"
+                               HorizontalAlignment="Right"
+                               VerticalAlignment="Center"
+                               Text="{Binding Path=Value, StringFormat='F2', ElementName=TrainTestSlider}" />
+                </Grid>
+
+                <TextBlock Grid.Row="8"
+                           Grid.ColumnSpan="2"
+                           Margin="0,10,0,10"
+                           x:Name="SplitTrainTestInfoTextBlock"
+                           Text="File info unknown" />
+
+                <Button Grid.Row="9"
+                        Grid.ColumnSpan="2"
+                        Margin="0,10,0,0"
                         x:Name="AugmentButton"
                         Click="AugmentButton_Click"
                         Content="Augment"/>
 
-                <Grid Grid.Row="7"
+                <Grid Grid.Row="10"
                       Grid.ColumnSpan="2">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -95,6 +147,7 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
@@ -193,56 +246,61 @@
                                HorizontalAlignment="Right"
                                VerticalAlignment="Center"
                                x:Name="AugmentLabel"
-                               Text="{Binding Path=Value, StringFormat='F0', ElementName=AugmentSlider}" />
+                               Text="{Binding Path=Value, StringFormat='{}{0:F0}x', ElementName=AugmentSlider}" />
                     <TextBlock Grid.Row="1"
                                Grid.Column="2"
                                Margin="0,10,0,0"
                                HorizontalAlignment="Right"
                                VerticalAlignment="Center"
                                x:Name="AugmentBuyLabel"
-                               Text="{Binding Path=Value, StringFormat='F0', ElementName=AugmentBuySlider}" />
+                               Text="{Binding Path=Value, StringFormat='{}{0:F0}x', ElementName=AugmentBuySlider}" />
                     <TextBlock Grid.Row="2"
                                Grid.Column="2"
                                Margin="0,10,0,0"
                                HorizontalAlignment="Right"
                                VerticalAlignment="Center"
                                x:Name="AugmentNoBuyLabel"
-                               Text="{Binding Path=Value, StringFormat='F0', ElementName=AugmentNoBuySlider}" />
+                               Text="{Binding Path=Value, StringFormat='{}{0:F0}x', ElementName=AugmentNoBuySlider}" />
                     <TextBlock Grid.Row="3"
                                Grid.Column="2"
                                Margin="0,10,0,0"
                                HorizontalAlignment="Right"
                                VerticalAlignment="Center"
                                x:Name="AugmentSellLabel"
-                               Text="{Binding Path=Value, StringFormat='F0', ElementName=AugmentSellSlider}" />
+                               Text="{Binding Path=Value, StringFormat='{}{0:F0}x', ElementName=AugmentSellSlider}" />
                     <TextBlock Grid.Row="4"
                                Grid.Column="2"
                                Margin="0,10,0,0"
                                HorizontalAlignment="Right"
                                VerticalAlignment="Center"
                                x:Name="AugmentNoSellLabel"
-                               Text="{Binding Path=Value, StringFormat='F0', ElementName=AugmentNoSellSlider}" />
+                               Text="{Binding Path=Value, StringFormat='{}{0:F0}x', ElementName=AugmentNoSellSlider}" />
                 </Grid>
 
-                <TextBlock Grid.Row="8"
+                <TextBlock Grid.Row="11"
                            Grid.ColumnSpan="2"
                            Margin="0,10,0,10"
                            x:Name="AugmentInfoTextBlock"
                            Text="File info unknown" />
 
-                <Slider Grid.Row="9"
+                <Button Grid.Row="12"
                         Grid.ColumnSpan="2"
                         Margin="0,10,0,0"
-                        Minimum="0"
-                        Maximum="100"
-                        Value="50"
-                        x:Name="TrainPercentageSlider"
-                        Interval="1" />
+                        x:Name="MergeButton"
+                        Click="MergeButton_Click"
+                        Content="Normalize + Merge"/>
 
-                <Button Grid.Row="10" 
+                <TextBlock Grid.Row="13"
+                           Grid.ColumnSpan="2"
+                           Margin="0,10,0,10"
+                           x:Name="MergeInfoTextBlock"
+                           Text="File info unknown" />
+
+                <Button Grid.Row="14" 
                         Grid.ColumnSpan="2"
                         x:Name="LearnButton"
                         Click="LearnButton_OnClick" 
+                        IsEnabled="False"
                         Content="Learn"/>
             </Grid>
             <TextBox x:Name="TextBlock"

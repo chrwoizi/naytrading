@@ -12,6 +12,8 @@ import shutil
 import datetime
 from shutil import copyfile
 
+#os.environ["CUDA_VISIBLE_DEVICES"]="-1"
+
 import numpy as np
 import tensorflow as tf
 
@@ -29,19 +31,18 @@ parser.add_argument(
     '--epochs', type = int, default = 1000, help = 'Number of cycles over the whole data.')
 
 parser.add_argument(
-    '--batch_size', type = int, default = 32, help = 'Number of examples per batch.')
+    '--start_epoch', type = int, default = 0, help = 'Start index in epochs.')
 
 parser.add_argument(
-    '--buy_file', type = str, default = '..\\StockFlow\\bin\\Debug\\buy_aug.csv',
-    help = 'Path to the buy data.')
+    '--batch_size', type = int, default = 48, help = 'Number of examples per batch.')
 
 parser.add_argument(
-    '--nobuy_file', type = str, default = '..\\StockFlow\\bin\\Debug\\nobuy_aug.csv',
-    help = 'Path to the nobuy data.')
+    '--test_file', type = str, default = '..\\StockFlow\\bin\\Debug\\test_buying.csv',
+    help = 'Path to the test data.')
 
 parser.add_argument(
-    '--test_data_ratio', type = float, default = 0.25,
-    help = 'The ratio between test and train data sets taken from the train_data file randomly.')
+    '--train_file', type = str, default = '..\\StockFlow\\bin\\Debug\\train_buying.csv',
+    help = 'Path to the train data.')
 
 parser.add_argument(
     '--first_day', type = int, default = -1814,
@@ -57,82 +58,33 @@ parser.add_argument(
 
 
 class Snapshots(object):
-    def __init__(self, model_dir, buy_file, nobuy_file, batch_size, epochs, test_data_ratio, column_defaults, buy_label):
+    def __init__(self, test_file, train_file, batch_size, column_defaults, buy_label):
         self.batch_size = batch_size
 
-        assert tf.gfile.Exists(buy_file), ('%s not found.' % buy_file)
-        assert tf.gfile.Exists(nobuy_file), ('%s not found.' % nobuy_file)
+        self.epochs_tensor = tf.placeholder(tf.int64, name='epochs')
+        self.batch_size_tensor = tf.placeholder(tf.int64, name='batch_size')
+        self.test_count_tensor = tf.placeholder(tf.int64, name='test_count')
+        self.train_count_tensor = tf.placeholder(tf.int64, name='train_count')
 
-        buy_lines = Snapshots.__get_lines(buy_file)
-        buy_count = len(buy_lines.keys())
+        assert tf.gfile.Exists(test_file), ('%s not found.' % test_file)
+        assert tf.gfile.Exists(train_file), ('%s not found.' % train_file)
 
-        nobuy_lines = Snapshots.__get_lines(nobuy_file)
-        nobuy_count = len(nobuy_lines.keys())
+        test_file_count = Snapshots.__get_line_count(test_file)
+        train_file_count = Snapshots.__get_line_count(train_file)
 
-        buy_test_count = int(test_data_ratio * buy_count)
-        nobuy_test_count = int(test_data_ratio * nobuy_count)
-        buy_train_count = buy_count - buy_test_count
-        nobuy_train_count = nobuy_count - nobuy_test_count
+        if test_file_count < self.batch_size:
+            print('WARNING: batch_size is greater than available test datasets. Reducing batch size to %d' % test_file_count)
+            self.batch_size = test_file_count
 
-        def match_batch_size(a, b):
-            i = 1
-            while (a + b) % batch_size > 0:
-                if i % 2 == 0:
-                    a = a - 1
-                else:
-                    b = b - 1
-                i = i + 1
-            return a, b
+        if train_file_count < self.batch_size:
+            print('WARNING: batch_size is greater than available train datasets. Reducing batch size to %d' % train_file_count)
+            self.batch_size = train_file_count
 
-        if buy_test_count + nobuy_test_count < batch_size:
-            print('WARNING: batch_size is greater than available test datasets. Reducing batch size to %d' % (buy_test_count + nobuy_test_count))
-            batch_size = buy_test_count + nobuy_test_count
+        self.test_batches = int(test_file_count / self.batch_size)
+        self.train_batches = int(train_file_count / self.batch_size)
 
-        if buy_train_count + nobuy_train_count < batch_size:
-            print('WARNING: batch_size is greater than available train datasets. Reducing batch size to %d' % (buy_train_count + nobuy_train_count))
-            batch_size = buy_train_count + nobuy_train_count
-
-        buy_test_count, nobuy_test_count = match_batch_size(buy_test_count, nobuy_test_count)
-        buy_train_count, nobuy_train_count = match_batch_size(buy_train_count, nobuy_train_count)
-
-        self.test_batches = int((buy_test_count + nobuy_test_count) / batch_size)
-        self.train_batches = int((buy_train_count + nobuy_train_count) / batch_size)
-
-        self.test_count = self.test_batches * batch_size
-        self.train_count = self.train_batches * batch_size
-
-        train_file = model_dir + '\\train.csv'
-        test_file = model_dir + '\\test.csv'
-
-        with open(train_file, 'w') as train_writer:
-            with open(test_file, 'w') as test_writer:
-                with open(buy_file) as buy_reader:
-                    with open(nobuy_file) as nobuy_reader:
-                        header = buy_reader.readline()
-                        nobuy_reader.readline()
-                        train_writer.write(header)
-                        test_writer.write(header)
-
-                        items = list(map(lambda x: [buy_reader, buy_lines, x], range(buy_count))) + list(map(lambda x: [nobuy_reader, nobuy_lines, x], range(nobuy_count)))
-                        np.random.shuffle(items)
-
-                        for i in range(self.test_count):
-                            item = items[i]
-                            reader = item[0]
-                            line_dict = item[1]
-                            line_index = item[2]
-                            reader.seek(line_dict[line_index + 1])
-                            line = reader.readline()
-                            test_writer.write(line)
-
-                        for i in range(self.train_count):
-                            item = items[self.test_count + i]
-                            reader = item[0]
-                            line_dict = item[1]
-                            line_index = item[2]
-                            reader.seek(line_dict[line_index + 1])
-                            line = reader.readline()
-                            train_writer.write(line)
+        self.test_count = self.test_batches * self.batch_size
+        self.train_count = self.train_batches * self.batch_size
 
         def parse_csv(value):
             columns = tf.decode_csv(value, record_defaults = column_defaults, field_delim = ";")
@@ -149,39 +101,40 @@ class Snapshots(object):
             return features, labels
 
         print('TextLineDataset')
-        test_dataset = tf.data.TextLineDataset(test_file).skip(1)
-        train_dataset = tf.data.TextLineDataset(train_file).skip(1)
+        test_dataset = tf.data.TextLineDataset(test_file).skip(1).take(self.test_count_tensor)
+        train_dataset = tf.data.TextLineDataset(train_file).skip(1).take(self.train_count_tensor)
 
         print('map')
         self.test = test_dataset.map(parse_csv, num_parallel_calls = 5)
         self.train = train_dataset.map(parse_csv, num_parallel_calls = 5)
 
         print('repeat/batch/iter/next')
-        self.test_iter = self.test.repeat(epochs + 1).batch(batch_size).make_one_shot_iterator().get_next()
-        self.train_iter = self.train.repeat(epochs).batch(batch_size).make_one_shot_iterator().get_next()
+        self.test = self.test.repeat(tf.add(self.epochs_tensor, tf.constant(2, tf.int64))).batch(self.batch_size_tensor)
+        self.train = self.train.repeat(self.epochs_tensor).batch(self.batch_size_tensor)
+        self.test_iter = self.test.make_initializable_iterator()
+        self.train_iter = self.train.make_initializable_iterator()
+        self.test_next = self.test_iter.get_next()
+        self.train_next = self.train_iter.get_next()
 
-    def __get_lines(file):
+    def __get_line_count(file):
 
-        lines = {}
-
+        count = 0
         with open(file) as f:
             i = 0
             while True:
-                pos = f.tell()
                 line = f.readline()
                 if not line:
                     break
                 if i > 0 and len(line) > 0:
-                    lines[i] = pos
+                    count = count + 1
                 i = i + 1
 
-        return lines
+        return count
 
 
 class Model(object):
-    def __init__(self, batch_size, summary_level, train_data, test_data):
+    def __init__(self, summary_level, train_data, test_data):
         self.summary_level = summary_level
-        self.batch_size = batch_size
         self.aux_fc_dropout_keep = tf.placeholder(tf.float32)
         self.fc_dropout_keep = tf.placeholder(tf.float32)
         self.is_train = tf.placeholder(tf.bool)
@@ -189,7 +142,7 @@ class Model(object):
         x, y = tf.cond(tf.equal(self.is_train, True), lambda: train_data, lambda: test_data)
 
         #days = tf.shape(x)[1]
-        #o = tf.one_hot(indices=tf.cast(tf.multiply(tf.reshape(x,[batch_size,days]),100), tf.int32), depth=100, on_value=1.0, off_value=0.0, axis=-1)
+        #o = tf.one_hot(indices=tf.cast(tf.multiply(tf.reshape(x,[tf.shape(x)[0],days]),100), tf.int32), depth=100, on_value=1.0, off_value=0.0, axis=-1)
         #self.__image_summary('x', o, days, 100, 1)
 
         # https://hacktilldawn.com/2016/09/25/inception-modules-explained-and-implemented/
@@ -227,38 +180,49 @@ class Model(object):
 
         exit = self.__exit_layer('exit', inception5p, self.fc_dropout_keep)
 
+        aux_scale = tf.constant(0.3, tf.float32)
+        logits = tf.add(tf.add(tf.scalar_mul(aux_scale, inception4a_exit), tf.scalar_mul(aux_scale, inception4e_exit)), exit)
+
         with tf.variable_scope('loss'):
 
             y_sg = tf.stop_gradient(y)
-
-            aux_scale = tf.constant([[0.3,0.3]] * batch_size)
-            logits = tf.add(tf.add(tf.multiply(inception4a_exit, aux_scale), tf.multiply(inception4e_exit, aux_scale)), exit)
 
             softmax = tf.nn.softmax_cross_entropy_with_logits_v2(labels = y_sg, logits = logits)
             self.loss = tf.reduce_mean(softmax)
             if self.summary_level >= 1:
                 tf.summary.scalar('loss_combined', self.loss)
 
-            softmax_exit = tf.nn.softmax_cross_entropy_with_logits_v2(labels = y_sg, logits = exit)
-            loss_exit = tf.reduce_mean(softmax_exit)
             if self.summary_level >= 1:
+                softmax_exit = tf.nn.softmax_cross_entropy_with_logits_v2(labels = y_sg, logits = exit)
+                loss_exit = tf.reduce_mean(softmax_exit)
                 tf.summary.scalar('loss_exit', loss_exit)
-
-            softmax_inception4a_exit = tf.nn.softmax_cross_entropy_with_logits_v2(labels = y_sg, logits = inception4a_exit)
-            loss_inception4a_exit = tf.reduce_mean(softmax_inception4a_exit)
-            if self.summary_level >= 1:
+                
+                softmax_inception4a_exit = tf.nn.softmax_cross_entropy_with_logits_v2(labels = y_sg, logits = inception4a_exit)
+                loss_inception4a_exit = tf.reduce_mean(softmax_inception4a_exit)
                 tf.summary.scalar('loss_inception4a_exit', loss_inception4a_exit)
-
-            softmax_inception4a_exit = tf.nn.softmax_cross_entropy_with_logits_v2(labels = y_sg, logits = inception4e_exit)
-            loss_inception4e_exit = tf.reduce_mean(softmax_inception4a_exit)
-            if self.summary_level >= 1:
+                
+                softmax_inception4a_exit = tf.nn.softmax_cross_entropy_with_logits_v2(labels = y_sg, logits = inception4e_exit)
+                loss_inception4e_exit = tf.reduce_mean(softmax_inception4a_exit)
                 tf.summary.scalar('loss_inception4e_exit', loss_inception4e_exit)
 
         with tf.variable_scope('accuracy'):
             self.correct_prediction = tf.equal(tf.argmax(exit, 1), tf.argmax(y, 1))
             self.accuracy = tf.reduce_mean(tf.cast(self.correct_prediction, tf.float32))
             if self.summary_level >= 1:
-                tf.summary.scalar('accuracy', self.accuracy)
+                tf.summary.scalar('accuracy_exit', self.accuracy)
+				
+            if self.summary_level >= 1:
+                correct_prediction_inception4a_exit = tf.equal(tf.argmax(inception4a_exit, 1), tf.argmax(y, 1))
+                accuracy_inception4a_exit = tf.reduce_mean(tf.cast(correct_prediction_inception4a_exit, tf.float32))
+                tf.summary.scalar('accuracy_inception4a_exit', accuracy_inception4a_exit)
+				
+                correct_prediction_inception4e_exit = tf.equal(tf.argmax(inception4e_exit, 1), tf.argmax(y, 1))
+                accuracy_inception4e_exit = tf.reduce_mean(tf.cast(correct_prediction_inception4e_exit, tf.float32))
+                tf.summary.scalar('accuracy_inception4e_exit', accuracy_inception4e_exit)
+				
+                correct_prediction_combined = tf.equal(tf.argmax(logits, 1), tf.argmax(y, 1))
+                accuracy_combined = tf.reduce_mean(tf.cast(correct_prediction_combined, tf.float32))
+                tf.summary.scalar('accuracy_combined', accuracy_combined)
 
         with tf.variable_scope('pred'):
             self.pred = tf.argmax(exit, 1)
@@ -364,37 +328,79 @@ class Model(object):
                 tf.summary.histogram('histogram', var)
 
     def __image_summary(self, name, V, width, height, dimensions):
-        V = tf.reshape(V, (self.batch_size, width, height, dimensions))
+        V = tf.reshape(V, (tf.shape(V)[0], width, height, dimensions))
         V = tf.transpose(V, (0, 2, 1, 3))
-        tf.summary.image(name, V, max_outputs=self.batch_size)
+        tf.summary.image(name, V, max_outputs=tf.shape(V)[0])
 
 
-def train(data, sess, model, optimizer, summary, summary_writer, epoch):
+def dump_step_data(name, x, y, epoch, i, batches):
+    print(np.shape(x))
+    print(np.shape(y))
+    x = np.reshape(x, [np.shape(x)[0], np.shape(x)[1]])
+    with open('%s_%i_%i.csv' % (name, epoch, i), 'w') as text_file:
+        text_file.write('decision;')
+        text_file.write(';'.join(str(i) for i in range(-1814, 1)))
+        text_file.write('\n')
+        for row_index, row in enumerate(x):
+            text_file.write('buy' if y[row_index][1] == 1 else 'ignore')
+            text_file.write(';')
+            text_file.write(';'.join(str(i) for i in row))
+            text_file.write('\n')
+
+
+def run(name, sess, model, data, epoch, epochs, optimizer, batches, aux_fc_dropout_keep, fc_dropout_keep, summary, summary_writer):
     accuracies = []
-    for i in range(data.train_batches):
-        print("Train %d/%d" % (i + 1, data.train_batches))
-        feed_dict = {model.aux_fc_dropout_keep: 0.3, model.fc_dropout_keep: 0.4, model.is_train: True}
+    durations = []
+    last_log = datetime.datetime.now()
+    last_step = datetime.datetime.now()
+
+    for i in range(batches):
+
+        if i == 0 or i == batches - 1 or (datetime.datetime.now() - last_log).total_seconds() > 1:
+            last_log = datetime.datetime.now()
+            seconds_per_batch = np.mean(durations) if len(durations) > 0 else 0
+            seconds_per_row = seconds_per_batch / data.batch_size
+            rows_per_second = (1 / seconds_per_row) if seconds_per_row > 0 else 0
+            if optimizer is not None:
+                remaining_epoch = seconds_per_batch * (batches - i)
+                remaining_total = remaining_epoch + seconds_per_batch * batches * (epochs - epoch - 1)
+                print("%s %d/%d # %.2f rows/s # %s remaining in epoch # %s remaining in training" % (
+                    name, i + 1, batches, rows_per_second, datetime.timedelta(seconds=remaining_epoch), datetime.timedelta(seconds=remaining_total)))
+            else:
+                print("%s %d/%d avg=%.2frows/s" % (name, i + 1, batches, rows_per_second))
+
         with tf.name_scope('train'):
-            sum, _, acc = sess.run([summary, optimizer, model.accuracy], feed_dict = feed_dict)
-            summary_writer.add_summary(sum, 0 if epoch == -1 else (epoch * data.train_batches + i + 1))
+
+            #x, y = sess.run(data.train_iter)
+            #dump_step_data(name, x, y, epoch, i, data.train_batches)
+
+            feed_dict = {model.aux_fc_dropout_keep: aux_fc_dropout_keep, model.fc_dropout_keep: fc_dropout_keep, model.is_train: optimizer is not None }
+
+            if optimizer is not None:
+                _, acc, sum = sess.run([optimizer, model.accuracy, summary], feed_dict = feed_dict)
+            else:
+                acc, sum = sess.run([model.accuracy, summary], feed_dict=feed_dict)
+
+            summary_writer.add_summary(sum, 0 if epoch == -1 else (epoch * batches + i + 1))
             summary_writer.flush()
             accuracies.append(acc)
+
+        durations.append((datetime.datetime.now() - last_step).total_seconds())
+        last_step = datetime.datetime.now()
+
+        if len(durations) > 10:
+            durations.pop(0)
+
     accuracy = np.mean(accuracies)
     return accuracy
 
 
-def measure_accuracy(data, sess, model, summary, summary_writer, epoch):
-    accuracies = []
-    for i in range(data.test_batches):
-        print("Test %d/%d" % (i + 1, data.test_batches))
-        feed_dict = {model.aux_fc_dropout_keep: 1.0, model.fc_dropout_keep: 1.0, model.is_train: False}
-        with tf.name_scope('test'):
-            sum, acc = sess.run([summary, model.accuracy], feed_dict = feed_dict)
-            summary_writer.add_summary(sum, 0 if epoch == -1 else (epoch * data.test_batches + i + 1))
-            summary_writer.flush()
-            accuracies.append(acc)
-    accuracy = np.mean(accuracies)
-    return accuracy
+def train(data, sess, model, optimizer, summary, summary_writer, epoch, epochs):
+    return run('Train', sess, model, data, epoch, epochs, optimizer, data.train_batches, 0.3, 0.4, summary, summary_writer)
+
+
+def measure_accuracy(data, sess, model, summary, summary_writer, epoch, epochs):
+    return run('Test', sess, model, data, epoch, epochs, None, data.test_batches, 1, 1, summary, summary_writer)
 
 
 def predict(sess, model, output_file):
@@ -412,49 +418,60 @@ def predict(sess, model, output_file):
         print("Output prediction: {0}".format(f.read()))
 
 
-def main(model_dir, load_ckpt, epochs, batch_size, buy_file, nobuy_file, test_data_ratio, first_day, last_day, buy_label):
+def main(model_dir, load_ckpt, epochs, start_epoch, batch_size, test_file, train_file, first_day, last_day, buy_label):
     """
     :param str model_dir: Base directory for the model
     :param int load_ckpt: Whether to load an existing model
     :param int epochs: Number of cycles over the whole data
+    :param int start_epoch: Start index in epochs
     :param int batch_size: Number of examples per batch
-    :param str buy_file: Path to the buy data
-    :param str nobuy_file: Path to the nobuy data
-    :param float test_data_ratio: The ratio between test and train data sets taken from the train_data file randomly
+    :param str test_file: Path to the test data
+    :param str train_file: Path to the train data
     :param int first_day: The first day column name e.g. -1814
     :param int last_day: The last day column name e.g. 0
     :param str buy_label: The label used if the user decided on an action for this dataset, e.g. 'buy'
     """
 
-    model_dir = model_dir + datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+    if load_ckpt:
+        if not os.path.exists(model_dir):
+            load_ckpt = False
 
-    if os.path.exists(model_dir):
-        if not load_ckpt:
+    if not load_ckpt:
+        model_dir = model_dir + datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+        if os.path.exists(model_dir):
             shutil.rmtree(model_dir, ignore_errors = True)
-    else:
-        os.makedirs(model_dir)
+        if not os.path.exists(model_dir):
+            os.makedirs(model_dir)
 
     ckpt_file = model_dir + '\\model.ckpt'
     output_file = model_dir + '\\prediction.txt'
     log_dir = model_dir + '\\log'
 
+    def write_resume_bat(next_epoch):
+        with open(model_dir + '\\resume.bat', 'w') as text_file:
+            text_file.write('python main.py --load=True --model_dir=. --test_file=test.csv --train_file=train.csv --start_epoch=%s\npause' % next_epoch)
 
-    print('Copying data to model dir')
-    copyfile('StockFlow.Python.py', model_dir + '\\main.py')	
-    copyfile(buy_file, model_dir + '\\buy.csv')
-    copyfile(nobuy_file, model_dir + '\\nobuy.csv')
-    buy_file = model_dir + '\\buy.csv'
-    nobuy_file = model_dir + '\\nobuy.csv'
+    if not load_ckpt:
+        print('Copying data to model dir')
+        copyfile('StockFlow.Python.py', model_dir + '\\main.py')
+        copyfile(test_file, model_dir + '\\test.csv')
+        copyfile(train_file, model_dir + '\\train.csv')
+        write_resume_bat(0)
+        with open(model_dir + '\\tensorboard.bat', 'w') as text_file:
+            text_file.write('tensorboard.exe --logdir=.')
+
+    test_file = model_dir + '\\test.csv'
+    train_file = model_dir + '\\train.csv'
 
     column_defaults = [['0'], ['0'], ['19700101'], ['ignore']] + [[0.00] for i in range(first_day, last_day + 1)]
 
     tf.logging.set_verbosity(tf.logging.INFO)
 
     print('Loading data')
-    data = Snapshots(model_dir, buy_file, nobuy_file, batch_size, epochs, test_data_ratio, column_defaults, buy_label)
+    data = Snapshots(test_file, train_file, batch_size, column_defaults, buy_label)
 
     print('Model')
-    model = Model(batch_size, 1, data.train_iter, data.test_iter)
+    model = Model(1, data.train_next, data.test_next)
 
     print('Optimizer')
     with tf.name_scope('adam'):
@@ -475,6 +492,9 @@ def main(model_dir, load_ckpt, epochs, batch_size, buy_file, nobuy_file, test_da
             print('Restoring parameters from', ckpt_file)
             saver.restore(sess, ckpt_file)
 
+        sess.run([data.test_iter.initializer, data.train_iter.initializer], feed_dict={
+            data.epochs_tensor: epochs, data.batch_size_tensor: data.batch_size, data.test_count_tensor: data.test_count, data.train_count_tensor: data.train_count})
+
         if epochs > 0:
 
             print('Summary writer')
@@ -482,15 +502,17 @@ def main(model_dir, load_ckpt, epochs, batch_size, buy_file, nobuy_file, test_da
             train_writer = tf.summary.FileWriter(log_dir + '/train', sess.graph)
             test_writer = tf.summary.FileWriter(log_dir + '/test')
 
-            val_acc_mean = measure_accuracy(data, sess, model, merged, test_writer, -1)
+            saver.save(sess, ckpt_file)
+
+            val_acc_mean = measure_accuracy(data, sess, model, merged, test_writer, 0, epochs)
             print("initial validation accuracy = %.4f" % val_acc_mean)
 
-            for epoch in range(epochs):
+            for epoch in range(start_epoch, epochs):
                 begin = time.time()
 
-                train_acc_mean = train(data, sess, model, optimizer, merged, train_writer, epoch)
+                train_acc_mean = train(data, sess, model, optimizer, merged, train_writer, epoch, epochs)
 
-                val_acc_mean = measure_accuracy(data, sess, model, merged, test_writer, epoch)
+                val_acc_mean = measure_accuracy(data, sess, model, merged, test_writer, epoch + 1, epochs)
 
                 print("Epoch %d/%d, time = %ds, train accuracy = %.4f, validation accuracy = %.4f" % (
                     epoch + 1, epochs, time.time() - begin, train_acc_mean, val_acc_mean))
@@ -499,8 +521,9 @@ def main(model_dir, load_ckpt, epochs, batch_size, buy_file, nobuy_file, test_da
 
                 sys.stdout.flush()
 
+                write_resume_bat(epoch + 1)
+
         print('Predict')
-        test_iter = data.test.take(data.test_batches * batch_size).batch(batch_size).make_one_shot_iterator().get_next()
         predict(sess, model, output_file)
 
 
@@ -511,10 +534,10 @@ if __name__ == '__main__':
     main(model_dir = FLAGS.model_dir,
           load_ckpt = FLAGS.load,
           epochs = FLAGS.epochs,
+          start_epoch = FLAGS.start_epoch,
           batch_size = FLAGS.batch_size,
-          buy_file = FLAGS.buy_file,
-          nobuy_file = FLAGS.nobuy_file,
-          test_data_ratio = FLAGS.test_data_ratio,
+          test_file = FLAGS.test_file,
+          train_file = FLAGS.train_file,
           first_day = FLAGS.first_day,
           last_day = FLAGS.last_day,
           buy_label = FLAGS.buy_label)
