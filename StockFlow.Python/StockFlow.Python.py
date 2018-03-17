@@ -161,10 +161,12 @@ class Model(object):
 
         conv1 = self.__conv_layer('conv1', x, 7, 2, 64, True)
         conv1_pool = self.__max_pool_layer('conv1_pool', conv1, 3, 2)
+        conv1_norm = tf.nn.local_response_normalization(conv1_pool, name='conv1_norm')
 
-        conv2_reduce = self.__conv_layer('conv2_reduce', conv1_pool, 1, 1, 64, True, 'VALID')
+        conv2_reduce = self.__conv_layer('conv2_reduce', conv1_norm, 1, 1, 64, True, 'VALID')
         conv2 = self.__conv_layer('conv2', conv2_reduce, 3, 1, 192, True)
-        conv2_pool = self.__max_pool_layer('conv2_pool', conv2, 3, 2)
+        conv2_norm = tf.nn.local_response_normalization(conv2, name='conv2_norm')
+        conv2_pool = self.__max_pool_layer('conv2_pool', conv2_norm, 3, 2)
 
         inception3a = self.__inception_module('inception3a', conv2_pool, 64, 96, 128, 16, 32, 32)
         inception3b = self.__inception_module('inception3b', inception3a, 128, 128, 192, 32, 96, 64)
@@ -182,7 +184,7 @@ class Model(object):
         inception4a_exit = self.__exit_layer('exit_4a', inception4a_reduce, self.aux_fc_dropout_keep)
 
         inception4e_avg = self.__avg_pool_layer('inception4a_avg', inception4e, 5, 3)
-        inception4e_reduce = self.__conv_layer('inception4a_reduce', inception4e_avg, 1, 1, 128, True)
+        inception4e_reduce = self.__conv_layer('inception4e_reduce', inception4e_avg, 1, 1, 128, True)
         inception4e_exit = self.__exit_layer('exit_4e', inception4e_reduce, self.aux_fc_dropout_keep)
 
         inception5a = self.__inception_module('inception5a', inception4p, 256, 160, 320, 32, 128, 128)
@@ -282,17 +284,19 @@ class Model(object):
             maxpool = self.__max_pool_layer('pool', x, 3, 1)
             conv_pool_reduce = self.__conv_layer('conv_pool_reduce', maxpool, 1, 1, out_pool, False)
 
-            return tf.nn.relu(tf.concat(axis=3, values=[conv_1x1, conv_3x1, conv_5x1, conv_pool_reduce]))
+            return tf.nn.leaky_relu(tf.concat(axis=3, values=[conv_1x1, conv_3x1, conv_5x1, conv_pool_reduce]))
 
     def __conv_layer(self, name, in_layer, width, stride, out_dim, relu, padding='SAME'):
         with tf.variable_scope(name):
             in_layer_shape = int(in_layer.get_shape()[3])
 
-            W = tf.Variable(tf.truncated_normal([width, 1, in_layer_shape, out_dim], stddev=0.1), name='W')
+            initializer = tf.contrib.layers.xavier_initializer(uniform=False)
+            W = tf.get_variable('W', [width, 1, in_layer_shape, out_dim], initializer=initializer, dtype=tf.float32)
             self.__variable_summaries('W', W)
             # __image_summary('W', W, 5, 1 out_dim)
 
-            b = tf.Variable(tf.constant(0.1, shape=[out_dim]), name='b')
+            initializer = tf.constant_initializer(0.0)
+            b = tf.get_variable('b', [out_dim], initializer=initializer, dtype=tf.float32)
             self.__variable_summaries(name, b)
 
             r = tf.nn.conv2d(in_layer, W, strides=[1, stride, 1, 1], padding=padding, name=name) + b
@@ -300,7 +304,7 @@ class Model(object):
                 tf.summary.histogram('r', r)
 
             if relu:
-                r = tf.nn.relu(r)
+                r = tf.nn.leaky_relu(r)
                 if self.summary_level >= 2:
                     tf.summary.histogram('relu', r)
 
@@ -310,12 +314,12 @@ class Model(object):
         with tf.variable_scope(name):
             in_layer_shape = int(np.prod(in_layer.get_shape()[1:]))
 
-            initializer = tf.truncated_normal_initializer(dtype=tf.float32, stddev=1e-1)
-            W = tf.get_variable("weights", [in_layer_shape, out_dim], initializer=initializer, dtype=tf.float32)
+            initializer = tf.contrib.layers.xavier_initializer(uniform=False)
+            W = tf.get_variable('W', [in_layer_shape, out_dim], initializer=initializer, dtype=tf.float32)
             self.__variable_summaries('W', W)
 
             initializer = tf.constant_initializer(0.0)
-            b = tf.get_variable("biases", [out_dim], initializer=initializer, dtype=tf.float32)
+            b = tf.get_variable('b', [out_dim], initializer=initializer, dtype=tf.float32)
             self.__variable_summaries('b', b)
 
             in_layer_flat = tf.reshape(in_layer, [-1, in_layer_shape])
@@ -325,7 +329,7 @@ class Model(object):
                 tf.summary.histogram('r', r)
 
             if relu:
-                r = tf.nn.relu(r)
+                r = tf.nn.leaky_relu(r)
                 if self.summary_level >= 2:
                     tf.summary.histogram('relu', r)
 
@@ -396,8 +400,8 @@ def run(name, sess, model, data, epoch, epochs, optimizer, batches, aux_fc_dropo
                 remaining_epoch = seconds_per_batch * (batches - i)
                 remaining_total = remaining_epoch + seconds_per_batch * batches * (epochs - epoch - 1)
                 print("%s %d/%d # %.2f rows/s # %s remaining in epoch # %s remaining in training" % (
-                    name, i + 1, batches, rows_per_second, datetime.timedelta(seconds=remaining_epoch),
-                    datetime.timedelta(seconds=remaining_total)))
+                    name, i + 1, batches, rows_per_second, datetime.timedelta(seconds=int(remaining_epoch)),
+                    datetime.timedelta(seconds=int(remaining_total))))
             else:
                 print("%s %d/%d avg=%.2frows/s" % (name, i + 1, batches, rows_per_second))
 
