@@ -60,60 +60,62 @@ class Snapshots(object):
     def __init__(self, test_file, train_file, batch_size, column_defaults, buy_label):
         self.batch_size = batch_size
 
-        self.epochs_tensor = tf.placeholder(tf.int64, name='epochs')
-        self.batch_size_tensor = tf.placeholder(tf.int64, name='batch_size')
-        self.test_count_tensor = tf.placeholder(tf.int64, name='test_count')
-        self.train_count_tensor = tf.placeholder(tf.int64, name='train_count')
+        with tf.name_scope('data'):
 
-        assert tf.gfile.Exists(test_file), ('%s not found.' % test_file)
-        assert tf.gfile.Exists(train_file), ('%s not found.' % train_file)
+            self.epochs_tensor = tf.placeholder(tf.int64, name='epochs')
+            self.batch_size_tensor = tf.placeholder(tf.int64, name='batch_size')
+            self.test_count_tensor = tf.placeholder(tf.int64, name='test_count')
+            self.train_count_tensor = tf.placeholder(tf.int64, name='train_count')
 
-        test_file_count = Snapshots.__get_line_count(test_file)
-        train_file_count = Snapshots.__get_line_count(train_file)
+            assert tf.gfile.Exists(test_file), ('%s not found.' % test_file)
+            assert tf.gfile.Exists(train_file), ('%s not found.' % train_file)
 
-        if test_file_count < self.batch_size:
-            print(
-                'WARNING: batch_size is greater than available test datasets. Reducing batch size to %d' % test_file_count)
-            self.batch_size = test_file_count
+            test_file_count = Snapshots.__get_line_count(test_file)
+            train_file_count = Snapshots.__get_line_count(train_file)
 
-        if train_file_count < self.batch_size:
-            print(
-                'WARNING: batch_size is greater than available train datasets. Reducing batch size to %d' % train_file_count)
-            self.batch_size = train_file_count
+            if test_file_count < self.batch_size:
+                print(
+                    'WARNING: batch_size is greater than available test datasets. Reducing batch size to %d' % test_file_count)
+                self.batch_size = test_file_count
 
-        self.test_batches = int(test_file_count / self.batch_size)
-        self.train_batches = int(train_file_count / self.batch_size)
+            if train_file_count < self.batch_size:
+                print(
+                    'WARNING: batch_size is greater than available train datasets. Reducing batch size to %d' % train_file_count)
+                self.batch_size = train_file_count
 
-        self.test_count = self.test_batches * self.batch_size
-        self.train_count = self.train_batches * self.batch_size
+            self.test_batches = int(test_file_count / self.batch_size)
+            self.train_batches = int(train_file_count / self.batch_size)
 
-        def parse_csv(value):
-            columns = tf.decode_csv(value, record_defaults=column_defaults, field_delim=";")
+            self.test_count = self.test_batches * self.batch_size
+            self.train_count = self.train_batches * self.batch_size
 
-            features = columns[4:len(columns)]
-            labels = columns[3]
+            def parse_csv(value):
+                columns = tf.decode_csv(value, record_defaults=column_defaults, field_delim=";")
 
-            features = tf.stack(features)
-            features = tf.reshape(features, [features.get_shape()[0], 1, 1])
+                features = columns[4:len(columns)]
+                labels = columns[3]
 
-            labels = tf.cast(tf.equal(labels, buy_label), dtype=tf.int32)
-            labels = tf.one_hot(indices=labels, depth=2, on_value=1.0, off_value=0.0, axis=-1)
+                features = tf.stack(features)
+                features = tf.reshape(features, [features.get_shape()[0], 1, 1])
 
-            return features, labels
+                labels = tf.cast(tf.equal(labels, buy_label), dtype=tf.int32)
+                labels = tf.one_hot(indices=labels, depth=2, on_value=1.0, off_value=0.0, axis=-1)
 
-        print('TextLineDataset')
-        test_dataset = tf.data.TextLineDataset(test_file).skip(1).take(self.test_count_tensor)
-        train_dataset = tf.data.TextLineDataset(train_file).skip(1).take(self.train_count_tensor)
+                return features, labels
 
-        print('map')
-        self.test = test_dataset.map(parse_csv, num_parallel_calls=5)
-        self.train = train_dataset.map(parse_csv, num_parallel_calls=5)
+            print('TextLineDataset')
+            test_dataset = tf.data.TextLineDataset(test_file).skip(1).take(self.test_count_tensor)
+            train_dataset = tf.data.TextLineDataset(train_file).skip(1).take(self.train_count_tensor)
 
-        print('batch/prefetch/cache/repeat/iter')
-        self.test = self.test.batch(self.batch_size_tensor).prefetch(self.test_count_tensor).cache().repeat(tf.add(self.epochs_tensor, tf.constant(2, tf.int64)))
-        self.train = self.train.batch(self.batch_size_tensor).prefetch(self.train_count_tensor).cache().repeat(self.epochs_tensor)
-        self.test_iter = self.test.make_initializable_iterator()
-        self.train_iter = self.train.make_initializable_iterator()
+            print('map')
+            self.test = test_dataset.map(parse_csv, num_parallel_calls=5)
+            self.train = train_dataset.map(parse_csv, num_parallel_calls=5)
+
+            print('batch/prefetch/cache/repeat/iter')
+            self.test = self.test.batch(self.batch_size_tensor).prefetch(self.test_count_tensor).cache().repeat(tf.add(self.epochs_tensor, tf.constant(2, tf.int64)))
+            self.train = self.train.batch(self.batch_size_tensor).prefetch(self.train_count_tensor).cache().repeat(self.epochs_tensor)
+            self.test_iter = self.test.make_initializable_iterator()
+            self.train_iter = self.train.make_initializable_iterator()
 
     def __get_line_count(file):
 
@@ -141,13 +143,14 @@ class Model(object):
         self.exit_weight = tf.placeholder(tf.float32, shape=())
         self.is_train = tf.placeholder(tf.bool)
 
-        def get_train_data():
-            return train_iter.get_next()
+        with tf.name_scope('input_switch'):
+            def get_train_data():
+                return train_iter.get_next()
 
-        def get_test_data():
-            return test_iter.get_next()
+            def get_test_data():
+                return test_iter.get_next()
 
-        x, y = tf.cond(tf.equal(self.is_train, True), lambda: get_train_data(), lambda: get_test_data())
+            x, y = tf.cond(tf.equal(self.is_train, True), lambda: get_train_data(), lambda: get_test_data())
 
         # days = tf.shape(x)[1]
         # o = tf.one_hot(indices=tf.cast(tf.multiply(tf.reshape(x,[tf.shape(x)[0],days]),100), tf.int32), depth=100, on_value=1.0, off_value=0.0, axis=-1)
@@ -188,56 +191,70 @@ class Model(object):
 
         exit = self.__exit_layer('exit', inception5p, self.fc_dropout_keep)
 
-        logits = tf.add(tf.add(tf.scalar_mul(self.aux_exit_4a_weight, inception4a_exit),
-                               tf.scalar_mul(self.aux_exit_4e_weight, inception4e_exit)),
-                        tf.scalar_mul(self.exit_weight, exit))
+        y_sg = tf.stop_gradient(y)
 
         with tf.variable_scope('loss'):
 
-            y_sg = tf.stop_gradient(y)
-
-            softmax = tf.nn.softmax_cross_entropy_with_logits_v2(labels=y_sg, logits=logits)
-            self.loss = tf.reduce_mean(softmax)
-            if self.summary_level >= 1:
-                tf.summary.scalar('loss_combined', self.loss)
-
-            if self.summary_level >= 1:
-                softmax_exit = tf.nn.softmax_cross_entropy_with_logits_v2(labels=y_sg, logits=exit)
-                loss_exit = tf.reduce_mean(softmax_exit)
-                tf.summary.scalar('loss_exit', loss_exit)
-
+            with tf.variable_scope('inception4a_exit'):
                 softmax_inception4a_exit = tf.nn.softmax_cross_entropy_with_logits_v2(labels=y_sg,
                                                                                       logits=inception4a_exit)
                 loss_inception4a_exit = tf.reduce_mean(softmax_inception4a_exit)
-                tf.summary.scalar('loss_inception4a_exit', loss_inception4a_exit)
+                if self.summary_level >= 1:
+                    tf.summary.scalar('value', loss_inception4a_exit)
 
+            with tf.variable_scope('inception4e_exit'):
                 softmax_inception4a_exit = tf.nn.softmax_cross_entropy_with_logits_v2(labels=y_sg,
                                                                                       logits=inception4e_exit)
                 loss_inception4e_exit = tf.reduce_mean(softmax_inception4a_exit)
-                tf.summary.scalar('loss_inception4e_exit', loss_inception4e_exit)
+                if self.summary_level >= 1:
+                    tf.summary.scalar('value', loss_inception4e_exit)
+
+            with tf.variable_scope('exit'):
+                softmax_exit = tf.nn.softmax_cross_entropy_with_logits_v2(labels=y_sg, logits=exit)
+                loss_exit = tf.reduce_mean(softmax_exit)
+                if self.summary_level >= 1:
+                    tf.summary.scalar('value', loss_exit)
+
+            with tf.variable_scope('combined'):
+                self.loss = tf.add(tf.add(tf.scalar_mul(self.aux_exit_4a_weight, loss_inception4a_exit),
+                                          tf.scalar_mul(self.aux_exit_4e_weight, loss_inception4e_exit)),
+                                   tf.scalar_mul(self.exit_weight, loss_exit))
+                if self.summary_level >= 1:
+                    tf.summary.scalar('value', self.loss)
 
         with tf.variable_scope('accuracy'):
-            correct_prediction_combined = tf.equal(tf.argmax(logits, 1), tf.argmax(y, 1))
-            accuracy_combined = tf.reduce_mean(tf.cast(correct_prediction_combined, tf.float32))
-            if self.summary_level >= 1:
-                tf.summary.scalar('accuracy_combined', accuracy_combined)
 
-            self.correct_prediction = tf.equal(tf.argmax(exit, 1), tf.argmax(y, 1))
-            self.accuracy = tf.reduce_mean(tf.cast(self.correct_prediction, tf.float32))
-            if self.summary_level >= 1:
-                tf.summary.scalar('accuracy_exit', self.accuracy)
+            with tf.variable_scope('inception4a_exit'):
+                correct_prediction_inception4a_exit = tf.equal(tf.argmax(inception4a_exit, 1), tf.argmax(y, 1))
+                accuracy_inception4a_exit = tf.reduce_mean(tf.cast(correct_prediction_inception4a_exit, tf.float32))
+                if self.summary_level >= 1:
+                    tf.summary.scalar('value', accuracy_inception4a_exit)
 
-            correct_prediction_inception4a_exit = tf.equal(tf.argmax(inception4a_exit, 1), tf.argmax(y, 1))
-            accuracy_inception4a_exit = tf.reduce_mean(tf.cast(correct_prediction_inception4a_exit, tf.float32))
-            if self.summary_level >= 1:
-                tf.summary.scalar('accuracy_inception4a_exit', accuracy_inception4a_exit)
+            with tf.variable_scope('inception4e_exit'):
+                correct_prediction_inception4e_exit = tf.equal(tf.argmax(inception4e_exit, 1), tf.argmax(y, 1))
+                accuracy_inception4e_exit = tf.reduce_mean(tf.cast(correct_prediction_inception4e_exit, tf.float32))
+                if self.summary_level >= 1:
+                    tf.summary.scalar('value', accuracy_inception4e_exit)
 
-            correct_prediction_inception4e_exit = tf.equal(tf.argmax(inception4e_exit, 1), tf.argmax(y, 1))
-            accuracy_inception4e_exit = tf.reduce_mean(tf.cast(correct_prediction_inception4e_exit, tf.float32))
-            if self.summary_level >= 1:
-                tf.summary.scalar('accuracy_inception4e_exit', accuracy_inception4e_exit)
+            with tf.variable_scope('exit'):
+                self.correct_prediction = tf.equal(tf.argmax(exit, 1), tf.argmax(y, 1))
+                self.accuracy = tf.reduce_mean(tf.cast(self.correct_prediction, tf.float32))
+                if self.summary_level >= 1:
+                    tf.summary.scalar('value', self.accuracy)
 
-        with tf.variable_scope('pred'):
+            with tf.variable_scope('combined'):
+                accuracy_combined = tf.divide(tf.add(tf.add(tf.scalar_mul(self.aux_exit_4a_weight, accuracy_inception4a_exit),
+                                                            tf.scalar_mul(self.aux_exit_4e_weight, accuracy_inception4e_exit)),
+                                                     tf.scalar_mul(self.exit_weight, self.accuracy)),
+                                              tf.add(tf.add(self.aux_exit_4a_weight, self.aux_exit_4e_weight), self.exit_weight))
+                if self.summary_level >= 1:
+                    tf.summary.scalar('value', accuracy_combined)
+
+        with tf.name_scope('pred_combined'):
+            logits = tf.add(tf.add(tf.scalar_mul(self.aux_exit_4a_weight, inception4a_exit),
+                                   tf.scalar_mul(self.aux_exit_4e_weight, inception4e_exit)),
+                            tf.scalar_mul(self.exit_weight, exit))
+
             self.pred = tf.argmax(logits, 1)
 
     def __exit_layer(self, name, x, dropout_keep):
@@ -247,7 +264,7 @@ class Model(object):
         with tf.variable_scope(name + '_fc1_drop'):
             fc1_drop = tf.nn.dropout(fc1, dropout_keep)
             if self.summary_level >= 2:
-                tf.summary.histogram(name + '_fc1_drop', fc1_drop)
+                tf.summary.histogram('value', fc1_drop)
 
         fc2 = self.__full_layer(name + '_fc2', fc1_drop, 2, False)
 
@@ -255,15 +272,15 @@ class Model(object):
 
     def __inception_module(self, name, x, out_1x1, reduce3, out_3x1, reduce5, out_5x1, out_pool):
         with tf.variable_scope(name):
-            conv_reduce3 = self.__conv_layer(name + '_conv_reduce_3x1', x, 1, 1, reduce3, True)
-            conv_reduce5 = self.__conv_layer(name + '_conv_reduce_5x1', x, 1, 1, reduce5, True)
+            conv_reduce3 = self.__conv_layer('conv_reduce_3x1', x, 1, 1, reduce3, True)
+            conv_reduce5 = self.__conv_layer('conv_reduce_5x1', x, 1, 1, reduce5, True)
 
-            conv_1x1 = self.__conv_layer(name + '_conv_1x1', x, 1, 1, out_1x1, False)
-            conv_3x1 = self.__conv_layer(name + '_conv_3x1', conv_reduce3, 3, 1, out_3x1, False)
-            conv_5x1 = self.__conv_layer(name + '_conv_5x1', conv_reduce5, 5, 1, out_5x1, False)
+            conv_1x1 = self.__conv_layer('conv_1x1', x, 1, 1, out_1x1, False)
+            conv_3x1 = self.__conv_layer('conv_3x1', conv_reduce3, 3, 1, out_3x1, False)
+            conv_5x1 = self.__conv_layer('conv_5x1', conv_reduce5, 5, 1, out_5x1, False)
 
-            maxpool = self.__max_pool_layer(name + '_pool', x, 3, 1)
-            conv_pool_reduce = self.__conv_layer(name + '_conv_pool_reduce', maxpool, 1, 1, out_pool, False)
+            maxpool = self.__max_pool_layer('pool', x, 3, 1)
+            conv_pool_reduce = self.__conv_layer('conv_pool_reduce', maxpool, 1, 1, out_pool, False)
 
             return tf.nn.relu(tf.concat(axis=3, values=[conv_1x1, conv_3x1, conv_5x1, conv_pool_reduce]))
 
@@ -271,21 +288,21 @@ class Model(object):
         with tf.variable_scope(name):
             in_layer_shape = int(in_layer.get_shape()[3])
 
-            W = tf.Variable(tf.truncated_normal([width, 1, in_layer_shape, out_dim], stddev=0.1), name=name + '_W')
-            self.__variable_summaries(name + '_W', W)
-            # __image_summary(name + '_W', W, 5, 1 out_dim)
+            W = tf.Variable(tf.truncated_normal([width, 1, in_layer_shape, out_dim], stddev=0.1), name='W')
+            self.__variable_summaries('W', W)
+            # __image_summary('W', W, 5, 1 out_dim)
 
-            b = tf.Variable(tf.constant(0.1, shape=[out_dim]), name=name + '_b')
+            b = tf.Variable(tf.constant(0.1, shape=[out_dim]), name='b')
             self.__variable_summaries(name, b)
 
             r = tf.nn.conv2d(in_layer, W, strides=[1, stride, 1, 1], padding=padding, name=name) + b
             if self.summary_level >= 2:
-                tf.summary.histogram(name + '_r', r)
+                tf.summary.histogram('r', r)
 
             if relu:
                 r = tf.nn.relu(r)
                 if self.summary_level >= 2:
-                    tf.summary.histogram(name + '_relu', r)
+                    tf.summary.histogram('relu', r)
 
             return r
 
@@ -295,22 +312,22 @@ class Model(object):
 
             initializer = tf.truncated_normal_initializer(dtype=tf.float32, stddev=1e-1)
             W = tf.get_variable("weights", [in_layer_shape, out_dim], initializer=initializer, dtype=tf.float32)
-            self.__variable_summaries(name + '_W', W)
+            self.__variable_summaries('W', W)
 
             initializer = tf.constant_initializer(0.0)
             b = tf.get_variable("biases", [out_dim], initializer=initializer, dtype=tf.float32)
-            self.__variable_summaries(name + '_b', b)
+            self.__variable_summaries('b', b)
 
             in_layer_flat = tf.reshape(in_layer, [-1, in_layer_shape])
 
             r = tf.matmul(in_layer_flat, W) + b
             if self.summary_level >= 2:
-                tf.summary.histogram(name + '_r', r)
+                tf.summary.histogram('r', r)
 
             if relu:
                 r = tf.nn.relu(r)
                 if self.summary_level >= 2:
-                    tf.summary.histogram(name + '_relu', r)
+                    tf.summary.histogram('relu', r)
 
             return r
 
@@ -318,14 +335,14 @@ class Model(object):
         with tf.variable_scope(name):
             pool = tf.nn.max_pool(x, ksize=[1, width, 1, 1], strides=[1, stride, 1, 1], padding='SAME', name=name)
             if self.summary_level >= 2:
-                tf.summary.histogram(name, pool)
+                tf.summary.histogram('value', pool)
             return pool
 
     def __avg_pool_layer(self, name, x, width, stride):
         with tf.variable_scope(name):
             pool = tf.nn.avg_pool(x, ksize=[1, width, 1, 1], strides=[1, stride, 1, 1], padding='SAME', name=name)
             if self.summary_level >= 2:
-                tf.summary.histogram(name, pool)
+                tf.summary.histogram('value', pool)
             return pool
 
     def __variable_summaries(self, name, var):
