@@ -136,6 +136,9 @@ class Model(object):
         self.summary_level = summary_level
         self.aux_fc_dropout_keep = tf.placeholder(tf.float32)
         self.fc_dropout_keep = tf.placeholder(tf.float32)
+        self.aux_exit_4a_weight = tf.placeholder(tf.float32, shape=())
+        self.aux_exit_4e_weight = tf.placeholder(tf.float32, shape=())
+        self.exit_weight = tf.placeholder(tf.float32, shape=())
         self.is_train = tf.placeholder(tf.bool)
 
         def get_train_data():
@@ -185,9 +188,9 @@ class Model(object):
 
         exit = self.__exit_layer('exit', inception5p, self.fc_dropout_keep)
 
-        aux_scale = tf.constant(0.3, tf.float32)
-        logits = tf.add(tf.add(tf.scalar_mul(aux_scale, inception4a_exit), tf.scalar_mul(aux_scale, inception4e_exit)),
-                        exit)
+        logits = tf.add(tf.add(tf.scalar_mul(self.aux_exit_4a_weight, inception4a_exit),
+                               tf.scalar_mul(self.aux_exit_4e_weight, inception4e_exit)),
+                        tf.scalar_mul(self.exit_weight, exit))
 
         with tf.variable_scope('loss'):
 
@@ -214,26 +217,28 @@ class Model(object):
                 tf.summary.scalar('loss_inception4e_exit', loss_inception4e_exit)
 
         with tf.variable_scope('accuracy'):
+            correct_prediction_combined = tf.equal(tf.argmax(logits, 1), tf.argmax(y, 1))
+            accuracy_combined = tf.reduce_mean(tf.cast(correct_prediction_combined, tf.float32))
+            if self.summary_level >= 1:
+                tf.summary.scalar('accuracy_combined', accuracy_combined)
+
             self.correct_prediction = tf.equal(tf.argmax(exit, 1), tf.argmax(y, 1))
             self.accuracy = tf.reduce_mean(tf.cast(self.correct_prediction, tf.float32))
             if self.summary_level >= 1:
                 tf.summary.scalar('accuracy_exit', self.accuracy)
 
+            correct_prediction_inception4a_exit = tf.equal(tf.argmax(inception4a_exit, 1), tf.argmax(y, 1))
+            accuracy_inception4a_exit = tf.reduce_mean(tf.cast(correct_prediction_inception4a_exit, tf.float32))
             if self.summary_level >= 1:
-                correct_prediction_inception4a_exit = tf.equal(tf.argmax(inception4a_exit, 1), tf.argmax(y, 1))
-                accuracy_inception4a_exit = tf.reduce_mean(tf.cast(correct_prediction_inception4a_exit, tf.float32))
                 tf.summary.scalar('accuracy_inception4a_exit', accuracy_inception4a_exit)
 
-                correct_prediction_inception4e_exit = tf.equal(tf.argmax(inception4e_exit, 1), tf.argmax(y, 1))
-                accuracy_inception4e_exit = tf.reduce_mean(tf.cast(correct_prediction_inception4e_exit, tf.float32))
+            correct_prediction_inception4e_exit = tf.equal(tf.argmax(inception4e_exit, 1), tf.argmax(y, 1))
+            accuracy_inception4e_exit = tf.reduce_mean(tf.cast(correct_prediction_inception4e_exit, tf.float32))
+            if self.summary_level >= 1:
                 tf.summary.scalar('accuracy_inception4e_exit', accuracy_inception4e_exit)
 
-                correct_prediction_combined = tf.equal(tf.argmax(logits, 1), tf.argmax(y, 1))
-                accuracy_combined = tf.reduce_mean(tf.cast(correct_prediction_combined, tf.float32))
-                tf.summary.scalar('accuracy_combined', accuracy_combined)
-
         with tf.variable_scope('pred'):
-            self.pred = tf.argmax(exit, 1)
+            self.pred = tf.argmax(logits, 1)
 
     def __exit_layer(self, name, x, dropout_keep):
 
@@ -356,7 +361,7 @@ def dump_step_data(name, x, y, epoch, i, batches):
             text_file.write('\n')
 
 
-def run(name, sess, model, data, epoch, epochs, optimizer, batches, aux_fc_dropout_keep, fc_dropout_keep, summary,
+def run(name, sess, model, data, epoch, epochs, optimizer, batches, aux_fc_dropout_keep, fc_dropout_keep, aux_exit_4a_weight, aux_exit_4e_weight, exit_weight, summary,
         summary_writer):
     accuracies = []
     durations = []
@@ -385,7 +390,8 @@ def run(name, sess, model, data, epoch, epochs, optimizer, batches, aux_fc_dropo
             # dump_step_data(name, x, y, epoch, i, data.train_batches)
 
             feed_dict = {model.aux_fc_dropout_keep: aux_fc_dropout_keep, model.fc_dropout_keep: fc_dropout_keep,
-                         model.is_train: optimizer is not None}
+                         model.is_train: optimizer is not None, model.aux_exit_4a_weight: aux_exit_4a_weight,
+                         model.aux_exit_4e_weight: aux_exit_4e_weight, model.exit_weight: exit_weight}
 
             if optimizer is not None:
                 _, acc, sum = sess.run([optimizer, model.accuracy, summary], feed_dict=feed_dict)
@@ -407,16 +413,17 @@ def run(name, sess, model, data, epoch, epochs, optimizer, batches, aux_fc_dropo
 
 
 def train(data, sess, model, optimizer, summary, summary_writer, epoch, epochs):
-    return run('Train', sess, model, data, epoch, epochs, optimizer, data.train_batches, 0.3, 0.4, summary,
+    return run('Train', sess, model, data, epoch, epochs, optimizer, data.train_batches, 0.3, 0.4, 0.3, 0.3, 1, summary,
                summary_writer)
 
 
 def measure_accuracy(data, sess, model, summary, summary_writer, epoch, epochs):
-    return run('Test', sess, model, data, epoch, epochs, None, data.test_batches, 1, 1, summary, summary_writer)
+    return run('Test', sess, model, data, epoch, epochs, None, data.test_batches, 1, 1, 0.3, 0.3, 1, summary, summary_writer)
 
 
 def predict(sess, model, output_file):
-    feed_dict = {model.aux_fc_dropout_keep: 1.0, model.fc_dropout_keep: 1.0, model.is_train: False}
+    feed_dict = {model.aux_fc_dropout_keep: 1.0, model.fc_dropout_keep: 1.0, model.is_train: False,
+                 model.aux_exit_4a_weight: 0.3, model.aux_exit_4e_weight: 0.3, model.exit_weight: 1}
     with tf.name_scope('prediction'):
         prediction = sess.run(model.pred, feed_dict=feed_dict)
 
