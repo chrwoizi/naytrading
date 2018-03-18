@@ -256,11 +256,14 @@ def main(model_dir, load_ckpt, epochs, start_epoch, batch_size, test_file, train
     def write_resume_bat(next_epoch):
         with open(model_dir + '\\resume.bat', 'w') as text_file:
             text_file.write(
-                'python main.py --load=True --model_dir=. --test_file=test.csv --train_file=train.csv --start_epoch=%s\npause' % next_epoch)
+                'python StockFlow.Python.py --load=True --model_dir=. --test_file=test.csv --train_file=train.csv --start_epoch=%s\npause' % next_epoch)
 
     if not load_ckpt:
         print('Copying data to model dir')
-        copyfile('StockFlow.Python.py', model_dir + '\\main.py')
+        copyfile('StockFlow.Python.py', model_dir + '\\StockFlow.Python.py')
+        copyfile('NetworkBase.py', model_dir + '\\NetworkBase.py')
+        copyfile('GoogLeNet.py', model_dir + '\\GoogLeNet.py')
+        copyfile('InceptionResNetV2.py', model_dir + '\\InceptionResNetV2.py')
         copyfile(test_file, model_dir + '\\test.csv')
         copyfile(train_file, model_dir + '\\train.csv')
         write_resume_bat(0)
