@@ -1,10 +1,14 @@
 # StockFlow
 StockFlow is a machine learning application that mimics stock trading decisions of the user. 
 
-The trading philosophy is chart-based only, i.e. the only resource data for a decision is the price history of the past 5 years. No stock name, no news, no ratings. Only the chart.
+The user's analysis philosophy must be purely technical, i.e. the only resource data for a buy/sell decision is the price history of the past 5 years. No stock name, no news, no ratings.
 
-A website shows current stock charts to the user and lets him/her choose whether to buy, ignore, or sell the stock. The chart data and the decision are stored in a database. 
+The website StockFlow.Web shows current stock charts to the users and lets them choose whether to buy, ignore, or sell the stock. The price history and the decision are stored in a database. 
 
-In future versions, a Tensorflow neural network is going to be trained on the recorded decisions. This neural network is going to be used to decide automatically whether to buy or sell a stock based on its current chart.
+In StockFlow.Python, a convolutional neural network is trained on the recorded data, using the price history as input and the user decision as desired output.
 
-The console application StockFlow.Trader can be used to actually buy or sell the stocks on a stock exchange.
+Currently, I am trying to record trade decisions to have enough training data for selecting a suitable network architecture. This may take a few months.
+
+Down the road, current stock prices are going to be fed into the network regularly to find stocks that can be bought or sold based on the user's analysis pattern.
+
+Meanwhile, the console application StockFlow.Trader can be used to actually buy or sell the stocks based on the recorded user decisions.
