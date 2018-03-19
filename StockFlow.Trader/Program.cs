@@ -322,7 +322,8 @@ namespace StockFlow.Trader
             var previousBuyOrders =
                 from buySuggestion in db.TradeSuggestions
                 where buySuggestion.Action == "buy"
-                where buySuggestion.Isin == suggestion.Isin || buySuggestion.Wkn == suggestion.Wkn
+                where (buySuggestion.Isin != null && suggestion.Isin != null && buySuggestion.Isin == suggestion.Isin)
+                || (buySuggestion.Wkn != null && suggestion.Wkn != null && buySuggestion.Wkn == suggestion.Wkn)
                 let buyLog = buySuggestion.Logs.OrderByDescending(x => x.Time).FirstOrDefault(x => x.Status == Status.Complete.ToString())
                 orderby buyLog.Time descending
                 select buyLog;
