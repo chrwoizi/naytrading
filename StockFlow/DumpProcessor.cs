@@ -262,7 +262,7 @@ namespace StockFlow
                                             {
                                                 buyWriter.WriteLine(linesRead + ";" + line);
                                             }
-                                            else
+                                            else if(meta.Decision == "ignore")
                                             {
                                                 nobuyWriter.WriteLine(linesRead + ";" + line);
                                             }
@@ -273,7 +273,7 @@ namespace StockFlow
                                             {
                                                 sellWriter.WriteLine(linesRead + ";" + line);
                                             }
-                                            else
+                                            else if(meta.Decision == "ignore")
                                             {
                                                 nosellWriter.WriteLine(linesRead + ";" + line);
                                             }

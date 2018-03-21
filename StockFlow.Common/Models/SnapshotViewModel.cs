@@ -21,15 +21,23 @@ namespace StockFlow.Web.Models
             }
         }
         
-        public string Time
+        public string Date
         {
             get
             {
                 return Model.Time.ToString("dd.MM.yy");
             }
         }
-        
-        public string ModifiedTime
+
+        public string DateSortable
+        {
+            get
+            {
+                return Model.Time.ToString("yyMMdd");
+            }
+        }
+
+        public string ModifiedDateSortable
         {
             get
             {
