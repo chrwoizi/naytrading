@@ -1,10 +1,46 @@
 import random
 import math
+import numpy as np
+import datetime
 from noise import pnoise1
 import matplotlib.pyplot as plt
 
 
-def generate(y_base, gradient, width, height, jitter_low, jitter_med, jitter_high, deform, end):
+def random_range(min, max):
+    return min + (max - min) * random.random()
+
+
+def sample(chart, x):
+    return chart[max(0, min(int(x), len(chart) - 1))]
+
+
+def linear_sample(chart, x):
+    x1 = sample(chart, int(x))
+    x2 = sample(chart, int(x) + 1)
+    return x1 + (x2 - x1) * (x - int(x))
+
+
+def normalize(chart):
+    chart_min = min(chart)
+    chart_max = max(chart)
+
+    for i,v in enumerate(chart):
+        diff = chart_max - chart_min
+        if diff != 0:
+            chart[i] = (chart[i] - chart_min) / diff
+
+
+def generate_well_formed(config):
+    days = config.days
+    y_base = config.y_base
+    gradient = config.gradient
+    width = config.width
+    height = config.height
+    jitter_low = config.jitter_low
+    jitter_med = config.jitter_med
+    jitter_high = config.jitter_high
+    deform = config.deform
+    end = config.end
 
     point_dist_min = int(width * 0.2 * days)
     point_dist_max = int(width * days)
@@ -48,7 +84,11 @@ def generate(y_base, gradient, width, height, jitter_low, jitter_med, jitter_hig
 
     chart = [0] * days_extra
 
-    base = 10000 * random.random()
+    base1 = 10000 * random.random()
+    base2 = 10000 * random.random()
+    base3 = 10000 * random.random()
+    base4 = 10000 * random.random()
+    base5 = 10000 * random.random()
 
     last_point = [0, (low_max + high_min) / 2, 1]
     for x in range(0, days_extra):
@@ -60,10 +100,11 @@ def generate(y_base, gradient, width, height, jitter_low, jitter_med, jitter_hig
 
             x_ratio = smooth((x - last_point[0]) / (next_point[0] - last_point[0]))
 
-            noise_high = pnoise1(base + x * 0.05) + 1 / 2
-            noise_med = pnoise1(base + x * 0.02) + 1 / 2
-            noise_low = pnoise1(base + x * 0.005) + 1 / 2
-            noise_very_low = pnoise1(base + x * 0.0005)
+            noise_high = pnoise1(base1 + x * 0.05) + 1 / 2
+            noise_med = pnoise1(base2 + x * 0.02) + 1 / 2
+            noise_low = pnoise1(base3 + x * 0.005) + 1 / 2
+            noise_very_low = pnoise1(base4 + x * 0.0005)
+            jitter_very_high = pnoise1(base5 + x * 0.08)
 
             if x >= last_x - transition_x:
                 transition_factor = smooth((last_x - x) / transition_x)
@@ -76,7 +117,7 @@ def generate(y_base, gradient, width, height, jitter_low, jitter_med, jitter_hig
             noise_med = 2 * noise_med - 1
             noise_low = 2 * noise_low - 1
 
-            jitter = y_mid * jitter_low * noise_low + (jitter_med * 0.5 + jitter_med * noise_med) * y_mid * jitter_high * noise_high
+            jitter = y_mid * jitter_low * noise_low + (jitter_med * 0.5 + jitter_med * noise_med) * y_mid * jitter_high * noise_high + 0.1 * y_mid * jitter_very_high
 
             chart[x] = last_point[1] + x_ratio * (next_point[1] - last_point[1]) + deform * y_mid * noise_very_low + jitter
 
@@ -89,43 +130,154 @@ def generate(y_base, gradient, width, height, jitter_low, jitter_med, jitter_hig
     if len(chart) > days:
         chart = chart[len(chart) - days:]
 
-    chart_min = min(chart)
-    chart_max = max(chart)
+    downsampled = [0] * 1024
+    for x in range(0, 1024):
+        downsampled[x] = linear_sample(chart, x / 1024 * len(chart))
+    chart = downsampled
 
-    for i,v in enumerate(chart):
-        chart[i] = (chart[i] - chart_min) / (chart_max - chart_min)
+    normalize(chart)
 
     return chart
 
 
 def generate_random():
+    chart = [0] * 1024
 
-    def random_range(min, max):
-        return min + (max - min) * random.random()
+    base = 10000 * random.random()
 
-    y_base = random_range(1, 100)
-    gradient = random_range(0.005, 2)
-    width = random_range(0.1, 0.5)
-    height = random_range(1 * width, 2 * width)
-    jitter_low = random_range(0.4 * height, 0.9 * height)
-    jitter_med = random_range(0.1, 0.15)
-    jitter_high = random_range(1 * height, 3 * height)
-    deform = random_range(0.005, 0.01)
+    #random slope
+    for x in range(0, 1024):
+        chart[x] = chart[max(0, x-1)] + random_range(-1,1)
 
-    chart = generate(y_base, gradient, width, height, jitter_low, jitter_med, jitter_high, deform, 0)
+    #deform
+    avg = sum(chart) / len(chart)
+    for x in range(0, 1024):
+        noise = pnoise1(base + x * 0.002)
+        chart[x] += 2 * avg * noise
+
+    # lift the end
+    for x in range(900, 1024):
+        chart[x] += chart[x-100] * math.pow((x - 900) / (1024-900), 2)
+
+    normalize(chart)
 
     return chart
 
 
-if __name__ == '__main__':
-    days = 5 * 365
+class BuyConfig():
+    def __init__(self):
+        self.days = 5 * 365 - 10
+        self.y_base = random_range(1, 100)
+        self.gradient = random_range(0.005, 2)
+        self.width = random_range(0.1, 0.3)
+        self.height = random_range(1 * self.width, 2 * self.width)
+        self.jitter_low = random_range(0.4 * self.height, 0.9 * self.height)
+        self.jitter_med = random_range(0.1, 0.15)
+        self.jitter_high = random_range(1 * self.height, 3 * self.height)
+        self.deform = random_range(0.005, 0.01)
+        self.end = 0
 
+class SellConfigMid(BuyConfig):
+    def __init__(self):
+        super().__init__()
+        self.end = 0.7
+
+class SellConfigHigh(BuyConfig):
+    def __init__(self):
+        super().__init__()
+        self.end = 1
+
+class SellConfigBearish(BuyConfig):
+    def __init__(self):
+        super().__init__()
+        self.gradient = -random_range(0.005, 2)
+        self.end = random_range(0, 1)
+
+class SellConfigWide(BuyConfig):
+    def __init__(self):
+        super().__init__()
+        self.y_base = random_range(1, 100)
+        self.gradient = random_range(-2, 2)
+        self.width = random_range(2, 5)
+        self.height = random_range(0.01 * self.width, 0.02 * self.width)
+        self.jitter_low = random_range(0.4 * self.height, 0.9 * self.height)
+        self.jitter_med = random_range(0.1, 0.15)
+        self.jitter_high = random_range(1 * self.height, 3 * self.height)
+        self.deform = random_range(0.005, 0.01)
+        self.end = random_range(0, 1)
+
+class SellConfigJitter(BuyConfig):
+    def __init__(self):
+        super().__init__()
+        self.gradient = random_range(-2, 2)
+        self.height = random_range(0.5 * self.width, 1 * self.width)
+        self.jitter_low = random_range(10 * self.height, 20 * self.height)
+        self.jitter_med = random_range(1, 1.5)
+        self.jitter_high = random_range(30 * self.height, 50 * self.height)
+        self.deform = random_range(5, 10)
+        self.end = random_range(0.5, 1)
+
+
+def plot(chart):
     fig_size = plt.rcParams["figure.figsize"]
     fig_size[0] = 7
     fig_size[1] = 2
     plt.rcParams["figure.figsize"] = fig_size
 
-    plt.plot(generate_random())
-    plt.plot(generate_random())
-    plt.plot(generate_random())
+    plt.plot(chart)
     plt.show()
+
+
+if __name__ == '__main__':
+    
+    sell_generators = {
+        0: lambda: generate_well_formed(SellConfigMid()),
+        1: lambda: generate_well_formed(SellConfigHigh()),
+        2: lambda: generate_well_formed(SellConfigBearish()),
+        3: lambda: generate_well_formed(SellConfigWide()),
+        4: lambda: generate_well_formed(SellConfigJitter()),
+        5: lambda: generate_random()
+    }
+
+    def generate_file(filename, count):
+        with open(filename, 'w') as text_file:
+            text_file.write('id;instrument;time;decision;')
+            text_file.write(';'.join(str(i) for i in range(0, 1024)))
+            text_file.write('\n')
+
+            last_log = datetime.datetime.now()
+            last_count = 0
+            durations = []
+
+            for i in range(count):
+
+                if i == 0 or i == count - 1 or (datetime.datetime.now() - last_log).total_seconds() > 1:
+                    now = datetime.datetime.now()
+                    last_duration = now - last_log
+                    last_log = now
+                    rows = i - last_count;
+                    last_count = i
+                    if rows > 0:
+                        durations.append(last_duration.total_seconds() / rows)
+                        if len(durations) > 10:
+                            durations.pop(0)
+                    seconds_per_row = np.mean(durations) if len(durations) > 0 else 1
+                    remaining = seconds_per_row * (count - i)
+                    print("%s %d/%d # %.2f rows/s # %s remaining" % (
+                        filename, i + 1, count, 1 / seconds_per_row, datetime.timedelta(seconds=int(remaining))))
+
+                if random.randint(0, 2) == 0:
+                    decision = 'buy'
+                    chart = generate_well_formed(BuyConfig())
+                else:
+                    decision = 'ignore'
+                    chart = sell_generators[random.randint(0, len(sell_generators) - 1)]()
+
+                text_file.write('%d;%d;19700101;%s' % (i, i, decision))
+                for x in range(1024):
+                    text_file.write(';')
+                    text_file.write('%.2f' % chart[x])
+                text_file.write('\n')
+
+    generate_file('train_buying.csv', 1000000)
+    generate_file('test_buying.csv',    10000)
