@@ -3,6 +3,7 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+import glob
 import argparse
 import sys
 import time
@@ -150,8 +151,7 @@ def dump_step_data(name, x, y, epoch, i):
             text_file.write('\n')
 
 
-def run(name, sess, model, data, epoch, epochs, optimizer, batches, feed_dict, summary,
-        summary_writer):
+def run(name, sess, model, data, epoch, optimizer, batches, feed_dict, summary, summary_writer):
     accuracies = []
     durations = []
     last_log = datetime.datetime.now()
@@ -164,14 +164,10 @@ def run(name, sess, model, data, epoch, epochs, optimizer, batches, feed_dict, s
             seconds_per_batch = np.mean(durations) if len(durations) > 0 else 0
             seconds_per_row = seconds_per_batch / data.batch_size
             rows_per_second = (1 / seconds_per_row) if seconds_per_row > 0 else 0
-            if optimizer is not None:
-                remaining_epoch = seconds_per_batch * (batches - i)
-                remaining_total = remaining_epoch + seconds_per_batch * batches * (epochs - epoch - 1)
-                print("%s %d/%d # %.2f rows/s # %s remaining in epoch # %s remaining in training" % (
-                    name, i + 1, batches, rows_per_second, datetime.timedelta(seconds=int(remaining_epoch)),
-                    datetime.timedelta(seconds=int(remaining_total))))
-            else:
-                print("%s %d/%d avg=%.2frows/s" % (name, i + 1, batches, rows_per_second))
+            remaining_epoch = seconds_per_batch * (batches - i)
+            accuracy = accuracies[len(accuracies)-1] if len(accuracies) > 0 else 0
+            print("%s %d/%d # %.2f rows/s # %s remaining # previous accuracy %.4f" % (
+                name, i + 1, batches, rows_per_second, datetime.timedelta(seconds=int(remaining_epoch)), accuracy))
 
         with tf.name_scope(name):
 
@@ -197,17 +193,16 @@ def run(name, sess, model, data, epoch, epochs, optimizer, batches, feed_dict, s
     return accuracy
 
 
-def train(data, sess, model, optimizer, summary, summary_writer, epoch, epochs):
+def train(data, sess, model, optimizer, summary, summary_writer, epoch):
     feed_dict = { model.is_train: True, model.fc_dropout_keep: 0.8, model.residual_scale: 0.1 }
     #feed_dict = { model.is_train: True, model.fc_dropout_keep: 0.4, model.aux_fc_dropout_keep: 0.3, model.aux_exit_4a_weight: 0.3, model.aux_exit_4e_weight: 0.3, model.exit_weight: 1.0 }
-    return run('Train', sess, model, data, epoch, epochs, optimizer, data.train_batches, feed_dict, summary,
-               summary_writer)
+    return run('Train', sess, model, data, epoch, optimizer, data.train_batches, feed_dict, summary, summary_writer)
 
 
-def measure_accuracy(data, sess, model, summary, summary_writer, epoch, epochs):
+def measure_accuracy(data, sess, model, summary, summary_writer, epoch):
     feed_dict = { model.is_train: False, model.fc_dropout_keep: 1.0, model.residual_scale: 0.1 }
     #feed_dict = { model.is_train: False, model.fc_dropout_keep: 1.0, model.aux_fc_dropout_keep: 1, model.aux_exit_4a_weight: 0.3, model.aux_exit_4e_weight: 0.3, model.exit_weight: 1.0 }
-    return run('Test', sess, model, data, epoch, epochs, None, data.test_batches, feed_dict, summary, summary_writer)
+    return run('Test', sess, model, data, epoch, None, data.test_batches, feed_dict, summary, summary_writer)
 
 
 def predict(sess, model, output_file):
@@ -249,18 +244,28 @@ def main(model_dir, load_ckpt, epochs, start_epoch, batch_size, test_file, train
         if not os.path.exists(model_dir):
             os.makedirs(model_dir)
 
-    ckpt_file = model_dir + '\\model.ckpt'
+    ckpt_file = model_dir + '\\checkpoint\\'
     output_file = model_dir + '\\prediction.txt'
-    log_dir = model_dir + '\\log'
+    log_dir = model_dir + '\\logs\\'
+
+    if not os.path.exists(ckpt_file):
+        os.makedirs(ckpt_file)
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
+
+    i = 0
+    while os.path.exists(log_dir + str(i)):
+        i += 1
+    log_dir = log_dir + str(i)
 
     def write_resume_bat(next_epoch):
         with open(model_dir + '\\resume.bat', 'w') as text_file:
             text_file.write(
-                'python StockFlow.Python.py --load=True --model_dir=. --test_file=test.csv --train_file=train.csv --start_epoch=%s\npause' % next_epoch)
+                'python main.py --load=True --model_dir=. --test_file=test.csv --train_file=train.csv --start_epoch=%s\npause' % next_epoch)
 
     if not load_ckpt:
         print('Copying data to model dir')
-        copyfile('StockFlow.Python.py', model_dir + '\\StockFlow.Python.py')
+        copyfile('main.py', model_dir + '\\main.py')
         copyfile('NetworkBase.py', model_dir + '\\NetworkBase.py')
         copyfile('GoogLeNet.py', model_dir + '\\GoogLeNet.py')
         copyfile('InceptionResNetV2.py', model_dir + '\\InceptionResNetV2.py')
@@ -269,9 +274,8 @@ def main(model_dir, load_ckpt, epochs, start_epoch, batch_size, test_file, train
         write_resume_bat(0)
         with open(model_dir + '\\tensorboard.bat', 'w') as text_file:
             text_file.write('tensorboard.exe --logdir=.')
-
-    test_file = model_dir + '\\test.csv'
-    train_file = model_dir + '\\train.csv'
+        test_file = model_dir + '\\test.csv'
+        train_file = model_dir + '\\train.csv'
 
     column_defaults = [['0'], ['0'], ['19700101'], ['ignore']] + [[0.00] for i in range(first_day, last_day + 1)]
 
@@ -288,7 +292,7 @@ def main(model_dir, load_ckpt, epochs, start_epoch, batch_size, test_file, train
     with tf.name_scope('adam'):  
         update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
         with tf.control_dependencies(update_ops):
-            optimizer = tf.train.AdamOptimizer().minimize(model.loss)
+            optimizer = tf.train.AdamOptimizer(learning_rate=0.0001, epsilon=0.1).minimize(model.loss)
 
     print('Saver')
     saver = tf.train.Saver(tf.trainable_variables())
@@ -305,8 +309,13 @@ def main(model_dir, load_ckpt, epochs, start_epoch, batch_size, test_file, train
         tf.global_variables_initializer().run()
 
         if load_ckpt:
-            print('Restoring parameters from', ckpt_file)
-            saver.restore(sess, ckpt_file)
+            i = 0
+            while os.path.exists(ckpt_file + str(i) + ".meta"):
+                i += 1
+            i -= 1
+            if i >= 0:
+                print('Restoring parameters from %s' % (ckpt_file + str(i)))
+                saver.restore(sess, ckpt_file + str(i))
 
         sess.run([data.test_iter.initializer, data.train_iter.initializer], feed_dict={
             data.epochs_tensor: epochs, data.batch_size_tensor: data.batch_size,
@@ -316,25 +325,26 @@ def main(model_dir, load_ckpt, epochs, start_epoch, batch_size, test_file, train
 
             print('Summary writer')
             merged = tf.summary.merge_all()
-            train_writer = tf.summary.FileWriter(log_dir + '/train', sess.graph)
-            test_writer = tf.summary.FileWriter(log_dir + '/test')
 
             if not load_ckpt:
                 print('Save model')
-                saver.save(sess, ckpt_file)
+                saver.save(sess, ckpt_file + "initial")
 
             for epoch in range(start_epoch, epochs):
                 begin = time.time()
 
-                train_acc_mean = train(data, sess, model, optimizer, merged, train_writer, epoch, epochs)
+                train_writer = tf.summary.FileWriter(log_dir + '/train', sess.graph)
+                test_writer = tf.summary.FileWriter(log_dir + '/test')
 
-                val_acc_mean = measure_accuracy(data, sess, model, merged, test_writer, epoch, epochs)
+                train_acc_mean = train(data, sess, model, optimizer, merged, train_writer, epoch)
+
+                val_acc_mean = measure_accuracy(data, sess, model, merged, test_writer, epoch)
 
                 print("Epoch %d/%d, time = %ds, train accuracy = %.4f, validation accuracy = %.4f" % (
                     epoch + 1, epochs, time.time() - begin, train_acc_mean, val_acc_mean))
 
                 print('Save model')
-                saver.save(sess, ckpt_file)
+                saver.save(sess, ckpt_file + str(epoch))
 
                 sys.stdout.flush()
 

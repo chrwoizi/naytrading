@@ -47,6 +47,8 @@
   <ItemGroup>
     <Compile Include="Importer.cs" />
     <Compile Include="Models\Instrument.cs" />
+    <Compile Include="Models\StatsViewModel.cs" />
+    <Compile Include="Models\Stats.cs" />
     <Compile Include="Models\Trade.cs" />
     <Compile Include="Models\SnapshotRateViewModel.cs" />
     <Compile Include="Models\SnapshotViewModel.cs" />

@@ -1,2 +1,2 @@
-python StockFlow.Python.py
+python main.py
 pause

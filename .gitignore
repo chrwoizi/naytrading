@@ -25,3 +25,4 @@
 /StockFlow.Python/model*
 /StockFlow.Python/.idea
 /StockFlow.Python/__pycache__
+/StockFlow.Python/*.csv

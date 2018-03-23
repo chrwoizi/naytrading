@@ -279,5 +279,5 @@ if __name__ == '__main__':
                     text_file.write('%.2f' % chart[x])
                 text_file.write('\n')
 
-    generate_file('train_buying.csv', 1000000)
-    generate_file('test_buying.csv',    10000)
+    generate_file('train_buying_synth.csv', 1000000)
+    generate_file('test_buying_synth.csv',    10000)
