@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using System;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace StockFlow.Web.Models
 {
@@ -21,7 +22,9 @@ namespace StockFlow.Web.Models
         public int Strikes { get; set; }
         
         public string Isin { get; set; }
-        
+
         public string Wkn { get; set; }
+
+        public DateTime LastStrikeTime { get; set; }
     }
 }

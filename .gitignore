@@ -26,3 +26,4 @@
 /StockFlow.Python/.idea
 /StockFlow.Python/__pycache__
 /StockFlow.Python/*.csv
+/StockFlow.Web/*.log
