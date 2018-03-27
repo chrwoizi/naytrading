@@ -25,6 +25,6 @@ namespace StockFlow.Web.Models
 
         public string Wkn { get; set; }
 
-        public DateTime LastStrikeTime { get; set; }
+        public DateTime? LastStrikeTime { get; set; }
     }
 }
