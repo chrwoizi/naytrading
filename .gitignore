@@ -27,3 +27,4 @@
 /StockFlow.Python/__pycache__
 /StockFlow.Python/*.csv
 /StockFlow.Web/*.log
+/StockFlow.Python/run_client.bat
