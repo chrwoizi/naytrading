@@ -287,7 +287,7 @@ namespace StockFlow
             }
         }
 
-        public static void SplitRandomTrainTest(string inPath, string testPath, string trainPath, double factor, Action<double> reportProgress)
+        public static void SplitRandomTrainTest(string inPath, string testPath, string trainPath, double factor, int samples, Action<double> reportProgress)
         {
             reportProgress(0);
 
@@ -296,7 +296,7 @@ namespace StockFlow
                 var linePositions = new Dictionary<int, long>();
                 GetLinePositions(linePositions, reader);
 
-                var randomLinePositions = linePositions.Select(x => new { r = random.NextDouble(), v = x }).OrderBy(x => x.r).Select(x => x.v).ToList();
+                var randomLinePositions = linePositions.Select(x => new { r = random.NextDouble(), v = x }).OrderBy(x => x.r).Select(x => x.v).Take(samples).ToList();
 
                 Debug.Assert(reader.BaseStream.CanSeek);
 

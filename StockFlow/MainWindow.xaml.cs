@@ -67,6 +67,10 @@
             LoadFileButton.IsEnabled = false;
             SplitFileButton.IsEnabled = false;
             SplitTrainTestButton.IsEnabled = false;
+            SplitBuySlider.IsEnabled = false;
+            SplitNoBuySlider.IsEnabled = false;
+            SplitSellSlider.IsEnabled = false;
+            SplitNoSellSlider.IsEnabled = false;
             TrainTestSlider.IsEnabled = false;
             AugmentButton.IsEnabled = false;
             AugmentSlider.IsEnabled = false;
@@ -84,6 +88,10 @@
             LoadFileButton.IsEnabled = true;
             SplitFileButton.IsEnabled = true;
             SplitTrainTestButton.IsEnabled = true;
+            SplitBuySlider.IsEnabled = true;
+            SplitNoBuySlider.IsEnabled = true;
+            SplitSellSlider.IsEnabled = true;
+            SplitNoSellSlider.IsEnabled = true;
             TrainTestSlider.IsEnabled = true;
             AugmentButton.IsEnabled = true;
             AugmentSlider.IsEnabled = true;
@@ -176,11 +184,36 @@
             });
         }
 
+        private void SetSplitSliderValues()
+        {
+            if (SplitBuySlider != null)
+            {
+                var splitBuySliderValue = Math.Min(flatBuyCount, flatNoBuyCount);
+                var splitNoBuySliderValue = Math.Min(flatBuyCount, flatNoBuyCount);
+                var splitSellSliderValue = Math.Min(flatSellCount, flatNoSellCount);
+                var splitNoSellSliderValue = Math.Min(flatSellCount, flatNoSellCount);
+
+                SplitBuySlider.Maximum = flatBuyCount;
+                SplitNoBuySlider.Maximum = flatNoBuyCount;
+                SplitSellSlider.Maximum = flatSellCount;
+                SplitNoSellSlider.Maximum = flatNoSellCount;
+
+                SplitBuySlider.Value = splitBuySliderValue;
+                SplitNoBuySlider.Value = splitNoBuySliderValue;
+                SplitSellSlider.Value = splitSellSliderValue;
+                SplitNoSellSlider.Value = splitNoSellSliderValue;
+            }
+        }
+
         private void SplitTrainTestButton_Click(object sender, RoutedEventArgs e)
         {
             DisableUI();
 
             var ratio = TrainTestSlider.Value;
+            var buySliderValue = (int)SplitBuySlider.Value;
+            var noBuySliderValue = (int)SplitNoBuySlider.Value;
+            var sellSliderValue = (int)SplitSellSlider.Value;
+            var noSellSliderValue = (int)SplitNoSellSlider.Value;
 
             var sum = flatBuyCount + flatNoBuyCount + flatSellCount + flatNoSellCount;
             var buyProgressScale = flatBuyCount / sum;
@@ -192,10 +225,10 @@
             {
                 try
                 {
-                    DumpProcessor.SplitRandomTrainTest(DumpProcessor.FlatBuyFile, DumpProcessor.TestBuyFile, DumpProcessor.TrainBuyFile, ratio, x => ReportProgress(x * buyProgressScale));
-                    DumpProcessor.SplitRandomTrainTest(DumpProcessor.FlatNoBuyFile, DumpProcessor.TestNoBuyFile, DumpProcessor.TrainNoBuyFile, ratio, x => ReportProgress(buyProgressScale + x * noBuyProgressScale));
-                    DumpProcessor.SplitRandomTrainTest(DumpProcessor.FlatSellFile, DumpProcessor.TestSellFile, DumpProcessor.TrainSellFile, ratio, x => ReportProgress(buyProgressScale + noBuyProgressScale + x * sellProgressScale));
-                    DumpProcessor.SplitRandomTrainTest(DumpProcessor.FlatNoSellFile, DumpProcessor.TestNoSellFile, DumpProcessor.TrainNoSellFile, ratio, x => ReportProgress(buyProgressScale + noBuyProgressScale + sellProgressScale + x * noSellProgressScale));
+                    DumpProcessor.SplitRandomTrainTest(DumpProcessor.FlatBuyFile, DumpProcessor.TestBuyFile, DumpProcessor.TrainBuyFile, ratio, buySliderValue, x => ReportProgress(x * buyProgressScale));
+                    DumpProcessor.SplitRandomTrainTest(DumpProcessor.FlatNoBuyFile, DumpProcessor.TestNoBuyFile, DumpProcessor.TrainNoBuyFile, ratio, noBuySliderValue, x => ReportProgress(buyProgressScale + x * noBuyProgressScale));
+                    DumpProcessor.SplitRandomTrainTest(DumpProcessor.FlatSellFile, DumpProcessor.TestSellFile, DumpProcessor.TrainSellFile, ratio, sellSliderValue, x => ReportProgress(buyProgressScale + noBuyProgressScale + x * sellProgressScale));
+                    DumpProcessor.SplitRandomTrainTest(DumpProcessor.FlatNoSellFile, DumpProcessor.TestNoSellFile, DumpProcessor.TrainNoSellFile, ratio, noSellSliderValue, x => ReportProgress(buyProgressScale + noBuyProgressScale + sellProgressScale + x * noSellProgressScale));
                 }
                 finally
                 {
@@ -364,6 +397,7 @@
             SplitFileInfoTextBlock.Text = string.Format(
                 "{0} buy\n{1} nobuy\n{2} sell\n{3} nosell", flatBuyCount, flatNoBuyCount, flatSellCount, flatNoSellCount);
 
+            SetSplitSliderValues();
             SetAugmentSliderValues();
         }
 

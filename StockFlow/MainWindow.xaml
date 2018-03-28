@@ -21,37 +21,21 @@
                 <ColumnDefinition Width="150"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
-            <Grid Grid.Column="0">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-                <TextBlock Grid.Row="0"
+            <StackPanel Grid.Column="0">
+                <Grid Grid.Row="1" Margin="5">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Row="0"
                            Grid.Column="0"
                            VerticalAlignment="Center"
                            Text="URL: "/>
-                <TextBox Grid.Row="0"
-                         Grid.Column="1"
-                         x:Name="UrlTextBox"
-                         Text="http://localhost/StockFlow.Web/api/export/snapshots/test" />
+                    <TextBox Grid.Row="0"
+                             Grid.Column="1"
+                             x:Name="UrlTextBox"
+                             Text="http://localhost/StockFlow.Web/api/export/snapshots/test" />
+                </Grid>
                 <Button Grid.Row="1"
                         Grid.ColumnSpan="2"
                         x:Name="DownloadButton"
@@ -126,6 +110,117 @@
                                Text="{Binding Path=Value, StringFormat='F2', ElementName=TrainTestSlider}" />
                 </Grid>
 
+                <Grid Grid.Row="10"
+                      Grid.ColumnSpan="2">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="40"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Row="0"
+                               Grid.Column="0"
+                               Margin="0,10,10,0"
+                               HorizontalAlignment="Left"
+                               VerticalAlignment="Center"
+                               Text="Buy" />
+                    <TextBlock Grid.Row="1"
+                               Grid.Column="0"
+                               Margin="0,10,10,0"
+                               HorizontalAlignment="Left"
+                               VerticalAlignment="Center"
+                               Text="No Buy" />
+                    <TextBlock Grid.Row="2"
+                               Grid.Column="0"
+                               Margin="0,10,10,0"
+                               HorizontalAlignment="Left"
+                               VerticalAlignment="Center"
+                               Text="Sell" />
+                    <TextBlock Grid.Row="3"
+                               Grid.Column="0"
+                               Margin="0,10,10,0"
+                               HorizontalAlignment="Left"
+                               VerticalAlignment="Center"
+                               Text="No Sell" />
+                    <Slider Grid.Row="0"
+                            Grid.Column="1"
+                            Margin="0,10,0,0"
+                            VerticalAlignment="Center"
+                            Minimum="0"
+                            Maximum="1"
+                            Value="0"
+                            x:Name="SplitBuySlider"
+                            SmallChange="1"
+                            LargeChange="10"
+                            Interval="1" />
+                    <Slider Grid.Row="1"
+                            Grid.Column="1"
+                            Margin="0,10,0,0"
+                            VerticalAlignment="Center"
+                            Minimum="0"
+                            Maximum="1"
+                            Value="0"
+                            x:Name="SplitNoBuySlider"
+                            SmallChange="1"
+                            LargeChange="10"
+                            Interval="1" />
+                    <Slider Grid.Row="2"
+                            Grid.Column="1"
+                            Margin="0,10,0,0"
+                            VerticalAlignment="Center"
+                            Minimum="0"
+                            Maximum="1"
+                            Value="0"
+                            x:Name="SplitSellSlider"
+                            SmallChange="1"
+                            LargeChange="10"
+                            Interval="1" />
+                    <Slider Grid.Row="3"
+                            Grid.Column="1"
+                            Margin="0,10,0,0"
+                            VerticalAlignment="Center"
+                            Minimum="0"
+                            Maximum="1"
+                            Value="0"
+                            x:Name="SplitNoSellSlider"
+                            SmallChange="1"
+                            LargeChange="10"
+                            Interval="1" />
+                    <TextBlock Grid.Row="0"
+                               Grid.Column="2"
+                               Margin="0,10,0,0"
+                               HorizontalAlignment="Right"
+                               VerticalAlignment="Center"
+                               x:Name="SplitBuyLabel"
+                               Text="{Binding Path=Value, StringFormat='{}{0:F0}', ElementName=SplitBuySlider}" />
+                    <TextBlock Grid.Row="1"
+                               Grid.Column="2"
+                               Margin="0,10,0,0"
+                               HorizontalAlignment="Right"
+                               VerticalAlignment="Center"
+                               x:Name="SplitNoBuyLabel"
+                               Text="{Binding Path=Value, StringFormat='{}{0:F0}', ElementName=SplitNoBuySlider}" />
+                    <TextBlock Grid.Row="2"
+                               Grid.Column="2"
+                               Margin="0,10,0,0"
+                               HorizontalAlignment="Right"
+                               VerticalAlignment="Center"
+                               x:Name="SplitSellLabel"
+                               Text="{Binding Path=Value, StringFormat='{}{0:F0}', ElementName=SplitSellSlider}" />
+                    <TextBlock Grid.Row="3"
+                               Grid.Column="2"
+                               Margin="0,10,0,0"
+                               HorizontalAlignment="Right"
+                               VerticalAlignment="Center"
+                               x:Name="SplitNoSellLabel"
+                               Text="{Binding Path=Value, StringFormat='{}{0:F0}', ElementName=SplitNoSellSlider}" />
+                </Grid>
                 <TextBlock Grid.Row="8"
                            Grid.ColumnSpan="2"
                            Margin="0,10,0,10"
@@ -302,7 +397,7 @@
                         Click="LearnButton_OnClick" 
                         IsEnabled="False"
                         Content="Learn"/>
-            </Grid>
+            </StackPanel>
             <TextBox x:Name="TextBlock"
                      Margin="5,0,0,0"
                      Grid.Column="1"
