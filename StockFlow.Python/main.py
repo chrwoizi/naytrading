@@ -7,6 +7,7 @@ import glob
 import argparse
 import sys
 import time
+import re
 import shutil
 import datetime
 from shutil import copyfile
@@ -76,7 +77,7 @@ class Snapshots(object):
             test_file_count = Snapshots.__get_line_count(test_file)
             train_file_count = Snapshots.__get_line_count(train_file)
 
-            if test_file_count < self.batch_size:
+            if test_file_count > 0 and test_file_count < self.batch_size:
                 print(
                     'WARNING: batch_size is greater than available test datasets. Reducing batch size to %d' % test_file_count)
                 self.batch_size = test_file_count
@@ -115,8 +116,8 @@ class Snapshots(object):
             self.train = train_dataset.map(parse_csv, num_parallel_calls=5)
 
             print('batch/prefetch/cache/repeat/iter')
-            self.test = self.test.batch(self.batch_size_tensor).prefetch(self.test_count_tensor).cache().repeat(tf.add(self.epochs_tensor, tf.constant(1, tf.int64)))
-            self.train = self.train.batch(self.batch_size_tensor).prefetch(self.train_count_tensor).cache().repeat(self.epochs_tensor)
+            self.test = self.test.batch(self.batch_size_tensor).prefetch(tf.maximum(self.test_count_tensor, tf.constant(1, tf.int64))).cache().repeat(tf.add(self.epochs_tensor, tf.constant(1, tf.int64)))
+            self.train = self.train.batch(self.batch_size_tensor).prefetch(tf.maximum(self.train_count_tensor, tf.constant(1, tf.int64))).cache().repeat(self.epochs_tensor)
             self.test_iter = self.test.make_initializable_iterator()
             self.train_iter = self.train.make_initializable_iterator()
 
@@ -277,6 +278,20 @@ def main(model_dir, load_ckpt, epochs, start_epoch, batch_size, test_file, train
         test_file = model_dir + '\\test.csv'
         train_file = model_dir + '\\train.csv'
 
+    if load_ckpt:
+        last_checkpoint_index = -1
+        for filename in glob.iglob(ckpt_file + "*.meta", recursive=False):
+            search = re.search('[^\d]+(\d+).meta$', filename, re.IGNORECASE)
+            if search:
+                last_checkpoint_index = max(last_checkpoint_index, int(search.group(1)))
+        if last_checkpoint_index >= 0:
+            load_ckpt_file = ckpt_file + str(last_checkpoint_index)
+        else:
+            if os.path.exists(ckpt_file + "initial.meta"):
+                load_ckpt_file = ckpt_file + 'initial'
+            else:
+                raise Exception('checkpoint not found')
+
     column_defaults = [['0'], ['0'], ['19700101'], ['ignore']] + [[0.00] for i in range(first_day, last_day + 1)]
 
     tf.logging.set_verbosity(tf.logging.INFO)
@@ -309,13 +324,8 @@ def main(model_dir, load_ckpt, epochs, start_epoch, batch_size, test_file, train
         tf.global_variables_initializer().run()
 
         if load_ckpt:
-            i = 0
-            while os.path.exists(ckpt_file + str(i) + ".meta"):
-                i += 1
-            i -= 1
-            if i >= 0:
-                print('Restoring parameters from %s' % (ckpt_file + str(i)))
-                saver.restore(sess, ckpt_file + str(i))
+            print('Restoring parameters from %s' % (load_ckpt_file))
+            saver.restore(sess, load_ckpt_file)
 
         sess.run([data.test_iter.initializer, data.train_iter.initializer], feed_dict={
             data.epochs_tensor: epochs, data.batch_size_tensor: data.batch_size,
