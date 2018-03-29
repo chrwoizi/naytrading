@@ -262,7 +262,7 @@ def main(model_dir, load_ckpt, epochs, start_epoch, batch_size, test_file, train
     def write_resume_bat(next_epoch):
         with open(model_dir + '\\resume.bat', 'w') as text_file:
             text_file.write(
-                'python main.py --load=True --model_dir=. --test_file=test.csv --train_file=train.csv --start_epoch=%s\npause' % next_epoch)
+                'python main.py --load=True --model_dir=. --test_file=test.csv --train_file=train.csv --start_epoch=%s --epochs=%d --batch_size=%d --first_day=%d --last_day=%d --buy_label=%s\npause' % (next_epoch, epochs, batch_size, first_day, last_day, buy_label))
 
     if not load_ckpt:
         print('Copying data to model dir')
