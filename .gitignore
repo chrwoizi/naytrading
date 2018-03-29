@@ -1,6 +1,6 @@
-/StockFlow/bin
-/StockFlow/obj
-/StockFlow/.vs
+/StockFlow.WPF/bin
+/StockFlow.WPF/obj
+/StockFlow.WPF/.vs
 /StockFlow.Common/bin
 /StockFlow.Common/obj
 /StockFlow.Common/.vs

@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27004.2010
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StockFlow", "StockFlow\StockFlow.csproj", "{2033628D-FE43-4799-B5DC-1A47939E4030}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StockFlow.WPF", "StockFlow.WPF\StockFlow.WPF.csproj", "{2033628D-FE43-4799-B5DC-1A47939E4030}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StockFlow.Web", "StockFlow.Web\StockFlow.Web.csproj", "{66A0B7DD-3B61-4D1D-92FC-66F2D851D782}"
 EndProject

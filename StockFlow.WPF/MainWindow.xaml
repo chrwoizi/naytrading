@@ -1,0 +1,423 @@
+﻿<Window x:Class="StockFlow.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="StockFlow" Height="403.835" Width="859.023"
+        Closing="Window_Closing">
+    <Window.Resources>
+        <ControlTemplate x:Key="StageControlTemplate" TargetType="UserControl">
+            <Border BorderThickness="1" 
+                    Background="#C5E7F9" 
+                    Margin="5" 
+                    Width="200" 
+                    BorderBrush="#8BA4AF">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Border Background="#92C9E5" BorderBrush="#8BA4AF" BorderThickness="0,0,1,0">
+                        <TextBlock Grid.Column="0"
+                                   FontSize="16"
+                                   FontWeight="Bold"
+                                   Foreground="Black"
+                                   Text="{TemplateBinding Tag}"
+                                   Margin="10" />
+                    </Border>
+                    <ContentControl Grid.Column="1"
+                                    Margin="10,10,10,10"
+                                    Content="{TemplateBinding Content}" />
+                </Grid>
+            </Border>
+        </ControlTemplate>
+    </Window.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Menu>
+            <MenuItem Header="Settings"
+                      Click="Settings_OnClick"/>
+        </Menu>
+        <Grid Grid.Row="1" Margin="5">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <WrapPanel Grid.Row="0" Orientation="Horizontal">
+                <WrapPanel Orientation="Vertical">
+                    <UserControl Template="{StaticResource StageControlTemplate}" Tag="1">
+                        <StackPanel>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Row="0"
+                                       Grid.Column="0"
+                                       VerticalAlignment="Center"
+                                       Text="URL: "/>
+                                <TextBox Grid.Row="0"
+                                             Grid.Column="1"
+                                             Text="{Binding Path=Url, Mode=TwoWay}"
+                                             IsEnabled="{Binding Path=IsNotBusy}" />
+                            </Grid>
+
+                            <Button Margin="0,5,0,0" 
+                                    Command="{Binding Path=DownloadCommand}"
+                                    Content="Download and flatten"
+                                    IsEnabled="{Binding Path=IsNotBusy}" />
+
+                            <Button Margin="0,10,0,0"
+                                    Command="{Binding Path=LoadFileCommand}"
+                                    Content="Flatten existing file"
+                                    IsEnabled="{Binding Path=IsNotBusy}" />
+
+                            <TextBlock Margin="0,10,0,10"
+                                       Text="{Binding Path=DumpFileInfo}" />
+
+                        </StackPanel>
+                    </UserControl>
+
+                    <UserControl Template="{StaticResource StageControlTemplate}" Tag="2">
+                        <StackPanel>
+                            <Button Command="{Binding Path=SplitFileCommand}"
+                                    Content="Split by Action"
+                                    IsEnabled="{Binding Path=IsNotBusy}" />
+
+                            <TextBlock Margin="0,10,0,10"
+                                       Text="{Binding Path=SplitFileInfo}" />
+                        </StackPanel>
+                    </UserControl>
+                </WrapPanel>
+                <UserControl Template="{StaticResource StageControlTemplate}" Tag="3">
+                    <StackPanel>
+                        <Button Command="{Binding Path=SplitTrainTestCommand}"
+                                Content="Split train/test"
+                                IsEnabled="{Binding Path=IsNotBusy}" />
+
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="40"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Row="0"
+                                   Grid.Column="0"
+                                   Margin="0,10,10,0"
+                                   HorizontalAlignment="Left"
+                                   VerticalAlignment="Center"
+                                   Text="Ratio" />
+                            <TextBlock Grid.Row="1"
+                                       Grid.Column="0"
+                                       Margin="0,10,10,0"
+                                       HorizontalAlignment="Left"
+                                       VerticalAlignment="Center"
+                                       Text="Buy" />
+                            <TextBlock Grid.Row="2"
+                                       Grid.Column="0"
+                                       Margin="0,10,10,0"
+                                       HorizontalAlignment="Left"
+                                       VerticalAlignment="Center"
+                                       Text="No Buy" />
+                            <TextBlock Grid.Row="3"
+                                       Grid.Column="0"
+                                       Margin="0,10,10,0"
+                                       HorizontalAlignment="Left"
+                                       VerticalAlignment="Center"
+                                       Text="Sell" />
+                            <TextBlock Grid.Row="4"
+                                       Grid.Column="0"
+                                       Margin="0,10,10,0"
+                                       HorizontalAlignment="Left"
+                                       VerticalAlignment="Center"
+                                       Text="No Sell" />
+
+                            <Slider Grid.Row="0"
+                                Grid.Column="1"
+                                Margin="0,10,0,0"
+                                VerticalAlignment="Center"
+                                Minimum="0"
+                                Maximum="1"
+                                Value="{Binding Path=TrainTestRatio, Mode=TwoWay}"
+                                SmallChange="0.01"
+                                LargeChange="0.1"
+                                Interval="1"
+                                IsEnabled="{Binding Path=IsNotBusy}" />
+                            <Slider Grid.Row="1"
+                                    Grid.Column="1"
+                                    Margin="0,10,0,0"
+                                    VerticalAlignment="Center"
+                                    Minimum="0"
+                                    Maximum="{Binding Path=SplitBuyCountMax, Mode=TwoWay}"
+                                    Value="{Binding Path=SplitBuyCount, Mode=TwoWay}"
+                                    SmallChange="1"
+                                    LargeChange="10"
+                                    Interval="1"
+                                    IsEnabled="{Binding Path=IsNotBusy}" />
+                            <Slider Grid.Row="2"
+                                    Grid.Column="1"
+                                    Margin="0,10,0,0"
+                                    VerticalAlignment="Center"
+                                    Minimum="0"
+                                    Maximum="{Binding Path=SplitNoBuyCountMax, Mode=TwoWay}"
+                                    Value="{Binding Path=SplitNoBuyCount, Mode=TwoWay}"
+                                    SmallChange="1"
+                                    LargeChange="10"
+                                    Interval="1"
+                                    IsEnabled="{Binding Path=IsNotBusy}" />
+                            <Slider Grid.Row="3"
+                                    Grid.Column="1"
+                                    Margin="0,10,0,0"
+                                    VerticalAlignment="Center"
+                                    Minimum="0"
+                                    Maximum="{Binding Path=SplitSellCountMax, Mode=TwoWay}"
+                                    Value="{Binding Path=SplitSellCount, Mode=TwoWay}"
+                                    SmallChange="1"
+                                    LargeChange="10"
+                                    Interval="1"
+                                    IsEnabled="{Binding Path=IsNotBusy}" />
+                            <Slider Grid.Row="4"
+                                    Grid.Column="1"
+                                    Margin="0,10,0,0"
+                                    VerticalAlignment="Center"
+                                    Minimum="0"
+                                    Maximum="{Binding Path=SplitNoSellCountMax, Mode=TwoWay}"
+                                    Value="{Binding Path=SplitNoSellCount, Mode=TwoWay}"
+                                    SmallChange="1"
+                                    LargeChange="10"
+                                    Interval="1"
+                                    IsEnabled="{Binding Path=IsNotBusy}" />
+                            <TextBlock Grid.Row="0"
+                                   Grid.Column="2"
+                                   Margin="0,10,0,0"
+                                   HorizontalAlignment="Right"
+                                   VerticalAlignment="Center"
+                                   Text="{Binding Path=TrainTestRatio, StringFormat='F2'}" />
+                            <TextBlock Grid.Row="1"
+                                       Grid.Column="2"
+                                       Margin="0,10,0,0"
+                                       HorizontalAlignment="Right"
+                                       VerticalAlignment="Center"
+                                       x:Name="SplitBuyLabel"
+                                       Text="{Binding Path=SplitBuyCount, StringFormat='{}{0:F0}'}" />
+                            <TextBlock Grid.Row="2"
+                                       Grid.Column="2"
+                                       Margin="0,10,0,0"
+                                       HorizontalAlignment="Right"
+                                       VerticalAlignment="Center"
+                                       x:Name="SplitNoBuyLabel"
+                                       Text="{Binding Path=SplitNoBuyCount, StringFormat='{}{0:F0}'}" />
+                            <TextBlock Grid.Row="3"
+                                       Grid.Column="2"
+                                       Margin="0,10,0,0"
+                                       HorizontalAlignment="Right"
+                                       VerticalAlignment="Center"
+                                       x:Name="SplitSellLabel"
+                                       Text="{Binding Path=SplitSellCount, StringFormat='{}{0:F0}'}" />
+                            <TextBlock Grid.Row="4"
+                                       Grid.Column="2"
+                                       Margin="0,10,0,0"
+                                       HorizontalAlignment="Right"
+                                       VerticalAlignment="Center"
+                                       x:Name="SplitNoSellLabel"
+                                       Text="{Binding Path=SplitNoSellCount, StringFormat='{}{0:F0}'}" />
+                        </Grid>
+                        <TextBlock Margin="0,10,0,10"
+                                   Text="{Binding Path=SplitTrainTestInfo}" />
+                    </StackPanel>
+                </UserControl>
+
+                <UserControl Template="{StaticResource StageControlTemplate}" Tag="4">
+                    <StackPanel>
+                        <Button Command="{Binding Path=AugmentCommand}"
+                                Content="Augment"
+                                IsEnabled="{Binding Path=IsNotBusy}" />
+
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="40"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Row="0"
+                                       Grid.Column="0"
+                                       Margin="0,10,10,0"
+                                       HorizontalAlignment="Left"
+                                       VerticalAlignment="Center"
+                                       Text="All" />
+                            <TextBlock Grid.Row="1"
+                                       Grid.Column="0"
+                                       Margin="0,10,10,0"
+                                       HorizontalAlignment="Left"
+                                       VerticalAlignment="Center"
+                                       Text="Buy" />
+                            <TextBlock Grid.Row="2"
+                                       Grid.Column="0"
+                                       Margin="0,10,10,0"
+                                       HorizontalAlignment="Left"
+                                       VerticalAlignment="Center"
+                                       Text="No Buy" />
+                            <TextBlock Grid.Row="3"
+                                       Grid.Column="0"
+                                       Margin="0,10,10,0"
+                                       HorizontalAlignment="Left"
+                                       VerticalAlignment="Center"
+                                       Text="Sell" />
+                            <TextBlock Grid.Row="4"
+                                       Grid.Column="0"
+                                       Margin="0,10,10,0"
+                                       HorizontalAlignment="Left"
+                                       VerticalAlignment="Center"
+                                       Text="No Sell" />
+                            <Slider Grid.Row="0"
+                                    Grid.Column="1"
+                                    Margin="0,10,0,0"
+                                    VerticalAlignment="Center"
+                                    Minimum="1"
+                                    Maximum="100"
+                                    Value="{Binding Path=AugmentFactor, Mode=TwoWay}"
+                                    SmallChange="1"
+                                    LargeChange="10"
+                                    Interval="1"
+                                    IsEnabled="{Binding Path=IsNotBusy}" />
+                            <Slider Grid.Row="1"
+                                    Grid.Column="1"
+                                    Margin="0,10,0,0"
+                                    VerticalAlignment="Center"
+                                    Minimum="1"
+                                    Maximum="{Binding Path=AugmentBuyFactorMax}"
+                                    Value="{Binding Path=AugmentBuyFactor, Mode=TwoWay}"
+                                    SmallChange="1"
+                                    LargeChange="10"
+                                    Interval="1"
+                                    IsEnabled="{Binding Path=IsNotBusy}" />
+                            <Slider Grid.Row="2"
+                                    Grid.Column="1"
+                                    Margin="0,10,0,0"
+                                    VerticalAlignment="Center"
+                                    Minimum="1"
+                                    Maximum="{Binding Path=AugmentNoBuyFactorMax}"
+                                    Value="{Binding Path=AugmentNoBuyFactor, Mode=TwoWay}"
+                                    SmallChange="1"
+                                    LargeChange="10"
+                                    Interval="1"
+                                    IsEnabled="{Binding Path=IsNotBusy}" />
+                            <Slider Grid.Row="3"
+                                    Grid.Column="1"
+                                    Margin="0,10,0,0"
+                                    VerticalAlignment="Center"
+                                    Minimum="1"
+                                    Maximum="{Binding Path=AugmentSellFactorMax}"
+                                    Value="{Binding Path=AugmentSellFactor, Mode=TwoWay}"
+                                    SmallChange="1"
+                                    LargeChange="10"
+                                    Interval="1"
+                                    IsEnabled="{Binding Path=IsNotBusy}" />
+                            <Slider Grid.Row="4"
+                                    Grid.Column="1"
+                                    Margin="0,10,0,0"
+                                    VerticalAlignment="Center"
+                                    Minimum="1"
+                                    Maximum="{Binding Path=AugmentNoSellFactorMax}"
+                                    Value="{Binding Path=AugmentNoSellFactor, Mode=TwoWay}"
+                                    SmallChange="1"
+                                    LargeChange="10"
+                                    Interval="1"
+                                    IsEnabled="{Binding Path=IsNotBusy}" />
+                            <TextBlock Grid.Row="0"
+                                       Grid.Column="2"
+                                       Margin="0,10,0,0"
+                                       HorizontalAlignment="Right"
+                                       VerticalAlignment="Center"
+                                       Text="{Binding Path=AugmentFactor, StringFormat='{}{0:F0}x'}" />
+                            <TextBlock Grid.Row="1"
+                                       Grid.Column="2"
+                                       Margin="0,10,0,0"
+                                       HorizontalAlignment="Right"
+                                       VerticalAlignment="Center"
+                                       Text="{Binding Path=AugmentBuyFactor, StringFormat='{}{0:F0}x'}" />
+                            <TextBlock Grid.Row="2"
+                                       Grid.Column="2"
+                                       Margin="0,10,0,0"
+                                       HorizontalAlignment="Right"
+                                       VerticalAlignment="Center"
+                                       Text="{Binding Path=AugmentNoBuyFactor, StringFormat='{}{0:F0}x'}" />
+                            <TextBlock Grid.Row="3"
+                                       Grid.Column="2"
+                                       Margin="0,10,0,0"
+                                       HorizontalAlignment="Right"
+                                       VerticalAlignment="Center"
+                                       Text="{Binding Path=AugmentSellFactor, StringFormat='{}{0:F0}x'}" />
+                            <TextBlock Grid.Row="4"
+                                       Grid.Column="2"
+                                       Margin="0,10,0,0"
+                                       HorizontalAlignment="Right"
+                                       VerticalAlignment="Center"
+                                       Text="{Binding Path=AugmentNoSellFactor, StringFormat='{}{0:F0}x'}" />
+                        </Grid>
+
+                        <TextBlock Margin="0,10,0,10"
+                                   Text="{Binding Path=AugmentInfo}" />
+                    </StackPanel>
+                </UserControl>
+
+                <WrapPanel Orientation="Vertical">
+                    <UserControl Template="{StaticResource StageControlTemplate}" Tag="5">
+                        <StackPanel>
+                            <Button Command="{Binding Path=MergeCommand}"
+                                    Content="Normalize + Merge"
+                                    IsEnabled="{Binding Path=IsNotBusy}" />
+
+                            <TextBlock Margin="0,10,0,10"
+                                       Text="{Binding Path=MergeInfo}" />
+                        </StackPanel>
+                    </UserControl>
+
+                    <UserControl Template="{StaticResource StageControlTemplate}" Tag="6" Visibility="Collapsed">
+                        <StackPanel>
+                            <Button Command="{Binding Path=LearnCommand}" 
+                                    IsEnabled="False"
+                                    Content="Learn" />
+                        </StackPanel>
+                    </UserControl>
+                </WrapPanel>
+            </WrapPanel>
+            <TextBox x:Name="TextBlock" 
+                     Visibility="Collapsed"
+                     Margin="5,0,0,0"
+                     Grid.Row="1"
+                     HorizontalScrollBarVisibility="Auto"
+                     VerticalScrollBarVisibility="Auto"
+                     AcceptsReturn="True"
+                     AcceptsTab="True"/>
+        </Grid>
+        <ProgressBar Grid.Row="2"
+                     Minimum="0"
+                     Maximum="1"
+                     Height="16"
+                     Value="{Binding Path=Progress}"
+                     Visibility="{Binding Path=BusyVisibility}"
+                     HorizontalAlignment="Stretch" />
+    </Grid>
+</Window>
+
