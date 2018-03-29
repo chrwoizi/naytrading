@@ -4,7 +4,7 @@ StockFlow is a machine learning application that mimics stock trading decisions 
 The user's analysis philosophy must be purely technical, i.e. the only resource data for a buy/sell decision is the price history of the past 5 years. No stock name, no news, no ratings.
 
 ## :pencil: Recording the user's trade decisions ##
-The website [StockFlow.Web](StockFlow.Web) shows current stock charts to the users and lets them choose whether to buy, ignore, or sell the stock. The price history and the decision are stored in a database. 
+The website [StockFlow.Web](StockFlow.Web) presents a stock price chart to the user and lets him/her choose whether to buy, ignore, or sell the stock. The price history and the decision are stored in a database. 
 
 ![list of stocks](Documentation/StockFlow.Web.instruments.png "list of stocks") ![a new price history snapshot of a previously bought stock with trade decision buttons](Documentation/StockFlow.Web.snapshot.png "a new price history snapshot of a previously bought stock with trade decision buttons")
 
