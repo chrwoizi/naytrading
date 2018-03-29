@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:StockFlow"
         mc:Ignorable="d"
-        Title="SettingsWindow" Height="100" Width="300">
+        Title="SettingsWindow" Height="200" Width="300">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto"/>
@@ -16,14 +16,26 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <TextBlock Text="Proxy URL:" VerticalAlignment="Center"/>
         <TextBlock Text="Proxy User:" Grid.Row="1" VerticalAlignment="Center"/>
         <TextBlock Text="Proxy Password:" Grid.Row="2" VerticalAlignment="Center"/>
-        <TextBlock Text="Python:" Grid.Row="3" VerticalAlignment="Center"/>
+        <TextBlock Text="StockFlow URL:" Grid.Row="3" VerticalAlignment="Center"/>
+        <TextBlock Text="StockFlow User:" Grid.Row="4" VerticalAlignment="Center"/>
+        <TextBlock Text="StockFlow Password:" Grid.Row="5" VerticalAlignment="Center"/>
+        <TextBlock Text="Python:" Grid.Row="6" VerticalAlignment="Center"/>
+        
         <TextBox Text="{Binding Path=ProxyAddress}" Grid.Column="1"></TextBox>
         <TextBox Text="{Binding Path=ProxyUser}" Grid.Column="1" Grid.Row="1"></TextBox>
         <PasswordBox x:Name="PasswordBox" PasswordChanged="PasswordBox_OnPasswordChanged" Grid.Column="1" Grid.Row="2"></PasswordBox>
-        <TextBox Text="{Binding Path=Python}" Grid.Column="1" Grid.Row="3"></TextBox>
+
+        <TextBox Text="{Binding Path=StockFlowAddress}" Grid.Row="3" Grid.Column="1"></TextBox>
+        <TextBox Text="{Binding Path=StockFlowUser}" Grid.Column="1" Grid.Row="4"></TextBox>
+        <PasswordBox x:Name="StockFlowPasswordBox" PasswordChanged="StockFlowPasswordBox_OnPasswordChanged" Grid.Column="1" Grid.Row="5"></PasswordBox>
+
+        <TextBox Text="{Binding Path=Python}" Grid.Column="1" Grid.Row="6"></TextBox>
     </Grid>
 </Window>

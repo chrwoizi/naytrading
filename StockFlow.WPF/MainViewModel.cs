@@ -1,5 +1,6 @@
 ﻿using Microsoft.Win32;
 using StockFlow.Annotations;
+using StockFlow.Common;
 using StockFlow.Properties;
 using System;
 using System.Collections.Generic;
@@ -22,7 +23,6 @@ namespace StockFlow
         const string TemporaryModelDir = "model";
 
         private bool _isBusy;
-        private string _url = "http://localhost/StockFlow.Web/api/export/snapshots/test";
         private int _splitBuyCountMax;
         private int _splitNoBuyCountMax;
         private int _splitSellCountMax;
@@ -121,21 +121,7 @@ namespace StockFlow
                 return _isBusy ? Visibility.Visible : Visibility.Collapsed;
             }
         }
-
-        public string Url
-        {
-            get
-            {
-                return _url;
-            }
-
-            set
-            {
-                _url = value;
-                OnPropertyChanged();
-            }
-        }
-
+        
         public int SplitBuyCountMax
         {
             get
@@ -519,15 +505,15 @@ namespace StockFlow
             {
                 try
                 {
-                    var download = Download(Url);
+                    var download = DownloadStream();
                     download.Wait();
 
-                    var stream = download.Result;
-                    if (stream != null)
+                    var tuple = download.Result;
+                    if (tuple.Item2 != null)
                     {
-                        using (stream)
+                        using (tuple.Item2)
                         {
-                            DumpProcessor.Flatten(stream, ReportProgress);
+                            DumpProcessor.Flatten(tuple.Item2, tuple.Item1, ReportProgress);
                         }
                     }
                 }
@@ -556,7 +542,7 @@ namespace StockFlow
                     {
                         using (stream)
                         {
-                            DumpProcessor.Flatten(stream, ReportProgress);
+                            DumpProcessor.Flatten(stream, -1, ReportProgress);
                         }
                     }
                 }
@@ -737,25 +723,27 @@ namespace StockFlow
             AugmentNoSellFactor = (int)augmentNoSellSliderValue;
         }
 
-        private async Task<Stream> Download(string url)
+        private async Task<Tuple<int, Stream>> DownloadStream()
         {
-            using (var handler = new HttpClientHandler())
+            var httpProvider = new HttpProvider()
             {
-                var proxyAddress = Settings.Default.ProxyAddress;
-                if (!string.IsNullOrEmpty(proxyAddress))
-                {
-                    handler.Proxy = new WebProxy(new Uri(proxyAddress, UriKind.Absolute));
-                    handler.Proxy.Credentials = new NetworkCredential(Settings.Default.ProxyUser, Settings.Default.ProxyPassword);
-                    handler.UseProxy = true;
-                }
+                ProxyAddress = Settings.Default.ProxyAddress,
+                ProxyUser = Settings.Default.ProxyUser,
+                ProxyPassword = Settings.Default.ProxyPassword
+            };
 
-                using (var httpClient = new HttpClient(handler))
-                {
-                    httpClient.Timeout = TimeSpan.FromMinutes(2);
-                    var stream = await httpClient.GetStreamAsync(url);
-                    return stream;
-                }
-            }
+            var response = await httpProvider.Login(
+                Settings.Default.StockFlowAddress + "/Account/Login", 
+                Settings.Default.StockFlowUser, 
+                Settings.Default.StockFlowPassword);
+
+            var countJson = await httpProvider.Get(
+                string.Format(Settings.Default.StockFlowAddress + "/api/count/snapshots"));
+            var couunt = int.Parse(countJson);
+
+            var stream = await httpProvider.GetStream(
+                string.Format(Settings.Default.StockFlowAddress + "/api/export/user/snapshots/all"));
+            return new Tuple<int, Stream>(couunt, stream);
         }
 
         private Stream LoadFileDialog()
@@ -773,7 +761,7 @@ namespace StockFlow
         {
             Dispatcher.BeginInvoke(new Action(() =>
             {
-                Progress = progress;
+                Progress = progress >= 1 ? 0 : progress;
             }));
         }
 

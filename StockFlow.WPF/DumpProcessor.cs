@@ -46,7 +46,7 @@ namespace StockFlow
         public const string TrainBuyingFile = "train_buying.csv";
         public const string TrainSellingFile = "train_selling.csv";
 
-        public static void Flatten(Stream stream, Action<double> reportProgress)
+        public static void Flatten(Stream stream, int count, Action<double> reportProgress)
         {
             using (var writer = new StreamWriter(File.Open(FlatDumpFile, FileMode.Create)))
             {
@@ -74,12 +74,19 @@ namespace StockFlow
                 }
                 catch { }
 
+                int current = 0;
                 Importer.Import<Snapshot>(stream, (snapshot) =>
                 {
+                    current++;
+
                     if (hasLength)
                     {
                         var progress = stream.Position / (double)stream.Length;
                         reportProgress(progress);
+                    }
+                    else
+                    {
+                        reportProgress(current / (double)count);
                     }
 
                     if (!string.IsNullOrEmpty(snapshot.Decision) && snapshot.Rates != null)

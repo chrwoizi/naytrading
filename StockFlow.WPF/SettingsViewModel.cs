@@ -70,6 +70,48 @@ namespace StockFlow
             }
         }
 
+        public string StockFlowAddress
+        {
+            get
+            {
+                return Settings.Default.StockFlowAddress;
+            }
+            set
+            {
+                Settings.Default.StockFlowAddress = value;
+                Settings.Default.Save();
+                this.OnPropertyChanged();
+            }
+        }
+
+        public string StockFlowUser
+        {
+            get
+            {
+                return Settings.Default.StockFlowUser;
+            }
+            set
+            {
+                Settings.Default.StockFlowUser = value;
+                Settings.Default.Save();
+                this.OnPropertyChanged();
+            }
+        }
+
+        public string StockFlowPassword
+        {
+            get
+            {
+                return Settings.Default.StockFlowPassword;
+            }
+            set
+            {
+                Settings.Default.StockFlowPassword = value;
+                Settings.Default.Save();
+                this.OnPropertyChanged();
+            }
+        }
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         [NotifyPropertyChangedInvocator]

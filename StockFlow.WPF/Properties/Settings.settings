@@ -14,5 +14,14 @@
     <Setting Name="Python" Type="System.String" Scope="User">
       <Value Profile="(Default)">C:\Program Files\Python\Python36\python.exe</Value>
     </Setting>
+    <Setting Name="StockFlowAddress" Type="System.String" Scope="User">
+      <Value Profile="(Default)">http://localhost/StockFlow.Web</Value>
+    </Setting>
+    <Setting Name="StockFlowUser" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="StockFlowPassword" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
   </Settings>
 </SettingsFile>

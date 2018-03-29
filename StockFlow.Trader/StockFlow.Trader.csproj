@@ -97,7 +97,6 @@
     <Compile Include="BaseLogger.cs" />
     <Compile Include="ConsoleLogger.cs" />
     <Compile Include="Broker\ConsoleTanProvider.cs" />
-    <Compile Include="HttpProvider.cs" />
     <Compile Include="Broker\IBroker.cs" />
     <Compile Include="ILogger.cs" />
     <Compile Include="Broker\ITanProvider.cs" />

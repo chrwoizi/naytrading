@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using StockFlow.Common;
 using StockFlow.Trader.Models;
 using StockFlow.Web.Models;
 using System;
@@ -16,6 +17,9 @@ namespace StockFlow.Trader
         public static async Task Refresh(string user, string password)
         {
             var httpProvider = new HttpProvider();
+            httpProvider.ProxyAddress = ConfigurationManager.AppSettings.Get("ProxyAddress");
+            httpProvider.ProxyUser = ConfigurationManager.AppSettings.Get("ProxyUser");
+            httpProvider.ProxyPassword = ConfigurationManager.AppSettings.Get("ProxyPassword");
 
             Console.WriteLine("Signing in at stockflow...");
             var response = await httpProvider.Login(ConfigurationManager.AppSettings["TradeDecisionsLoginAddress"], user, password);

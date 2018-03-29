@@ -36,11 +36,17 @@ namespace StockFlow
         private void SettingsWindow_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
             this.PasswordBox.Password = ViewModel.ProxyPassword;
+            this.StockFlowPasswordBox.Password = ViewModel.StockFlowPassword;
         }
 
         private void PasswordBox_OnPasswordChanged(object sender, RoutedEventArgs e)
         {
             ViewModel.ProxyPassword = PasswordBox.Password;
+        }
+
+        private void StockFlowPasswordBox_OnPasswordChanged(object sender, RoutedEventArgs e)
+        {
+            ViewModel.StockFlowPassword = StockFlowPasswordBox.Password;
         }
     }
 }
