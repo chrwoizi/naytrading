@@ -243,8 +243,8 @@ def main(checkpoint_dir, proxy_url, proxy_user, proxy_password, stockflow_url, s
 
                 set_decision(session, stockflow_url, snapshot['ID'], decision, proxies)
 
-            except:
-                print("Unexpected error:", sys.exc_info()[0])
+            except Exception as e:
+                print("Unexpected error:", str(e))
 
             time.sleep(5)
 
