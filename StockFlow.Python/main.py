@@ -11,15 +11,15 @@ import re
 import shutil
 import datetime
 from shutil import copyfile
-from subprocess import Popen
+from subprocess import Popen, CREATE_NEW_CONSOLE
 
 #os.environ["CUDA_VISIBLE_DEVICES"]="-1"
 
 import numpy as np
 import tensorflow as tf
 
-#from GoogLeNet import GoogLeNet
-from InceptionResNetV2 import InceptionResNetV2
+from GoogLeNet import GoogLeNet
+#from InceptionResNetV2 import InceptionResNetV2
 
 parser = argparse.ArgumentParser()
 
@@ -97,7 +97,7 @@ class Snapshots(object):
                 columns = tf.decode_csv(value, record_defaults=column_defaults, field_delim=";")
 
                 features = columns[4:len(columns)]
-                labels = columns[3]
+                labels = columns[2]
 
                 features = tf.stack(features)
                 features = tf.reshape(features, [features.get_shape()[0], 1, 1])
@@ -195,29 +195,15 @@ def run(name, sess, model, data, epoch, optimizer, batches, feed_dict, summary, 
 
 
 def train(data, sess, model, optimizer, summary, summary_writer, epoch):
-    feed_dict = { model.is_train: True, model.fc_dropout_keep: 0.8, model.residual_scale: 0.1 }
-    #feed_dict = { model.is_train: True, model.fc_dropout_keep: 0.4, model.aux_fc_dropout_keep: 0.3, model.aux_exit_4a_weight: 0.3, model.aux_exit_4e_weight: 0.3, model.exit_weight: 1.0 }
+    #feed_dict = { model.is_train: True, model.fc_dropout_keep: 0.8, model.residual_scale: 0.1 } # InceptionResNetV2
+    feed_dict = { model.is_train: True, model.fc_dropout_keep: 0.4, model.aux_fc_dropout_keep: 0.3, model.aux_exit_4a_weight: 0.3, model.aux_exit_4e_weight: 0.3, model.exit_weight: 1.0 } # GoogLeNet
     return run('Train', sess, model, data, epoch, optimizer, data.train_batches, feed_dict, summary, summary_writer)
 
 
 def measure_accuracy(data, sess, model, summary, summary_writer, epoch):
-    feed_dict = { model.is_train: False, model.fc_dropout_keep: 1.0, model.residual_scale: 0.1 }
-    #feed_dict = { model.is_train: False, model.fc_dropout_keep: 1.0, model.aux_fc_dropout_keep: 1, model.aux_exit_4a_weight: 0.3, model.aux_exit_4e_weight: 0.3, model.exit_weight: 1.0 }
+    #feed_dict = { model.is_train: False, model.fc_dropout_keep: 1.0, model.residual_scale: 0.1 } # InceptionResNetV2
+    feed_dict = { model.is_train: False, model.fc_dropout_keep: 1.0, model.aux_fc_dropout_keep: 1, model.aux_exit_4a_weight: 0.3, model.aux_exit_4e_weight: 0.3, model.exit_weight: 1.0 } #GoogLeNet
     return run('Test', sess, model, data, epoch, None, data.test_batches, feed_dict, summary, summary_writer)
-
-
-def predict(sess, model, output_file):
-    feed_dict = {model.fc_dropout_keep: 1.0, model.residual_scale: 0.1, model.is_train: False}
-    with tf.name_scope('prediction'):
-        prediction = sess.run(model.pred, feed_dict=feed_dict)
-
-    with open(output_file, 'w') as text_file:
-        text_file.write('id;label\n')
-        for i in range(len(prediction)):
-            text_file.write('%d;%d\n' % (i, prediction[i]))
-
-    with open(output_file) as f:
-        print("Output prediction: {0}".format(f.read()))
 
 
 def main(model_dir, load_ckpt, epochs, start_epoch, batch_size, test_file, train_file, first_day, last_day, buy_label):
@@ -263,6 +249,9 @@ def main(model_dir, load_ckpt, epochs, start_epoch, batch_size, test_file, train
         with open(model_dir + '\\resume.bat', 'w') as text_file:
             text_file.write(
                 'python main.py --load=True --model_dir=. --test_file=test.csv --train_file=train.csv --start_epoch=%s --epochs=%d --batch_size=%d --first_day=%d --last_day=%d --buy_label=%s\npause' % (next_epoch, epochs, batch_size, first_day, last_day, buy_label))
+        with open(model_dir + '\\resume_infinitely.bat', 'w') as text_file:
+            text_file.write(
+                'python main.py --load=True --model_dir=. --test_file=test.csv --train_file=train.csv --start_epoch=%s --epochs=1000000 --batch_size=%d --first_day=%d --last_day=%d --buy_label=%s\npause' % (next_epoch, batch_size, first_day, last_day, buy_label))
 
     if not load_ckpt:
         print('Copying data to model dir')
@@ -292,7 +281,7 @@ def main(model_dir, load_ckpt, epochs, start_epoch, batch_size, test_file, train
             else:
                 raise Exception('checkpoint not found')
 
-    column_defaults = [['0'], ['0'], ['19700101'], ['ignore']] + [[0.00] for i in range(first_day, last_day + 1)]
+    column_defaults = [['0'], ['0'], ['ignore'], ['19700101']] + [[0.00] for i in range(first_day, last_day + 1)]
 
     tf.logging.set_verbosity(tf.logging.INFO)
 
@@ -300,20 +289,19 @@ def main(model_dir, load_ckpt, epochs, start_epoch, batch_size, test_file, train
     data = Snapshots(test_file, train_file, batch_size, column_defaults, buy_label)
 
     print('Model')
-    #model = GoogLeNet(1, data.train_iter, data.test_iter)
-    model = InceptionResNetV2(1, data.train_iter, data.test_iter)
+    model = GoogLeNet(1, data.train_iter, data.test_iter)
+    #model = InceptionResNetV2(1, data.train_iter, data.test_iter)
 
     print('Optimizer')
     with tf.name_scope('adam'):  
         update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
         with tf.control_dependencies(update_ops):
-            optimizer = tf.train.AdamOptimizer(learning_rate=0.0001, epsilon=0.1).minimize(model.loss)
+            optimizer = tf.train.AdamOptimizer(learning_rate=0.0005, epsilon=0.5).minimize(model.loss)
 
     print('Saver')
-    saver = tf.train.Saver(tf.trainable_variables())
+    saver = tf.train.Saver(var_list=tf.trainable_variables(), max_to_keep=1000000)
 
-    Popen('tensorboard.exe --logdir=%s' % model_dir, shell=True,
-          stdin=None, stdout=None, stderr=None, close_fds=True)
+    #Popen('tensorboard.exe --logdir=%s' % model_dir, creationflags=CREATE_NEW_CONSOLE)
 
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
@@ -359,9 +347,6 @@ def main(model_dir, load_ckpt, epochs, start_epoch, batch_size, test_file, train
                 sys.stdout.flush()
 
                 write_resume_bat(epoch + 1)
-
-        print('Predict')
-        predict(sess, model, output_file)
 
 
 if __name__ == '__main__':

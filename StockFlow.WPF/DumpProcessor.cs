@@ -52,7 +52,7 @@ namespace StockFlow
             {
                 reportProgress(0);
 
-                writer.Write("instrument;time;decision;");
+                writer.Write("instrument;decision;time;");
                 for (var day = -Days + 1; day <= 0; ++day)
                 {
                     writer.Write(day.ToString());
@@ -100,10 +100,10 @@ namespace StockFlow
                         writer.Write(snapshot.Instrument.ID);
                         writer.Write(";");
 
-                        writer.Write(snapshot.Time.ToString("yyyyMMdd", CultureInfo.InvariantCulture));
-                        writer.Write(";");
-
                         writer.Write(snapshot.Decision);
+                        writer.Write(";");
+                        
+                        writer.Write(snapshot.Time.ToString("yyyyMMdd", CultureInfo.InvariantCulture));
                         writer.Write(";");
 
                         if (rates.Any() && rates.First().Time.Date <= firstDate)
@@ -181,9 +181,10 @@ namespace StockFlow
                         var split = line.Split(';');
 
                         var instrumentId = split[0];
-                        var time = DateTime.ParseExact(split[1], "yyyyMMdd", CultureInfo.InvariantCulture);
-                        var decision = split[2];
-                        var firstRate = decimal.Parse(split[3]);
+                        var decision = split[1];
+                        var time = DateTime.ParseExact(split[2], "yyyyMMdd", CultureInfo.InvariantCulture);
+                        var firstRate = decimal.Parse(split[3], CultureInfo.InstalledUICulture);
+                        var lastRate = decimal.Parse(split.Last(), CultureInfo.InstalledUICulture);
 
                         var meta = new SnapshotMetadata()
                         {
@@ -191,6 +192,7 @@ namespace StockFlow
                             InstrumentId = instrumentId,
                             Decision = decision,
                             Time = time,
+                            CurrentPrice = lastRate,
                             Valid = firstRate > 0
                         };
 
@@ -204,19 +206,21 @@ namespace StockFlow
             foreach (var group in metas.GroupBy(x => x.InstrumentId))
             {
                 var invested = false;
+                var previousBuyRate = 0m;
 
                 foreach (var meta in group.OrderBy(x => x.Time))
                 {
                     meta.Invested = invested;
+                    meta.PreviousBuyRate = previousBuyRate;
                     switch (meta.Decision)
                     {
                         case "buy":
-                            if (invested)
-                                Debugger.Break();
                             invested = true;
+                            previousBuyRate = meta.CurrentPrice;
                             break;
                         case "sell":
                             invested = false;
+                            previousBuyRate = 0m;
                             break;
                     }
                 }
@@ -263,26 +267,35 @@ namespace StockFlow
 
                                     if (!string.IsNullOrEmpty(line))
                                     {
-                                        if (!meta.Invested)
-                                        {
-                                            if (meta.Decision == "buy")
-                                            {
-                                                buyWriter.WriteLine(linesRead + ";" + line);
-                                            }
-                                            else if(meta.Decision == "ignore")
-                                            {
-                                                nobuyWriter.WriteLine(linesRead + ";" + line);
-                                            }
-                                        }
-                                        else
+                                        if (meta.Invested)
                                         {
                                             if (meta.Decision == "sell")
                                             {
                                                 sellWriter.WriteLine(linesRead + ";" + line);
                                             }
-                                            else if(meta.Decision == "ignore")
+                                            else if (meta.Decision == "ignore")
                                             {
+                                                if (meta.PreviousBuyRate > 0 && meta.PreviousBuyRate < (meta.CurrentPrice * 1.01m))
+                                                {
+                                                    var firstSemicolon = line.IndexOf(';');
+                                                    var lineAsBuy = line.Substring(0, firstSemicolon + 1) 
+                                                        + "buy"
+                                                        + line.Substring(line.IndexOf(';', firstSemicolon + 1));
+                                                    buyWriter.WriteLine(linesRead + ";" + lineAsBuy);
+                                                }
+
                                                 nosellWriter.WriteLine(linesRead + ";" + line);
+                                            }
+                                        }
+                                        else
+                                        {
+                                            if (meta.Decision == "buy")
+                                            {
+                                                buyWriter.WriteLine(linesRead + ";" + line);
+                                            }
+                                            else if (meta.Decision == "ignore")
+                                            {
+                                                nobuyWriter.WriteLine(linesRead + ";" + line);
                                             }
                                         }
                                     }

@@ -10,6 +10,8 @@
         public string InstrumentId;
         public string Decision;
         public DateTime Time;
+        public decimal PreviousBuyRate;
+        public decimal CurrentPrice;
         public bool Invested;
         public bool Valid;
 

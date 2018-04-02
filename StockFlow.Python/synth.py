@@ -1,9 +1,16 @@
 import random
 import math
+import argparse
 import numpy as np
 import datetime
 from noise import pnoise1
 import matplotlib.pyplot as plt
+
+
+parser = argparse.ArgumentParser()
+
+parser.add_argument('--test', type=int, default=1000, help='Number of test data rows.')
+parser.add_argument('--train', type=int, default=100000, help='Number of train data rows.')
 
 
 def random_range(min, max):
@@ -230,6 +237,8 @@ def plot(chart):
 
 if __name__ == '__main__':
     
+    FLAGS, unparsed = parser.parse_known_args()
+
     sell_generators = {
         0: lambda: generate_well_formed(SellConfigMid()),
         1: lambda: generate_well_formed(SellConfigHigh()),
@@ -241,7 +250,7 @@ if __name__ == '__main__':
 
     def generate_file(filename, count):
         with open(filename, 'w') as text_file:
-            text_file.write('id;instrument;time;decision;')
+            text_file.write('id;instrument;decision;time;')
             text_file.write(';'.join(str(i) for i in range(0, 1024)))
             text_file.write('\n')
 
@@ -273,11 +282,11 @@ if __name__ == '__main__':
                     decision = 'ignore'
                     chart = sell_generators[random.randint(0, len(sell_generators) - 1)]()
 
-                text_file.write('%d;%d;19700101;%s' % (i, i, decision))
+                text_file.write('%d;%d;%s;19700101' % (i, i, decision))
                 for x in range(1024):
                     text_file.write(';')
                     text_file.write('%.2f' % chart[x])
                 text_file.write('\n')
 
-    generate_file('train_buying_synth.csv', 1000000)
-    generate_file('test_buying_synth.csv',    10000)
+    generate_file('train_buying_synth.csv', FLAGS.train)
+    generate_file('test_buying_synth.csv', FLAGS.test)
