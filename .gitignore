@@ -28,3 +28,6 @@
 /StockFlow.Python/*.csv
 /StockFlow.Web/*.log
 /StockFlow.Python/run_client.bat
+/StockFlow.Node/node_modules
+/StockFlow.Node/.env
+/StockFlow.Node/StockFlow.Node.njsproj.user

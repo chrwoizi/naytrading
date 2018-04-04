@@ -1,0 +1,48 @@
+﻿<div class="row row-spacer">
+</div>
+
+<div class="row row-spacer">
+    <div class="col-12">
+        <a href="#!/snapshot/new/random" class="btn btn-info btn-block" role="button">New</a>
+    </div>
+</div>
+
+<span us-spinner spinner-on="$ctrl.loading">
+    <div ng-hide="$ctrl.loading">
+        <div class="row">
+            <div class="col-12">
+                <p>
+                    Search:
+                    <input ng-model="$ctrl.query" ng-change="$ctrl.onQueryChanged()" />
+                </p>
+                <p>
+                    Sort by:
+                    <select ng-model="$ctrl.orderProp" ng-change="$ctrl.onOrderChanged()">
+                        <option value="Instrument.InstrumentName">Alphabetical</option>
+                        <option value="Decision">Decision</option>
+                        <option value="-ModifiedDateSortable">Newest Modified</option>
+                        <option value="-DateSortable">Newest Snapshot</option>
+                    </select>
+                </p>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <p>
+                    Count: {{$ctrl.snapshots.length}}
+                </p>
+            </div>
+        </div>
+
+        <div infinite-scroll='$ctrl.loadMore()' infinite-scroll-distance='2' infinite-scroll-listen-for-event="list:filtered">
+            <div ng-repeat="snapshot in $ctrl.pagedItems" class="row">
+                <a href="#!/snapshot/{{snapshot.ID}}">
+                    <div class="col-3 snapshot-time">{{snapshot.Date}}</div>
+                    <div class="col-6 instrument-name">{{snapshot.Instrument.InstrumentName}}</div>
+                    <div class="col-2 snapshot-decision">{{snapshot.Decision}}</div>
+                </a>
+            </div>
+        </div>
+    </div>
+</span>

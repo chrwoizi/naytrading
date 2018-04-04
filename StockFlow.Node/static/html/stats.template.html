@@ -1,0 +1,86 @@
+﻿<div class="row row-spacer">
+</div>
+
+<div class="row row-spacer">
+    <div class="col-12">
+        <a href="#!/snapshot/new/random" class="btn btn-info btn-block" role="button">New</a>
+    </div>
+</div>
+
+<span us-spinner spinner-on="$ctrl.loading">
+    <div ng-hide="$ctrl.loading">
+        <div class="row">
+            <div class="col-12">
+                <p>
+                    Search:
+                    <input ng-model="$ctrl.query" ng-change="$ctrl.onQueryChanged()" />
+                </p>
+                <p>
+                    Sort by:
+                    <select ng-model="$ctrl.orderProp" ng-change="$ctrl.onOrderChanged()">
+                        <option value="I">Alphabetical</option>
+                        <option value="-DS">Newest</option>
+                        <option value="DS">Oldest</option>
+                        <option value="-R">Highest</option>
+                        <option value="R">Lowest</option>
+                        <option value="S">Complete</option>
+                        <option value="-S">Open</option>
+                    </select>
+                </p>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Status</th>
+                            <th scope="col">Count</th>
+                            <th scope="col">Balance</th>
+                            <th scope="col">Min</th>
+                            <th scope="col">Avg</th>
+                            <th scope="col">Max</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th scope="row"><div class="glyphicon glyphicon-euro"></div></th>
+                            <td class="sale-cell">{{$ctrl.completeStats.count}}</td>
+                            <td class="sale-cell">{{$ctrl.completeStats.balance.toFixed(4)}}</td>
+                            <td class="sale-cell">{{$ctrl.completeStats.minReturn.toFixed(2)}}</td>
+                            <td class="sale-cell">{{$ctrl.completeStats.averageReturn.toFixed(2)}}</td>
+                            <td class="sale-cell">{{$ctrl.completeStats.maxReturn.toFixed(2)}}</td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><div class="glyphicon glyphicon-briefcase"></div></th>
+                            <td class="sale-cell">{{$ctrl.openStats.count}}</td>
+                            <td class="sale-cell">{{$ctrl.openStats.balance.toFixed(4)}}</td>
+                            <td class="sale-cell">{{$ctrl.openStats.minReturn.toFixed(2)}}</td>
+                            <td class="sale-cell">{{$ctrl.openStats.averageReturn.toFixed(2)}}</td>
+                            <td class="sale-cell">{{$ctrl.openStats.maxReturn.toFixed(2)}}</td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><div class="glyphicon glyphicon-plus"></div></th>
+                            <td class="sale-cell">{{$ctrl.combinedStats.count}}</td>
+                            <td class="sale-cell">{{$ctrl.combinedStats.balance.toFixed(4)}}</td>
+                            <td class="sale-cell">{{$ctrl.combinedStats.minReturn.toFixed(2)}}</td>
+                            <td class="sale-cell">{{$ctrl.combinedStats.averageReturn.toFixed(2)}}</td>
+                            <td class="sale-cell">{{$ctrl.combinedStats.maxReturn.toFixed(2)}}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div infinite-scroll='$ctrl.loadMore()' infinite-scroll-distance='2' infinite-scroll-listen-for-event="list:filtered">
+            <div ng-repeat="sale in $ctrl.pagedItems" class="row">
+                <a href="#!/snapshots/{{sale.I}}">
+                    <div class="col-3 snapshot-time">{{sale.D}}</div>
+                    <div class="col-6 instrument-name">{{sale.I}}</div>
+                    <div class="col-2 sale-return">{{sale.R.toFixed(2)}}</div>
+                    <div class="col-1 sale-status glyphicon" ng-class="sale.S == 'c' ? 'glyphicon-euro' : 'glyphicon-briefcase'"></div>
+                </a>
+            </div>
+        </div>
+    </div>
+</span>

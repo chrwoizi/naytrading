@@ -1,0 +1,55 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StockFlow</title>
+    <link rel="stylesheet" href="/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/css/stockflow.css">
+    <script src="/angular/angular.min.js"></script>
+    <script src="/angular-resource/angular-resource.min.js"></script>
+    <script src="/angular-route/angular-route.min.js"></script>
+    <script src="/angular-spinner/angular-spinner.min.js"></script>
+    <script src="/ng-infinite-scroll/ng-infinite-scroll.min.js"></script>
+    <script src="/chart.js/Chart.bundle.min.js"></script>
+    <script src="/angular-chart.js/angular-chart.min.js"></script>
+</head>
+<body>
+    <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
+        <a class="navbar-brand" href="/">StockFlow</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarsExampleDefault">
+            <ul class="navbar-nav mr-auto">
+                {{#if isAuthenticated}}
+                <li class="nav-item"><a class="nav-link" href="/app/#!/stats">Stats</a></li>
+                <li class="nav-item"><a class="nav-link" href="/app/#!/snapshot/new/random">New Snapshot</a></li>
+                <li class="nav-item"><a class="nav-link" href="/app/#!/snapshots">Snapshots</a></li>
+                <li class="nav-item"><a class="nav-link" href="/app/#!/instruments">Instruments</a></li>
+                {{/if}}
+                <li class="nav-item"><a class="nav-link" href="/about">About</a></li>
+                <li class="nav-item"><a class="nav-link" href="/contact">Impressum</a></li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                {{#if isAuthenticated}}
+                <li class="nav-item"><a class="nav-link" href="/manage" title="Manage">Welcome {{username}}!</a></li>
+                <li class="nav-item"><a class="nav-link" href="/logout">Logoff</a></li>
+                {{else}}
+                <li class="nav-item"><a class="nav-link" href="/signup" id="registerLink">Register</a></li>
+                <li class="nav-item"><a class="nav-link" href="/signin" id="loginLink">Login</a></li>
+                {{/if}}
+            </ul>
+        </div>
+    </nav>
+
+    <main role="main" class="body-content">
+        {{{body}}}
+    </main>
+
+    <script src="/jquery/jquery.min.js"></script>
+    <script src="/bootstrap/js/bootstrap.min.js"></script>
+</body>
+</html>

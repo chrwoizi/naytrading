@@ -1,0 +1,25 @@
+<h2>Account</h2>
+<div>
+    <p class="text-success">{{statusMessage}}</p>
+    <hr />
+    <dl class="dl-horizontal">
+        <dt>Password:</dt>
+        <dd>
+            <a href="/password">Change</a>
+        </dd>
+        <dt>Export:</dt>
+        <dd>
+            <a href="/api/export/user/instruments" class="btn-link">Instruments</a>
+            <a href="/api/export/user/snapshots/all" class="btn-link">Snapshots</a>
+            <a href="/api/export/user/trades/all" class="btn-link">Trades</a>
+        </dd>
+        {{#if isAi}}
+        <dt>Clear decisions:</dt>
+        <dd>
+            <form action="/clear" class="form-horizontal" method="post" role="form">
+                <input type="submit" value="Delete all snapshot decisions" class="btn-danger" />
+            </form>
+        </dd>
+        {{/if}}
+    </dl>
+</div>
