@@ -59,9 +59,12 @@ module.exports = (sequelize, DataTypes) => {
             allowNull: false
         }
 
-    }, {});
+    },
+    {
+        indexes: [{ fields: ['User'] }]
+    });
     instrument.associate = function (models) {
-        // associations can be defined here
+        instrument.hasMany(models.snapshot, { foreignKey: 'Instrument_ID', onDelete: 'cascade', hooks: true });
     };
     return instrument;
 };

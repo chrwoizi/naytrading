@@ -31,3 +31,5 @@
 /StockFlow.Node/node_modules
 /StockFlow.Node/.env
 /StockFlow.Node/StockFlow.Node.njsproj.user
+/StockFlow.Node/bin
+/StockFlow.Node/obj

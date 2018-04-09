@@ -36,13 +36,11 @@
         </div>
 
         <div infinite-scroll='$ctrl.loadMore()' infinite-scroll-distance='2' infinite-scroll-listen-for-event="list:filtered">
-            <div ng-repeat="snapshot in $ctrl.pagedItems" class="row">
-                <a href="#!/snapshot/{{snapshot.ID}}">
-                    <div class="col-3 snapshot-time">{{snapshot.Date}}</div>
-                    <div class="col-6 instrument-name">{{snapshot.Instrument.InstrumentName}}</div>
-                    <div class="col-2 snapshot-decision">{{snapshot.Decision}}</div>
-                </a>
-            </div>
+            <a ng-repeat="snapshot in $ctrl.pagedItems" class="row" href="#!/snapshot/{{snapshot.ID}}">
+                <div class="col-3 snapshot-time">{{snapshot.Date}}</div>
+                <div class="col-6 instrument-name">{{snapshot.Instrument.InstrumentName}}</div>
+                <div class="col-2 snapshot-decision">{{snapshot.Decision}}</div>
+            </a>
         </div>
     </div>
 </span>

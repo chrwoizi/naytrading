@@ -2,22 +2,25 @@
   "development": {
     "username": "test",
     "password": "test",
-    "database": "stockflow_user",
+    "database": "stockflow_data",
     "host": "127.0.0.1",
-    "dialect": "mysql"
+    "dialect": "mysql",
+    "operatorsAliases": {}
   },
   "test": {
     "username": "test",
     "password": "test",
-    "database": "stockflow_user",
+    "database": "stockflow_data",
     "host": "127.0.0.1",
-    "dialect": "mysql"
+    "dialect": "mysql",
+    "operatorsAliases": {}
   },
   "production": {
     "username": "test",
     "password": "test",
-    "database": "stockflow_user",
+    "database": "stockflow_data",
     "host": "127.0.0.1",
-    "dialect": "mysql"
+    "dialect": "mysql",
+    "operatorsAliases": {}
   }
 }

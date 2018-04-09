@@ -1,6 +1,6 @@
 'use strict';
 module.exports = (sequelize, DataTypes) => {
-    var instrument = sequelize.define('snapshotrate', {
+    var snapshotrate = sequelize.define('snapshotrate', {
 
         ID: {
             allowNull: false,
@@ -32,18 +32,11 @@ module.exports = (sequelize, DataTypes) => {
         Low: {
             type: DataTypes.DECIMAL(18, 2),
             allowNull: true
-        },
-
-        Snapshot_ID: {
-            type: DataTypes.INTEGER,
-            allowNull: true,
-            references: 'snapshots',
-            referencesKey: 'ID'
         }
 
     }, {});
-    instrument.associate = function (models) {
-        // associations can be defined here
+    snapshotrate.associate = function (models) {
+        snapshotrate.belongsTo(models.snapshot, { foreignKey: 'Snapshot_ID', allowNull: false });
     };
-    return instrument;
+    return snapshotrate;
 };
