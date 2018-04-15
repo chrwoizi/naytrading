@@ -32,6 +32,7 @@ app.use('/angular-resource', express.static('./node_modules/angular-resource/'))
 app.use('/angular-route', express.static('./node_modules/angular-route/'));
 app.use('/angular-spinner', express.static('./node_modules/angular-spinner/dist/'));
 app.use('/bootstrap', express.static('./node_modules/bootstrap/dist/'));
+app.use('/glyphicons-only-bootstrap', express.static('./node_modules/glyphicons-only-bootstrap/'));
 app.use('/chart.js', express.static('./node_modules/chart.js/dist/'));
 app.use('/jquery', express.static('./node_modules/jquery/dist/'));
 app.use('/ng-infinite-scroll', express.static('./node_modules/ng-infinite-scroll/build/'));

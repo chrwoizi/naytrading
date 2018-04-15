@@ -31,8 +31,11 @@
   <ItemGroup>
     <Compile Include="app\config\passport\passport.js" />
     <Compile Include="app\controllers\api_controller.js" />
+    <Compile Include="app\controllers\data_controller.js" />
+    <Compile Include="app\controllers\new_snapshot_controller.js" />
     <Compile Include="app\controllers\views_controller.js" />
     <Compile Include="app\controllers\auth_controller.js" />
+    <Compile Include="app\migrations\20180414185900-addIndex-snapshotrate.js" />
     <Compile Include="app\migrations\20180405195508-addColumn-snapshotrate.js" />
     <Compile Include="app\migrations\20180405194219-addColumn-instrument.js" />
     <Compile Include="app\migrations\20180405193913-addColumn-snapshot.js" />
@@ -49,6 +52,7 @@
     <Compile Include="app\models\snapshotrate.js" />
     <Compile Include="app\models\snapshot.js" />
     <Compile Include="app\models\instrument.js" />
+    <Compile Include="app\sql\sql.js" />
     <Compile Include="app\models\user.js" />
     <Compile Include="app\routes\api_routes.js" />
     <Compile Include="app\routes\views_routes.js" />
@@ -81,12 +85,17 @@
     <Compile Include="static\js\user-stats\stats.module.js" />
     <Compile Include="server.js" />
     <Content Include="app\config\config.json" />
+    <Content Include="app\sql\rank_instruments.sql" />
+    <Content Include="app\sql\stats.sql" />
     <Content Include="node_modules\bootstrap\dist\css\bootstrap.css" />
     <Content Include="node_modules\bootstrap\dist\css\bootstrap.min.css" />
-    <Content Include="node_modules\bootstrap\dist\fonts\glyphicons-halflings-regular.eot" />
-    <Content Include="node_modules\bootstrap\dist\fonts\glyphicons-halflings-regular.svg" />
-    <Content Include="node_modules\bootstrap\dist\fonts\glyphicons-halflings-regular.ttf" />
-    <Content Include="node_modules\bootstrap\dist\fonts\glyphicons-halflings-regular.woff" />
+    <Content Include="node_modules\glyphicons-only-bootstrap\css\bootstrap-theme.min.css" />
+    <Content Include="node_modules\glyphicons-only-bootstrap\css\bootstrap.min.css" />
+    <Content Include="node_modules\glyphicons-only-bootstrap\fonts\glyphicons-halflings-regular.eot" />
+    <Content Include="node_modules\glyphicons-only-bootstrap\fonts\glyphicons-halflings-regular.svg" />
+    <Content Include="node_modules\glyphicons-only-bootstrap\fonts\glyphicons-halflings-regular.ttf" />
+    <Content Include="node_modules\glyphicons-only-bootstrap\fonts\glyphicons-halflings-regular.woff" />
+    <Content Include="node_modules\glyphicons-only-bootstrap\fonts\glyphicons-halflings-regular.woff2" />
     <Content Include="static\css\bootstrap.css" />
     <Content Include="static\css\bootstrap.min.css" />
     <Content Include="static\css\stockflow.css" />
@@ -113,6 +122,7 @@
     <Folder Include="app\controllers\" />
     <Folder Include="app\migrations\" />
     <Folder Include="app\models\" />
+    <Folder Include="app\sql\" />
     <Folder Include="node_modules\" />
     <Folder Include="node_modules\angular-chart.js\" />
     <Folder Include="node_modules\angular-chart.js\dist\" />
@@ -124,10 +134,12 @@
     <Folder Include="node_modules\bootstrap\" />
     <Folder Include="node_modules\bootstrap\dist\" />
     <Folder Include="node_modules\bootstrap\dist\css\" />
-    <Folder Include="node_modules\bootstrap\dist\fonts\" />
     <Folder Include="node_modules\bootstrap\dist\js\" />
     <Folder Include="node_modules\chart.js\" />
     <Folder Include="node_modules\chart.js\dist\" />
+    <Folder Include="node_modules\glyphicons-only-bootstrap\" />
+    <Folder Include="node_modules\glyphicons-only-bootstrap\css\" />
+    <Folder Include="node_modules\glyphicons-only-bootstrap\fonts\" />
     <Folder Include="node_modules\jquery\" />
     <Folder Include="node_modules\jquery\dist\" />
     <Folder Include="node_modules\ng-infinite-scroll\" />

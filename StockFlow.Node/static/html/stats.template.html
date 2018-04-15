@@ -35,11 +35,11 @@
                     <thead>
                         <tr>
                             <th scope="col">Status</th>
-                            <th scope="col">Count</th>
-                            <th scope="col">Balance</th>
-                            <th scope="col">Min</th>
-                            <th scope="col">Avg</th>
-                            <th scope="col">Max</th>
+                            <th scope="col" class="sale-cell">Count</th>
+                            <th scope="col" class="sale-cell">Balance</th>
+                            <th scope="col" class="sale-cell">Min</th>
+                            <th scope="col" class="sale-cell">Avg</th>
+                            <th scope="col" class="sale-cell">Max</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -73,14 +73,12 @@
         </div>
 
         <div infinite-scroll='$ctrl.loadMore()' infinite-scroll-distance='2' infinite-scroll-listen-for-event="list:filtered">
-            <div ng-repeat="sale in $ctrl.pagedItems" class="row">
-                <a href="#!/snapshots/{{sale.I}}">
-                    <div class="col-3 snapshot-time">{{sale.D}}</div>
-                    <div class="col-6 instrument-name">{{sale.I}}</div>
-                    <div class="col-2 sale-return">{{sale.R.toFixed(2)}}</div>
-                    <div class="col-1 sale-status glyphicon" ng-class="sale.S == 'c' ? 'glyphicon-euro' : 'glyphicon-briefcase'"></div>
-                </a>
-            </div>
+            <a ng-repeat="sale in $ctrl.pagedItems" class="row" href="#!/snapshots/{{sale.I}}">
+                <div class="col-3 snapshot-time">{{sale.D}}</div>
+                <div class="col-6 instrument-name">{{sale.I}}</div>
+                <div class="col-2 sale-return">{{sale.R.toFixed(2)}}</div>
+                <div class="col-1 sale-status glyphicon" ng-class="sale.S == 'c' ? 'glyphicon-euro' : 'glyphicon-briefcase'"></div>
+            </a>
         </div>
     </div>
 </span>
