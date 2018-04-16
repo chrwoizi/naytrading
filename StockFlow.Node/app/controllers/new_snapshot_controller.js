@@ -243,7 +243,7 @@ exports.createNewRandomSnapshot = async function (req, res) {
                             },
                             {
                                 where: {
-                                    Id: snapshot.ID
+                                    Id: newSnapshot.ID
                                 }
                             }
                         );
@@ -263,6 +263,7 @@ exports.createNewRandomSnapshot = async function (req, res) {
             res.status(404);
         }
         else {
+			res.json(JSON.stringify({ error: "unauthorized" }));
             res.status(401);
         }
     }
@@ -291,6 +292,7 @@ exports.createNewSnapshotByInstrumentId = async function (req, res) {
 
         }
         else {
+			res.json(JSON.stringify({ error: "unauthorized" }));
             res.status(401);
         }
     }

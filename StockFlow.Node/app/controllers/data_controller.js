@@ -47,6 +47,7 @@ exports.getStats = async function (req, res) {
 
         }
         else {
+			res.json(JSON.stringify({ error: "unauthorized" }));
             res.status(401);
         }
     }
@@ -71,11 +72,13 @@ exports.clearDecisions = async function (req, res) {
 
             }
             else {
+				res.json(JSON.stringify({ error: "action not applicable" }));
                 res.status(404);
             }
 
         }
         else {
+			res.json(JSON.stringify({ error: "unauthorized" }));
             res.status(401);
         }
     }

@@ -30,6 +30,7 @@ exports.addIndex = async function (req, res) {
             res.status(200);
         }
         else {
+			res.json(JSON.stringify({ error: "unauthorized" }));
             res.status(401);
         }
     }
@@ -66,6 +67,7 @@ exports.addUrl = async function (req, res) {
             
         }
         else {
+			res.json(JSON.stringify({ error: "unauthorized" }));
             res.status(401);
         }
     }
@@ -90,6 +92,7 @@ exports.instruments = async function (req, res) {
 
         }
         else {
+			res.json(JSON.stringify({ error: "unauthorized" }));
             res.status(401);
         }
     }
@@ -119,6 +122,7 @@ exports.instrument = async function (req, res) {
             }
         }
         else {
+			res.json(JSON.stringify({ error: "unauthorized" }));
             res.status(401);
         }
     }

@@ -49,6 +49,7 @@ exports.countSnapshots = async function (req, res) {
 
         }
         else {
+			res.json(JSON.stringify({ error: "unauthorized" }));
             res.status(401);
         }
     }
@@ -77,6 +78,7 @@ exports.snapshots = async function (req, res) {
 
         }
         else {
+			res.json(JSON.stringify({ error: "unauthorized" }));
             res.status(401);
         }
     }
@@ -156,6 +158,7 @@ exports.snapshot = async function (req, res) {
 
         }
         else {
+			res.json(JSON.stringify({ error: "unauthorized" }));
             res.status(401);
         }
     }
@@ -221,10 +224,12 @@ exports.setDecision = async function (req, res) {
                 }
             );
 
+			res.json(JSON.stringify({}));
             res.status(200);
 
         }
         else {
+			res.json(JSON.stringify({ error: "unauthorized" }));
             res.status(401);
         }
     }
