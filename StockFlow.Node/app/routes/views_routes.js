@@ -11,8 +11,6 @@ module.exports = function (app, passport) {
 
     app.get('/manage', isLoggedIn, viewsController.manage);
 
-    app.post('/clear', viewsController.clear);
-
     app.get('/app', isLoggedIn, viewsController.app);
 
     function isLoggedIn(req, res, next) {

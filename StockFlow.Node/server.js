@@ -5,6 +5,7 @@ var session = require('express-session')
 var bodyParser = require('body-parser')
 var env = require('dotenv').load()
 var exphbs = require('express-handlebars')
+var cleanupJob = require('./app/jobs/cleanup')
 
 
 // For BodyParser
@@ -57,7 +58,7 @@ var viewsRoute = require('./app/routes/views_routes.js')(app, passport);
 var apiRoute = require('./app/routes/api_routes.js')(app, passport);
 
 // load passport strategies
-require('./app/config/passport/passport.js')(passport, models.user);
+require('./app/passport/passport.js')(passport, models.user);
 
 
 // Sync Database
@@ -79,6 +80,10 @@ app.listen(5000, function (err) {
     if (!err)
         console.log("Site is live");
     else
-        console.log(err)
+        console.log(err);
 
 });
+
+setTimeout(function () {
+    new Promise(function (resolve, reject) { cleanupJob.run(); });
+}, 10000);

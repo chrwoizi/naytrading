@@ -1,6 +1,6 @@
 var exports = module.exports = {}
 
-function getDefaultArgs(req) {
+function get_default_args(req) {
     return {
         isAuthenticated: req.isAuthenticated(),
         username: req.isAuthenticated() ? req.user.email : undefined,
@@ -8,38 +8,40 @@ function getDefaultArgs(req) {
     }
 }
 
+exports.get_default_args = get_default_args;
+
 exports.home = function (req, res) {
 
-    res.render('home', getDefaultArgs(req));
+    res.render('home', get_default_args(req));
 
 }
 
 exports.about = function (req, res) {
 
-    res.render('about', getDefaultArgs(req));
+    res.render('about', get_default_args(req));
 
 }
 
 exports.contact = function (req, res) {
 
-    res.render('contact', getDefaultArgs(req));
+    res.render('contact', get_default_args(req));
 
 }
 
 exports.manage = function (req, res) {
 
-    res.render('manage', getDefaultArgs(req));
+    res.render('manage', get_default_args(req));
 
 }
 
 exports.clear = function (req, res) {
 
-    res.render('clear', getDefaultArgs(req));
+    res.render('clear', get_default_args(req));
 
 }
 
 exports.app = function (req, res) {
 
-    res.render('app', getDefaultArgs(req));
+    res.render('app', get_default_args(req));
 
 }

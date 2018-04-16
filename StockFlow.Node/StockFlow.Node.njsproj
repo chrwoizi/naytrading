@@ -29,8 +29,10 @@
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="app\config\passport\passport.js" />
-    <Compile Include="app\controllers\api_controller.js" />
+    <Compile Include="app\controllers\snapshot_controller.js" />
+    <Compile Include="app\jobs\cleanup.js" />
+    <Compile Include="app\passport\passport.js" />
+    <Compile Include="app\controllers\instrument_controller.js" />
     <Compile Include="app\controllers\data_controller.js" />
     <Compile Include="app\controllers\new_snapshot_controller.js" />
     <Compile Include="app\controllers\views_controller.js" />
@@ -54,6 +56,7 @@
     <Compile Include="app\models\instrument.js" />
     <Compile Include="app\sql\sql.js" />
     <Compile Include="app\models\user.js" />
+    <Compile Include="app\providers\wo.js" />
     <Compile Include="app\routes\api_routes.js" />
     <Compile Include="app\routes\views_routes.js" />
     <Compile Include="app\routes\auth_routes.js" />
@@ -84,7 +87,9 @@
     <Compile Include="static\js\user-stats\stats.component.js" />
     <Compile Include="static\js\user-stats\stats.module.js" />
     <Compile Include="server.js" />
+    <Content Include="app\config\config.default.json" />
     <Content Include="app\config\config.json" />
+    <Content Include="app\sql\duplicates.sql" />
     <Content Include="app\sql\rank_instruments.sql" />
     <Content Include="app\sql\stats.sql" />
     <Content Include="node_modules\bootstrap\dist\css\bootstrap.css" />
@@ -118,10 +123,12 @@
   <ItemGroup>
     <Folder Include="app\" />
     <Folder Include="app\config\" />
-    <Folder Include="app\config\passport\" />
+    <Folder Include="app\jobs\" />
+    <Folder Include="app\passport\" />
     <Folder Include="app\controllers\" />
     <Folder Include="app\migrations\" />
     <Folder Include="app\models\" />
+    <Folder Include="app\providers\" />
     <Folder Include="app\sql\" />
     <Folder Include="node_modules\" />
     <Folder Include="node_modules\angular-chart.js\" />

@@ -1,6 +1,8 @@
 var exports = module.exports = {}
 var model = require('../models/index');
 var sql = require('../sql/sql');
+var***REMOVED***= require('../providers***REMOVED***);
+var snapshotController = require('./snapshot_controller');
 var sequelize = require('sequelize');
 var dateFormat = require('dateformat');
 var fs = require('fs');
@@ -17,52 +19,54 @@ try {
 
 var lockFlag = 0;
 
-var***REMOVED***= {
-    getRates: async function (instrument, startTime, endTime) {
-        var rates = [];
-        for (var i = 0; i < Math.floor((endTime.getTime() - startTime.getTime()) / 1000 / 60 / 60 / 24); ++i) {
-            rates.push({
-                Time: new Date(startTime.getTime() + 1000 * 60 * 60 * 24 * i),
-                Open: i,
-                Close: i,
-                High: i,
-                Low: i
-            });
-        }
-        return rates;
+
+async function getNewSnapshotInstruments(endTime, userName) {
+
+    var upToDateFrom = new Date(endTime.getTime() - config.snapshot_valid_seconds * 1000);
+
+    if (await model.instrument.count({}) == 0) {
+        return [];
     }
+
+    var maxCapitalization = await model.instrument.max('Capitalization');
+    maxCapitalization = Math.max(maxCapitalization, 1);
+
+    var args = {
+        "@userName": userName,
+        "@validFromDateTime": upToDateFrom,
+        "@maxCapitalization": maxCapitalization,
+        "@maxStrikes": config.max_strikes,
+        "@strikesOrderWeight": config.strikes_order_weight,
+        "@boughtOrderWeight": config.bought_order_weight,
+        "@capitalizationOrderWeight": config.capitalization_order_weight,
+        "@snapshotCountOrderWeight": config.snapshot_count_order_weight
+    };
+
+    var rows = await sql.query(rank_instruments, args);
+
+    var instrumentIds = rows.sort((a, b) => b.Order - a.Order);
+    return instrumentIds;
 }
 
-function getInstrumentViewModel(instrument) {
-    return {
-        ID: instrument.ID,
-        InstrumentName: instrument.InstrumentName
-    };
-}
+/**
+Gets an index from gaussian normal distribution
+@param count number of list items.
+@param randomRange range within the list from which to pick items. e.g. 0.33 means picking from the first third of the list.
+@return An index within [0..count-1].
+*/
+function getRandomIndex(count, randomRange) {
+    var u1 = 1.0 - Math.random();
+    var u2 = 1.0 - Math.random();
 
-function getSnapshotViewModel(snapshot) {
-    var previous = getPreviousDecision(snapshot);
-    return {
-        ID: snapshot.ID,
-        Instrument: getInstrumentViewModel(snapshot.instrument),
-        StartTime: dateFormat(snapshot.StartTime, 'dd.mm.yy'),
-        Date: dateFormat(snapshot.Time, 'dd.mm.yy'),
-        DateSortable: dateFormat(snapshot.Time, 'yymmdd'),
-        ModifiedDateSortable: dateFormat(snapshot.ModifiedTime, 'yymmddHHMMss'),
-        ModifiedDate: dateFormat(snapshot.ModifiedTime, 'dd.mm.yy'),
-        Rates: snapshot.snapshotrates ? snapshot.snapshotrates.map(getSnapshotRateViewModel) : undefined,
-        Decision: snapshot.Decision,
-        PreviousDecision: previous.PreviousDecision,
-        PreviousBuyRate: previous.PreviousBuyRate,
-        PreviousTime: previous.PreviousTime
-    };
-}
+    // gaussian normal distribution around 0 with standard deviation of 1
+    var randStdNormal = Math.sqrt(-2.0 * Math.log(u1)) * Math.sin(2.0 * Math.PI * u2);
 
-function getSnapshotRateViewModel(snapshotRate) {
-    return {
-        T: dateFormat(snapshotRate.Time, "dd.mm.yy"),
-        C: snapshotRate.Close
-    };
+    // roughly within [0..1] where 0 has the highest probability and 1+ the lowest.
+    // values are <1 with probability 99,73% but can be larger
+    var randNormal = Math.abs(randStdNormal) / 3.0;
+
+    var index = Math.floor(randNormal * count * randomRange) % count;
+    return index;
 }
 
 async function isAutoIgnore(newSnapshot) {
@@ -95,95 +99,7 @@ async function isAutoIgnore(newSnapshot) {
     }
 }
 
-async function getPreviousDecision(snapshot) {
-
-    var previous = await model.snapshot.findAll({
-        limit: 1,
-        where: {
-            User: snapshot.User,
-            ID: { [sequelize.Op.ne]: snapshot.ID },
-            Instrument_ID: snapshot.Instrument_ID,
-            Time: { [sequelize.Op.lt]: snapshot.Time },
-            Decision: { [sequelize.Op.or]: ['buy', 'sell'] }
-        },
-        order: [['Time', 'DESC']]
-    });
-
-    result = {};
-
-    if (previous && previous.length == 1) {
-        result.PreviousDecision = previous[0].Decision;
-        if (result.PreviousDecision == 'buy') {
-
-            var lastRates = await model.snapshotrate.findAll({
-                limit: 1,
-                where: {
-                    Snapshot_ID: previous[0].ID
-                },
-                order: [['Time', 'DESC']]
-            });
-
-            if (lastRates && lastRates.length == 1) {
-                result.PreviousBuyRate = lastRates[0].Close;
-                result.PreviousTime = dateFormat(lastRates[0].Time, 'dd.mm.yy');
-            }
-
-        }
-    }
-
-    return result;
-}
-
-async function getNewSnapshotInstruments(endTime, userName) {
-
-    var upToDateFrom = new Date(endTime.getTime() - config.snapshot_valid_seconds * 1000);
-
-    if (await model.instrument.count({}) == 0) {
-        return [];
-    }
-
-    var maxCapitalization = await model.instrument.max('Capitalization');
-    maxCapitalization = Math.max(maxCapitalization, 1);
-    
-    var args = {
-        "@userName": userName,
-        "@validFromDateTime": upToDateFrom,
-        "@maxCapitalization": maxCapitalization,
-        "@maxStrikes": config.max_strikes,
-        "@strikesOrderWeight": config.strikes_order_weight,
-        "@boughtOrderWeight": config.bought_order_weight,
-        "@capitalizationOrderWeight": config.capitalization_order_weight,
-        "@snapshotCountOrderWeight": config.snapshot_count_order_weight
-    };
-
-    var rows = await sql.query(rank_instruments, args);
-
-    var instrumentIds = rows.sort((a, b) => b.Order - a.Order);
-    return instrumentIds;
-}
-
-/// <summary>
-/// Gets an index from gaussian normal distribution
-/// </summary>
-/// <param name="count">number of list items</param>
-/// <param name="randomRange">range within the list from which to pick items. e.g. 0.33 means picking from the first third of the list</param>
-/// <returns>An index within [0..count-1]</returns>
-function getRandomIndex(count, randomRange) {
-    var u1 = 1.0 - Math.random();
-    var u2 = 1.0 - Math.random();
-
-    // gaussian normal distribution around 0 with standard deviation of 1
-    var randStdNormal = Math.sqrt(-2.0 * Math.log(u1)) * Math.sin(2.0 * Math.PI * u2);
-
-    // roughly within [0..1] where 0 has the highest probability and 1+ the lowest.
-    // values are <1 with probability 99,73% but can be larger
-    var randNormal = Math.abs(randStdNormal) / 3.0;
-
-    var index = Math.floor(randNormal * count * randomRange) % count;
-    return index;
-}
-
-async function getNewRandomSnapshot(instrumentIds) {
+async function createNewSnapshotFromRandomInstrument(instrumentIds) {
     var endTime = new Date();
     var startTime = new Date(endTime.getTime() - config.chart_period_seconds * 1000);
 
@@ -196,7 +112,7 @@ async function getNewRandomSnapshot(instrumentIds) {
         var instrument = await model.instrument.findOne({ where: { ID: instrumentIds[index].ID } });
 
         try {
-            var rates = await***REMOVED***getRates(instrument, startTime, endTime);
+            var rates = await***REMOVED***getRates(instrument.InstrumentId, instrument.MarketId, startTime, endTime);
             var minRateTime = new Date(startTime.getTime() + 1000 * config.discard_threshold_seconds);
             var maxRateTime = new Date(endTime.getTime() - 1000 * config.discard_threshold_seconds);
 
@@ -234,12 +150,12 @@ async function getNewRandomSnapshot(instrumentIds) {
                     Instrument_ID: instrument.ID,
                     User: instrument.User
                 }, {
-                    include: [{
-                        model: model.instrument
-                    }, {
-                        model: model.snapshotrate
-                    }]
-                });
+                        include: [{
+                            model: model.instrument
+                        }, {
+                            model: model.snapshotrate
+                        }]
+                    });
 
                 snapshot.instrument = instrument;
                 return snapshot;
@@ -279,7 +195,7 @@ async function getNewRandomSnapshot(instrumentIds) {
     return null;
 }
 
-exports.newSnapshot = async function (req, res) {
+exports.createNewRandomSnapshot = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
 
@@ -300,7 +216,8 @@ exports.newSnapshot = async function (req, res) {
             });
 
             if (forgotten && forgotten.length == 1) {
-                var viewModel = getSnapshotViewModel(forgotten[0]);
+                var previous = await snapshotController.getPreviousDecision(forgotten[0]);
+                var viewModel = snapshotController.getSnapshotViewModel(forgotten[0], previous);
                 res.json(viewModel);
                 return;
             }
@@ -309,14 +226,29 @@ exports.newSnapshot = async function (req, res) {
 
             var newSnapshot = null;
             for (var i = 0; i <= config.automatic_ignores; ++i) {
-                newSnapshot = await getNewRandomSnapshot(instrumentIds);
+                newSnapshot = await createNewSnapshotFromRandomInstrument(instrumentIds);
                 if (newSnapshot != null) {
 
                     var k = instrumentIds.indexOf(newSnapshot.Instrument_ID);
                     instrumentIds.splice(k, 1);
 
-                    var viewModel = getSnapshotViewModel(newSnapshot);
-                    if (i == config.automatic_ignores || !isAutoIgnore(viewModel)) {
+                    var previous = await snapshotController.getPreviousDecision(newSnapshot);
+                    var viewModel = snapshotController.getSnapshotViewModel(newSnapshot, previous);
+
+                    if (i < config.automatic_ignores && isAutoIgnore(viewModel)) {
+                        await model.snapshot.update(
+                            {
+                                Decision: "ignore",
+                                ModifiedTime: new Date()
+                            },
+                            {
+                                where: {
+                                    Id: snapshot.ID
+                                }
+                            }
+                        );
+                    }
+                    else {
                         res.json(viewModel);
                         return;
                     }
@@ -340,15 +272,15 @@ exports.newSnapshot = async function (req, res) {
     }
 };
 
-exports.newSnapshotByInstrumentId = async function (req, res) {
+exports.createNewSnapshotByInstrumentId = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
 
             var instrumentIds = [{ ID: req.params.instrumentId, Order: 1 }];
 
-            var newSnapshot = await getNewRandomSnapshot(instrumentIds);
+            var newSnapshot = await createNewSnapshotFromRandomInstrument(instrumentIds);
             if (newSnapshot != null) {
-                var viewModel = getSnapshotViewModel(newSnapshot);
+                var viewModel = snapshotController.getSnapshotViewModel(newSnapshot);
                 res.json(viewModel);
                 return;
             }

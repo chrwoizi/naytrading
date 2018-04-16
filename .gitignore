@@ -33,3 +33,4 @@
 /StockFlow.Node/StockFlow.Node.njsproj.user
 /StockFlow.Node/bin
 /StockFlow.Node/obj
+/StockFlow.Node/app/config/config.json
