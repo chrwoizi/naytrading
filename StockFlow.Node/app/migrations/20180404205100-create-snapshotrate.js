@@ -40,9 +40,6 @@ module.exports = {
                 references: { model: 'snapshots', key: 'ID' }
             }
 
-        }).then(function () {
-            queryInterface.sequelize.query("ALTER TABLE snapshotrates DROP FOREIGN KEY snapshotrates_ibfk_1");
-            queryInterface.sequelize.query("ALTER TABLE snapshotrates ADD CONSTRAINT snapshotrates_ibfk_1 FOREIGN KEY (Snapshot_ID) REFERENCES snapshots (ID) ON DELETE CASCADE;");
         });
     },
     down: (queryInterface, Sequelize) => {
