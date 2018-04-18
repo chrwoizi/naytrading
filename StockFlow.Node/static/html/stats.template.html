@@ -36,7 +36,7 @@
                         <tr>
                             <th scope="col">Status</th>
                             <th scope="col" class="sale-cell">Count</th>
-                            <th scope="col" class="sale-cell">Balance</th>
+                            <th scope="col" class="sale-cell">Sum</th>
                             <th scope="col" class="sale-cell">Min</th>
                             <th scope="col" class="sale-cell">Avg</th>
                             <th scope="col" class="sale-cell">Max</th>
@@ -46,7 +46,7 @@
                         <tr>
                             <th scope="row"><div class="glyphicon glyphicon-euro"></div></th>
                             <td class="sale-cell">{{$ctrl.completeStats.count}}</td>
-                            <td class="sale-cell">{{$ctrl.completeStats.balance.toFixed(4)}}</td>
+                            <td class="sale-cell">{{$ctrl.completeStats.sumReturn.toFixed(4)}}</td>
                             <td class="sale-cell">{{$ctrl.completeStats.minReturn.toFixed(2)}}</td>
                             <td class="sale-cell">{{$ctrl.completeStats.averageReturn.toFixed(2)}}</td>
                             <td class="sale-cell">{{$ctrl.completeStats.maxReturn.toFixed(2)}}</td>
@@ -54,7 +54,7 @@
                         <tr>
                             <th scope="row"><div class="glyphicon glyphicon-briefcase"></div></th>
                             <td class="sale-cell">{{$ctrl.openStats.count}}</td>
-                            <td class="sale-cell">{{$ctrl.openStats.balance.toFixed(4)}}</td>
+                            <td class="sale-cell">{{$ctrl.openStats.sumReturn.toFixed(4)}}</td>
                             <td class="sale-cell">{{$ctrl.openStats.minReturn.toFixed(2)}}</td>
                             <td class="sale-cell">{{$ctrl.openStats.averageReturn.toFixed(2)}}</td>
                             <td class="sale-cell">{{$ctrl.openStats.maxReturn.toFixed(2)}}</td>
@@ -62,10 +62,18 @@
                         <tr>
                             <th scope="row"><div class="glyphicon glyphicon-plus"></div></th>
                             <td class="sale-cell">{{$ctrl.combinedStats.count}}</td>
-                            <td class="sale-cell">{{$ctrl.combinedStats.balance.toFixed(4)}}</td>
+                            <td class="sale-cell">{{$ctrl.combinedStats.sumReturn.toFixed(4)}}</td>
                             <td class="sale-cell">{{$ctrl.combinedStats.minReturn.toFixed(2)}}</td>
                             <td class="sale-cell">{{$ctrl.combinedStats.averageReturn.toFixed(2)}}</td>
                             <td class="sale-cell">{{$ctrl.combinedStats.maxReturn.toFixed(2)}}</td>
+                        </tr>
+                        <tr>
+                            <th scope="row"></th>
+                            <td class="sale-cell"></td>
+                            <td class="sale-cell">{{($ctrl.account.balance * 100).toFixed(4)}}%</td>
+                            <td class="sale-cell"></td>
+                            <td class="sale-cell"></td>
+                            <td class="sale-cell"></td>
                         </tr>
                     </tbody>
                 </table>

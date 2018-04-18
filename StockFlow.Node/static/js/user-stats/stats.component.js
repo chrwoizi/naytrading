@@ -46,22 +46,21 @@ angular.
                         count: 0,
                         minReturn: 9999999,
                         maxReturn: 0,
-                        sumReturn: 0,
-                        totalReturn: 0
+                        sumReturn: 0
                     };
                     self.openStats = {
                         count: 0,
                         minReturn: 9999999,
                         maxReturn: 0,
-                        sumReturn: 0,
-                        totalReturn: 0
+                        sumReturn: 0
                     };
                     self.combinedStats = {
                         count: 0,
                         minReturn: 9999999,
                         maxReturn: 0,
-                        sumReturn: 0,
-                        totalReturn: 0
+                        sumReturn: 0
+                    };
+                    self.account = {
                     };
                     for (var i = 0; i < stats.Sales.length; i++) {
                         var sale = stats.Sales[i];
@@ -80,12 +79,11 @@ angular.
                         currentStats.maxReturn = Math.max(currentStats.maxReturn, sale.R);
                         self.combinedStats.maxReturn = Math.max(self.combinedStats.maxReturn, sale.R);
                     }
-                    self.combinedStats.balance = (self.combinedStats.sumReturn + self.combinedStats.count) / self.combinedStats.count;
-                    self.completeStats.balance = (self.completeStats.sumReturn + self.completeStats.count) / self.completeStats.count;
-                    self.openStats.balance = (self.openStats.sumReturn + self.openStats.count) / self.openStats.count;
                     self.combinedStats.averageReturn = self.combinedStats.sumReturn / self.combinedStats.count;
                     self.completeStats.averageReturn = self.completeStats.sumReturn / self.completeStats.count;
                     self.openStats.averageReturn = self.openStats.sumReturn / self.openStats.count;
+
+                    self.account.balance = (self.combinedStats.sumReturn + self.openStats.count) / self.openStats.count;
 
                     self.updateList();
                     self.viewCount = Math.min(100, self.filteredItems.length);
