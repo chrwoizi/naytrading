@@ -40,6 +40,9 @@ module.exports = {
                 references: { model: 'instruments', key: 'ID' }
             }
 
+        }).then(function () {
+            queryInterface.sequelize.query("ALTER TABLE snapshots DROP FOREIGN KEY snapshots_ibfk_1");
+            queryInterface.sequelize.query("ALTER TABLE snapshots ADD CONSTRAINT snapshots_ibfk_1 FOREIGN KEY (Instrument_ID) REFERENCES instruments (ID) ON DELETE CASCADE;");
         });
     },
     down: (queryInterface, Sequelize) => {

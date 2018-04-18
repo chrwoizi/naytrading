@@ -57,6 +57,16 @@ module.exports = (sequelize, DataTypes) => {
         LastStrikeTime: {
             type: DataTypes.DATE,
             allowNull: false
+        },
+
+        createdAt: {
+            allowNull: false,
+            type: DataTypes.DATE
+        },
+
+        updatedAt: {
+            allowNull: false,
+            type: DataTypes.DATE
         }
 
     },
@@ -64,7 +74,7 @@ module.exports = (sequelize, DataTypes) => {
         indexes: [{ fields: ['User'] }]
     });
     instrument.associate = function (models) {
-        instrument.hasMany(models.snapshot, { foreignKey: 'Instrument_ID', onDelete: 'cascade', hooks: true });
+        instrument.hasMany(models.snapshot, { foreignKey: 'Instrument_ID', onDelete: 'CASCADE', hooks: true });
     };
     return instrument;
 };

@@ -21,7 +21,13 @@
     "***REMOVED***throttle_seconds": 10,
     "***REMOVED***timeout_milliseconds": 120000,
     "job_cleanup_interval_seconds": 600,
-    "proxy": null
+    "export_secret": "test",
+    "proxy": null,
+    "pool": {
+      "idle": 120000,
+      "acquire": 120000,
+      "evict": 120000
+    }
   },
   "test": {
     "username": "test",
@@ -45,7 +51,13 @@
     "***REMOVED***throttle_seconds": 10,
     "***REMOVED***timeout_milliseconds": 120000,
     "job_cleanup_interval_seconds": 600,
-    "proxy": null
+    "export_secret": "test",
+    "proxy": null,
+    "pool": {
+      "idle": 120000,
+      "acquire": 120000,
+      "evict": 120000
+    }
   },
   "production": {
     "username": "test",
@@ -69,6 +81,12 @@
     "***REMOVED***throttle_seconds": 10,
     "***REMOVED***timeout_milliseconds": 120000,
     "job_cleanup_interval_seconds": 600,
-    "proxy": null
+    "export_secret": "test",
+    "proxy": null,
+    "pool": {
+      "idle": 120000,
+      "acquire": 120000,
+      "evict": 120000
+    }
   }
 }

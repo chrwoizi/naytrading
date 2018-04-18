@@ -3,11 +3,11 @@ module.exports = {
     up: (queryInterface, Sequelize) => {
         return queryInterface.addColumn('instruments', 'createdAt', {
             type: Sequelize.DATE,
-            allowNull: false
+            allowNull: true
         }).then(() => {
             queryInterface.addColumn('instruments', 'updatedAt', {
                 type: Sequelize.DATE,
-                allowNull: false
+                allowNull: true
             });
         });
     },

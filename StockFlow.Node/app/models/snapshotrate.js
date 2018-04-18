@@ -32,6 +32,16 @@ module.exports = (sequelize, DataTypes) => {
         Low: {
             type: DataTypes.DECIMAL(18, 2),
             allowNull: true
+        },
+
+        createdAt: {
+            allowNull: false,
+            type: DataTypes.DATE
+        },
+
+        updatedAt: {
+            allowNull: false,
+            type: DataTypes.DATE
         }
 
     }, {});

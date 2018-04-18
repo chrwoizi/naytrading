@@ -5,19 +5,49 @@
     <dl class="dl-horizontal">
         <dt>Password:</dt>
         <dd>
-            <a href="/password">Change</a>
+            <a href="/password" class="btn btn-secondary" role="button">Change</a>
         </dd>
         <dt>Export:</dt>
         <dd>
-            <a href="/api/export/user/instruments" class="btn-link">Instruments</a>
-            <a href="/api/export/user/snapshots/all" class="btn-link">Snapshots</a>
-            <a href="/api/export/user/trades/all" class="btn-link">Trades</a>
+            <a href="/api/export/user/instruments" class="btn btn-secondary" role="button">Instruments</a>
+            <a href="/api/export/user/snapshots/19700101" class="btn btn-secondary" role="button">Snapshots</a>
+            <a href="/api/export/user/trades/19700101" class="btn btn-secondary" role="button">Trades</a>
+        </dd>
+        <dt>Import Instruments:</dt>
+        <dd>
+            <form action="/api/import/user/instruments" method="post" enctype="multipart/form-data">
+                <div class="form-group">
+                    <input type="file" name="file" class="form-control-file"></input>
+                </div>
+                <div class="form-check">
+                    <label class="form-check-label">
+                        <input type="checkbox" class="form-check-input" name="delete">
+                        Delete existing instruments
+                    </label>
+                </div>
+                <button type="submit" class="btn btn-secondary">Import Instruments</button>
+            </form>
+        </dd>
+        <dt>Import Snapshots:</dt>
+        <dd>
+            <form action="/api/import/user/snapshots" method="post" enctype="multipart/form-data">
+                <div class="form-group">
+                    <input type="file" name="file" class="form-control-file"></input>
+                </div>
+                <div class="form-check">
+                    <label class="form-check-label">
+                        <input type="checkbox" class="form-check-input" name="delete">
+                        Delete existing snapshots
+                    </label>
+                </div>
+                <button type="submit" class="btn btn-secondary">Import Snapshots</button>
+            </form>
         </dd>
         {{#if isAi}}
         <dt>Clear decisions:</dt>
         <dd>
             <form action="/clear/decisions" class="form-horizontal" method="post" role="form">
-                <input type="submit" value="Delete all snapshot decisions" class="btn-danger" />
+                <input type="submit" value="Delete all snapshot decisions" class="btn btn-danger" />
             </form>
         </dd>
         {{/if}}

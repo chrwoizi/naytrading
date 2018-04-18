@@ -2,6 +2,8 @@ var dataController = require('../controllers/data_controller.js');
 var instrumentController = require('../controllers/instrument_controller.js');
 var snapshotController = require('../controllers/snapshot_controller.js');
 var newSnapshotController = require('../controllers/new_snapshot_controller.js');
+var importController = require('../controllers/import_controller.js');
+var exportController = require('../controllers/export_controller.js');
 
 module.exports = function (app, passport) {
 
@@ -28,5 +30,17 @@ module.exports = function (app, passport) {
     app.get('/api/stats', dataController.getStats);
 
     app.post('/api/clear/decisions', dataController.clearDecisions);
+
+    app.get('/api/export/instruments/:exportSecret', exportController.exportInstruments);
+
+    app.get('/api/export/user/instruments', exportController.exportUserInstruments);
+
+    app.get('/api/export/snapshots/:fromDate/:exportSecret', exportController.exportSnapshots);
+
+    app.get('/api/export/user/snapshots/:fromDate', exportController.exportUserSnapshots);
+
+    app.post('/api/import/user/instruments', importController.importUserInstruments);
+
+    app.post('/api/import/user/snapshots', importController.importUserSnapshots);
 
 }

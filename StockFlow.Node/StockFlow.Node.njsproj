@@ -29,6 +29,8 @@
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="app\controllers\export_controller.js" />
+    <Compile Include="app\controllers\import_controller.js" />
     <Compile Include="app\controllers\snapshot_controller.js" />
     <Compile Include="app\jobs\cleanup.js" />
     <Compile Include="app\passport\passport.js" />

@@ -1,7 +1,6 @@
 var exports = module.exports = {}
 var model = require('../models/index');
 var sql = require('../sql/sql');
-var sequelize = require('sequelize');
 var dateFormat = require('dateformat');
 var fs = require('fs');
 var viewsController = require('./views_controller.js');
@@ -16,6 +15,11 @@ try {
     console.log('Error:', e.stack);
 }
 
+
+function return500(res, e) {
+    res.json(JSON.stringify({ error: e.message }));
+    res.status(500);
+}
 
 function getStatsViewModel(model) {
     function getSaleViewModel(model) {
@@ -47,13 +51,12 @@ exports.getStats = async function (req, res) {
 
         }
         else {
-			res.json(JSON.stringify({ error: "unauthorized" }));
+            res.json(JSON.stringify({ error: "unauthorized" }));
             res.status(401);
         }
     }
     catch (error) {
-        res.json(JSON.stringify({ error: error.message }));
-        res.status(500);
+        return500(res, error);
     }
 };
 
@@ -72,18 +75,17 @@ exports.clearDecisions = async function (req, res) {
 
             }
             else {
-				res.json(JSON.stringify({ error: "action not applicable" }));
+                res.json(JSON.stringify({ error: "action not applicable" }));
                 res.status(404);
             }
 
         }
         else {
-			res.json(JSON.stringify({ error: "unauthorized" }));
+            res.json(JSON.stringify({ error: "unauthorized" }));
             res.status(401);
         }
     }
     catch (error) {
-        res.json(JSON.stringify({ error: error.message }));
-        res.status(500);
+        return500(res, error);
     }
 }
