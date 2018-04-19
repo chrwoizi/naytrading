@@ -16,16 +16,16 @@ FROM
 			SELECT 
 				snapshot.Decision
 			FROM
-				Snapshots AS snapshot
+				snapshots AS snapshot
 			WHERE
 				instrument.ID = snapshot.Instrument_ID
 				AND (snapshot.Decision = 'buy' OR snapshot.Decision = 'sell')
 			ORDER BY snapshot.Time DESC
 			LIMIT 1
 		) AS previousDecision,
-		(SELECT COUNT(1) FROM Snapshots AS snapshot WHERE instrument.ID = snapshot.Instrument_ID) AS snapshotCount
+		(SELECT COUNT(1) FROM snapshots AS snapshot WHERE instrument.ID = snapshot.Instrument_ID) AS snapshotCount
 	FROM
-		Instruments AS instrument
+		instruments AS instrument
 	WHERE
 		instrument.User = @userName
 		AND instrument.Strikes <= @maxStrikes
@@ -34,7 +34,7 @@ FROM
 			SELECT 
 				1
 			FROM
-				Snapshots AS snapshot
+				snapshots AS snapshot
 			WHERE
 				instrument.ID = snapshot.Instrument_ID
 				AND snapshot.Time > @validFromDateTime

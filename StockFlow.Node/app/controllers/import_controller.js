@@ -133,7 +133,7 @@ exports.importUserInstruments = async function (req, res) {
     }
 
     async function getExistingInstruments() {
-        var existing = await sql.query('SELECT instrument.ID, instrument.Source, instrument.InstrumentId FROM Instruments AS instrument WHERE instrument.User = @userName',
+        var existing = await sql.query('SELECT instrument.ID, instrument.Source, instrument.InstrumentId FROM instruments AS instrument WHERE instrument.User = @userName',
             {
                 "@userName": req.user.email
             });
@@ -185,7 +185,7 @@ exports.importUserSnapshots = async function (req, res) {
     }
 
     async function getExistingInstruments() {
-        var existing = await sql.query('SELECT instrument.ID, instrument.Source, instrument.InstrumentId FROM Instruments AS instrument WHERE instrument.User = @userName',
+        var existing = await sql.query('SELECT instrument.ID, instrument.Source, instrument.InstrumentId FROM instruments AS instrument WHERE instrument.User = @userName',
             {
                 "@userName": req.user.email
             });
@@ -193,7 +193,7 @@ exports.importUserSnapshots = async function (req, res) {
     }
 
     async function getExistingSnapshots() {
-        var existing = await sql.query('SELECT snapshot.ID, instrument.Source, instrument.InstrumentId, snapshot.Time FROM Snapshots AS snapshot INNER JOIN Instruments AS instrument ON instrument.ID = snapshot.Instrument_ID WHERE snapshot.User = @userName',
+        var existing = await sql.query('SELECT snapshot.ID, instrument.Source, instrument.InstrumentId, snapshot.Time FROM snapshots AS snapshot INNER JOIN instruments AS instrument ON instrument.ID = snapshot.Instrument_ID WHERE snapshot.User = @userName',
             {
                 "@userName": req.user.email
             });

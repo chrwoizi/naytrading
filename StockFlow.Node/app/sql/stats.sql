@@ -13,7 +13,7 @@ FROM
 			SELECT
 				rate.Close
 			FROM
-				SnapshotRates AS rate
+				snapshotrates AS rate
 			WHERE
 				rate.Snapshot_ID = snapshot.ID
 			ORDER BY
@@ -28,7 +28,7 @@ FROM
 			SELECT
 				rate.Close
 			FROM
-				SnapshotRates AS rate
+				snapshotrates AS rate
 			WHERE
 				rate.Snapshot_ID = previousSnapshot.ID
 			ORDER BY
@@ -54,7 +54,7 @@ FROM
 							SELECT
 								previousSnapshot.ID
 							FROM
-								Snapshots as previousSnapshot
+								snapshots as previousSnapshot
 							WHERE
 								previousSnapshot.Instrument_ID = snapshot.Instrument_ID
 								AND previousSnapshot.ID <> snapshot.ID
@@ -66,7 +66,7 @@ FROM
 							LIMIT 1
 						) AS PreviousID
 					FROM 
-						Snapshots AS snapshot 
+						snapshots AS snapshot 
 					WHERE
 						snapshot.User = @userName
 						AND 
@@ -77,7 +77,7 @@ FROM
 								SELECT
 									1
 								FROM
-									Snapshots AS newerSnapshot
+									snapshots AS newerSnapshot
 								WHERE
 									newerSnapshot.Instrument_ID = snapshot.Instrument_ID
 									AND newerSnapshot.ID <> snapshot.ID
@@ -87,11 +87,11 @@ FROM
 				) AS snapshot
 		) AS snapshot
 	LEFT JOIN
-		Snapshots AS previousSnapshot
+		snapshots AS previousSnapshot
 	ON
 		previousSnapshot.ID = PreviousID
 	INNER JOIN
-		Instruments AS instrument
+		instruments AS instrument
 	ON
 		instrument.ID = snapshot.Instrument_ID
 	WHERE
