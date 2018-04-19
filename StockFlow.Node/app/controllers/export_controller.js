@@ -21,7 +21,7 @@ exports.exportInstruments = async function (req, res) {
     try {
         if (req.params.exportSecret == config.export_secret) {
 
-            var ids = await sql.query('SELECT instrument.ID FROM Instruments AS instrument ORDER BY instrument.ID', {});
+            var ids = await sql.query('SELECT instrument.ID FROM instruments AS instrument ORDER BY instrument.ID', {});
 
             res.header('Content-disposition', 'attachment; filename=instruments.json');
             res.header('Content-type', 'application/json');
@@ -61,7 +61,7 @@ exports.exportUserInstruments = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
 
-            var ids = await sql.query('SELECT instrument.ID FROM Instruments AS instrument WHERE instrument.User = @userName ORDER BY instrument.ID',
+            var ids = await sql.query('SELECT instrument.ID FROM instruments AS instrument WHERE instrument.User = @userName ORDER BY instrument.ID',
                 {
                     "@userName": req.user.email
                 });
@@ -115,7 +115,7 @@ exports.exportSnapshots = async function (req, res) {
 
             cancel = false;
 
-            var ids = await sql.query('SELECT snapshot.ID FROM Snapshots AS snapshot WHERE snapshot.Time >= @fromDate ORDER BY snapshot.Time',
+            var ids = await sql.query('SELECT snapshot.ID FROM snapshots AS snapshot WHERE snapshot.Time >= @fromDate ORDER BY snapshot.Time',
                 {
                     "@fromDate": fromDate
                 });
@@ -171,7 +171,7 @@ exports.exportUserSnapshots = async function (req, res) {
 
             var fromDate = new Date(req.params.fromDate.substr(0, 4), parseInt(req.params.fromDate.substr(4, 2)) - 1, req.params.fromDate.substr(6, 2));
 
-            var ids = await sql.query('SELECT snapshot.ID FROM Snapshots AS snapshot WHERE snapshot.User = @userName AND snapshot.Time >= @fromDate ORDER BY snapshot.Time',
+            var ids = await sql.query('SELECT snapshot.ID FROM snapshots AS snapshot WHERE snapshot.User = @userName AND snapshot.Time >= @fromDate ORDER BY snapshot.Time',
                 {
                     "@userName": req.user.email,
                     "@fromDate": req.params.fromDate

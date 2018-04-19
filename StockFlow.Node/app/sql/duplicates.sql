@@ -16,7 +16,7 @@ FROM
 			snapshot.Time, 
 			count(1) AS Snapshots
 		FROM
-			Snapshots AS snapshot
+			snapshots AS snapshot
 		GROUP BY
 			snapshot.User, snapshot.Instrument_ID, snapshot.Time
 	) AS `group`
@@ -24,7 +24,7 @@ FROM
 		`group`.Snapshots > 1
 ) AS Duplicate
 INNER JOIN
-	Snapshots snapshot
+	snapshots snapshot
 	ON snapshot.User = Duplicate.User
     AND snapshot.Instrument_ID = Duplicate.Instrument_ID
     AND snapshot.Time = Duplicate.Time
