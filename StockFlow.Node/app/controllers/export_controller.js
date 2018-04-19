@@ -1,9 +1,15 @@
 var exports = module.exports = {}
 var model = require('../models/index');
 var sql = require('../sql/sql');
+var fs = require('fs');
+var config = require('../config/envconfig');
 
-var env = process.env.NODE_ENV || 'development';
-var config = require(__dirname + '/../config/config.json')[env];
+var trades_sql = "";
+try {
+    trades_sql = fs.readFileSync(__dirname + '/../sql/trades.sql', 'utf8');
+} catch (e) {
+    console.log('Error:', e.stack);
+}
 
 
 function return500(res, e) {
@@ -194,6 +200,52 @@ exports.exportUserSnapshots = async function (req, res) {
                 }
 
                 res.write(JSON.stringify(snapshot));
+            }
+
+            res.write(']');
+            res.end();
+
+        }
+        else {
+            res.json(JSON.stringify({ error: "unauthorized" }));
+            res.status(401);
+        }
+    }
+    catch (error) {
+        return500(res, error);
+    }
+}
+
+exports.exportUserTrades = async function (req, res) {
+    try {
+        if (req.isAuthenticated()) {
+
+            if (typeof (req.params.fromDate) !== 'string' || req.params.fromDate.length != 8) {
+
+                return500(res, { message: 'invalid date format' });
+                return;
+            }
+
+            var fromDate = new Date(req.params.fromDate.substr(0, 4), parseInt(req.params.fromDate.substr(4, 2)) - 1, req.params.fromDate.substr(6, 2));
+
+            var trades = await sql.query(trades_sql,
+                {
+                    "@userName": req.user.email,
+                    "@fromDate": req.params.fromDate
+                });
+
+            res.header('Content-disposition', 'attachment; filename=trades.json');
+            res.header('Content-type', 'application/json');
+
+            res.write('[');
+
+            for (var i = 0; i < trades.length; ++i) {
+
+                if (i > 0) {
+                    res.write(',');
+                }
+
+                res.write(JSON.stringify(trades[i]));
             }
 
             res.write(']');
