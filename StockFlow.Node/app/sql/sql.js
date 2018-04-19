@@ -1,17 +1,11 @@
 var exports = module.exports = {}
 var mysql = require('mysql');
+var moment = require('moment');
+var config = require('../config/envconfig');
 
-var env = process.env.NODE_ENV || 'development';
-var config = require(__dirname + '/../config/config.json')[env];
+config.connectionLimit = 10;
 
-var pool = mysql.createPool({
-    connectionLimit: 10,
-    host: config.host,
-    user: config.username,
-    password: config.password,
-    database: config.database,
-    port: config.port
-});
+var pool = mysql.createPool(config);
 
 exports.query = async function (sql, args) {
 
