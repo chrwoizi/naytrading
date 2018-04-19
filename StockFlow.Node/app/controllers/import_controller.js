@@ -6,7 +6,6 @@ var JSONStream = require('JSONStream');
 var multiparty = require('multiparty');
 var stream = require('stream');
 var fs = require('fs');
-var config = require('../config/envconfig');
 
 
 function return500(res, e) {

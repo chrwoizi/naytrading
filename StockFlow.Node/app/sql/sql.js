@@ -3,9 +3,9 @@ var mysql = require('mysql');
 var moment = require('moment');
 var config = require('../config/envconfig');
 
-config.connectionLimit = 10;
+config.database.connectionLimit = 10;
 
-var pool = mysql.createPool(config);
+var pool = mysql.createPool(config.database);
 
 exports.query = async function (sql, args) {
 

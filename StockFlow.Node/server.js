@@ -27,7 +27,7 @@ var sql = require('./app/sql/sql');
         `data` text COLLATE utf8mb4_bin,\
         PRIMARY KEY (`session_id`)\
     ) ENGINE=InnoDB");
-    var sessionStore = new MySQLStore(config);
+    var sessionStore = new MySQLStore(config.database);
     app.use(session({
         key: 'session',
         secret: 'stockflow',
@@ -89,7 +89,7 @@ var sql = require('./app/sql/sql');
 
 
     // Start server
-    app.listen(5000, function (err) {
+    app.listen(config.port, function (err) {
 
         if (!err)
             console.log("Site is live");

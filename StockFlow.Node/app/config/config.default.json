@@ -1,12 +1,21 @@
 {
   "development": {
-    "username": "stockflow",
-    "password": "stockflow",
-    "database": "stockflow",
-    "host": "127.0.0.1",
-    "port": 3306,
-    "dialect": "mysql",
-    "operatorsAliases": {},
+    "database":{
+      "username": "stockflow",
+      "password": "stockflow",
+      "database": "stockflow",
+      "host": "127.0.0.1",
+      "port": 3306,
+      "dialect": "mysql",
+      "operatorsAliases": {},
+      "pool": {
+        "idle": 120000,
+        "acquire": 120000,
+        "evict": 120000
+      },
+      "logging": null
+    },
+    "port": 5000,
     "chart_period_seconds": 157680000,
     "snapshot_valid_seconds": 604800,
     "automatic_ignores": 3,
@@ -23,56 +32,26 @@
     "job_cleanup_interval_seconds": 600,
     "job_preload_interval_seconds": 10,
     "job_preload_max_open_snapshots": 100,
-    "export_secret": "test",
-    "proxy": null,
-    "pool": {
-      "idle": 120000,
-      "acquire": 120000,
-      "evict": 120000
-    },
-    "logging": null
-  },
-  "test": {
-    "username": "stockflow",
-    "password": "stockflow",
-    "database": "stockflow",
-    "host": "127.0.0.1",
-    "port": 3306,
-    "dialect": "mysql",
-    "operatorsAliases": {},
-    "chart_period_seconds": 157680000,
-    "snapshot_valid_seconds": 604800,
-    "automatic_ignores": 3,
-    "discard_threshold_seconds": 2592000,
-    "max_strikes": 30,
-    "strikes_order_weight": 0.1,
-    "bought_order_weight": 0.3,
-    "capitalization_order_weight": 0.15,
-    "snapshot_count_order_weight": 0.05,
-    "random_order_weight": 0.2,
-    "***REMOVED***throttle_requests": 10,
-    "***REMOVED***throttle_seconds": 10,
-    "***REMOVED***timeout_milliseconds": 120000,
-    "job_cleanup_interval_seconds": 600,
-    "job_preload_interval_seconds": 10,
-    "job_preload_max_open_snapshots": 100,
-    "export_secret": "test",
-    "proxy": null,
-    "pool": {
-      "idle": 120000,
-      "acquire": 120000,
-      "evict": 120000
-    },
-    "logging": null
+    "export_secret": "enter secret token here",
+    "proxy": null
   },
   "production": {
-    "username": "stockflow",
-    "password": "stockflow",
-    "database": "stockflow",
-    "host": "127.0.0.1",
-    "port": 3306,
-    "dialect": "mysql",
-    "operatorsAliases": {},
+    "database":{
+      "username": "stockflow",
+      "password": "stockflow",
+      "database": "stockflow",
+      "host": "127.0.0.1",
+      "port": 3306,
+      "dialect": "mysql",
+      "operatorsAliases": {},
+      "pool": {
+        "idle": 120000,
+        "acquire": 120000,
+        "evict": 120000
+      },
+      "logging": null
+    },
+    "port": 80,
     "chart_period_seconds": 157680000,
     "snapshot_valid_seconds": 604800,
     "automatic_ignores": 3,
@@ -89,13 +68,7 @@
     "job_cleanup_interval_seconds": 600,
     "job_preload_interval_seconds": 10,
     "job_preload_max_open_snapshots": 100,
-    "export_secret": "test",
-    "proxy": null,
-    "pool": {
-      "idle": 120000,
-      "acquire": 120000,
-      "evict": 120000
-    },
-    "logging": null
+    "export_secret": "enter secret token here",
+    "proxy": null
   }
 }

@@ -3,9 +3,9 @@ var moment = require('moment');
 var env = process.env.NODE_ENV || 'development';
 var config = require(__dirname + '/config.json')[env];
 
-config.user = config.user || config.username;
+config.database.user = config.database.user || config.database.username;
 
-config.dialectOptions = {
+config.database.dialectOptions = {
     useUTC: false,
     dateStrings: true,
     typeCast: function (field, next) {
@@ -16,6 +16,6 @@ config.dialectOptions = {
     }
 }
 
-config.timezone = moment.tz.guess();
+config.database.timezone = moment.tz.guess();
 
 module.exports = config;
