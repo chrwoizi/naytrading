@@ -1,8 +1,8 @@
 {
   "development": {
-    "username": "test",
-    "password": "test",
-    "database": "stockflow_data",
+    "username": "stockflow",
+    "password": "stockflow",
+    "database": "stockflow",
     "host": "127.0.0.1",
     "port": 3306,
     "dialect": "mysql",
@@ -30,9 +30,9 @@
     }
   },
   "test": {
-    "username": "test",
-    "password": "test",
-    "database": "stockflow_data",
+    "username": "stockflow",
+    "password": "stockflow",
+    "database": "stockflow",
     "host": "127.0.0.1",
     "port": 3306,
     "dialect": "mysql",
@@ -60,9 +60,9 @@
     }
   },
   "production": {
-    "username": "test",
-    "password": "test",
-    "database": "stockflow_data",
+    "username": "stockflow",
+    "password": "stockflow",
+    "database": "stockflow",
     "host": "127.0.0.1",
     "port": 3306,
     "dialect": "mysql",
