@@ -4,9 +4,7 @@ var sql = require('../sql/sql');
 var dateFormat = require('dateformat');
 var fs = require('fs');
 var viewsController = require('./views_controller.js');
-
-var env = process.env.NODE_ENV || 'development';
-var config = require(__dirname + '/../config/config.json')[env];
+var config = require('../config/envconfig');
 
 var stats_sql = "";
 try {

@@ -21,13 +21,16 @@
     "***REMOVED***throttle_seconds": 10,
     "***REMOVED***timeout_milliseconds": 120000,
     "job_cleanup_interval_seconds": 600,
+    "job_preload_interval_seconds": 10,
+    "job_preload_max_open_snapshots": 100,
     "export_secret": "test",
     "proxy": null,
     "pool": {
       "idle": 120000,
       "acquire": 120000,
       "evict": 120000
-    }
+    },
+    "logging": null
   },
   "test": {
     "username": "test",
@@ -51,13 +54,16 @@
     "***REMOVED***throttle_seconds": 10,
     "***REMOVED***timeout_milliseconds": 120000,
     "job_cleanup_interval_seconds": 600,
+    "job_preload_interval_seconds": 10,
+    "job_preload_max_open_snapshots": 100,
     "export_secret": "test",
     "proxy": null,
     "pool": {
       "idle": 120000,
       "acquire": 120000,
       "evict": 120000
-    }
+    },
+    "logging": null
   },
   "production": {
     "username": "test",
@@ -81,12 +87,15 @@
     "***REMOVED***throttle_seconds": 10,
     "***REMOVED***timeout_milliseconds": 120000,
     "job_cleanup_interval_seconds": 600,
+    "job_preload_interval_seconds": 10,
+    "job_preload_max_open_snapshots": 100,
     "export_secret": "test",
     "proxy": null,
     "pool": {
       "idle": 120000,
       "acquire": 120000,
       "evict": 120000
-    }
+    },
+    "logging": null
   }
 }

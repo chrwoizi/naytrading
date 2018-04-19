@@ -6,9 +6,7 @@ var JSONStream = require('JSONStream');
 var multiparty = require('multiparty');
 var stream = require('stream');
 var fs = require('fs');
-
-var env = process.env.NODE_ENV || 'development';
-var config = require(__dirname + '/../config/config.json')[env];
+var config = require('../config/envconfig');
 
 
 function return500(res, e) {
@@ -42,25 +40,28 @@ async function importFromFormSubmit(req, res, getExistingEntities, getEntityKey,
 
                 var processor = new stream.Transform({ objectMode: true })
                 processor._transform = function (data, encoding, onDone) {
-                    (async (resolve, reject) => {
-                        try {
-                            var key = getEntityKey(data);
-                            var value = existing[key];
-                            if (value) {
-                                delete remaining[key];
-                            }
-                            else {
-                                await createEntity(data);
-                                addedCount++;
-                            }
-
+                    try {
+                        var key = getEntityKey(data);
+                        var value = existing[key];
+                        if (value) {
+                            delete remaining[key];
                             onDone();
                         }
-                        catch (e) {
-                            errors.push(e);
-                            onDone(e);
+                        else {
+                            createEntity(data).then(() => {
+                                addedCount++;
+                                onDone();
+                            })
+                            .catch(e => {
+                                errors.push(e);
+                                onDone(e);
+                            });
                         }
-                    })();
+                    }
+                    catch (e) {
+                        errors.push(e);
+                        onDone(e);
+                    }
                 };
 
                 fs.createReadStream(filePath)
@@ -126,83 +127,20 @@ function toDictionary(existing, getKey) {
     return dict;
 }
 
-exports.importUserInstruments = async function (req, res) {
-
-    function getInstrumentKey(data) {
-        return data.Source + '/' + data.InstrumentId;
-    }
-
-    async function getExistingInstruments() {
-        var existing = await sql.query('SELECT instrument.ID, instrument.Source, instrument.InstrumentId FROM Instruments AS instrument WHERE instrument.User = @userName',
-            {
-                "@userName": req.user.email
-            });
-        return toDictionary(existing, getInstrumentKey);
-    }
-    
-    async function addInstrument(data) {
-        delete data.ID;
-        delete data.createdAt;
-        delete data.updatedAt;
-        data.User = req.user.email;
-        await model.instrument.create(data);
-    }
-
-    async function removeInstrument(dictValue) {
-        return await model.instrument.destroy({
-            where: {
-                User: req.user.email,
-                ID: dictValue.ID
-            }
-        });
-    }
-
-    importFromFormSubmit(req, res, getExistingInstruments, getInstrumentKey, addInstrument, removeInstrument);
+function getInstrumentKey(data) {
+    return data.Source + '/' + data.InstrumentId;
 }
 
-exports.importUserSnapshots = async function (req, res) {
+function getExistingSnapshotKey(data) {
+    return data.Source + '/' + data.InstrumentId + '/' + new Date(data.Time).getTime();
+}
 
-    function toDict(existing, getKey) {
-        var dict = {};
-        for (var i = 0; i < existing.length; ++i) {
-            var item = existing[i];
-            var key = getKey(item);
-            dict[key] = item;
-        };
-        return dict;
-    }
+function getSnapshotKey(data) {
+    return data.instrument.Source + '/' + data.instrument.InstrumentId + '/' + new Date(data.Time).getTime();
+}
 
-    function getInstrumentKey(data) {
-        return data.Source + '/' + data.InstrumentId;
-    }
-
-    function getExistingSnapshotKey(data) {
-        return data.Source + '/' + data.InstrumentId + '/' + new Date(data.Time).getTime();
-    }
-
-    function getSnapshotKey(data) {
-        return data.instrument.Source + '/' + data.instrument.InstrumentId + '/' + new Date(data.Time).getTime();
-    }
-
-    async function getExistingInstruments() {
-        var existing = await sql.query('SELECT instrument.ID, instrument.Source, instrument.InstrumentId FROM Instruments AS instrument WHERE instrument.User = @userName',
-            {
-                "@userName": req.user.email
-            });
-        return toDict(existing, getInstrumentKey);
-    }
-
-    async function getExistingSnapshots() {
-        var existing = await sql.query('SELECT snapshot.ID, instrument.Source, instrument.InstrumentId, snapshot.Time FROM Snapshots AS snapshot INNER JOIN Instruments AS instrument ON instrument.ID = snapshot.Instrument_ID WHERE snapshot.User = @userName',
-            {
-                "@userName": req.user.email
-            });
-        return toDict(existing, getExistingSnapshotKey);
-    }
-
-    var instrumentsDict = await getExistingInstruments();
-
-    async function addSnapshot(data) {
+function addSnapshot(data, instrumentsDict) {
+    return new Promise(async (resolve, reject) => {
         var instrumentKey = getInstrumentKey(data.instrument);
         var instrument = instrumentsDict[instrumentKey];
         if (instrument) {
@@ -213,7 +151,7 @@ exports.importUserSnapshots = async function (req, res) {
             delete data.instrument.ID;
             delete data.instrument.createdAt;
             delete data.instrument.updatedAt;
-            data.instrument.User = req.user.email;
+            data.instrument.User = data.User;
 
             instrument = await model.instrument.create(data.instrument);
             data.Instrument_ID = instrument.ID;
@@ -228,26 +166,133 @@ exports.importUserSnapshots = async function (req, res) {
             delete data.snapshotrates[i].updatedAt;
         }
 
-        data.User = req.user.email;
-
-        await model.snapshot.create(data, {
+        model.snapshot.create(data, {
             include: [{
                 model: model.snapshotrate
             }]
-        });
+        }).then(resolve);
+    });
+}
+
+async function removeSnapshot(dictValue) {
+    return await model.snapshot.destroy({
+        where: {
+            ID: dictValue.ID
+        },
+        include: [{
+            model: model.snapshotrate
+        }]
+    });
+}
+
+function addInstrument(data) {
+    return new Promise(async (resolve, reject) => {
+        delete data.ID;
+        delete data.createdAt;
+        delete data.updatedAt;
+        model.instrument.create(data).then(resolve);
+    });
+}
+
+async function removeInstrument(dictValue) {
+    return await model.instrument.destroy({
+        where: {
+            ID: dictValue.ID
+        }
+    });
+}
+
+exports.importInstruments = async function (req, res) {
+
+    async function getExistingInstruments() {
+        var existing = await sql.query('SELECT instrument.ID, instrument.Source, instrument.InstrumentId FROM Instruments AS instrument');
+        return toDictionary(existing, getInstrumentKey);
+    }
+    
+    importFromFormSubmit(
+        req,
+        res,
+        getExistingInstruments,
+        getInstrumentKey, 
+        addInstrument, 
+        removeInstrument);
+}
+
+exports.importUserInstruments = async function (req, res) {
+
+    async function getExistingInstruments() {
+        var existing = await sql.query('SELECT instrument.ID, instrument.Source, instrument.InstrumentId FROM Instruments AS instrument WHERE instrument.User = @userName',
+            {
+                "@userName": req.user.email
+            });
+        return toDictionary(existing, getInstrumentKey);
+    }
+    
+    importFromFormSubmit(
+        req,
+        res,
+        getExistingInstruments,
+        getInstrumentKey, 
+        instrument => {
+            instrument.User = req.user.email;    
+            return addInstrument(instrument);
+        }, 
+        removeInstrument);
+}
+
+exports.importSnapshots = async function (req, res) {
+
+    async function getExistingInstruments() {
+        var existing = await sql.query('SELECT instrument.ID, instrument.Source, instrument.InstrumentId FROM Instruments AS instrument');
+        return toDictionary(existing, getInstrumentKey);
     }
 
-    async function removeSnapshot(dictValue) {
-        return await model.snapshot.destroy({
-            where: {
-                User: req.user.email,
-                ID: dictValue.ID
-            },
-            include: [{
-                model: model.snapshotrate
-            }]
-        });
+    async function getExistingSnapshots() {
+        var existing = await sql.query('SELECT snapshot.ID, instrument.Source, instrument.InstrumentId, snapshot.Time FROM Snapshots AS snapshot INNER JOIN Instruments AS instrument ON instrument.ID = snapshot.Instrument_ID');
+        return toDictionary(existing, getExistingSnapshotKey);
     }
 
-    importFromFormSubmit(req, res, getExistingSnapshots, getSnapshotKey, addSnapshot, removeSnapshot);
+    var instrumentsDict = await getExistingInstruments();
+
+    importFromFormSubmit(
+        req, 
+        res,
+        getExistingSnapshots,
+        getSnapshotKey,
+        snapshot => {   
+            return addSnapshot(snapshot, instrumentsDict);
+        }, 
+        removeSnapshot);
+}
+
+exports.importUserSnapshots = async function (req, res) {
+
+    async function getExistingInstruments() {
+        var existing = await sql.query('SELECT instrument.ID, instrument.Source, instrument.InstrumentId FROM Instruments AS instrument WHERE instrument.User = @userName',
+            {
+                "@userName": req.user.email
+            });
+        return toDictionary(existing, getInstrumentKey);
+    }
+
+    async function getExistingSnapshots() {
+        var existing = await sql.query('SELECT snapshot.ID, instrument.Source, instrument.InstrumentId, snapshot.Time FROM Snapshots AS snapshot INNER JOIN Instruments AS instrument ON instrument.ID = snapshot.Instrument_ID WHERE snapshot.User = @userName',
+            {
+                "@userName": req.user.email
+            });
+        return toDictionary(existing, getExistingSnapshotKey);
+    }
+
+    var instrumentsDict = await getExistingInstruments();
+
+    importFromFormSubmit(
+        req, 
+        res,
+        getExistingSnapshots,
+        getSnapshotKey,
+        snapshot => {
+            snapshot.User = req.user.email;    
+            return addSnapshot(snapshot, instrumentsDict);
+        }, 
+        removeSnapshot);
 }

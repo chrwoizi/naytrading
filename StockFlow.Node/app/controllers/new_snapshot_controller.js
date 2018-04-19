@@ -6,9 +6,7 @@ var snapshotController = require('./snapshot_controller');
 var sequelize = require('sequelize');
 var dateFormat = require('dateformat');
 var fs = require('fs');
-
-var env = process.env.NODE_ENV || 'development';
-var config = require(__dirname + '/../config/config.json')[env];
+var config = require('../config/envconfig');
 
 var rank_instruments = "";
 try {
@@ -20,7 +18,7 @@ try {
 var lockFlag = 0;
 
 
-async function getNewSnapshotInstruments(endTime, userName) {
+exports.getNewSnapshotInstruments = async function(endTime, userName) {
 
     var upToDateFrom = new Date(endTime.getTime() - config.snapshot_valid_seconds * 1000);
 
@@ -69,7 +67,7 @@ function getRandomIndex(count, randomRange) {
     return index;
 }
 
-async function isAutoIgnore(newSnapshot) {
+exports.isAutoIgnore = async function(newSnapshot) {
     if (newSnapshot.PreviousDecision == "buy") {
         if (newSnapshot.Rates && newSnapshot.Rates.length > 0 && newSnapshot.PreviousBuyRate != null) {
             var lastRate = newSnapshot.Rates[newSnapshot.Rates.length - 1];
@@ -91,6 +89,10 @@ async function isAutoIgnore(newSnapshot) {
         var firstRates = newSnapshot.Rates.filter(x => x.Close != null && x.Time < firstRatesUntil);
         var lastRates = newSnapshot.Rates.filter(x => x.Close != null && x.Time > lastRatesFrom);
 
+        if (firstRates.length == 0 || lastRates.length == 0) {
+            return false;
+        }
+
         var firstAverage = firstRates.reduce((a, b) => a.Close + b.Close) / firstRates.length;
         var lastAverage = lastRates.reduce((a, b) => a.Close + b.Close) / firstRates.length;
 
@@ -99,7 +101,7 @@ async function isAutoIgnore(newSnapshot) {
     }
 }
 
-async function createNewSnapshotFromRandomInstrument(instrumentIds) {
+exports.createNewSnapshotFromRandomInstrument = async function(instrumentIds) {
     var endTime = new Date();
     var startTime = new Date(endTime.getTime() - config.chart_period_seconds * 1000);
 
@@ -222,11 +224,11 @@ exports.createNewRandomSnapshot = async function (req, res) {
                 return;
             }
 
-            var instrumentIds = await getNewSnapshotInstruments(endTime, req.user.email);
+            var instrumentIds = await exports.getNewSnapshotInstruments(endTime, req.user.email);
 
             var newSnapshot = null;
             for (var i = 0; i <= config.automatic_ignores; ++i) {
-                newSnapshot = await createNewSnapshotFromRandomInstrument(instrumentIds);
+                newSnapshot = await exports.createNewSnapshotFromRandomInstrument(instrumentIds);
                 if (newSnapshot != null) {
 
                     var k = instrumentIds.indexOf(newSnapshot.Instrument_ID);
@@ -235,7 +237,7 @@ exports.createNewRandomSnapshot = async function (req, res) {
                     var previous = await snapshotController.getPreviousDecision(newSnapshot);
                     var viewModel = snapshotController.getSnapshotViewModel(newSnapshot, previous);
 
-                    if (i < config.automatic_ignores && isAutoIgnore(viewModel)) {
+                    if (i < config.automatic_ignores && exports.isAutoIgnore(viewModel)) {
                         await model.snapshot.update(
                             {
                                 Decision: "ignore",
@@ -279,7 +281,7 @@ exports.createNewSnapshotByInstrumentId = async function (req, res) {
 
             var instrumentIds = [{ ID: req.params.instrumentId, Order: 1 }];
 
-            var newSnapshot = await createNewSnapshotFromRandomInstrument(instrumentIds);
+            var newSnapshot = await exports.createNewSnapshotFromRandomInstrument(instrumentIds);
             if (newSnapshot != null) {
                 var viewModel = snapshotController.getSnapshotViewModel(newSnapshot);
                 res.json(viewModel);

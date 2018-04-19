@@ -4,6 +4,14 @@ var sequelize = require('sequelize');
 var dateFormat = require('dateformat');
 var***REMOVED***= require('../providers***REMOVED***);
 
+function getInstrumentViewModel(instrument) {
+    return {
+        ID: instrument.ID,
+        InstrumentName: instrument.InstrumentName,
+        Capitalization: instrument.Capitalization > 0 ? Math.floor(instrument.Capitalization) : null,
+    };
+}
+
 exports.addIndex = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
@@ -88,7 +96,7 @@ exports.instruments = async function (req, res) {
                 order: [['Capitalization', 'DESC']]
             });
 
-            res.json(instruments);
+            res.json(instruments.map(getInstrumentViewModel));
 
         }
         else {
@@ -114,7 +122,7 @@ exports.instrument = async function (req, res) {
             });
 
             if (instrument) {
-                res.json(instrument);
+                res.json(instrument.map(getInstrumentViewModel));
             }
             else {
                 res.json(JSON.stringify({ error: 'instrument not found' }));
