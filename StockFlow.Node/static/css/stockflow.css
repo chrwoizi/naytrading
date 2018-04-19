@@ -1,6 +1,11 @@
-﻿body {
+﻿html {
+    font-size: 12px;
+}
+
+body {
     padding-top: 50px;
     padding-bottom: 20px;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 /* Set padding to keep content from hitting the edges */
@@ -51,4 +56,16 @@ textarea {
 
 .sale-cell {
     text-align: right;
+}
+
+.instrument-capitalization {
+    text-align: right;
+}
+
+a.github-logo {
+    font-size: 3rem;
+}
+
+img.github-logo {
+    height: 3rem;
 }

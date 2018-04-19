@@ -4,8 +4,7 @@
 <div class="row row-spacer">
     <div class="col-12">
         <form class="form-inline">
-            <label>Worldwide stocks indices:</label>
-            <button class="btn btn-info" ng-click="$ctrl.refreshInstruments()">Add</button>
+            <button class="btn btn-info" ng-click="$ctrl.refreshInstruments()">Add stocks indices</button>
         </form>
     </div>
 </div>
@@ -13,12 +12,10 @@
 <div class="row row-spacer">
     <form class="form-inline">
         <div class="col-2">
-            <label style="margin-top: 6px;">Url:</label>
+            <p style="margin-bottom: 0;">Url:</p>
         </div>
         <div class="col-7">
-            <div class="form-group">
-                <input type="text" class="form-control" ng-model="$ctrl.newInstrumentUrl">
-            </div>
+            <input type="text" ng-model="$ctrl.newInstrumentUrl">
         </div>
         <div class="col-3">
             <button class="btn btn-info" ng-click="$ctrl.addInstrument()">Add</button>
@@ -29,19 +26,26 @@
 <span us-spinner spinner-on="$ctrl.loading">
     <div ng-hide="$ctrl.loading">
         <div class="row">
-            <div class="col-12">
-                <p>
-                    Search:
-                    <input ng-model="$ctrl.query" ng-change="$ctrl.onQueryChanged()" />
-                </p>
-                <p>
-                    Sort by:
-                    <select ng-model="$ctrl.orderProp" ng-change="$ctrl.onOrderChanged()">
-                        <option value="InstrumentName">Alphabetical</option>
-                        <option value="-Capitalization">Capitalization</option>
-                    </select>
-                </p>
+            <div class="col-2">
+                <p>Search:</p>
             </div>
+            <div class="col-7">
+                <input ng-model="$ctrl.query" ng-change="$ctrl.onQueryChanged()" />
+            </div>
+            <div class="col-3"></div>
+        </div>
+
+        <div class="row">
+            <div class="col-2">
+                <p>Sort&nbsp;by:</p>
+            </div>
+            <div class="col-7">
+                <select ng-model="$ctrl.orderProp" ng-change="$ctrl.onOrderChanged()">
+                    <option value="InstrumentName">Alphabetical</option>
+                    <option value="-Capitalization">Capitalization</option>
+                </select>
+            </div>
+            <div class="col-3"></div>
         </div>
 
         <div class="row">

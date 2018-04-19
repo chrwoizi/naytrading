@@ -62,6 +62,7 @@ angular.
                     };
                     self.account = {
                     };
+
                     for (var i = 0; i < stats.Sales.length; i++) {
                         var sale = stats.Sales[i];
                         var currentStats = self.completeStats;
@@ -79,9 +80,40 @@ angular.
                         currentStats.maxReturn = Math.max(currentStats.maxReturn, sale.R);
                         self.combinedStats.maxReturn = Math.max(self.combinedStats.maxReturn, sale.R);
                     }
+
                     self.combinedStats.averageReturn = self.combinedStats.sumReturn / self.combinedStats.count;
                     self.completeStats.averageReturn = self.completeStats.sumReturn / self.completeStats.count;
                     self.openStats.averageReturn = self.openStats.sumReturn / self.openStats.count;
+
+                    if (self.completeStats.count == 0) {
+                        self.completeStats = {
+                            count: 0,
+                            minReturn: NaN,
+                            maxReturn: NaN,
+                            sumReturn: NaN,
+                            averageReturn: NaN
+                        };
+                    }
+
+                    if (self.openStats.count == 0) {
+                        self.openStats = {
+                            count: 0,
+                            minReturn: NaN,
+                            maxReturn: NaN,
+                            sumReturn: NaN,
+                            averageReturn: NaN
+                        };
+                    }
+
+                    if (self.combinedStats.count == 0) {
+                        self.combinedStats = {
+                            count: 0,
+                            minReturn: NaN,
+                            maxReturn: NaN,
+                            sumReturn: NaN,
+                            averageReturn: NaN
+                        };
+                    }
 
                     self.account.balance = (self.combinedStats.sumReturn + self.openStats.count) / self.openStats.count;
 
