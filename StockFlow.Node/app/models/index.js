@@ -6,21 +6,8 @@ var Sequelize = require('sequelize');
 var moment = require('moment');
 var basename = path.basename(__filename);
 var env = process.env.NODE_ENV || 'development';
-var config = require(__dirname + '/../config/config.json')[env];
+var config = require(__dirname + '/../config/envconfig').database;
 var db = {};
-
-config.dialectOptions = {
-    useUTC: false,
-    dateStrings: true,
-    typeCast: function (field, next) {
-        if (field.type === 'DATETIME') {
-            return field.string()
-        }
-        return next()
-    }
-}
-
-config.timezone = moment.tz.guess();
 
 if (config.use_env_variable) {
     var sequelize = new Sequelize(process.env[config.use_env_variable], config);
