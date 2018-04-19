@@ -12,7 +12,7 @@ exports.get_default_args = get_default_args;
 
 exports.home = function (req, res) {
 
-    res.render('home', get_default_args(req));
+    res.render('about', get_default_args(req));
 
 }
 
