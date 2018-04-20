@@ -57,7 +57,7 @@ stockflow@host:~/stockflow/StockFlow.Node$ vi config/config.json
 [set production.admin_user to your email address]
 [set production.proxy if you access the web through a proxy]
 :wq
-stockflow@host:~/stockflow/StockFlow.Node/app$ sequelize db:migrate
+stockflow@host:~/stockflow/StockFlow.Node/app$ sequelize db:migrate --url mysql://stockflow:stockflow@localhost/stockflow
 stockflow@host:~/stockflow/StockFlow.Node/app$ cd..
 stockflow@host:~/stockflow/StockFlow.Node$ chmod +x production.sh
 
