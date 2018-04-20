@@ -113,6 +113,15 @@ angular.
                         animation: false
                     };
 
+                    function yymmdd(date) {
+                        var y = date.getYear();
+                        var m = date.getMonth() + 1;
+                        var d = date.getDate();
+                        var mm = m < 10 ? '0' + m : m;
+                        var dd = d < 10 ? '0' + d : d;
+                        return '' + (y%100) + mm + dd;
+                    }
+
                     function parseDate(dateString) {
                         return new Date(
                             (+("20" + dateString.substr(6, 2))),
@@ -187,11 +196,11 @@ angular.
                     $scope.data5 = GetData(snapshot.Rates);
 
                     var endDate = parseDate(snapshot.Date);
-                    var startDate = endDate.setMonth(endDate.getMonth() - 12);
-
-                    var startDateIndex = $scope.labels5.length - 1;
+                    var startDate = yymmdd(new Date(endDate.setMonth(endDate.getMonth() - 12)));
+                    
+                    var startDateIndex = snapshot.Rates.length - 1;
                     for (; startDateIndex >= 0; --startDateIndex) {
-                        var rateDate = parseDate($scope.labels5[startDateIndex]);
+                        var rateDate = snapshot.Rates[startDateIndex].T;
                         if (rateDate == startDate) {
                             break;
                         }
