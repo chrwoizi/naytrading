@@ -54,7 +54,7 @@
       },
       "logging": null
     },
-    "port": 80,
+    "port": 5000,
     "chart_period_seconds": 157680000,
     "snapshot_valid_seconds": 604800,
     "automatic_ignores": 3,
