@@ -14,7 +14,6 @@ The website [StockFlow.Node](StockFlow.Node) presents a stock price chart to the
 root@host:~$ apt-get install sudo
 root@host:~$ apt-get install curl
 root@host:~$ apt-get install git
-root@host:~$ apt-get install iptables-persistent
 
 # install nodejs
 root@host:~$ curl -sL https://deb.nodesource.com/setup_8.x | bash
@@ -33,7 +32,8 @@ MariaDB [(none)]> create user 'stockflow'@'localhost' identified by 'stockflow';
 MariaDB [(none)]> grant all on stockflow.* to 'stockflow' identified by 'stockflow';
 [Ctrl+C]
 
-# redirect port 80 to 5000
+# redirect port 80 to 5000 (or setup a reverse proxy)
+root@host:~$ apt-get install iptables-persistent
 root@host:~$ iptables -t nat -I PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 5000
 root@host:~$ iptables-save > /etc/iptables/rules.v4
 
