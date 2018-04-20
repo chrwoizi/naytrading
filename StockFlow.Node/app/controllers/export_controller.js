@@ -266,10 +266,7 @@ exports.exportLog = async function (req, res) {
     try {
         if (req.isAuthenticated() && req.user.email == config.admin_user) {
 
-            res.header('Content-disposition', 'attachment; filename=stockflow.log');
-            res.header('Content-type', 'application/json');
-
-            res.pipe(fs.createReadStream(__dirname + '/../../' + config.log_path));
+            res.download(__dirname + '/../../' + config.log_path);
 
         }
         else {
