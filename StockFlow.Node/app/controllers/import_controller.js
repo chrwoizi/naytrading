@@ -22,7 +22,7 @@ async function importFromFormSubmit(req, res, getExistingEntities, getEntityKey,
 
             form.parse(req, async (error, fields, files) => {
 
-                if (!(files.file && files.file.length == 1 && files.file[0].path && files.file[0].size > 0)) {
+                if (!(files && files.file && files.file.length == 1 && files.file[0].path && files.file[0].size > 0)) {
                     return500(res, { message: "no file received" });
                     return;
                 }
