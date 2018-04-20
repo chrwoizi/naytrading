@@ -141,7 +141,10 @@ exports.exportSnapshots = async function (req, res) {
                     }],
                     where: {
                         ID: ids[i].ID
-                    }
+                    },
+                    order: [
+                        [model.snapshotrate, "Time", "ASC"]
+                    ]
                 });
 
                 snapshot = snapshot.get({ plain: true });
@@ -212,7 +215,10 @@ exports.exportUserSnapshots = async function (req, res) {
                     }],
                     where: {
                         ID: ids[i].ID
-                    }
+                    },
+                    order: [
+                        [model.snapshotrate, "Time", "ASC"]
+                    ]
                 }).get({ plain: true });
 
                 for (var r = 0; r < snapshot.snapshotrates.length; ++r) {

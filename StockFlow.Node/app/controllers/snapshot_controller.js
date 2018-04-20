@@ -101,7 +101,10 @@ exports.snapshot = async function (req, res) {
                 where: {
                     ID: req.params.id,
                     User: req.user.email
-                }
+                },
+                order: [
+                    [model.snapshotrate, "Time", "ASC"]
+                ]
             });
 
             if (snapshot) {
