@@ -94,7 +94,7 @@ exports.isAutoIgnore = async function(newSnapshot) {
         }
 
         var firstAverage = firstRates.reduce((a, b) => a.Close + b.Close) / firstRates.length;
-        var lastAverage = lastRates.reduce((a, b) => a.Close + b.Close) / firstRates.length;
+        var lastAverage = lastRates.reduce((a, b) => a.Close + b.Close) / lastRates.length;
 
         // overall bearish trend
         return lastAverage < firstAverage;

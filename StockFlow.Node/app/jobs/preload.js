@@ -46,7 +46,7 @@ exports.run = async function () {
                     var previous = await snapshotController.getPreviousDecision(newSnapshot);
                     var viewModel = snapshotController.getSnapshotViewModel(newSnapshot, previous);
 
-                    if (newSnapshotController.isAutoIgnore(viewModel)) {
+                    if (await newSnapshotController.isAutoIgnore(viewModel)) {
                         await model.snapshot.update(
                             {
                                 Decision: "ignore",
