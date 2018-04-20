@@ -40,6 +40,9 @@ exports.exportInstruments = async function (req, res) {
                     res.write(',');
                 }
 
+                delete instrument.createdAt;
+                delete instrument.updatedAt;
+                
                 res.write(JSON.stringify(instrument));
             }
 
@@ -83,6 +86,9 @@ exports.exportUserInstruments = async function (req, res) {
                     res.write(',');
                 }
 
+                delete instrument.createdAt;
+                delete instrument.updatedAt;
+                
                 res.write(JSON.stringify(instrument));
             }
 
@@ -138,6 +144,18 @@ exports.exportSnapshots = async function (req, res) {
                     }
                 });
 
+                for (var r = 0; r < snapshot.snapshotrates.length; ++r) {
+                    var rate = snapshot.snapshotrates[r];
+                    delete rate.createdAt;
+                    delete rate.updatedAt;
+                }
+
+                delete snapshot.instrument.createdAt;
+                delete snapshot.instrument.updatedAt;
+
+                delete snapshot.createdAt;
+                delete snapshot.updatedAt;
+                
                 if (i > 0) {
                     res.write(',');
                 }
@@ -195,6 +213,18 @@ exports.exportUserSnapshots = async function (req, res) {
                     }
                 });
 
+                for (var r = 0; r < snapshot.snapshotrates.length; ++r) {
+                    var rate = snapshot.snapshotrates[r];
+                    delete rate.createdAt;
+                    delete rate.updatedAt;
+                }
+                
+                delete snapshot.instrument.createdAt;
+                delete snapshot.instrument.updatedAt;
+
+                delete snapshot.createdAt;
+                delete snapshot.updatedAt;
+                
                 if (i > 0) {
                     res.write(',');
                 }
