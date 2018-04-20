@@ -53,6 +53,8 @@ stockflow@host:~/stockflow/StockFlow.Node$ cd app
 stockflow@host:~/stockflow/StockFlow.Node$ cp config/config.default.json config/config.json
 stockflow@host:~/stockflow/StockFlow.Node$ vi config/config.json
 [set production.export_token to a secret value of your choice]
+[set production.import_token to a secret value of your choice]
+[set production.admin_user to your email address]
 [set production.proxy if you access the web through a proxy]
 :wq
 stockflow@host:~/stockflow/StockFlow.Node/app$ sequelize db:migrate
