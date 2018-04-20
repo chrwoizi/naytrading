@@ -269,7 +269,7 @@ exports.exportLog = async function (req, res) {
             res.header('Content-disposition', 'attachment; filename=stockflow.log');
             res.header('Content-type', 'application/json');
 
-            res.pipe(fs.createReadStream(__dirname + '/../' + config.log_path));
+            res.pipe(fs.createReadStream(__dirname + '/../../' + config.log_path));
 
         }
         else {
