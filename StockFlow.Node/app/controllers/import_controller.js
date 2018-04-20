@@ -82,7 +82,7 @@ async function importFromFormSubmit(req, res, getExistingEntities, getEntityKey,
                                 }
                             }
 
-                            console.log("import complete. added: " + addedCount + ", removed: " + removedCount + ", errors: " + errors);
+                            console.log("import complete. added: " + addedCount + ", removed: " + removedCount + ", errors: " + JSON.stringify(errors));
                             res.json(JSON.stringify({ added: addedCount, removed: removedCount, errors: errors }));
                         }
                         catch (e) {

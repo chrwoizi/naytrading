@@ -6,6 +6,7 @@ var config = require(__dirname + '/config.json')[env];
 config.database.user = config.database.user || config.database.username;
 
 config.database.dialectOptions = {
+    decimalNumbers: true,
     useUTC: false,
     dateStrings: true,
     typeCast: function (field, next) {
