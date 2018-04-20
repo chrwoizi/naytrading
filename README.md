@@ -60,10 +60,11 @@ stockflow@host:~/stockflow/StockFlow.Node$ vi config/config.json
 stockflow@host:~/stockflow/StockFlow.Node/app$ sequelize db:migrate --url mysql://stockflow:stockflow@localhost/stockflow
 stockflow@host:~/stockflow/StockFlow.Node/app$ cd..
 stockflow@host:~/stockflow/StockFlow.Node$ chmod +x production.sh
+stockflow@host:~/stockflow/StockFlow.Node$ chmod +x upgrade_production.sh
 
 # run stockflow
 stockflow@host:~/stockflow/StockFlow.Node$ autostart enable -n "stockflow" -p "/home/stockflow/stockflow/StockFlow.Node" -c "./production.sh"
-stockflow@host:~/stockflow/StockFlow.Node$ nohup ./production.sh &
+stockflow@host:~/stockflow/StockFlow.Node$ ./production.sh &
 ```
 </details><p></p>
 
