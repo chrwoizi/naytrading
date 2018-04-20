@@ -135,7 +135,7 @@ angular.
                         } else {
                             var previousSnapshotIndex = rates.length - 1;
                             for (var i = 0; i < rates.length; i++) {
-                                if (rates[i].T == snapshot.PreviousTime) {
+                                if (rates[i].T >= snapshot.PreviousTime) {
                                     previousSnapshotIndex = i;
                                     break;
                                 }
@@ -181,7 +181,7 @@ angular.
                     }
 
                     $scope.labels5 = snapshot.Rates.map(function (v) {
-                        return v.T;
+                        return v.T.substr(4, 2) + "." + v.T.substr(2, 2) + "." + v.T.substr(0, 2);
                     });
                     
                     $scope.data5 = GetData(snapshot.Rates);

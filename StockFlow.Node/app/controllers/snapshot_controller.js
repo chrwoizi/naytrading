@@ -16,7 +16,7 @@ exports.getSnapshotViewModel = function (snapshot, previous) {
 
     function getSnapshotRateViewModel(snapshotRate) {
         return {
-            T: dateFormat(snapshotRate.Time, "dd.mm.yy"),
+            T: dateFormat(snapshotRate.Time, "yymmdd"),
             C: snapshotRate.Close
         };
     }
@@ -139,7 +139,7 @@ exports.snapshot = async function (req, res) {
 
                         if (lastRates && lastRates.length == 1) {
                             viewModel.PreviousBuyRate = lastRates[0].Close;
-                            viewModel.PreviousTime = dateFormat(lastRates[0].Time, 'dd.mm.yy');
+                            viewModel.PreviousTime = dateFormat(lastRates[0].Time, 'yymmdd');
                         }
 
                         res.json(viewModel);
@@ -201,7 +201,7 @@ exports.getPreviousDecision = async function (snapshot) {
 
             if (lastRates && lastRates.length == 1) {
                 result.PreviousBuyRate = lastRates[0].Close;
-                result.PreviousTime = dateFormat(lastRates[0].Time, 'dd.mm.yy');
+                result.PreviousTime = dateFormat(lastRates[0].Time, 'yymmdd');
             }
 
         }
