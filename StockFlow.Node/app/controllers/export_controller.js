@@ -34,7 +34,7 @@ exports.exportInstruments = async function (req, res) {
                     where: {
                         ID: ids[i].ID
                     }
-                });
+                }).get({ plain: true });
 
                 if (i > 0) {
                     res.write(',');
@@ -80,7 +80,7 @@ exports.exportUserInstruments = async function (req, res) {
                     where: {
                         ID: ids[i].ID
                     }
-                });
+                }).get({ plain: true });
 
                 if (i > 0) {
                     res.write(',');
@@ -143,6 +143,8 @@ exports.exportSnapshots = async function (req, res) {
                         ID: ids[i].ID
                     }
                 });
+
+                snapshot = snapshot.get({ plain: true });
 
                 for (var r = 0; r < snapshot.snapshotrates.length; ++r) {
                     var rate = snapshot.snapshotrates[r];
@@ -211,7 +213,7 @@ exports.exportUserSnapshots = async function (req, res) {
                     where: {
                         ID: ids[i].ID
                     }
-                });
+                }).get({ plain: true });
 
                 for (var r = 0; r < snapshot.snapshotrates.length; ++r) {
                     var rate = snapshot.snapshotrates[r];
