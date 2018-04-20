@@ -6,7 +6,7 @@ function get_default_args(req) {
         isAuthenticated: req.isAuthenticated(),
         username: req.isAuthenticated() ? req.user.email : undefined,
         isAi: req.isAuthenticated() ? req.user.email.endsWith('.ai') : false,
-        isAdmin: req.user.email == config.admin_user
+        isAdmin: req.isAuthenticated() ? req.user.email == config.admin_user : false
     }
 }
 
