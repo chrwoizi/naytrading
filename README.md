@@ -17,9 +17,9 @@ root@host:~$ apt-get install git
 root@host:~$ apt-get install iptables-persistent
 
 # install nodejs
+root@host:~$ curl -sL https://deb.nodesource.com/setup_8.x | bash
 root@host:~$ apt-get install -y nodejs
 root@host:~$ apt-get install -y build-essential
-root@host:~$ curl -sL https://deb.nodesource.com/setup_8.x | bash
 root@host:~$ npm i -g sequelize-cli
 root@host:~$ npm i -g node-autostart
 
@@ -53,15 +53,18 @@ stockflow@host:~/stockflow/StockFlow.Node$ cd app
 stockflow@host:~/stockflow/StockFlow.Node$ cp config/config.default.json config/config.json
 stockflow@host:~/stockflow/StockFlow.Node$ vi config/config.json
 [set production.export_token to a secret value of your choice]
+[set production.import_token to a secret value of your choice]
+[set production.admin_user to your email address]
 [set production.proxy if you access the web through a proxy]
 :wq
-stockflow@host:~/stockflow/StockFlow.Node/app$ sequelize db:migrate
+stockflow@host:~/stockflow/StockFlow.Node/app$ sequelize db:migrate --url mysql://stockflow:stockflow@localhost/stockflow
 stockflow@host:~/stockflow/StockFlow.Node/app$ cd..
 stockflow@host:~/stockflow/StockFlow.Node$ chmod +x production.sh
+stockflow@host:~/stockflow/StockFlow.Node$ chmod +x upgrade_production.sh
 
 # run stockflow
 stockflow@host:~/stockflow/StockFlow.Node$ autostart enable -n "stockflow" -p "/home/stockflow/stockflow/StockFlow.Node" -c "./production.sh"
-stockflow@host:~/stockflow/StockFlow.Node$ nohup ./production.sh &
+stockflow@host:~/stockflow/StockFlow.Node$ ./production.sh &
 ```
 </details><p></p>
 
