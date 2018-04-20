@@ -52,7 +52,7 @@ angular.
 
                 self.refreshInstruments = function refreshInstruments() {
                     self.loading = true;
-                    InstrumentAddIndexService.get({ }, function () {
+                    InstrumentAddIndexService.post({ }, function () {
                         self.loading = false;
                         window.location.reload();
                     }, function (error) {
