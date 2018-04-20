@@ -6,6 +6,7 @@ var JSONStream = require('JSONStream');
 var multiparty = require('multiparty');
 var stream = require('stream');
 var fs = require('fs');
+var config = require('../config/envconfig');
 
 
 function return500(res, e) {
@@ -13,12 +14,10 @@ function return500(res, e) {
     res.status(500);
 }
 
-async function importFromFormSubmit(req, res, getExistingEntities, getEntityKey, createEntity, destroyEntity) {
+async function importFromFormSubmit(req, res, getExistingEntities, getEntityKey, createEntity, destroyEntity, prepareEntity) {
     var filePath = undefined;
 
     try {
-        if (req.isAuthenticated()) {
-
             var form = new multiparty.Form();
 
             form.parse(req, async (error, fields, files) => {
@@ -37,10 +36,14 @@ async function importFromFormSubmit(req, res, getExistingEntities, getEntityKey,
                 var removedCount = 0;
                 var errors = [];
 
-                var processor = new stream.Transform({ objectMode: true })
+                var processor = new stream.Transform({ objectMode: true });
                 processor._transform = function (data, encoding, onDone) {
                     try {
+                        if(prepareEntity) {
+                            prepareEntity(data);
+                        }
                         var key = getEntityKey(data);
+                        console.log("importing " + key);
                         var value = existing[key];
                         if (value) {
                             delete remaining[key];
@@ -72,12 +75,14 @@ async function importFromFormSubmit(req, res, getExistingEntities, getEntityKey,
                                 if (fields.delete && fields.delete.length == 1 && fields.delete[0] == "on") {
                                     for (var key in remaining) {
                                         if (remaining.hasOwnProperty(key)) {
+                                            console.log("deleting " + key);
                                             removedCount += await destroyEntity(remaining[key]);
                                         }
                                     }
                                 }
                             }
 
+                            console.log("import complete. added: " + addedCount + ", removed: " + removedCount + ", errors: " + errors);
                             res.json(JSON.stringify({ added: addedCount, removed: removedCount, errors: errors }));
                         }
                         catch (e) {
@@ -98,12 +103,6 @@ async function importFromFormSubmit(req, res, getExistingEntities, getEntityKey,
                     });
 
             });
-
-        }
-        else {
-            res.json(JSON.stringify({ error: "unauthorized" }));
-            res.status(401);
-        }
     }
     catch (error) {
         return500(res, error);
@@ -136,6 +135,30 @@ function getExistingSnapshotKey(data) {
 
 function getSnapshotKey(data) {
     return data.instrument.Source + '/' + data.instrument.InstrumentId + '/' + new Date(data.Time).getTime();
+}
+
+function prepareSnapshot(data) {
+    // map old data format
+
+    delete data.StartTimeString;
+    delete data.TimeString;
+    delete data.ModifiedTimeString;
+    delete data.ModifiedDateString;
+    delete data.PreviousDecision;
+    delete data.PreviousBuyRate;
+    delete data.PreviousTime;
+    delete data.PreviousTimeString;
+    
+    data.instrument = data.instrument || data.Instrument;
+    delete data.Instrument;
+
+    data.snapshotrates = data.snapshotrates || data.Rates;
+    delete data.Rates;
+    for(var i = 0; i < data.snapshotrates.length; ++i) {
+        delete data.snapshotrates[i].TimeString;
+    }
+
+    return data;
 }
 
 function addSnapshot(data, instrumentsDict) {
@@ -203,95 +226,129 @@ async function removeInstrument(dictValue) {
 
 exports.importInstruments = async function (req, res) {
 
-    async function getExistingInstruments() {
-        var existing = await sql.query('SELECT instrument.ID, instrument.Source, instrument.InstrumentId FROM Instruments AS instrument');
-        return toDictionary(existing, getInstrumentKey);
+    if (req.params.importSecret == config.import_secret) {
+
+        async function getExistingInstruments() {
+            var existing = await sql.query('SELECT instrument.ID, instrument.Source, instrument.InstrumentId FROM Instruments AS instrument');
+            return toDictionary(existing, getInstrumentKey);
+        }
+        
+        importFromFormSubmit(
+            req,
+            res,
+            getExistingInstruments,
+            getInstrumentKey, 
+            addInstrument, 
+            removeInstrument);
+
     }
-    
-    importFromFormSubmit(
-        req,
-        res,
-        getExistingInstruments,
-        getInstrumentKey, 
-        addInstrument, 
-        removeInstrument);
+    else {
+        res.json(JSON.stringify({ error: "unauthorized" }));
+        res.status(401);
+    }
 }
 
 exports.importUserInstruments = async function (req, res) {
 
-    async function getExistingInstruments() {
-        var existing = await sql.query('SELECT instrument.ID, instrument.Source, instrument.InstrumentId FROM instruments AS instrument WHERE instrument.User = @userName',
-            {
-                "@userName": req.user.email
-            });
-        return toDictionary(existing, getInstrumentKey);
+    if (req.isAuthenticated()) {
+
+        async function getExistingInstruments() {
+            var existing = await sql.query('SELECT instrument.ID, instrument.Source, instrument.InstrumentId FROM instruments AS instrument WHERE instrument.User = @userName',
+                {
+                    "@userName": req.user.email
+                });
+            return toDictionary(existing, getInstrumentKey);
+        }
+        
+        importFromFormSubmit(
+            req,
+            res,
+            getExistingInstruments,
+            getInstrumentKey, 
+            instrument => {
+                instrument.User = req.user.email;    
+                return addInstrument(instrument);
+            }, 
+            removeInstrument);
+
     }
-    
-    importFromFormSubmit(
-        req,
-        res,
-        getExistingInstruments,
-        getInstrumentKey, 
-        instrument => {
-            instrument.User = req.user.email;    
-            return addInstrument(instrument);
-        }, 
-        removeInstrument);
+    else {
+        res.json(JSON.stringify({ error: "unauthorized" }));
+        res.status(401);
+    }
 }
 
 exports.importSnapshots = async function (req, res) {
 
-    async function getExistingInstruments() {
-        var existing = await sql.query('SELECT instrument.ID, instrument.Source, instrument.InstrumentId FROM Instruments AS instrument');
-        return toDictionary(existing, getInstrumentKey);
+    if (req.params.importSecret == config.import_secret) {
+
+        async function getExistingInstruments() {
+            var existing = await sql.query('SELECT instrument.ID, instrument.Source, instrument.InstrumentId FROM Instruments AS instrument');
+            return toDictionary(existing, getInstrumentKey);
+        }
+
+        async function getExistingSnapshots() {
+            var existing = await sql.query('SELECT snapshot.ID, instrument.Source, instrument.InstrumentId, snapshot.Time FROM Snapshots AS snapshot INNER JOIN Instruments AS instrument ON instrument.ID = snapshot.Instrument_ID');
+            return toDictionary(existing, getExistingSnapshotKey);
+        }
+
+        var instrumentsDict = await getExistingInstruments();
+
+        importFromFormSubmit(
+            req, 
+            res,
+            getExistingSnapshots,
+            getSnapshotKey,
+            snapshot => {   
+                return addSnapshot(snapshot, instrumentsDict);
+            }, 
+            removeSnapshot,
+            prepareSnapshot);
+
     }
-
-    async function getExistingSnapshots() {
-        var existing = await sql.query('SELECT snapshot.ID, instrument.Source, instrument.InstrumentId, snapshot.Time FROM Snapshots AS snapshot INNER JOIN Instruments AS instrument ON instrument.ID = snapshot.Instrument_ID');
-        return toDictionary(existing, getExistingSnapshotKey);
+    else {
+        res.json(JSON.stringify({ error: "unauthorized" }));
+        res.status(401);
     }
-
-    var instrumentsDict = await getExistingInstruments();
-
-    importFromFormSubmit(
-        req, 
-        res,
-        getExistingSnapshots,
-        getSnapshotKey,
-        snapshot => {   
-            return addSnapshot(snapshot, instrumentsDict);
-        }, 
-        removeSnapshot);
 }
 
 exports.importUserSnapshots = async function (req, res) {
 
-    async function getExistingInstruments() {
-        var existing = await sql.query('SELECT instrument.ID, instrument.Source, instrument.InstrumentId FROM instruments AS instrument WHERE instrument.User = @userName',
-            {
-                "@userName": req.user.email
-            });
-        return toDictionary(existing, getInstrumentKey);
+    if (req.isAuthenticated()) {
+
+        async function getExistingInstruments() {
+            var existing = await sql.query('SELECT instrument.ID, instrument.Source, instrument.InstrumentId FROM instruments AS instrument WHERE instrument.User = @userName',
+                {
+                    "@userName": req.user.email
+                });
+            return toDictionary(existing, getInstrumentKey);
+        }
+
+        async function getExistingSnapshots() {
+            var existing = await sql.query('SELECT snapshot.ID, instrument.Source, instrument.InstrumentId, snapshot.Time FROM snapshots AS snapshot INNER JOIN instruments AS instrument ON instrument.ID = snapshot.Instrument_ID WHERE snapshot.User = @userName',
+                {
+                    "@userName": req.user.email
+                });
+            return toDictionary(existing, getExistingSnapshotKey);
+        }
+
+        var instrumentsDict = await getExistingInstruments();
+
+        importFromFormSubmit(
+            req, 
+            res,
+            getExistingSnapshots,
+            getSnapshotKey,
+            snapshot => {
+                snapshot.User = req.user.email;    
+                return addSnapshot(snapshot, instrumentsDict);
+            }, 
+            removeSnapshot,
+            prepareSnapshot);
+
     }
-
-    async function getExistingSnapshots() {
-        var existing = await sql.query('SELECT snapshot.ID, instrument.Source, instrument.InstrumentId, snapshot.Time FROM snapshots AS snapshot INNER JOIN instruments AS instrument ON instrument.ID = snapshot.Instrument_ID WHERE snapshot.User = @userName',
-            {
-                "@userName": req.user.email
-            });
-        return toDictionary(existing, getExistingSnapshotKey);
+    else {
+        res.json(JSON.stringify({ error: "unauthorized" }));
+        res.status(401);
     }
-
-    var instrumentsDict = await getExistingInstruments();
-
-    importFromFormSubmit(
-        req, 
-        res,
-        getExistingSnapshots,
-        getSnapshotKey,
-        snapshot => {
-            snapshot.User = req.user.email;    
-            return addSnapshot(snapshot, instrumentsDict);
-        }, 
-        removeSnapshot);
 }

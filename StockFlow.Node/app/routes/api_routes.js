@@ -41,7 +41,13 @@ module.exports = function (app, passport) {
 
     app.get('/api/export/user/trades/:fromDate', exportController.exportUserTrades);
 
+    app.get('/api/export/log/:adminSecret', exportController.exportLog);
+
+    app.post('/api/import/instruments/:importSecret', importController.importInstruments);
+
     app.post('/api/import/user/instruments', importController.importUserInstruments);
+
+    app.post('/api/import/snapshots/:importSecret', importController.importSnapshots);
 
     app.post('/api/import/user/snapshots', importController.importUserSnapshots);
 

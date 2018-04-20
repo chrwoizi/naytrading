@@ -261,3 +261,23 @@ exports.exportUserTrades = async function (req, res) {
         return500(res, error);
     }
 }
+
+exports.exportLog = async function (req, res) {
+    try {
+        if (req.isAuthenticated() && req.user.email == config.admin_user) {
+
+            res.header('Content-disposition', 'attachment; filename=stockflow.log');
+            res.header('Content-type', 'application/json');
+
+            res.pipe(fileSystem.createReadStream(__dirname + '/../' + config.log_path));
+
+        }
+        else {
+            res.json(JSON.stringify({ error: "unauthorized" }));
+            res.status(401);
+        }
+    }
+    catch (error) {
+        return500(res, error);
+    }
+}

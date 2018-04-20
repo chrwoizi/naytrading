@@ -1,0 +1,43 @@
+<h2>Admin</h2>
+<div>
+    <p class="text-success">{{statusMessage}}</p>
+    <hr />
+    <dl class="dl-horizontal">
+        <dt>Export:</dt>
+        <dd>
+            <a href="/api/export/instruments/{{export_secret}}" class="btn btn-secondary" role="button">All Instruments</a>
+            <a href="/api/export/snapshots/19700101/{{export_secret}}" class="btn btn-secondary" role="button">All Snapshots</a>
+            <a href="/api/export/log" class="btn btn-secondary" role="button">Log</a>
+        </dd>
+        <dt>Import All Instruments:</dt>
+        <dd>
+            <form action="/api/import/instruments/{{import_secret}}" method="post" enctype="multipart/form-data">
+                <div class="form-group">
+                    <input type="file" name="file" class="form-control-file"></input>
+                </div>
+                <div class="form-check">
+                    <label class="form-check-label">
+                        <input type="checkbox" class="form-check-input" name="delete">
+                        Delete all existing instruments
+                    </label>
+                </div>
+                <button type="submit" class="btn btn-secondary">Import All Instruments</button>
+            </form>
+        </dd>
+        <dt>Import All Snapshots:</dt>
+        <dd>
+            <form action="/api/import/snapshots/{{import_secret}}" method="post" enctype="multipart/form-data">
+                <div class="form-group">
+                    <input type="file" name="file" class="form-control-file"></input>
+                </div>
+                <div class="form-check">
+                    <label class="form-check-label">
+                        <input type="checkbox" class="form-check-input" name="delete">
+                        Delete all existing snapshots
+                    </label>
+                </div>
+                <button type="submit" class="btn btn-secondary">Import All Snapshots</button>
+            </form>
+        </dd>
+    </dl>
+</div>

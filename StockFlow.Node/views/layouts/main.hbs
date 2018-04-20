@@ -30,6 +30,9 @@
                 <li class="nav-item"><a class="nav-link" href="/app/#!/snapshot/new/random">New Snapshot</a></li>
                 <li class="nav-item"><a class="nav-link" href="/app/#!/snapshots">Snapshots</a></li>
                 <li class="nav-item"><a class="nav-link" href="/app/#!/instruments">Instruments</a></li>
+                {{#if isAdmin}}
+                <li class="nav-item"><a class="nav-link" href="/admin">Admin</a></li>
+                {{/if}}
                 {{/if}}
                 <li class="nav-item"><a class="nav-link" href="/about">About</a></li>
                 <li class="nav-item"><a class="nav-link" href="/contact">Impressum</a></li>

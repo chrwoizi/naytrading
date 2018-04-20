@@ -33,6 +33,9 @@
     "job_preload_interval_seconds": 10,
     "job_preload_max_open_snapshots": 100,
     "export_secret": "enter secret token here",
+    "import_secret": "enter secret token here",
+    "admin_user": "enter admin user email here",
+    "log_path": "stockflow.log",
     "proxy": null
   },
   "production": {
@@ -69,6 +72,9 @@
     "job_preload_interval_seconds": 10,
     "job_preload_max_open_snapshots": 100,
     "export_secret": "enter secret token here",
+    "import_secret": "enter secret token here",
+    "admin_user": "enter admin user email here",
+    "log_path": "stockflow.log",
     "proxy": null
   }
 }
