@@ -176,6 +176,8 @@ function addSnapshot(data, instrumentsDict) {
             data.instrument.User = data.User;
 
             instrument = await model.instrument.create(data.instrument);
+            instrumentsDict[instrumentKey] = instrument;
+
             data.Instrument_ID = instrument.ID;
         }
 
