@@ -261,17 +261,17 @@ exports.createNewRandomSnapshot = async function (req, res) {
                 }
             }
 
-            res.json(JSON.stringify({ error: 'no instrument available' }));
             res.status(404);
+            res.json({ error: 'no instrument available' });
         }
         else {
-			res.json(JSON.stringify({ error: "unauthorized" }));
             res.status(401);
+			res.json({ error: "unauthorized" });
         }
     }
     catch (error) {
-        res.json(JSON.stringify({ error: error.message }));
         res.status(500);
+        res.json({ error: error.message });
     }
 };
 
@@ -288,18 +288,18 @@ exports.createNewSnapshotByInstrumentId = async function (req, res) {
                 return;
             }
             else {
-                res.json(JSON.stringify({ error: 'instrument not available' }));
                 res.status(404);
+                res.json({ error: 'instrument not available' });
             }
 
         }
         else {
-			res.json(JSON.stringify({ error: "unauthorized" }));
             res.status(401);
+			res.json({ error: "unauthorized" });
         }
     }
     catch (error) {
-        res.json(JSON.stringify({ error: error.message }));
         res.status(500);
+        res.json({ error: error.message });
     }
 };

@@ -36,10 +36,9 @@ angular.
                         self.loading = false;
 
                         window.location.href = '#!/snapshots';
-                        if (error.status != 404) {
-                            if (typeof(error.data) !== 'undefined' && error.data != null) {
-                                alert('error: ' + JSON.stringify(error.data));
-                            }
+
+                        if (typeof(error.data) !== 'undefined' && error.data != null) {
+                            console.error('error: ' + JSON.stringify(error.data));
                         }
                     }
                 });

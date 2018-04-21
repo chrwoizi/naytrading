@@ -14,8 +14,8 @@ try {
 
 
 function return500(res, e) {
-    res.json(JSON.stringify({ error: e.message }));
     res.status(500);
+    res.json({ error: e.message });
 }
 
 function getStatsViewModel(model) {
@@ -121,8 +121,8 @@ exports.getStats = async function (req, res) {
 
         }
         else {
-            res.json(JSON.stringify({ error: "unauthorized" }));
             res.status(401);
+            res.json({ error: "unauthorized" });
         }
     }
     catch (error) {
@@ -145,14 +145,14 @@ exports.clearDecisions = async function (req, res) {
 
             }
             else {
-                res.json(JSON.stringify({ error: "action not applicable" }));
                 res.status(404);
+                res.json({ error: "action not applicable" });
             }
 
         }
         else {
-            res.json(JSON.stringify({ error: "unauthorized" }));
             res.status(401);
+            res.json({ error: "unauthorized" });
         }
     }
     catch (error) {

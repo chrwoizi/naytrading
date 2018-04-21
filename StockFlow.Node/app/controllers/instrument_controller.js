@@ -34,17 +34,17 @@ exports.addIndex = async function (req, res) {
                 await model.instrument.create(instrument);
             }
 
-            res.json(JSON.stringify({ added: newInstruments.length }));
             res.status(200);
+            res.json({ added: newInstruments.length });
         }
         else {
-			res.json(JSON.stringify({ error: "unauthorized" }));
             res.status(401);
+			res.json({ error: "unauthorized" });
         }
     }
     catch (error) {
-        res.json(JSON.stringify({ error: error.message }));
         res.status(500);
+        res.json({ error: error.message });
     }
 }
 
@@ -65,23 +65,23 @@ exports.addUrl = async function (req, res) {
             if (knownInstruments.length == 0) {
                 instrument.User = req.user.email;
                 await model.instrument.create(instrument);
-                res.json(JSON.stringify({ added: 1 }));
                 res.status(200);
+                res.json({ added: 1 });
             }
             else {
-                res.json(JSON.stringify({ added: 0 }));
                 res.status(200);
+                res.json({ added: 0 });
             }
             
         }
         else {
-			res.json(JSON.stringify({ error: "unauthorized" }));
             res.status(401);
+			res.json({ error: "unauthorized" });
         }
     }
     catch (error) {
-        res.json(JSON.stringify({ error: error.message }));
         res.status(500);
+        res.json({ error: error.message });
     }
 }
 
@@ -100,13 +100,13 @@ exports.instruments = async function (req, res) {
 
         }
         else {
-			res.json(JSON.stringify({ error: "unauthorized" }));
             res.status(401);
+			res.json({ error: "unauthorized" });
         }
     }
     catch (error) {
-        res.json(JSON.stringify({ error: error.message }));
         res.status(500);
+        res.json({ error: error.message });
     }
 }
 
@@ -125,17 +125,17 @@ exports.instrument = async function (req, res) {
                 res.json(instrument.map(getInstrumentViewModel));
             }
             else {
-                res.json(JSON.stringify({ error: 'instrument not found' }));
                 res.status(404);
+                res.json({ error: 'instrument not found' });
             }
         }
         else {
-			res.json(JSON.stringify({ error: "unauthorized" }));
             res.status(401);
+			res.json({ error: "unauthorized" });
         }
     }
     catch (error) {
-        res.json(JSON.stringify({ error: error.message }));
         res.status(500);
+        res.json({ error: error.message });
     }
 }

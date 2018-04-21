@@ -49,13 +49,13 @@ exports.countSnapshots = async function (req, res) {
 
         }
         else {
-			res.json(JSON.stringify({ error: "unauthorized" }));
             res.status(401);
+			res.json({ error: "unauthorized" });
         }
     }
     catch (error) {
-        res.json(JSON.stringify({ error: error.message }));
         res.status(500);
+        res.json({ error: error.message });
     }
 }
 
@@ -78,13 +78,13 @@ exports.snapshots = async function (req, res) {
 
         }
         else {
-			res.json(JSON.stringify({ error: "unauthorized" }));
             res.status(401);
+			res.json({ error: "unauthorized" });
         }
     }
     catch (error) {
-        res.json(JSON.stringify({ error: error.message }));
         res.status(500);
+        res.json({ error: error.message });
     }
 }
 
@@ -155,19 +155,19 @@ exports.snapshot = async function (req, res) {
 
             }
             else {
-                res.json(JSON.stringify({ error: 'snapshot not found' }));
                 res.status(404);
+                res.json({ error: 'snapshot not found' });
             }
 
         }
         else {
-			res.json(JSON.stringify({ error: "unauthorized" }));
             res.status(401);
+			res.json({ error: "unauthorized" });
         }
     }
     catch (error) {
-        res.json(JSON.stringify({ error: error.message }));
         res.status(500);
+        res.json({ error: error.message });
     }
 }
 
@@ -227,17 +227,17 @@ exports.setDecision = async function (req, res) {
                 }
             );
 
-			res.json(JSON.stringify({}));
             res.status(200);
+			res.json({});
 
         }
         else {
-			res.json(JSON.stringify({ error: "unauthorized" }));
             res.status(401);
+			res.json({ error: "unauthorized" });
         }
     }
     catch (error) {
-        res.json(JSON.stringify({ error: error.message }));
         res.status(500);
+        res.json({ error: error.message });
     }
 }

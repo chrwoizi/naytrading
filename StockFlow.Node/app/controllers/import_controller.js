@@ -10,7 +10,7 @@ var config = require('../config/envconfig');
 
 
 function return500(res, e) {
-    res.json(JSON.stringify({ error: e.message }));
+    res.json({ error: e.message });
     res.status(500);
 }
 
@@ -83,7 +83,7 @@ async function importFromFormSubmit(req, res, getExistingEntities, getEntityKey,
                             }
 
                             console.log("import complete. added: " + addedCount + ", removed: " + removedCount + ", errors: " + JSON.stringify(errors));
-                            res.json(JSON.stringify({ added: addedCount, removed: removedCount, errors: errors }));
+                            res.json({ added: addedCount, removed: removedCount, errors: errors });
                         }
                         catch (e) {
                             return500(res, e);
@@ -245,8 +245,8 @@ exports.importInstruments = async function (req, res) {
 
     }
     else {
-        res.json(JSON.stringify({ error: "unauthorized" }));
         res.status(401);
+        res.json({ error: "unauthorized" });
     }
 }
 
@@ -275,8 +275,8 @@ exports.importUserInstruments = async function (req, res) {
 
     }
     else {
-        res.json(JSON.stringify({ error: "unauthorized" }));
         res.status(401);
+        res.json({ error: "unauthorized" });
     }
 }
 
@@ -309,8 +309,8 @@ exports.importSnapshots = async function (req, res) {
 
     }
     else {
-        res.json(JSON.stringify({ error: "unauthorized" }));
         res.status(401);
+        res.json({ error: "unauthorized" });
     }
 }
 
@@ -350,7 +350,7 @@ exports.importUserSnapshots = async function (req, res) {
 
     }
     else {
-        res.json(JSON.stringify({ error: "unauthorized" }));
         res.status(401);
+        res.json({ error: "unauthorized" });
     }
 }

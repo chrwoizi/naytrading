@@ -13,8 +13,8 @@ try {
 
 
 function return500(res, e) {
-    res.json(JSON.stringify({ error: e.message }));
     res.status(500);
+    res.json({ error: e.message });
 }
 
 exports.exportInstruments = async function (req, res) {
@@ -51,8 +51,8 @@ exports.exportInstruments = async function (req, res) {
 
         }
         else {
-            res.json(JSON.stringify({ error: "unauthorized" }));
             res.status(401);
+            res.json({ error: "unauthorized" });
         }
     }
     catch (error) {
@@ -97,8 +97,8 @@ exports.exportUserInstruments = async function (req, res) {
 
         }
         else {
-            res.json(JSON.stringify({ error: "unauthorized" }));
             res.status(401);
+            res.json({ error: "unauthorized" });
         }
     }
     catch (error) {
@@ -112,8 +112,8 @@ exports.exportSnapshots = async function (req, res) {
 
             if (typeof (req.params.fromDate) !== 'string' || req.params.fromDate.length != 8) {
 
-                res.json(JSON.stringify({ error: 'invalid date format' }));
                 res.status(500);
+                res.json({ error: 'invalid date format' });
                 return;
             }
 
@@ -173,8 +173,8 @@ exports.exportSnapshots = async function (req, res) {
 
         }
         else {
-            res.json(JSON.stringify({ error: "unauthorized" }));
             res.status(401);
+            res.json({ error: "unauthorized" });
         }
     }
     catch (error) {
@@ -245,8 +245,8 @@ exports.exportUserSnapshots = async function (req, res) {
 
         }
         else {
-            res.json(JSON.stringify({ error: "unauthorized" }));
             res.status(401);
+            res.json({ error: "unauthorized" });
         }
     }
     catch (error) {
@@ -291,8 +291,8 @@ exports.exportUserTrades = async function (req, res) {
 
         }
         else {
-            res.json(JSON.stringify({ error: "unauthorized" }));
             res.status(401);
+            res.json({ error: "unauthorized" });
         }
     }
     catch (error) {
@@ -308,8 +308,8 @@ exports.exportLog = async function (req, res) {
 
         }
         else {
-            res.json(JSON.stringify({ error: "unauthorized" }));
             res.status(401);
+            res.json({ error: "unauthorized" });
         }
     }
     catch (error) {
