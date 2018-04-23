@@ -36,7 +36,7 @@ module.exports = {
 
             User: {
                 type: Sequelize.TEXT('long'),
-                allowNull: false
+                allowNull: true
             },
 
             Strikes: {

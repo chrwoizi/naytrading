@@ -3,6 +3,12 @@
     <p class="text-success">{{statusMessage}}</p>
     <hr />
     <dl class="dl-horizontal">
+        <dt>Cache:</dt>
+        <dd>
+            <form action="/api/clear/instruments/{{import_secret}}" method="post" enctype="multipart/form-data">
+                <button type="submit" class="btn btn-secondary">Refresh Default Instruments</button>
+            </form>
+        </dd>
         <dt>Export:</dt>
         <dd>
             <a href="/api/export/instruments/{{export_secret}}" class="btn btn-secondary" role="button">All Instruments</a>

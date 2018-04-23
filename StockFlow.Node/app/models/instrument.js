@@ -36,7 +36,7 @@ module.exports = (sequelize, DataTypes) => {
 
         User: {
             type: DataTypes.TEXT('long'),
-            allowNull: false
+            allowNull: true
         },
 
         Strikes: {

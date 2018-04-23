@@ -7,7 +7,7 @@ var exportController = require('../controllers/export_controller.js');
 
 module.exports = function (app, passport) {
 
-    app.post('/api/instruments/add/index', instrumentController.addIndex);
+    app.post('/api/instruments/add/default', instrumentController.addDefault);
 
     app.post('/api/instruments/add', instrumentController.addUrl);
 
@@ -30,6 +30,8 @@ module.exports = function (app, passport) {
     app.get('/api/stats', dataController.getStats);
 
     app.post('/api/clear/decisions', dataController.clearDecisions);
+
+    app.post('/api/clear/instruments/:importSecret', instrumentController.clearDefaultInstruments);
 
     app.get('/api/export/instruments/:exportSecret', exportController.exportInstruments);
 

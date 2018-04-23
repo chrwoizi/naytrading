@@ -27,6 +27,8 @@ angular.
     ]).
     factory('InstrumentAddIndexService', ['$resource',
         function ($resource) {
-            return $resource('/api/instruments/add/index', {}, {});
+            return $resource('/api/instruments/add/default', {}, {
+                post: { method: 'POST' }
+            });
         }
     ]);

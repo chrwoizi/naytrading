@@ -3,9 +3,7 @@ var model = require('../models/index');
 var sequelize = require('sequelize');
 var sql = require('../sql/sql');
 var fs = require('fs');
-
-var env = process.env.NODE_ENV || 'development';
-var config = require(__dirname + '/../config/config.json')[env];
+var config = require('../config/envconfig');
 
 var duplicates_sql = "";
 try {

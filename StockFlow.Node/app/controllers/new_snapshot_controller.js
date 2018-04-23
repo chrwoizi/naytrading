@@ -171,9 +171,9 @@ exports.createNewSnapshotFromRandomInstrument = async function(instrumentIds) {
                     });
                 }
                 else {
-                    console.log("Adding 1 strike to instrument " + instrument.InstrumentName + " because it has no rates");
+                    console.log("Adding 5 strikes to instrument " + instrument.InstrumentName + " because it has no rates");
                     await instrument.updateAttributes({
-                        Strikes: instrument.Strikes + 1,
+                        Strikes: instrument.Strikes + 5,
                         LastStrikeTime: new Date()
                     });
                 }

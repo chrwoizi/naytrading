@@ -5,9 +5,7 @@ var sql = require('../sql/sql');
 var fs = require('fs');
 var snapshotController = require('../controllers/snapshot_controller');
 var newSnapshotController = require('../controllers/new_snapshot_controller');
-
-var env = process.env.NODE_ENV || 'development';
-var config = require(__dirname + '/../config/config.json')[env];
+var config = require('../config/envconfig');
 
 function sleep(ms) {
     return new Promise((resolve, reject) => {

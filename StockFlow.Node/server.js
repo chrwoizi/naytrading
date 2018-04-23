@@ -1,13 +1,15 @@
-var express = require('express')
-var app = express()
-var passport = require('passport')
-var session = require('express-session')
+var express = require('express');
+var app = express();
+var passport = require('passport');
+var session = require('express-session');
 var MySQLStore = require('express-mysql-session')(session);
-var bodyParser = require('body-parser')
-var env = require('dotenv').load()
-var exphbs = require('express-handlebars')
-var cleanupJob = require('./app/jobs/cleanup')
-var preloadJob = require('./app/jobs/preload')
+var bodyParser = require('body-parser');
+var env = require('dotenv').load();
+var exphbs = require('express-handlebars');
+var instrumentsJob = require('./app/jobs/instruments');
+var cleanupJob = require('./app/jobs/cleanup');
+var preloadJob = require('./app/jobs/preload');
+var strikesJob = require('./app/jobs/strikes');
 var config = require('./app/config/envconfig');
 var sql = require('./app/sql/sql');
 
@@ -97,6 +99,10 @@ var sql = require('./app/sql/sql');
             console.log(err);
 
     });
+    
+    setTimeout(function () {
+        new Promise(function (resolve, reject) { instrumentsJob.run(); });
+    }, 5000);
 
     setTimeout(function () {
         new Promise(function (resolve, reject) { cleanupJob.run(); });
@@ -104,6 +110,10 @@ var sql = require('./app/sql/sql');
     
     setTimeout(function () {
         new Promise(function (resolve, reject) { preloadJob.run(); });
+    }, 15000);
+    
+    setTimeout(function () {
+        new Promise(function (resolve, reject) { strikesJob.run(); });
     }, 20000);
 
 })();

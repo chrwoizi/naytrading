@@ -52,7 +52,8 @@ angular.
 
                 self.refreshInstruments = function refreshInstruments() {
                     self.loading = true;
-                    InstrumentAddIndexService.post({ }, function () {
+                    InstrumentAddIndexService.post({ }, function (result) {
+                        alert("Added " + result.added + " instruments.");
                         self.loading = false;
                         window.location.reload();
                     }, function (error) {

@@ -3,6 +3,17 @@ var model = require('../models/index');
 var sequelize = require('sequelize');
 var dateFormat = require('dateformat');
 var***REMOVED***= require('../providers***REMOVED***);
+var sql = require('../sql/sql');
+var fs = require('fs');
+var config = require('../config/envconfig');
+
+var copy_sql = "";
+try {
+    copy_sql = fs.readFileSync(__dirname + '/../sql/copy_instruments.sql', 'utf8');
+} catch (e) {
+    console.log('Error:', e.stack);
+}
+
 
 function getInstrumentViewModel(instrument) {
     return {
@@ -12,30 +23,16 @@ function getInstrumentViewModel(instrument) {
     };
 }
 
-exports.addIndex = async function (req, res) {
+exports.addDefault = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
 
-            var allInstruments = await***REMOVED***getAllInstruments();
-            
-            var knownInstruments = await model.instrument.findAll({
-                where: {
-                    User: req.user.email
-                }
+            var result = await sql.query(copy_sql, {
+                "@userName": req.user.email
             });
 
-            var knownIds = knownInstruments.filter(x => x.Source ==***REMOVED***source).map(x => x.InstrumentId);
-
-            var newInstruments = allInstruments.filter(x => knownIds.indexOf(x.InstrumentId) == -1);
-
-            for (var i = 0; i < newInstruments.length; ++i) {
-                var instrument = newInstruments[i];
-                instrument.User = req.user.email;
-                await model.instrument.create(instrument);
-            }
-
             res.status(200);
-            res.json({ added: newInstruments.length });
+            res.json({ added: result.affectedRows });
         }
         else {
             res.status(401);
@@ -133,6 +130,29 @@ exports.instrument = async function (req, res) {
             res.status(401);
 			res.json({ error: "unauthorized" });
         }
+    }
+    catch (error) {
+        res.status(500);
+        res.json({ error: error.message });
+    }
+}
+
+exports.clearDefaultInstruments = async function (req, res) {
+    try {
+
+        if (req.params.importSecret == config.import_secret) {
+
+            var result = await sql.query('DELETE instrument FROM instruments AS instrument WHERE instrument.User IS NULL');
+            
+            res.status(200);
+            res.json({ deleted: result.affectedRows });
+
+        }
+        else {
+            res.status(401);
+            res.json({ error: "unauthorized" });
+        }
+
     }
     catch (error) {
         res.status(500);
