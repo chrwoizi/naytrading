@@ -36,8 +36,6 @@ exports.run = async function () {
 
                 var endTime = new Date();
 
-                console.log("Preloading a snapshot for " + userName);
-
                 var instrumentIds = await newSnapshotController.getNewSnapshotInstruments(endTime, userName);
 
                 var newSnapshot = await newSnapshotController.createNewSnapshotFromRandomInstrument(instrumentIds);
