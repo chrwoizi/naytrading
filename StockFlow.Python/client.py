@@ -50,23 +50,11 @@ def get_proxy_config(proxy_url, user, password):
 
 
 def login(session, stockflow_url, user, password, proxies):
-    login_url = stockflow_url + '/Account/Login'
-
-    r = session.get(login_url, proxies = proxies)
-    if r.status_code != 200:
-        raise Exception('%s returned %d' %(login_url, r.status_code))
-
-    html = r.text
-
-    verificationToken = html[html.index('__RequestVerificationToken'):]
-    verificationToken = verificationToken[verificationToken.index('value=\"') + 7:]
-    verificationToken = verificationToken[0:verificationToken.index('\"')]
+    login_url = stockflow_url + '/signin'
 
     r = session.post(login_url, {
-        '__RequestVerificationToken': verificationToken,
-        'Email': user,
-        'Password': password,
-        'RememberMe': 'true'
+        'email': user,
+        'password': password
     }, proxies = proxies)
 
     if r.status_code != 200:
@@ -120,7 +108,7 @@ def plot(chart):
 
 
 def get_chart(snapshot):
-    rates = list(map(lambda x: [datetime.datetime.strptime(x['T'], '%d.%m.%y'), x['C']], snapshot['Rates']))
+    rates = list(map(lambda x: [datetime.datetime.strptime(x['T'], '%y%m%d'), x['C']], snapshot['Rates']))
 
     start_date = datetime.datetime.strptime(snapshot['StartTime'], '%d.%m.%y')
     end_date = datetime.datetime.strptime(snapshot['Date'], '%d.%m.%y')
