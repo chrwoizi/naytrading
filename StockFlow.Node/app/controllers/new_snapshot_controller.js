@@ -18,6 +18,10 @@ try {
 var lockFlag = 0;
 
 
+function isEmpty(str) {
+    return typeof(str) === 'undefined' || str == null || !str.length;
+}
+
 exports.getNewSnapshotInstruments = async function(endTime, userName) {
 
     var upToDateFrom = new Date(endTime.getTime() - config.snapshot_valid_seconds * 1000);
@@ -116,7 +120,24 @@ exports.createNewSnapshotFromRandomInstrument = async function(instrumentIds) {
         var instrument = await model.instrument.findOne({ where: { ID: instrumentIds[index].ID } });
 
         try {
-            var rates = await***REMOVED***getRates(instrument.InstrumentId, instrument.MarketId, startTime, endTime);
+            var ratesResponse = await***REMOVED***getRates(instrument.InstrumentId, instrument.MarketId, startTime, endTime);
+            var rates = ratesResponse.rates;
+            var isin = ratesResponse.isin;
+            var wkn = ratesResponse.wkn;
+                    
+            var updated = false;
+            if (isEmpty(instrument.Isin) && !isEmpty(isin)) {
+                instrument.Isin = isin;
+                updated = true;
+            }
+            if (isEmpty(instrument.Wkn) && !isEmpty(wkn)) {
+                instrument.Wkn = wkn;
+                updated = true;
+            }
+            if (updated) {
+                instrument.save();
+            }
+            
             var minRateTime = new Date(startTime.getTime() + 1000 * config.discard_threshold_seconds);
             var maxRateTime = new Date(endTime.getTime() - 1000 * config.discard_threshold_seconds);
 

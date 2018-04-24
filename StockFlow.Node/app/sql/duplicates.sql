@@ -27,4 +27,4 @@ INNER JOIN
 	snapshots snapshot
 	ON snapshot.User = Duplicate.User
     AND snapshot.Instrument_ID = Duplicate.Instrument_ID
-    AND snapshot.Time = Duplicate.Time
+    AND DATE(snapshot.Time) = DATE(Duplicate.Time)
