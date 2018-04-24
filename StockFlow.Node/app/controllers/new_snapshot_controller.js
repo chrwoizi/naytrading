@@ -126,16 +126,18 @@ exports.createNewSnapshotFromRandomInstrument = async function(instrumentIds) {
             var wkn = ratesResponse.wkn;
                     
             var updated = false;
+            var fields = {};
             if (isEmpty(instrument.Isin) && !isEmpty(isin)) {
-                instrument.Isin = isin;
+                fields.Isin = isin;
                 updated = true;
             }
             if (isEmpty(instrument.Wkn) && !isEmpty(wkn)) {
-                instrument.Wkn = wkn;
+                fields.Wkn = wkn;
                 updated = true;
             }
             if (updated) {
-                instrument.save();
+                await instrument.updateAttributes(fields);
+                instrument = await model.instrument.findOne({ where: { ID: instrumentIds[index].ID } });
             }
             
             var minRateTime = new Date(startTime.getTime() + 1000 * config.discard_threshold_seconds);
