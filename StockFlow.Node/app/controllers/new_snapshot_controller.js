@@ -164,14 +164,15 @@ exports.createNewSnapshotFromRandomInstrument = async function(instrumentIds) {
             }
             else {
                 if (rates && rates.length > 0) {
-                    console.log("Adding 10 strikes to instrument " + instrument.InstrumentName + " because it has insufficient rates. Available rates are from " + dateFormat(rates[0].Time, 'dd.mm.yy') + " to " + dateFormat(rates[rates.length - 1].Time, 'dd.mm.yy'));
+                    var strikes = config.max_strikes + 6;
+                    console.log("Setting " + strikes + " strikes on instrument " + instrument.InstrumentName + " because it has insufficient rates. Available rates are from " + dateFormat(rates[0].Time, 'dd.mm.yy') + " to " + dateFormat(rates[rates.length - 1].Time, 'dd.mm.yy'));
                     await instrument.updateAttributes({
-                        Strikes: instrument.Strikes + 10,
+                        Strikes: strikes,
                         LastStrikeTime: new Date()
                     });
                 }
                 else {
-                    console.log("Adding 5 strikes to instrument " + instrument.InstrumentName + " because it has no rates");
+                    console.log("Adding 5 strikes to instrument " + instrument.InstrumentName + " because the server returned no rates");
                     await instrument.updateAttributes({
                         Strikes: instrument.Strikes + 5,
                         LastStrikeTime: new Date()
@@ -181,12 +182,29 @@ exports.createNewSnapshotFromRandomInstrument = async function(instrumentIds) {
             }
         }
         catch (error) {
-            console.log(error);
-            console.log("Adding 1 strike to instrument " + instrument.InstrumentName + " because it caused an exception: " + error);
-            await instrument.updateAttributes({
-                Strikes: instrument.Strikes + 1,
-                LastStrikeTime: new Date()
-            });
+            if(error ==***REMOVED***market_not_found) {
+                var strikes = config.max_strikes + 12;
+                console.log("Setting " + strikes + " strikes on instrument " + instrument.InstrumentName + " because the market id does not exist");
+                await instrument.updateAttributes({
+                    Strikes: strikes,
+                    LastStrikeTime: new Date()
+                });
+            }
+            else if(error ==***REMOVED***invalid_response) {
+                console.log("Adding 5 strikes to instrument " + instrument.InstrumentName + " because the server returned an unexpected response");
+                await instrument.updateAttributes({
+                    Strikes: instrument.Strikes + 5,
+                    LastStrikeTime: new Date()
+                });
+            }
+            else {
+                console.log(error);
+                console.log("Adding 1 strike to instrument " + instrument.InstrumentName + " because it caused an exception: " + error);
+                await instrument.updateAttributes({
+                    Strikes: instrument.Strikes + 1,
+                    LastStrikeTime: new Date()
+                });
+            }
         }
 
         if (lockFlag > 0) {
