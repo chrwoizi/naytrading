@@ -79,7 +79,8 @@ exports.isAutoIgnore = async function(newSnapshot) {
         return false;
     }
     else {
-        var endTime = new Date().setHours(0,0,0,0);
+        var endTime = new Date();
+        endTime.setHours(0,0,0,0);
         var startTime = new Date(endTime.getTime() - config.chart_period_seconds * 1000);
 
         var timeDiff = endTime - startTime;
@@ -102,7 +103,8 @@ exports.isAutoIgnore = async function(newSnapshot) {
 }
 
 exports.createNewSnapshotFromRandomInstrument = async function(instrumentIds) {
-    var endTime = new Date().setHours(0,0,0,0);
+    var endTime = new Date();
+    endTime.setHours(0,0,0,0);
     var startTime = new Date(endTime.getTime() - config.chart_period_seconds * 1000);
 
     // try to load rates of a random instrument. 
@@ -219,7 +221,8 @@ exports.createNewRandomSnapshot = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
 
-            var endTime = new Date().setHours(0,0,0,0);
+            var endTime = new Date();
+            endTime.setHours(0,0,0,0);
 
             var forgotten = await model.snapshot.findAll({
                 limit: 1,

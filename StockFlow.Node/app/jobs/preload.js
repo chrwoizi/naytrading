@@ -32,7 +32,8 @@ exports.run = async function () {
             {
                 await sleep(3000 + Math.floor(Math.random() * 7000));
 
-                var endTime = new Date().setHours(0,0,0,0);
+                var endTime = new Date();
+                endTime.setHours(0,0,0,0);
 
                 var instrumentIds = await newSnapshotController.getNewSnapshotInstruments(endTime, userName);
 
