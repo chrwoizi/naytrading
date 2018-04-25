@@ -1,36 +1,45 @@
 var exports = module.exports = {}
-var model = require('../models/index');
-var sequelize = require('sequelize');
 var sql = require('../sql/sql');
-var***REMOVED***= require('../providers***REMOVED***);
+var fs = require('fs');
 var config = require('../config/envconfig');
 
+var isin_sql = "";
+try {
+    isin_sql = fs.readFileSync(__dirname + '/../sql/isin.sql', 'utf8');
+} catch (e) {
+    console.log('Error:', e.stack);
+}
+
+var wkn_sql = "";
+try {
+    wkn_sql = fs.readFileSync(__dirname + '/../sql/wkn.sql', 'utf8');
+} catch (e) {
+    console.log('Error:', e.stack);
+}
 
 exports.run = async function () {
     try {
 
-        var isinIds = await sql.query("SELECT i.ID FROM instruments i INNER JOIN instruments g ON g.InstrumentId = i.InstrumentID AND g.Source = i.Source AND g.ID <> i.ID AND i.Isin IS NULL AND g.Isin IS NOT NULL");
-        var wknIds = await sql.query("SELECT i.ID FROM instruments i INNER JOIN instruments g ON g.InstrumentId = i.InstrumentID AND g.Source = i.Source AND g.ID <> i.ID AND i.Wkn IS NULL AND g.Wkn IS NOT NULL");
+        var ids = await sql.query(isin_sql);
         
-        for (var i = 0; i < isinIds.length; ++i) {
-            var isin = await sql.query("UPDATE instruments i INNER JOIN instruments g ON g.InstrumentId = i.InstrumentID AND g.Source = i.Source AND g.ID <> i.ID AND i.Isin IS NULL AND g.Isin IS NOT NULL AND i.ID = @id SET i.Isin = g.Isin", {
-                id: isinIds[i].ID
+        for (var i = 0; i < ids.length; ++i) {
+            await sql.query("UPDATE instruments i INNER JOIN instruments g ON g.ID = @fromId SET i.Isin = g.Isin WHERE i.ID = @toId", {
+                "@fromId": ids[i].FromId,
+                "@toId": ids[i].ToId
             });
-            var affectedRows = isin.affectedRows;
-            if (affectedRows > 0) {
-                console.log("Updated ISIN of instrument " + isinIds[i].ID);
-            }
+            console.log("Updated ISIN of instrument " + ids[i].ToId);
         }
 
-        for (var i = 0; i < isinIds.length; ++i) {
-            var wkn = await sql.query("UPDATE instruments i INNER JOIN instruments g ON g.InstrumentId = i.InstrumentID AND g.Source = i.Source AND g.ID <> i.ID AND i.Wkn IS NULL AND g.Wkn IS NOT NULL AND i.ID = @id SET i.Wkn = g.Wkn", {
-                id: isinIds[i].ID
+        ids = await sql.query(wkn_sql);
+        
+        for (var i = 0; i < ids.length; ++i) {
+            await sql.query("UPDATE instruments i INNER JOIN instruments g ON g.ID = @fromId SET i.Wkn = g.Wkn WHERE i.ID = @toId", {
+                "@fromId": ids[i].FromId,
+                "@toId": ids[i].ToId
             });
-            var affectedRows = wkn.affectedRows;
-            if (affectedRows > 0) {
-                console.log("Updated WKN of instrument " + isinIds[i].ID);
-            }
+            console.log("Updated WKN of instrument " + ids[i].ToId);
         }
+
     }
     catch (error) {
         console.log("error in isin/wkn job: " + error);
