@@ -103,22 +103,22 @@ var sql = require('./app/sql/sql');
     
     setTimeout(function () {
         new Promise(function (resolve, reject) { instrumentsJob.run(); });
-    }, 5000);
+    }, 2000);
 
     setTimeout(function () {
         new Promise(function (resolve, reject) { cleanupJob.run(); });
-    }, 10000);
+    }, 4000);
     
     setTimeout(function () {
         new Promise(function (resolve, reject) { preloadJob.run(); });
-    }, 15000);
+    }, 6000);
     
     setTimeout(function () {
         new Promise(function (resolve, reject) { strikesJob.run(); });
-    }, 20000);
+    }, 8000);
     
     setTimeout(function () {
         new Promise(function (resolve, reject) { isinWknJob.run(); });
-    }, 22000);
+    }, 10000);
 
 })();
