@@ -156,7 +156,11 @@ exports.createNewSnapshotFromRandomInstrument = async function(instrumentIds) {
                         StartTime: startTime,
                         Time: endTime
                     },
-                    order: [['Time'], ['ID']],
+                    order: [
+                        ['Time'], 
+                        ['ID'], 
+                        [model.snapshotrate, "Time", "ASC"]
+                    ],
                     limit: 1
                 })
 
@@ -258,7 +262,11 @@ exports.createNewRandomSnapshot = async function (req, res) {
                     User: req.user.email,
                     Decision: null
                 },
-                order: [['Time', 'ASC'], ['ID', 'ASC']]
+                order: [
+                    ['Time', 'ASC'], 
+                    ['ID', 'ASC'],
+                    [model.snapshotrate, "Time", "ASC"]
+                ]
             });
 
             if (forgotten && forgotten.length == 1) {
