@@ -1,0 +1,32 @@
+{
+  "development": {
+    "username": "stockflow",
+    "password": "stockflow",
+    "database": "stockflow",
+    "host": "127.0.0.1",
+    "port": 3306,
+    "dialect": "mysql",
+    "operatorsAliases": {},
+    "pool": {
+      "idle": 120000,
+      "acquire": 120000,
+      "evict": 120000
+    },
+    "logging": null
+  },
+  "production": {
+    "username": "stockflow",
+    "password": "stockflow",
+    "database": "stockflow",
+    "host": "127.0.0.1",
+    "port": 3306,
+    "dialect": "mysql",
+    "operatorsAliases": {},
+    "pool": {
+      "idle": 120000,
+      "acquire": 120000,
+      "evict": 120000
+    },
+    "logging": null
+  }
+}

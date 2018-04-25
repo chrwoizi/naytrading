@@ -49,18 +49,20 @@ stockflow@host:~$ git clone https://github.com/chrwoizi/stockflow.git
 stockflow@host:~$ cd stockflow
 stockflow@host:~/stockflow$ cd StockFlow.Node
 stockflow@host:~/stockflow/StockFlow.Node$ npm install
-stockflow@host:~/stockflow/StockFlow.Node$ cd app
-stockflow@host:~/stockflow/StockFlow.Node$ cp config/config.default.json config/config.json
-stockflow@host:~/stockflow/StockFlow.Node$ vi config/config.json
+stockflow@host:~/stockflow/StockFlow.Node$ cd app/config
+stockflow@host:~/stockflow/StockFlow.Node/app/config$ cp config.mandatory.json config.json
+stockflow@host:~/stockflow/StockFlow.Node/app/config$ cp database.mandatory.json database.json
+stockflow@host:~/stockflow/StockFlow.Node/app/config$ vi config.json
 [set production.export_token to a secret value of your choice]
 [set production.import_token to a secret value of your choice]
 [set production.admin_user to your email address]
 [set production.proxy if you access the web through a proxy]
 :wq
-stockflow@host:~/stockflow/StockFlow.Node/app$ sequelize db:migrate --url mysql://stockflow:stockflow@localhost/stockflow
-stockflow@host:~/stockflow/StockFlow.Node/app$ cd..
+stockflow@host:~/stockflow/StockFlow.Node/app/config$ cd ../..
+stockflow@host:~/stockflow/StockFlow.Node$ chmod +x dbmigrate.sh
 stockflow@host:~/stockflow/StockFlow.Node$ chmod +x production.sh
 stockflow@host:~/stockflow/StockFlow.Node$ chmod +x upgrade_production.sh
+stockflow@host:~/stockflow/StockFlow.Node$ ./dbmigrate.sh
 
 # run stockflow
 stockflow@host:~/stockflow/StockFlow.Node$ autostart enable -n "stockflow" -p "/home/stockflow/stockflow/StockFlow.Node" -c "./production.sh"

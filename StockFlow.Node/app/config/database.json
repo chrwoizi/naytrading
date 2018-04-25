@@ -1,0 +1,9 @@
+{
+  "development": {
+    "username": "test",
+    "password": "test",
+    "database": "stockflow_data"
+  },
+  "production": {
+  }
+}
