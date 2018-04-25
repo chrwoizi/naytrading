@@ -35,3 +35,4 @@
 /StockFlow.Node/obj
 /StockFlow.Node/app/config/config.json
 /StockFlow.Node/*.log
+/StockFlow.Node/app/config/database.json
