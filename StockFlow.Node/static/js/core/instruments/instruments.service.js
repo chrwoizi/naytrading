@@ -20,8 +20,11 @@ angular.
     ]).
     factory('InstrumentAddService', ['$resource',
         function ($resource) {
-            return $resource('/api/instruments/add', { url: '@url' }, {
-                add: { method: 'POST' }
+            return $resource('/api/instruments/add/url/:url', {}, {
+                add: { 
+                    method: 'POST',
+                    params: {"url" : "@url"}
+                }
             });
         }
     ]).

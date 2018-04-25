@@ -61,6 +61,8 @@ exports.addUrl = async function (req, res) {
 
             if (knownInstruments.length == 0) {
                 instrument.User = req.user.email;
+                instrument.Strikes = 0;
+                instrument.LastStrikeTime = new Date();
                 await model.instrument.create(instrument);
                 res.status(200);
                 res.json({ added: 1 });
