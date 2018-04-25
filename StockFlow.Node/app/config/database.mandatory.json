@@ -1,6 +1,18 @@
 {
   "development": {
+    "username": "stockflow",
+    "password": "stockflow",
+    "database": "stockflow",
+    "host": "127.0.0.1",
+    "port": 3306,
+    "dialect": "mysql"
   },
   "production": {
+    "username": "stockflow",
+    "password": "stockflow",
+    "database": "stockflow",
+    "host": "127.0.0.1",
+    "port": 3306,
+    "dialect": "mysql"
   }
 }
