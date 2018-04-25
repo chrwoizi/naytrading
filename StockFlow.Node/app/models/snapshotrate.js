@@ -15,22 +15,22 @@ module.exports = (sequelize, DataTypes) => {
         },
 
         Open: {
-            type: DataTypes.DECIMAL(18, 2),
+            type: DataTypes.DECIMAL(8, 2),
             allowNull: true
         },
 
         Close: {
-            type: DataTypes.DECIMAL(18, 2),
+            type: DataTypes.DECIMAL(8, 2),
             allowNull: true
         },
 
         High: {
-            type: DataTypes.DECIMAL(18, 2),
+            type: DataTypes.DECIMAL(8, 2),
             allowNull: true
         },
 
         Low: {
-            type: DataTypes.DECIMAL(18, 2),
+            type: DataTypes.DECIMAL(8, 2),
             allowNull: true
         },
 
