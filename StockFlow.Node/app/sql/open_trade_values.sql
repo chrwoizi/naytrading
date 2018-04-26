@@ -50,7 +50,7 @@ FROM
 					newerSnapshot.User = trade.User
 					AND newerSnapshot.Instrument_ID = buySnapshot.Instrument_ID
 					AND newerSnapshot.Time > buySnapshot.Time
-				AND newerSnapshot.Decision = 'sell'
+					AND newerSnapshot.Decision = 'sell'
                 LIMIT 1
 			)
     ) AS trade

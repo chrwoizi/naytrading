@@ -19,6 +19,7 @@ FROM
 				snapshots AS snapshot
 			WHERE
 				instrument.ID = snapshot.Instrument_ID
+				AND snapshot.User = @userName
 				AND (snapshot.Decision = 'buy' OR snapshot.Decision = 'sell')
 			ORDER BY snapshot.Time DESC
 			LIMIT 1
@@ -37,6 +38,7 @@ FROM
 				snapshots AS snapshot
 			WHERE
 				instrument.ID = snapshot.Instrument_ID
+				AND snapshot.User = @userName
 				AND snapshot.Time > @validFromDateTime
 		)
 ) AS instrument;
