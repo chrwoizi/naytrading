@@ -1,6 +1,6 @@
 'use strict';
 module.exports = {
-    up: (queryInterface, Sequelize) => {
+    up: (queryInterface, Sequelize, onDone) => {
         return queryInterface.createTable('trades', {
 
             ID: {
