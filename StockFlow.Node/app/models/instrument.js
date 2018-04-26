@@ -10,22 +10,22 @@ module.exports = (sequelize, DataTypes) => {
         },
 
         Source: {
-            type: DataTypes.TEXT('long'),
+            type: DataTypes.STRING,
             allowNull: true
         },
 
         InstrumentName: {
-            type: DataTypes.TEXT('long'),
+            type: DataTypes.STRING,
             allowNull: true
         },
 
         InstrumentId: {
-            type: DataTypes.TEXT('long'),
+            type: DataTypes.STRING,
             allowNull: true
         },
 
         MarketId: {
-            type: DataTypes.TEXT('long'),
+            type: DataTypes.STRING,
             allowNull: true
         },
 
@@ -35,7 +35,7 @@ module.exports = (sequelize, DataTypes) => {
         },
 
         User: {
-            type: DataTypes.TEXT('long'),
+            type: DataTypes.STRING,
             allowNull: true
         },
 
@@ -45,12 +45,12 @@ module.exports = (sequelize, DataTypes) => {
         },
 
         Isin: {
-            type: DataTypes.TEXT('long'),
+            type: DataTypes.STRING(12),
             allowNull: true
         },
 
         Wkn: {
-            type: DataTypes.TEXT('long'),
+            type: DataTypes.STRING(6),
             allowNull: true
         },
 
@@ -71,7 +71,16 @@ module.exports = (sequelize, DataTypes) => {
 
     },
     {
-        indexes: [{ fields: ['User'] }]
+        indexes: [
+            { fields: ['User'] },
+            { fields: ['Strikes'] },
+            { fields: ['Capitalization'] },
+            { fields: ['InstrumentId'] },
+            { fields: ['Source'] },
+            { fields: ['Isin'] },
+            { fields: ['Wkn'] },
+            { fields: ['LastStrikeTime'] }
+        ]
     });
     instrument.associate = function (models) {
         instrument.hasMany(models.snapshot, { foreignKey: 'Instrument_ID', onDelete: 'CASCADE', hooks: true });

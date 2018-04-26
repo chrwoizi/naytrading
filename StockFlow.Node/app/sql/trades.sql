@@ -4,60 +4,51 @@ SELECT
     trade.Isin,
     trade.Wkn,
     trade.SnapshotId,
-    trade.Decision, 
+    trade.Decision,
+    trade.DecisionTime, 
     rate.Time,
     rate.Close AS Price
 FROM
 (
     SELECT
-        instrument.InstrumentId,
+        instrument.ID AS InstrumentId,
         instrument.InstrumentName,
         instrument.Isin,
         instrument.Wkn,
-        instrument.SnapshotId,
+        snapshot.ID AS SnapshotId,
         snapshot.Decision,
+        snapshot.ModifiedTime AS DecisionTime,
         (
             SELECT
                 rate.ID
             FROM
                 snapshotrates AS rate
             WHERE
-                rate.Snapshot_ID = instrument.snapshotId
-                AND rate.Close IS NOT NULL
+                rate.Snapshot_ID = snapshot.ID
             ORDER BY
                 rate.Time DESC
             LIMIT 1
         ) AS RateId
     FROM
+        instruments AS instrument
+    INNER JOIN
     (
         SELECT
-            instrument.ID AS InstrumentId,
-            instrument.InstrumentName,
-            instrument.Isin,
-            instrument.Wkn,
-            (
-                SELECT
-                    snapshot.ID
-                FROM
-                    snapshots AS snapshot
-                WHERE
-                    snapshot.User = @userName
-                    AND snapshot.Instrument_ID = instrument.ID
-                    AND snapshot.Time >= @fromDate
-                    AND snapshot.Decision = 'buy' OR snapshot.Decision = 'sell'
-                ORDER BY
-                    snapshot.Time DESC
-                LIMIT 1
-            ) AS SnapshotId
+            snapshot.ID,
+            snapshot.Instrument_ID,
+            snapshot.Decision,
+            snapshot.ModifiedTime
         FROM
-            instruments AS instrument
+            snapshots AS snapshot
         WHERE
-            instrument.User = @userName
-    ) AS instrument
-    INNER JOIN
-        snapshots AS snapshot
-        ON snapshot.ID = instrument.SnapshotId
+            snapshot.User = @userName
+            AND snapshot.ModifiedTime >= @fromDate
+            AND (snapshot.Decision = 'buy' OR snapshot.Decision = 'sell')
+    ) AS snapshot
+    ON snapshot.Instrument_ID = instrument.ID
 ) AS trade
 INNER JOIN
     snapshotrates AS rate
-    ON rate.ID = trade.rateId;
+    ON rate.ID = trade.rateId
+ORDER BY
+    trade.DecisionTime ASC;

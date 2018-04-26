@@ -11,6 +11,7 @@ var cleanupJob = require('./app/jobs/cleanup');
 var preloadJob = require('./app/jobs/preload');
 var strikesJob = require('./app/jobs/strikes');
 var isinWknJob = require('./app/jobs/isinwkn');
+var portfoliosJob = require('./app/jobs/portfolios');
 var config = require('./app/config/envconfig');
 var sql = require('./app/sql/sql');
 
@@ -120,5 +121,9 @@ var sql = require('./app/sql/sql');
     setTimeout(function () {
         new Promise(function (resolve, reject) { isinWknJob.run(); });
     }, 10000);
+    
+    setTimeout(function () {
+        new Promise(function (resolve, reject) { portfoliosJob.run(); });
+    }, 12000);
 
 })();

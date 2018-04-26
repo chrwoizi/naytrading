@@ -7,7 +7,14 @@ var viewsController = require('./views_controller.js');
 
 var stats_sql = "";
 try {
-    stats_sql = fs.readFileSync(__dirname + '/../sql/stats_simple.sql', 'utf8');
+    stats_sql = fs.readFileSync(__dirname + '/../sql/stats.sql', 'utf8');
+} catch (e) {
+    console.log('Error:', e.stack);
+}
+
+var open_trade_values_sql = "";
+try {
+    open_trade_values_sql = fs.readFileSync(__dirname + '/../sql/open_trade_values.sql', 'utf8');
 } catch (e) {
     console.log('Error:', e.stack);
 }
@@ -29,90 +36,111 @@ function getStatsViewModel(model) {
         };
     }
 
+    var valueHistory = [];
+    if (model.portfolios && model.portfolios.length > 0) {
+        var history = model.portfolios.map(x => {
+            return {
+                Time: dateFormat(x.Time, 'dd.mm.yyyy'),
+                Return: (x.Value - x.Deposit) / x.Deposit
+            };
+        });
+        valueHistory = history.concat(valueHistory);
+    }
+
     return {
+        Value: model.portfolio ? model.portfolio.Value : 0,
+        Deposit: model.portfolio ? model.portfolio.Deposit : 0,
+        ValueHistory: valueHistory,
+        OpenCount: model.portfolio ? model.portfolio.OpenCount : 0,
+        CompleteCount: model.portfolio ? model.portfolio.CompleteCount : 0,
         Sales: model.Sales.map(getSaleViewModel)
     };
-}
-
-function groupBy(xs, key) {
-    return xs.reduce(function (rv, x) {
-        let v = key instanceof Function ? key(x) : x[key];
-        let el = rv.find((r) => r && r.key === v);
-        if (el) {
-            el.values.push(x);
-        } else {
-            rv.push({ key: v, values: [x] });
-        }
-        return rv;
-    }, []);
-}
-
-async function loadPrice(snapshotId) {
-    var result = await sql.query("SELECT rate.Close\
-    FROM snapshotrates AS rate\
-    WHERE rate.Snapshot_ID = @snapshotId\
-    ORDER BY rate.Time DESC LIMIT 1", 
-    {
-        "@snapshotId": snapshotId
-    });
-
-    return result[0].Close;
 }
 
 exports.getStats = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
 
+            var stats = {};
+            stats.Sales = [];
+
+            stats.portfolios = await model.portfolio.findAll({
+                where: {
+                    User: req.user.email
+                },
+                order: [["Time", "ASC"]]
+            });
+
+            if (stats.portfolios && stats.portfolios.length > 0) {
+                stats.portfolio = stats.portfolios[stats.portfolios.length - 1];
+            }
+
             var trades = await sql.query(stats_sql, {
                 "@userName": req.user.email
             });
 
-            var instruments = groupBy(trades, "InstrumentId");
+            var openTradeValues = await sql.query(open_trade_values_sql, {
+                "@userName": req.user.email
+            });
 
-            var stats = {};
-            stats.Sales = [];
+            var openCount = 0;
+            var completeCount = 0;
 
-            for (var i = 0; i < instruments.length; ++i)
-            {
-                var snapshots = instruments[i].values;
-                var buy = null;
-                for (var s = 0; s < snapshots.length; ++s)
-                {
-                    var snapshot = snapshots[s];
-                    if (snapshot.Decision == "buy")
-                    {
-                        buy = snapshot;
-                        snapshot.Price = await loadPrice(snapshot.SnapshotId);
+            var buyTrades = {};
+            for (var i = 0; i < trades.length; ++i) {
+                var trade = trades[i];
+
+                if (trade.Decision == "buy") {
+
+                    var sellPrice = trade.Price;
+                    var open = openTradeValues.filter(x => x.ID == trade.ID);
+                    if (open.length == 1) {
+                        sellPrice = open[0].SellPrice;
+
+                        stats.Sales.push({
+                            Time: trade.Time,
+                            IsComplete: false,
+                            Return: sellPrice * trade.Quantity - trade.Price * trade.Quantity,
+                            InstrumentName: trade.InstrumentName
+                        });
+                        openCount++;
                     }
-                    else if (snapshot.Decision == "sell")
-                    {
-                        if (buy != null)
-                        {
-                            snapshot.Price = await loadPrice(snapshot.SnapshotId);
-                            stats.Sales.push({
-                                Time: snapshot.Time,
-                                IsComplete: true,
-                                Return: (snapshot.Price - buy.Price) / buy.Price,
-                                InstrumentName: snapshot.InstrumentName
-                            });
-                            buy = null;
-                        }
+                    else {
+                        buyTrades[trade.InstrumentId] = trade;
                     }
                 }
+                else {
 
-                if (buy != null)
-                {
-                    var snapshot = snapshots[snapshots.length - 1];
-                    if (snapshot != buy)
-                    {
-                        snapshot.Price = await loadPrice(snapshot.SnapshotId);
+                    var buyTrade = buyTrades[trade.InstrumentId];
+                    if (typeof (buyTrade) === 'undefined') {
+                        throw { message: "could not find buy trade for user " + req.user.email + " and instrument " + trade.InstrumentId };
                     }
+
+                    delete buyTrades[trade.InstrumentId];
+
                     stats.Sales.push({
-                        Time: snapshot.Time,
-                        IsComplete: false,
-                        Return: (snapshot.Price - buy.Price) / buy.Price,
-                        InstrumentName: snapshot.InstrumentName
+                        Time: trade.Time,
+                        IsComplete: true,
+                        Return: trade.Price * buyTrade.Quantity - buyTrade.Price * buyTrade.Quantity,
+                        InstrumentName: trade.InstrumentName
                     });
+                    completeCount++;
+                }
+            }
+
+            var missing = Object.values(buyTrades);
+            if (missing.length > 0) {
+                throw { message: "could not determine return for trade " + missing[0].ID };
+            }
+
+            if (stats.portfolio) {
+
+                if (openCount != stats.portfolio.OpenCount) {
+                    throw { message: "open trade count mismatch: expected " + stats.portfolio.OpenCount + ", actual " + openCount };
+                }
+
+                if (completeCount != stats.portfolio.CompleteCount) {
+                    throw { message: "complete trade count mismatch: expected " + stats.portfolio.CompleteCount + ", actual " + completeCount };
                 }
             }
 
@@ -136,10 +164,21 @@ exports.clearDecisions = async function (req, res) {
 
             if (req.user.email.endsWith('.ai')) {
 
-                await model.snapshot.update(
-                    { Decision: null },
-                    { where: { User: req.user.email } }
+                await model.snapshot.update({
+                    Decision: null,
+                    ModifiedTime: new Date()
+                }, {
+                        where: {
+                            User: req.user.email
+                        }
+                    }
                 );
+
+                await model.portfolio.destroy({
+                    where: {
+                        User: req.user.email
+                    }
+                });
 
                 res.render('clear', viewsController.get_default_args(req));
 

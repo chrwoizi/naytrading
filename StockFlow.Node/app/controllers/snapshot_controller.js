@@ -214,6 +214,25 @@ exports.setDecision = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
 
+            var snapshot = await model.snapshot.find({
+                where: {
+                    User: req.user.email,
+                    Id: req.params.id
+                }
+            });
+
+            if (snapshot.Decision) {
+                await sql.query("DELETE trade FROM trades AS trade WHERE trade.User = @userName AND trade.Snapshot_ID = @snapshotId", {
+                    "@userName": user,
+                    "@snapshotId": req.params.id
+                });
+
+                await sql.query("DELETE portfolio FROM portfolios AS portfolio WHERE portfolio.User = @userName AND portfolio.Time >= @modifiedTime", {
+                    "@userName": user,
+                    "@modifiedTime": snapshot.ModifiedTime
+                });
+            }
+
             await model.snapshot.update(
                 {
                     Decision: req.params.decision,

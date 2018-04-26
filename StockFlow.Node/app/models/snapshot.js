@@ -25,12 +25,12 @@ module.exports = (sequelize, DataTypes) => {
         },
 
         Decision: {
-            type: DataTypes.TEXT('long'),
+            type: DataTypes.STRING(6),
             allowNull: true
         },
 
         User: {
-            type: DataTypes.TEXT('long'),
+            type: DataTypes.STRING,
             allowNull: true
         },
 
@@ -46,7 +46,11 @@ module.exports = (sequelize, DataTypes) => {
 
     },
     {
-        indexes: [{ fields: ['User'] }]
+        indexes: [
+            { fields: ['User'] },
+            { fields: ['Time'] },
+            { fields: ['Decision'] }
+        ]
     });
     snapshot.associate = function (models) {
         snapshot.belongsTo(models.instrument, { foreignKey: 'Instrument_ID', allowNull: false });

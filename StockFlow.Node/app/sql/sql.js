@@ -15,12 +15,12 @@ exports.query = async function (sql, args) {
         params.push(matches[1]);
     }
 
-    for(var arg in args) {
-        if(!arg.startsWith("@")) {
-            throw "invalid sql argument " + arg;
+    for (var arg in args) {
+        if (!arg.startsWith("@")) {
+            throw { message: "invalid sql argument " + arg };
         }
     }
-    
+
     return new Promise(function (resolve, reject) {
         pool.query(
             sql.replace(regex, "?"),

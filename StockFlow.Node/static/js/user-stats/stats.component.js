@@ -39,6 +39,16 @@ angular.
                     self.query = $routeParams.query;
                 }
 
+                self.formatCurrency = function(n) {
+                    if (typeof(n) === 'undefined')
+                        return undefined;
+                    var abbrv = ["", "T", "M"];
+                    for(var i = 0; i < abbrv.length - 1 && Math.abs(n) >= 1000; ++i) {
+                        n /= 1000.0;
+                    }
+                    return n.toFixed(2) + abbrv[i];
+                }
+
                 self.loading = true;
                 self.stats = StatsService.query({}, function (stats) {
                     self.loading = false;
@@ -61,6 +71,11 @@ angular.
                         sumReturn: 0
                     };
                     self.account = {
+                        deposit: stats.Deposit,
+                        value: stats.Value,
+                        return: (stats.Value - stats.Deposit) / stats.Deposit,
+                        open: stats.OpenCount,
+                        complete: stats.CompleteCount
                     };
 
                     for (var i = 0; i < stats.Sales.length; i++) {
@@ -115,7 +130,51 @@ angular.
                         };
                     }
 
-                    self.account.balance = (self.combinedStats.sumReturn + self.openStats.count) / self.openStats.count;
+                    self.series = ["Value"];
+                    self.datasetOverride = [
+                        {
+                            yAxisID: 'y-axis-2'
+                        }
+                    ];
+
+                    self.options = {
+                        scales: {
+                            yAxes: [
+                                {
+                                    id: 'y-axis-2',
+                                    type: 'linear',
+                                    display: true,
+                                    position: 'right',
+                                    ticks: {
+                                        callback: function(value, index, values) {
+                                            return value + '%';
+                                        }
+                                    }
+                                }
+                            ],
+                            xAxes: [{
+                                ticks: {
+                                    autoSkip: true,
+                                    maxTicksLimit: 5,
+                                    maxRotation: 0 // angle in degrees
+                                }
+                            }]
+                        },
+                        elements: {
+                            point: {
+                                radius: 0
+                            }
+                        },
+                        animation: false
+                    };
+
+                    self.labels = stats.ValueHistory.map(function (v) {
+                        return v.Time;
+                    });
+                    
+                    self.data = stats.ValueHistory.map(function (v, i) {
+                        return 100 * v.Return;
+                    });
 
                     self.updateList();
                     self.viewCount = Math.min(100, self.filteredItems.length);

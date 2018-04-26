@@ -1,6 +1,6 @@
 'use strict';
 module.exports = (sequelize, DataTypes) => {
-    var snapshotrate = sequelize.define('snapshotrate', {
+    var trade = sequelize.define('trade', {
 
         ID: {
             allowNull: false,
@@ -14,24 +14,19 @@ module.exports = (sequelize, DataTypes) => {
             allowNull: false
         },
 
-        Open: {
-            type: DataTypes.DECIMAL(8, 2),
-            allowNull: true
+        User: {
+            type: DataTypes.STRING,
+            allowNull: false
         },
 
-        Close: {
+        Price: {
             type: DataTypes.DECIMAL(8, 2),
-            allowNull: true
+            allowNull: false
         },
 
-        High: {
-            type: DataTypes.DECIMAL(8, 2),
-            allowNull: true
-        },
-
-        Low: {
-            type: DataTypes.DECIMAL(8, 2),
-            allowNull: true
+        Quantity: {
+            type: DataTypes.INTEGER,
+            allowNull: false
         },
 
         createdAt: {
@@ -46,10 +41,10 @@ module.exports = (sequelize, DataTypes) => {
 
     },
     {
-        indexes: [{ fields: ['Time'] }]
+        indexes: [{ fields: ['User'] }, { fields: ['Time'] }]
     });
-    snapshotrate.associate = function (models) {
-        snapshotrate.belongsTo(models.snapshot, { foreignKey: 'Snapshot_ID', allowNull: false });
+    trade.associate = function (models) {
+        trade.belongsTo(models.snapshot, { foreignKey: 'Snapshot_ID', allowNull: false });
     };
-    return snapshotrate;
+    return trade;
 };

@@ -1,6 +1,6 @@
 'use strict';
 module.exports = (sequelize, DataTypes) => {
-    var snapshotrate = sequelize.define('snapshotrate', {
+    var portfolio = sequelize.define('portfolio', {
 
         ID: {
             allowNull: false,
@@ -14,24 +14,34 @@ module.exports = (sequelize, DataTypes) => {
             allowNull: false
         },
 
-        Open: {
-            type: DataTypes.DECIMAL(8, 2),
-            allowNull: true
+        User: {
+            type: DataTypes.STRING,
+            allowNull: false
         },
 
-        Close: {
+        Deposit: {
             type: DataTypes.DECIMAL(8, 2),
-            allowNull: true
+            allowNull: false
         },
 
-        High: {
+        Balance: {
             type: DataTypes.DECIMAL(8, 2),
-            allowNull: true
+            allowNull: false
         },
 
-        Low: {
+        Value: {
             type: DataTypes.DECIMAL(8, 2),
-            allowNull: true
+            allowNull: false
+        },
+
+        OpenCount: {
+            type: DataTypes.INTEGER,
+            allowNull: false
+        },
+
+        CompleteCount: {
+            type: DataTypes.INTEGER,
+            allowNull: false
         },
 
         createdAt: {
@@ -46,10 +56,7 @@ module.exports = (sequelize, DataTypes) => {
 
     },
     {
-        indexes: [{ fields: ['Time'] }]
+        indexes: [{ fields: ['User'] }, { fields: ['Time'] }]
     });
-    snapshotrate.associate = function (models) {
-        snapshotrate.belongsTo(models.snapshot, { foreignKey: 'Snapshot_ID', allowNull: false });
-    };
-    return snapshotrate;
+    return portfolio;
 };

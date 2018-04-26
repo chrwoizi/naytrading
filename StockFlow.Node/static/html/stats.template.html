@@ -9,6 +9,82 @@
 
 <span us-spinner spinner-on="$ctrl.loading">
     <div ng-hide="$ctrl.loading">
+        
+        <div class="row">
+            <div class="col-12">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col" class="sale-cell">Deposited</th>
+                            <th scope="col" class="sale-cell">Balance</th>
+                            <th scope="col" class="sale-cell">Return</th>
+                            <th scope="col" class="sale-cell">Holding</th>
+                            <th scope="col" class="sale-cell">Sold</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="sale-cell">{{$ctrl.formatCurrency($ctrl.account.deposit)}}€</td>
+                            <td class="sale-cell">{{$ctrl.formatCurrency($ctrl.account.value)}}€</td>
+                            <td class="sale-cell">{{($ctrl.account.return * 100).toFixed(2)}}%</td>
+                            <td class="sale-cell">{{$ctrl.account.open}}</td>
+                            <td class="sale-cell">{{$ctrl.account.complete}}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="row">
+            <canvas class="chart chart-line" chart-data="$ctrl.data" chart-labels="$ctrl.labels"
+                    chart-click="$ctrl.onClick" chart-series="$ctrl.series" chart-options="$ctrl.options"
+                    chart-dataset-override="datasetOverride"></canvas>
+            <div>&nbsp;</div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Status</th>
+                            <th scope="col" class="sale-cell">Count</th>
+                            <th scope="col" class="sale-cell">Sum</th>
+                            <th scope="col" class="sale-cell">Min</th>
+                            <th scope="col" class="sale-cell">Avg</th>
+                            <th scope="col" class="sale-cell">Max</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th scope="row"><div class="glyphicon glyphicon-euro"></div></th>
+                            <td class="sale-cell">{{$ctrl.completeStats.count}}</td>
+                            <td class="sale-cell">{{$ctrl.formatCurrency($ctrl.completeStats.sumReturn)}}€</td>
+                            <td class="sale-cell">{{$ctrl.formatCurrency($ctrl.completeStats.minReturn)}}€</td>
+                            <td class="sale-cell">{{$ctrl.formatCurrency($ctrl.completeStats.averageReturn)}}€</td>
+                            <td class="sale-cell">{{$ctrl.formatCurrency($ctrl.completeStats.maxReturn)}}€</td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><div class="glyphicon glyphicon-briefcase"></div></th>
+                            <td class="sale-cell">{{$ctrl.openStats.count}}</td>
+                            <td class="sale-cell">{{$ctrl.formatCurrency($ctrl.openStats.sumReturn)}}€</td>
+                            <td class="sale-cell">{{$ctrl.formatCurrency($ctrl.openStats.minReturn)}}€</td>
+                            <td class="sale-cell">{{$ctrl.formatCurrency($ctrl.openStats.averageReturn)}}€</td>
+                            <td class="sale-cell">{{$ctrl.formatCurrency($ctrl.openStats.maxReturn)}}€</td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><div class="glyphicon glyphicon-plus"></div></th>
+                            <td class="sale-cell">{{$ctrl.combinedStats.count}}</td>
+                            <td class="sale-cell">{{$ctrl.formatCurrency($ctrl.combinedStats.sumReturn)}}€</td>
+                            <td class="sale-cell">{{$ctrl.formatCurrency($ctrl.combinedStats.minReturn)}}€</td>
+                            <td class="sale-cell">{{$ctrl.formatCurrency($ctrl.combinedStats.averageReturn)}}€</td>
+                            <td class="sale-cell">{{$ctrl.formatCurrency($ctrl.combinedStats.maxReturn)}}€</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
         <div class="row">
             <div class="col-12">
                 <p>
@@ -29,62 +105,12 @@
                 </p>
             </div>
         </div>
-        <div class="row">
-            <div class="col-12">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th scope="col">Status</th>
-                            <th scope="col" class="sale-cell">Count</th>
-                            <th scope="col" class="sale-cell">Sum</th>
-                            <th scope="col" class="sale-cell">Min</th>
-                            <th scope="col" class="sale-cell">Avg</th>
-                            <th scope="col" class="sale-cell">Max</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <th scope="row"><div class="glyphicon glyphicon-euro"></div></th>
-                            <td class="sale-cell">{{$ctrl.completeStats.count}}</td>
-                            <td class="sale-cell">{{$ctrl.completeStats.sumReturn.toFixed(4)}}</td>
-                            <td class="sale-cell">{{$ctrl.completeStats.minReturn.toFixed(2)}}</td>
-                            <td class="sale-cell">{{$ctrl.completeStats.averageReturn.toFixed(2)}}</td>
-                            <td class="sale-cell">{{$ctrl.completeStats.maxReturn.toFixed(2)}}</td>
-                        </tr>
-                        <tr>
-                            <th scope="row"><div class="glyphicon glyphicon-briefcase"></div></th>
-                            <td class="sale-cell">{{$ctrl.openStats.count}}</td>
-                            <td class="sale-cell">{{$ctrl.openStats.sumReturn.toFixed(4)}}</td>
-                            <td class="sale-cell">{{$ctrl.openStats.minReturn.toFixed(2)}}</td>
-                            <td class="sale-cell">{{$ctrl.openStats.averageReturn.toFixed(2)}}</td>
-                            <td class="sale-cell">{{$ctrl.openStats.maxReturn.toFixed(2)}}</td>
-                        </tr>
-                        <tr>
-                            <th scope="row"><div class="glyphicon glyphicon-plus"></div></th>
-                            <td class="sale-cell">{{$ctrl.combinedStats.count}}</td>
-                            <td class="sale-cell">{{$ctrl.combinedStats.sumReturn.toFixed(4)}}</td>
-                            <td class="sale-cell">{{$ctrl.combinedStats.minReturn.toFixed(2)}}</td>
-                            <td class="sale-cell">{{$ctrl.combinedStats.averageReturn.toFixed(2)}}</td>
-                            <td class="sale-cell">{{$ctrl.combinedStats.maxReturn.toFixed(2)}}</td>
-                        </tr>
-                        <tr>
-                            <th scope="row"></th>
-                            <td class="sale-cell"></td>
-                            <td class="sale-cell">{{($ctrl.account.balance * 100).toFixed(2)}}%</td>
-                            <td class="sale-cell"></td>
-                            <td class="sale-cell"></td>
-                            <td class="sale-cell"></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
 
         <div infinite-scroll='$ctrl.loadMore()' infinite-scroll-distance='2' infinite-scroll-listen-for-event="list:filtered">
             <a ng-repeat="sale in $ctrl.pagedItems" class="row" href="#!/snapshots/{{sale.I}}">
                 <div class="col-3 snapshot-time">{{sale.D}}</div>
                 <div class="col-6 instrument-name">{{sale.I}}</div>
-                <div class="col-2 sale-return">{{sale.R.toFixed(2)}}</div>
+                <div class="col-2 sale-return">{{$ctrl.formatCurrency(sale.R)}}€</div>
                 <div class="col-1 sale-status glyphicon" ng-class="sale.S == 'c' ? 'glyphicon-euro' : 'glyphicon-briefcase'"></div>
             </a>
         </div>
