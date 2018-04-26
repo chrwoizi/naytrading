@@ -178,6 +178,8 @@ exports.createNewSnapshotFromRandomInstrument = async function(instrumentIds) {
                     Time: endTime,
                     ModifiedTime: new Date(),
                     snapshotrates: rates,
+                    Price: rates[rates.length - 1].Close,
+                    PriceTime: rates[rates.length - 1].Time,
                     Instrument_ID: instrument.ID,
                     User: instrument.User
                 }, {

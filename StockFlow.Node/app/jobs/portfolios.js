@@ -104,8 +104,6 @@ exports.run = async function () {
                 complete = latest.CompleteCount;
             }
 
-            var now = new Date();
-
             console.log(new Date() + ': trades_sql, @userName=' + user + ', @fromDate=' + currentDay);
             var trades = await sql.query(trades_sql, {
                 "@userName": user,
@@ -115,14 +113,6 @@ exports.run = async function () {
 
             for (var t = 0; t < trades.length; ++t) {
                 var trade = trades[t];
-
-                console.log(new Date() + ': select rate, @snapshotId=' + trade.SnapshotId);
-                var rates = await sql.query('SELECT r.Close FROM snapshotrates r WHERE r.Snapshot_ID = @snapshotId ORDER BY r.Time DESC LIMIT 1',
-                    {
-                        "@snapshotId": trade.SnapshotId
-                    });
-                console.log(new Date() + ': ' + rates[0].Close);
-                trade.Price = rates[0].Close;
 
                 var tradeDay = new Date(trade.DecisionTime);
                 tradeDay.setHours(0, 0, 0, 0);
@@ -185,7 +175,9 @@ exports.run = async function () {
 
             }
 
+            currentDay = new Date();
             currentDay.setHours(23, 59, 59);
+
             var value = balance + deposit + await getOpenValues(user, currentDay);
             console.log(new Date() + ': model.portfolio.create');
             await model.portfolio.create({

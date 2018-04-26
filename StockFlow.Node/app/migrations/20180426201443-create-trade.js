@@ -47,11 +47,11 @@ module.exports = {
             }
 
         }).then(() => {
-            queryInterface.addIndex('trades', ['Time'])
+            return queryInterface.addIndex('trades', ['Time'])
         }).then(() => {
-            queryInterface.addIndex('trades', ['User'])
+            return queryInterface.addIndex('trades', ['User'])
         }).then(() => {
-            queryInterface.sequelize.query("SELECT CONSTRAINT_NAME AS name FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS WHERE TABLE_NAME = 'trades' AND CONSTRAINT_TYPE='FOREIGN KEY'")
+            return queryInterface.sequelize.query("SELECT CONSTRAINT_NAME AS name FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS WHERE TABLE_NAME = 'trades' AND CONSTRAINT_TYPE='FOREIGN KEY'")
             .then(names => {
                 var name = "trades_ibfk_1";
 

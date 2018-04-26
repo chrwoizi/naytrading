@@ -5,7 +5,7 @@ module.exports = {
             type: Sequelize.DATE,
             allowNull: true
         }).then(() => {
-            queryInterface.addColumn('instruments', 'updatedAt', {
+            return queryInterface.addColumn('instruments', 'updatedAt', {
                 type: Sequelize.DATE,
                 allowNull: true
             });
@@ -14,7 +14,7 @@ module.exports = {
     down: (queryInterface, Sequelize) => {
         return queryInterface.removeColumn('instruments', 'createdAt')
             .then(() => {
-                queryInterface.removeColumn('instruments', 'updatedAt');
+                return queryInterface.removeColumn('instruments', 'updatedAt');
             });
     }
 };

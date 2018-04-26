@@ -34,6 +34,16 @@ module.exports = (sequelize, DataTypes) => {
             allowNull: true
         },
 
+        Price: {
+            type: DataTypes.DECIMAL(8,2),
+            allowNull: false
+        },
+
+        PriceTime: {
+            type: DataTypes.DATE,
+            allowNull: false
+        },
+
         createdAt: {
             allowNull: false,
             type: DataTypes.DATE

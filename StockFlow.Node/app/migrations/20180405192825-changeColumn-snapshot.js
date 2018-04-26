@@ -5,7 +5,7 @@ module.exports = {
             type: Sequelize.STRING(6),
             allowNull: true
         }).then(() => {
-            queryInterface.changeColumn('snapshots', 'User', {
+            return queryInterface.changeColumn('snapshots', 'User', {
                 type: Sequelize.STRING,
                 allowNull: true
             });
@@ -16,7 +16,7 @@ module.exports = {
             type: Sequelize.TEXT('long'),
             allowNull: true
         }).then(() => {
-            queryInterface.changeColumn('snapshots', 'User', {
+            return queryInterface.changeColumn('snapshots', 'User', {
                 type: Sequelize.TEXT('long'),
                 allowNull: true
             });

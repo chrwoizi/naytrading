@@ -1,29 +1,20 @@
 SELECT
-    trade.InstrumentId,
-    trade.InstrumentName,
-    trade.Isin,
-    trade.Wkn,
-    trade.SnapshotId,
-    trade.Decision,
-    trade.DecisionTime
+    instrument.ID AS InstrumentId,
+    instrument.InstrumentName,
+    instrument.Isin,
+    instrument.Wkn,
+    snapshot.ID AS SnapshotId,
+    snapshot.Decision,
+    snapshot.Time AS DecisionTime,
+    snapshot.Price AS Price,
+    snapshot.PriceTime AS Time
 FROM
-(
-    SELECT
-        instrument.ID AS InstrumentId,
-        instrument.InstrumentName,
-        instrument.Isin,
-        instrument.Wkn,
-        snapshot.ID AS SnapshotId,
-        snapshot.Decision,
-        snapshot.Time AS DecisionTime
-    FROM
-        instruments AS instrument
-    INNER JOIN
-        snapshots AS snapshot
-        ON snapshot.User = @userName
-        AND snapshot.Instrument_ID = instrument.ID
-        AND snapshot.Time >= @fromDate
-        AND (snapshot.Decision = 'buy' OR snapshot.Decision = 'sell')
-) AS trade
+    instruments AS instrument
+INNER JOIN
+    snapshots AS snapshot
+    ON snapshot.User = @userName
+    AND snapshot.Instrument_ID = instrument.ID
+    AND snapshot.Time >= @fromDate
+    AND (snapshot.Decision = 'buy' OR snapshot.Decision = 'sell')
 ORDER BY
-    trade.DecisionTime ASC;
+    snapshot.Time ASC;

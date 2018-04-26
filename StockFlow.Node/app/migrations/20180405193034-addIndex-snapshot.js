@@ -3,19 +3,19 @@ module.exports = {
     up: (queryInterface, Sequelize) => {
         return queryInterface.addIndex('snapshots', ['User'])
             .then(() => {
-                queryInterface.addIndex('snapshots', ['Time'])
+                return queryInterface.addIndex('snapshots', ['Time'])
             })
             .then(() => {
-                queryInterface.addIndex('snapshots', ['Decision'])
+                return queryInterface.addIndex('snapshots', ['Decision'])
             });
     },
     down: (queryInterface, Sequelize) => {
         return queryInterface.removeIndex('snapshots', ['User'])
             .then(() => {
-                queryInterface.removeIndex('snapshots', ['Time'])
+                return queryInterface.removeIndex('snapshots', ['Time'])
             })
             .then(() => {
-                queryInterface.removeIndex('snapshots', ['Decision'])
+                return queryInterface.removeIndex('snapshots', ['Decision'])
             });
     }
 };

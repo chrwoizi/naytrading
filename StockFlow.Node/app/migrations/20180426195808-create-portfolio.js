@@ -56,9 +56,9 @@ module.exports = {
             }
 
         }).then(() => {
-            queryInterface.addIndex('portfolios', ['Time'])
+            return queryInterface.addIndex('portfolios', ['Time'])
         }).then(() => {
-            queryInterface.addIndex('portfolios', ['User'])
+            return queryInterface.addIndex('portfolios', ['User'])
         });
     },
     down: (queryInterface, Sequelize) => {

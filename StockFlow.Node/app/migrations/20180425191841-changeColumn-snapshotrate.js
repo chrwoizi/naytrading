@@ -5,17 +5,17 @@ module.exports = {
             type: Sequelize.DECIMAL(8, 2),
             allowNull: true
         }).then(() => {
-            queryInterface.changeColumn('snapshotrates', 'Close', {
+            return queryInterface.changeColumn('snapshotrates', 'Close', {
                 type: Sequelize.DECIMAL(8, 2),
                 allowNull: true
             });
         }).then(() => {
-            queryInterface.changeColumn('snapshotrates', 'High', {
+            return queryInterface.changeColumn('snapshotrates', 'High', {
                 type: Sequelize.DECIMAL(8, 2),
                 allowNull: true
             });
         }).then(() => {
-            queryInterface.changeColumn('snapshotrates', 'Low', {
+            return queryInterface.changeColumn('snapshotrates', 'Low', {
                 type: Sequelize.DECIMAL(8, 2),
                 allowNull: true
             });
@@ -26,17 +26,17 @@ module.exports = {
             type: Sequelize.DECIMAL(6, 2),
             allowNull: true
         }).then(() => {
-            queryInterface.changeColumn('snapshotrates', 'Close', {
+            return queryInterface.changeColumn('snapshotrates', 'Close', {
                 type: Sequelize.DECIMAL(6, 2),
                 allowNull: true
             });
         }).then(() => {
-            queryInterface.changeColumn('snapshotrates', 'High', {
+            return queryInterface.changeColumn('snapshotrates', 'High', {
                 type: Sequelize.DECIMAL(6, 2),
                 allowNull: true
             });
         }).then(() => {
-            queryInterface.changeColumn('snapshotrates', 'Low', {
+            return queryInterface.changeColumn('snapshotrates', 'Low', {
                 type: Sequelize.DECIMAL(6, 2),
                 allowNull: true
             });
