@@ -279,11 +279,20 @@ exports.exportUserTrades = async function (req, res) {
 
             for (var i = 0; i < trades.length; ++i) {
 
+                var trade = trades[i];
+                
+                var rates = await sql.query('SELECT r.Time, r.Close FROM snapshotrates r WHERE r.Snapshot_ID = @snapshotId ORDER BY r.Time DESC LIMIT 1',
+                    {
+                        "@snapshotId": trade.SnapshotId
+                    });
+                trade.Time = rates[0].Time;
+                trade.Price = rates[0].Close;
+
                 if (i > 0) {
                     res.write(',');
                 }
 
-                res.write(JSON.stringify(trades[i]));
+                res.write(JSON.stringify(trade));
             }
 
             res.write(']');

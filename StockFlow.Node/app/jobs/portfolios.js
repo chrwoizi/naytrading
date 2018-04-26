@@ -28,10 +28,12 @@ try {
 
 
 async function getOpenValues(user, currentDay) {
+    console.log(new Date() + ': open_trade_values_sum_sql, @userName=' + user + ', @toDate=' + currentDay);
     var openTradeValuesSum = await sql.query(open_trade_values_sum_sql, {
         "@userName": user,
         "@toDate": currentDay
     });
+    console.log(new Date() + ': ' + openTradeValuesSum[0].Value);
     return openTradeValuesSum[0].Value;
 }
 
@@ -43,6 +45,7 @@ exports.run = async function () {
         for (var i = 0; i < users.length; ++i) {
             var user = users[i].User;
 
+            console.log(new Date() + ': model.portfolio.find, User=' + user + ', order [Time,DESC], limit 1');
             var latest = await model.portfolio.find({
                 where: {
                     User: user
@@ -50,6 +53,7 @@ exports.run = async function () {
                 order: [["Time", "DESC"]],
                 limit: 1
             });
+            console.log(new Date() + ': ' + latest);
 
             var fromTime = new Date(1970, 0, 1);
             if (latest) {
@@ -59,6 +63,7 @@ exports.run = async function () {
 
             var currentDay = fromTime;
 
+            console.log(new Date() + ': model.portfolio.destroy, User=' + user + ', Time>=' + currentDay);
             await model.portfolio.destroy({
                 where: {
                     User: user,
@@ -68,6 +73,7 @@ exports.run = async function () {
                 }
             });
 
+            console.log(new Date() + ': model.trade.destroy, User=' + user + ', Time>=' + currentDay);
             await model.trade.destroy({
                 where: {
                     User: user,
@@ -77,6 +83,7 @@ exports.run = async function () {
                 }
             });
 
+            console.log(new Date() + ': model.portfolio.find, User=' + user + ', order [Time,DESC], limit 1');
             latest = await model.portfolio.find({
                 where: {
                     User: user
@@ -84,6 +91,7 @@ exports.run = async function () {
                 order: [["Time", "DESC"]],
                 limit: 1
             });
+            console.log(new Date() + ': ' + latest);
 
             var deposit = 0;
             var balance = 0;
@@ -98,13 +106,23 @@ exports.run = async function () {
 
             var now = new Date();
 
+            console.log(new Date() + ': trades_sql, @userName=' + user + ', @fromDate=' + currentDay);
             var trades = await sql.query(trades_sql, {
                 "@userName": user,
                 "@fromDate": currentDay
             });
+            console.log(new Date() + ': ' + trades.length);
 
             for (var t = 0; t < trades.length; ++t) {
                 var trade = trades[t];
+
+                console.log(new Date() + ': select rate, @snapshotId=' + trade.SnapshotId);
+                var rates = await sql.query('SELECT r.Close FROM snapshotrates r WHERE r.Snapshot_ID = @snapshotId ORDER BY r.Time DESC LIMIT 1',
+                    {
+                        "@snapshotId": trade.SnapshotId
+                    });
+                console.log(new Date() + ': ' + rates[0].Close);
+                trade.Price = rates[0].Close;
 
                 var tradeDay = new Date(trade.DecisionTime);
                 tradeDay.setHours(0, 0, 0, 0);
@@ -112,6 +130,7 @@ exports.run = async function () {
                     if (open + complete > 0) {
                         currentDay.setHours(23, 59, 59);
                         var value = balance + deposit + await getOpenValues(user, currentDay);
+                        console.log(new Date() + ': model.portfolio.create');
                         await model.portfolio.create({
                             User: user,
                             Time: currentDay,
@@ -138,10 +157,12 @@ exports.run = async function () {
                 }
 
                 if (trade.Decision == "sell") {
+                    console.log(new Date() + ': previous_trade.sql, @refSnapshotId=' + trade.SnapshotId + ', @refTime=' + trade.DecisionTime);
                     var previousTrades = await sql.query(previous_trade_sql, {
                         "@refSnapshotId": trade.SnapshotId,
                         "@refTime": trade.DecisionTime
                     });
+                    console.log(new Date() + ': ' + (previousTrades ? previousTrades.length : undefined));
 
                     if (!previousTrades || !previousTrades.length) {
                         throw { message: "could not find previous trade for snapshot " + trade.SnapshotId };
@@ -153,6 +174,7 @@ exports.run = async function () {
                     complete++;
                 }
 
+                console.log(new Date() + ': model.trade.create');
                 await model.trade.create({
                     User: user,
                     Time: trade.DecisionTime,
@@ -165,6 +187,7 @@ exports.run = async function () {
 
             currentDay.setHours(23, 59, 59);
             var value = balance + deposit + await getOpenValues(user, currentDay);
+            console.log(new Date() + ': model.portfolio.create');
             await model.portfolio.create({
                 User: user,
                 Time: currentDay,
