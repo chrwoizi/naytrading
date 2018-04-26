@@ -32,20 +32,11 @@ FROM
     FROM
         instruments AS instrument
     INNER JOIN
-    (
-        SELECT
-            snapshot.ID,
-            snapshot.Instrument_ID,
-            snapshot.Decision,
-            snapshot.Time
-        FROM
-            snapshots AS snapshot
-        WHERE
-            snapshot.User = @userName
-            AND snapshot.Time >= @fromDate
-            AND (snapshot.Decision = 'buy' OR snapshot.Decision = 'sell')
-    ) AS snapshot
-    ON snapshot.Instrument_ID = instrument.ID
+        snapshots AS snapshot
+        ON snapshot.User = @userName
+        AND snapshot.Instrument_ID = instrument.ID
+        AND snapshot.Time >= @fromDate
+        AND (snapshot.Decision = 'buy' OR snapshot.Decision = 'sell')
 ) AS trade
 INNER JOIN
     snapshotrates AS rate
