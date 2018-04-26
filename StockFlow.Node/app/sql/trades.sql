@@ -17,7 +17,7 @@ FROM
         instrument.Wkn,
         snapshot.ID AS SnapshotId,
         snapshot.Decision,
-        snapshot.ModifiedTime AS DecisionTime,
+        snapshot.Time AS DecisionTime,
         (
             SELECT
                 rate.ID
@@ -37,12 +37,12 @@ FROM
             snapshot.ID,
             snapshot.Instrument_ID,
             snapshot.Decision,
-            snapshot.ModifiedTime
+            snapshot.Time
         FROM
             snapshots AS snapshot
         WHERE
             snapshot.User = @userName
-            AND snapshot.ModifiedTime >= @fromDate
+            AND snapshot.Time >= @fromDate
             AND (snapshot.Decision = 'buy' OR snapshot.Decision = 'sell')
     ) AS snapshot
     ON snapshot.Instrument_ID = instrument.ID
