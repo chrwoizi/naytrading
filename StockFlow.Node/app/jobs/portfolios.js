@@ -27,11 +27,11 @@ try {
 }
 
 
-async function getOpenValues(user, currentDay) {
-    console.log(new Date() + ': open_trade_values_sum_sql, @userName=' + user + ', @toDate=' + currentDay);
+async function getOpenValues(user, fromTime) {
+    console.log(new Date() + ': open_trade_values_sum_sql, @userName=' + user + ', @toDate=' + fromTime);
     var openTradeValuesSum = await sql.query(open_trade_values_sum_sql, {
         "@userName": user,
-        "@toDate": currentDay
+        "@toDate": fromTime
     });
     console.log(new Date() + ': ' + openTradeValuesSum[0].Value);
     return openTradeValuesSum[0].Value;
@@ -61,24 +61,12 @@ exports.run = async function () {
                 fromTime.setHours(0, 0, 0, 0);
             }
 
-            var currentDay = fromTime;
-
-            console.log(new Date() + ': model.portfolio.destroy, User=' + user + ', Time>=' + currentDay);
+            console.log(new Date() + ': model.portfolio.destroy, User=' + user + ', Time>=' + fromTime);
             await model.portfolio.destroy({
                 where: {
                     User: user,
                     Time: {
-                        [sequelize.Op.gte]: currentDay
-                    }
-                }
-            });
-
-            console.log(new Date() + ': model.trade.destroy, User=' + user + ', Time>=' + currentDay);
-            await model.trade.destroy({
-                where: {
-                    User: user,
-                    Time: {
-                        [sequelize.Op.gte]: currentDay
+                        [sequelize.Op.gte]: fromTime
                     }
                 }
             });
@@ -102,12 +90,24 @@ exports.run = async function () {
                 balance = latest.Balance;
                 open = latest.OpenCount;
                 complete = latest.CompleteCount;
+
+                fromTime = new Date(latest.Time);
             }
 
-            console.log(new Date() + ': trades_sql, @userName=' + user + ', @fromDate=' + currentDay);
+            console.log(new Date() + ': model.trade.destroy, User=' + user + ', Time>=' + fromTime);
+            await model.trade.destroy({
+                where: {
+                    User: user,
+                    Time: {
+                        [sequelize.Op.gte]: fromTime
+                    }
+                }
+            });
+
+            console.log(new Date() + ': trades_sql, @userName=' + user + ', @fromDate=' + fromTime);
             var trades = await sql.query(trades_sql, {
                 "@userName": user,
-                "@fromDate": currentDay
+                "@fromDate": fromTime
             });
             console.log(new Date() + ': ' + trades.length);
 
@@ -116,14 +116,14 @@ exports.run = async function () {
 
                 var tradeDay = new Date(trade.DecisionTime);
                 tradeDay.setHours(0, 0, 0, 0);
-                if (tradeDay > currentDay) {
+                if (tradeDay > fromTime) {
                     if (open + complete > 0) {
-                        currentDay.setHours(23, 59, 59);
-                        var value = balance + deposit + await getOpenValues(user, currentDay);
+                        fromTime.setHours(23, 59, 59);
+                        var value = balance + deposit + await getOpenValues(user, fromTime);
                         console.log(new Date() + ': model.portfolio.create');
                         await model.portfolio.create({
                             User: user,
-                            Time: currentDay,
+                            Time: fromTime,
                             Deposit: deposit,
                             Balance: balance,
                             Value: value,
@@ -133,7 +133,7 @@ exports.run = async function () {
                     }
                 }
 
-                currentDay = tradeDay;
+                fromTime = tradeDay;
 
                 var quantity = 0;
                 if (trade.Decision == "buy") {
@@ -175,14 +175,13 @@ exports.run = async function () {
 
             }
 
-            currentDay = new Date();
-            currentDay.setHours(23, 59, 59);
+            fromTime = new Date();
 
-            var value = balance + deposit + await getOpenValues(user, currentDay);
+            var value = balance + deposit + await getOpenValues(user, fromTime);
             console.log(new Date() + ': model.portfolio.create');
             await model.portfolio.create({
                 User: user,
-                Time: currentDay,
+                Time: fromTime,
                 Deposit: deposit,
                 Balance: balance,
                 Value: value,
