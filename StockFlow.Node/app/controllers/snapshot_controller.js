@@ -50,7 +50,7 @@ exports.countSnapshots = async function (req, res) {
         }
         else {
             res.status(401);
-			res.json({ error: "unauthorized" });
+            res.json({ error: "unauthorized" });
         }
     }
     catch (error) {
@@ -79,7 +79,7 @@ exports.snapshots = async function (req, res) {
         }
         else {
             res.status(401);
-			res.json({ error: "unauthorized" });
+            res.json({ error: "unauthorized" });
         }
     }
     catch (error) {
@@ -162,7 +162,7 @@ exports.snapshot = async function (req, res) {
         }
         else {
             res.status(401);
-			res.json({ error: "unauthorized" });
+            res.json({ error: "unauthorized" });
         }
     }
     catch (error) {
@@ -221,38 +221,47 @@ exports.setDecision = async function (req, res) {
                 }
             });
 
-            if (snapshot.Decision) {
-                await sql.query("DELETE trade FROM trades AS trade WHERE trade.User = @userName AND trade.Snapshot_ID = @snapshotId", {
-                    "@userName": user,
-                    "@snapshotId": req.params.id
-                });
+            var deletePortfolio = false;
 
-                await sql.query("DELETE portfolio FROM portfolios AS portfolio WHERE portfolio.User = @userName AND portfolio.Time >= @modifiedTime", {
-                    "@userName": user,
-                    "@modifiedTime": snapshot.ModifiedTime
-                });
+            if (snapshot.Decision != req.params.decision) {
+
+                deletePortfolio = true;
+
+                await model.snapshot.update(
+                    {
+                        Decision: req.params.decision,
+                        ModifiedTime: new Date()
+                    },
+                    {
+                        where: {
+                            User: req.user.email,
+                            Id: req.params.id
+                        }
+                    }
+                );
             }
 
-            await model.snapshot.update(
-                {
-                    Decision: req.params.decision,
-                    ModifiedTime: new Date()
-                },
-                {
-                    where: {
-                        User: req.user.email,
-                        Id: req.params.id
-                    }
-                }
-            );
-
             res.status(200);
-			res.json({});
+            res.json({});
 
+            if (deletePortfolio) {
+                var day = snapshot.Time;
+                day.setHours(0, 0, 0, 0);
+                
+                await sql.query("DELETE trade FROM trades AS trade WHERE trade.User = @userName AND trade.Time >= @time", {
+                    "@userName": user,
+                    "@time": day
+                });
+
+                await sql.query("DELETE portfolio FROM portfolios AS portfolio WHERE portfolio.User = @userName AND portfolio.Time >= @time", {
+                    "@userName": user,
+                    "@time": day
+                });
+            }
         }
         else {
             res.status(401);
-			res.json({ error: "unauthorized" });
+            res.json({ error: "unauthorized" });
         }
     }
     catch (error) {
