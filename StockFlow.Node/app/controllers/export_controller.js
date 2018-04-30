@@ -34,7 +34,8 @@ exports.exportInstruments = async function (req, res) {
                     where: {
                         ID: ids[i].ID
                     }
-                }).get({ plain: true });
+                });
+                instrument = instrument.get({ plain: true });
 
                 if (i > 0) {
                     res.write(',');
@@ -80,7 +81,8 @@ exports.exportUserInstruments = async function (req, res) {
                     where: {
                         ID: ids[i].ID
                     }
-                }).get({ plain: true });
+                });
+                instrument = instrument.get({ plain: true });
 
                 if (i > 0) {
                     res.write(',');
@@ -219,7 +221,8 @@ exports.exportUserSnapshots = async function (req, res) {
                     order: [
                         [model.snapshotrate, "Time", "ASC"]
                     ]
-                }).get({ plain: true });
+                });
+                snapshot = snapshot.get({ plain: true });
 
                 for (var r = 0; r < snapshot.snapshotrates.length; ++r) {
                     var rate = snapshot.snapshotrates[r];
