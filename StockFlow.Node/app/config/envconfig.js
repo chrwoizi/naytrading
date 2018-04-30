@@ -16,6 +16,9 @@ function copyProperties(from, to) {
         if (toProperties.indexOf(property) == -1) {
             to[property] = from[property];
         }
+        if(from[property] != null && to[property] != null && typeof(from[property]) === 'object' && typeof(to[property]) === 'object') {
+            copyProperties(from[property], to[property]);
+        }
     }
 }
 
