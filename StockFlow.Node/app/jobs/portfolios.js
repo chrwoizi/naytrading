@@ -119,6 +119,19 @@ exports.run = async function () {
                 if (tradeDay > fromTime) {
                     if (open + complete > 0) {
                         fromTime.setHours(23, 59, 59);
+
+                        var fromDay = new Date(fromTime.getTime());
+                        fromDay.setHours(0, 0, 0, 0);
+                        console.log(new Date() + ': model.portfolio.destroy, User=' + user + ', Time>=' + fromDay);
+                        await model.portfolio.destroy({
+                            where: {
+                                User: user,
+                                Time: {
+                                    [sequelize.Op.gte]: fromDay
+                                }
+                            }
+                        });
+
                         var value = balance + deposit + await getOpenValues(user, fromTime);
                         console.log(new Date() + ': model.portfolio.create');
                         await model.portfolio.create({
@@ -175,7 +188,7 @@ exports.run = async function () {
 
             }
 
-            fromTime = new Date();
+            fromTime.setHours(23, 59, 59);
 
             var value = balance + deposit + await getOpenValues(user, fromTime);
             console.log(new Date() + ': model.portfolio.create');
