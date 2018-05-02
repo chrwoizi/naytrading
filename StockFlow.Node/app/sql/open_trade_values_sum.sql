@@ -5,12 +5,13 @@ SELECT
 		FROM
 			snapshots AS sellSnapshot
 		WHERE
-			sellSnapshot.User = trade.User
+			sellSnapshot.User = @userName
 			AND sellSnapshot.Instrument_ID = buySnapshot.Instrument_ID
 			AND sellSnapshot.Time >= buySnapshot.Time
 			AND sellSnapshot.Time <= @toDate
+			AND sellSnapshot.Decision = 'sell'
 		ORDER BY
-			sellSnapshot.Time DESC
+			sellSnapshot.Time ASC
 		LIMIT 1
 	) - trade.Price) * trade.Quantity) AS Value
 FROM trades AS trade
@@ -25,11 +26,11 @@ WHERE
 		SELECT 1
 		FROM snapshots AS newerSnapshot
 		WHERE 
-			newerSnapshot.User = trade.User
-			AND newerSnapshot.Time <= @toDate
+			newerSnapshot.User = @userName
 			AND newerSnapshot.Instrument_ID = buySnapshot.Instrument_ID
 			AND newerSnapshot.Time > buySnapshot.Time
-		AND newerSnapshot.Decision = 'sell'
+			AND newerSnapshot.Time <= @toDate
+			AND newerSnapshot.Decision = 'sell'
 		LIMIT 1
 	)
 ORDER BY trade.Time ASC;

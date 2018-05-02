@@ -154,7 +154,7 @@ exports.run = async function () {
                     });
 
                     if (!previousTrades || !previousTrades.length) {
-                        throw { message: "could not find previous trade for snapshot " + trade.SnapshotId };
+                        throw { message: "could not find previous buy trade for snapshot " + trade.SnapshotId };
                     }
 
                     quantity = -previousTrades[0].Quantity;
