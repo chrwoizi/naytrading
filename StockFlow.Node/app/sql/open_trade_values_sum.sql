@@ -9,9 +9,8 @@ SELECT
 			AND sellSnapshot.Instrument_ID = buySnapshot.Instrument_ID
 			AND sellSnapshot.Time >= buySnapshot.Time
 			AND sellSnapshot.Time <= @toDate
-			AND sellSnapshot.Decision = 'sell'
 		ORDER BY
-			sellSnapshot.Time ASC
+			sellSnapshot.Time DESC
 		LIMIT 1
 	) - trade.Price) * trade.Quantity) AS Value
 FROM trades AS trade
