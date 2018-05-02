@@ -246,13 +246,37 @@ exports.setDecision = async function (req, res) {
             res.json({});
 
             if (deletePortfolio) {
-                var day = new Date(snapshot.Time);
-                day.setHours(0, 0, 0, 0);
-                
-                await sql.query("DELETE portfolio FROM portfolios AS portfolio WHERE portfolio.User = @userName AND portfolio.Time >= @time", {
-                    "@userName": req.user.email,
-                    "@time": day
+                var fromTime = new Date(snapshot.Time);
+                    
+                await model.portfolio.destroy({
+                    where: {
+                        User: req.user.email,
+                        Time: {
+                            [sequelize.Op.gte]: fromTime
+                        }
+                    }
                 });
+
+                var latest = await model.portfolio.find({
+                    where: {
+                        User: req.user.email
+                    },
+                    order: [["Time", "DESC"]],
+                    limit: 1
+                });
+
+                if (latest) {
+                    fromTime = new Date(latest.Time);
+                }
+
+                await model.trade.destroy({
+                    where: {
+                        User: req.user.email,
+                        Time: {
+                            [sequelize.Op.gte]: fromTime
+                        }
+                    }
+                });    
             }
         }
         else {
