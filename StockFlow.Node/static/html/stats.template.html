@@ -26,7 +26,7 @@
                         <tr>
                             <td class="sale-cell">{{$ctrl.formatCurrency($ctrl.account.deposit)}}€</td>
                             <td class="sale-cell">{{$ctrl.formatCurrency($ctrl.account.value)}}€</td>
-                            <td class="sale-cell">{{($ctrl.account.return * 100).toFixed(2)}}%</td>
+                            <td class="sale-cell">{{$ctrl.formatPercentage($ctrl.account.return)}}%</td>
                             <td class="sale-cell">{{$ctrl.account.open}}</td>
                             <td class="sale-cell">{{$ctrl.account.complete}}</td>
                         </tr>
@@ -59,26 +59,26 @@
                         <tr>
                             <th scope="row"><div class="glyphicon glyphicon-euro"></div></th>
                             <td class="sale-cell">{{$ctrl.completeStats.count}}</td>
-                            <td class="sale-cell">{{$ctrl.formatCurrency($ctrl.completeStats.sumReturn)}}€</td>
-                            <td class="sale-cell">{{$ctrl.formatCurrency($ctrl.completeStats.minReturn)}}€</td>
-                            <td class="sale-cell">{{$ctrl.formatCurrency($ctrl.completeStats.averageReturn)}}€</td>
-                            <td class="sale-cell">{{$ctrl.formatCurrency($ctrl.completeStats.maxReturn)}}€</td>
+                            <td class="sale-cell">{{$ctrl.formatPercentage($ctrl.completeStats.sumReturn)}}%</td>
+                            <td class="sale-cell">{{$ctrl.formatPercentage($ctrl.completeStats.minReturn)}}%</td>
+                            <td class="sale-cell">{{$ctrl.formatPercentage($ctrl.completeStats.averageReturn)}}%</td>
+                            <td class="sale-cell">{{$ctrl.formatPercentage($ctrl.completeStats.maxReturn)}}%</td>
                         </tr>
                         <tr>
                             <th scope="row"><div class="glyphicon glyphicon-briefcase"></div></th>
                             <td class="sale-cell">{{$ctrl.openStats.count}}</td>
-                            <td class="sale-cell">{{$ctrl.formatCurrency($ctrl.openStats.sumReturn)}}€</td>
-                            <td class="sale-cell">{{$ctrl.formatCurrency($ctrl.openStats.minReturn)}}€</td>
-                            <td class="sale-cell">{{$ctrl.formatCurrency($ctrl.openStats.averageReturn)}}€</td>
-                            <td class="sale-cell">{{$ctrl.formatCurrency($ctrl.openStats.maxReturn)}}€</td>
+                            <td class="sale-cell">{{$ctrl.formatPercentage($ctrl.openStats.sumReturn)}}%</td>
+                            <td class="sale-cell">{{$ctrl.formatPercentage($ctrl.openStats.minReturn)}}%</td>
+                            <td class="sale-cell">{{$ctrl.formatPercentage($ctrl.openStats.averageReturn)}}%</td>
+                            <td class="sale-cell">{{$ctrl.formatPercentage($ctrl.openStats.maxReturn)}}%</td>
                         </tr>
                         <tr>
                             <th scope="row"><div class="glyphicon glyphicon-plus"></div></th>
                             <td class="sale-cell">{{$ctrl.combinedStats.count}}</td>
-                            <td class="sale-cell">{{$ctrl.formatCurrency($ctrl.combinedStats.sumReturn)}}€</td>
-                            <td class="sale-cell">{{$ctrl.formatCurrency($ctrl.combinedStats.minReturn)}}€</td>
-                            <td class="sale-cell">{{$ctrl.formatCurrency($ctrl.combinedStats.averageReturn)}}€</td>
-                            <td class="sale-cell">{{$ctrl.formatCurrency($ctrl.combinedStats.maxReturn)}}€</td>
+                            <td class="sale-cell">{{$ctrl.formatPercentage($ctrl.combinedStats.sumReturn)}}%</td>
+                            <td class="sale-cell">{{$ctrl.formatPercentage($ctrl.combinedStats.minReturn)}}%</td>
+                            <td class="sale-cell">{{$ctrl.formatPercentage($ctrl.combinedStats.averageReturn)}}%</td>
+                            <td class="sale-cell">{{$ctrl.formatPercentage($ctrl.combinedStats.maxReturn)}}%</td>
                         </tr>
                     </tbody>
                 </table>
@@ -110,7 +110,7 @@
             <a ng-repeat="sale in $ctrl.pagedItems" class="row" href="#!/snapshots/{{sale.I}}">
                 <div class="col-3 snapshot-time">{{sale.D}}</div>
                 <div class="col-6 instrument-name">{{sale.I}}</div>
-                <div class="col-2 sale-return">{{$ctrl.formatCurrency(sale.R)}}€</div>
+                <div class="col-2 sale-return">{{$ctrl.formatPercentage(sale.R)}}%</div>
                 <div class="col-1 sale-status glyphicon" ng-class="sale.S == 'c' ? 'glyphicon-euro' : 'glyphicon-briefcase'"></div>
             </a>
         </div>

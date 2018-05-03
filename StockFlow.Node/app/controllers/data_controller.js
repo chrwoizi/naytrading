@@ -92,15 +92,12 @@ exports.getStats = async function (req, res) {
 
                 if (trade.Decision == "buy") {
 
-                    var sellPrice = trade.Price;
                     var open = openTradeValues.filter(x => x.ID == trade.ID);
                     if (open.length == 1) {
-                        sellPrice = open[0].SellPrice;
-
                         stats.Sales.push({
                             Time: trade.Time,
                             IsComplete: false,
-                            Return: sellPrice * trade.Quantity - trade.Price * trade.Quantity,
+                            Return: (open[0].LatestPrice - trade.Price) / trade.Price,
                             InstrumentName: trade.InstrumentName
                         });
                         openCount++;
@@ -121,7 +118,7 @@ exports.getStats = async function (req, res) {
                     stats.Sales.push({
                         Time: trade.Time,
                         IsComplete: true,
-                        Return: trade.Price * buyTrade.Quantity - buyTrade.Price * buyTrade.Quantity,
+                        Return: (trade.Price - buyTrade.Price) / buyTrade.Price,
                         InstrumentName: trade.InstrumentName
                     });
                     completeCount++;

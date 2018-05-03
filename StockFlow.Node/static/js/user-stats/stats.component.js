@@ -49,6 +49,12 @@ angular.
                     return n.toFixed(2) + abbrv[i];
                 }
 
+                self.formatPercentage = function(n) {
+                    if (typeof(n) === 'undefined')
+                        return undefined;
+                    return (n * 100).toFixed(2);
+                }
+
                 self.loading = true;
                 self.stats = StatsService.query({}, function (stats) {
                     self.loading = false;
