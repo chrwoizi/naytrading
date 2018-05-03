@@ -121,7 +121,7 @@ exports.run = async function () {
                             }
                         });
 
-                        var value = balance + deposit + await getOpenValues(user, fromTime);
+                        var value = balance + await getOpenValues(user, fromTime);
                         await model.portfolio.create({
                             User: user,
                             Time: fromTime,
@@ -175,7 +175,7 @@ exports.run = async function () {
 
             fromTime.setHours(23, 59, 59);
 
-            var value = balance + deposit + await getOpenValues(user, fromTime);
+            var value = balance + await getOpenValues(user, fromTime);
             await model.portfolio.create({
                 User: user,
                 Time: fromTime,

@@ -1,18 +1,18 @@
 SELECT
-	SUM(((
+	SUM((
 		SELECT
-			sellSnapshot.Price
+			latestSnapshot.Price
 		FROM
-			snapshots AS sellSnapshot
+			snapshots AS latestSnapshot
 		WHERE
-			sellSnapshot.User = @userName
-			AND sellSnapshot.Instrument_ID = buySnapshot.Instrument_ID
-			AND sellSnapshot.Time >= buySnapshot.Time
-			AND sellSnapshot.Time <= @toDate
+			latestSnapshot.User = @userName
+			AND latestSnapshot.Instrument_ID = buySnapshot.Instrument_ID
+			AND latestSnapshot.Time >= buySnapshot.Time
+			AND latestSnapshot.Time <= @toDate
 		ORDER BY
-			sellSnapshot.Time DESC
+			latestSnapshot.Time DESC
 		LIMIT 1
-	) - trade.Price) * trade.Quantity) AS Value
+	) * trade.Quantity) AS Value
 FROM trades AS trade
 INNER JOIN snapshots AS buySnapshot
 ON buySnapshot.ID = trade.Snapshot_ID
