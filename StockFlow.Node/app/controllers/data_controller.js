@@ -19,6 +19,13 @@ try {
     console.log('Error:', e.stack);
 }
 
+var next_sell_trade_sql = "";
+try {
+    next_sell_trade_sql = fs.readFileSync(__dirname + '/../sql/next_sell_trade.sql', 'utf8');
+} catch (e) {
+    console.log('Error:', e.stack);
+}
+
 
 function return500(res, e) {
     res.status(500);
@@ -116,7 +123,7 @@ exports.getStats = async function (req, res) {
                     delete buyTrades[trade.InstrumentId];
 
                     stats.Sales.push({
-                        Time: trade.Time,
+                        Time: buyTrade.Time,
                         IsComplete: true,
                         Return: (trade.Price - buyTrade.Price) / buyTrade.Price,
                         InstrumentName: trade.InstrumentName
@@ -126,8 +133,26 @@ exports.getStats = async function (req, res) {
             }
 
             var missing = Object.values(buyTrades);
-            if (missing.length > 0) {
-                throw { message: "could not determine return for trade " + missing[0].ID };
+            for(var i = 0; i < missing.length; ++i) {
+                var buyTrade = buyTrades[missing[i]];
+                var sellTrades = await sql.query(next_sell_trade_sql, {
+                    "@userName": req.user.email,
+                    "@instrumentId": buyTrade.InstrumentId,
+                    "@fromTime": buyTrade.Time,
+                });
+                if (sellTrades.length == 0) {
+                    throw { message: "could not determine sell price for buy trade " + buyTrade.ID };
+                }
+                else {
+                    var sellTrade = sellTrades[0];
+                    stats.Sales.push({
+                        Time: buyTrade.Time,
+                        IsComplete: true,
+                        Return: (sellTrade.Price - buyTrade.Price) / buyTrade.Price,
+                        InstrumentName: buyTrade.InstrumentName
+                    });
+                    completeCount++;
+                }
             }
 
             if (stats.portfolio) {
