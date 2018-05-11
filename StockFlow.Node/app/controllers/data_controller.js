@@ -4,6 +4,7 @@ var sql = require('../sql/sql');
 var dateFormat = require('dateformat');
 var fs = require('fs');
 var viewsController = require('./views_controller.js');
+var portfolioJob = require('../jobs/portfolios.js');
 
 var stats_sql = "";
 try {
@@ -64,105 +65,168 @@ function getStatsViewModel(model) {
     };
 }
 
+async function getStatsForUser(user) {
+    var stats = {};
+    stats.Sales = [];
+
+    stats.portfolios = await model.portfolio.findAll({
+        where: {
+            User: user
+        },
+        order: [["Time", "ASC"]]
+    });
+
+    if (stats.portfolios && stats.portfolios.length > 0) {
+        stats.portfolio = stats.portfolios[stats.portfolios.length - 1];
+    }
+
+    var trades = await sql.query(stats_sql, {
+        "@userName": user
+    });
+
+    var openTradeValues = await sql.query(open_trade_values_sql, {
+        "@userName": user
+    });
+
+    var openCount = 0;
+    var completeCount = 0;
+
+    var buyTrades = {};
+    for (var i = 0; i < trades.length; ++i) {
+        var trade = trades[i];
+
+        if (trade.Decision == "buy") {
+
+            var open = openTradeValues.filter(x => x.ID == trade.ID);
+            if (open.length == 1) {
+                stats.Sales.push({
+                    Time: trade.Time,
+                    IsComplete: false,
+                    Return: (open[0].LatestPrice - trade.Price) / trade.Price,
+                    InstrumentName: trade.InstrumentName
+                });
+                openCount++;
+            }
+            else {
+                buyTrades[trade.InstrumentId] = trade;
+            }
+        }
+        else {
+
+            var buyTrade = buyTrades[trade.InstrumentId];
+            if (typeof (buyTrade) === 'undefined') {
+                throw { message: "could not find buy trade for user " + user + " and instrument " + trade.InstrumentId };
+            }
+
+            delete buyTrades[trade.InstrumentId];
+
+            stats.Sales.push({
+                Time: buyTrade.Time,
+                IsComplete: true,
+                Return: (trade.Price - buyTrade.Price) / buyTrade.Price,
+                InstrumentName: trade.InstrumentName
+            });
+            completeCount++;
+        }
+    }
+
+    var missing = Object.keys(buyTrades);
+    for (var i = 0; i < missing.length; ++i) {
+        var buyTrade = buyTrades[missing[i]];
+        var sellTrades = await sql.query(next_sell_trade_sql, {
+            "@userName": user,
+            "@instrumentId": buyTrade.InstrumentId,
+            "@fromTime": buyTrade.Time,
+        });
+        if (sellTrades.length == 0) {
+            throw { message: "could not determine sell price for buy trade " + buyTrade.ID };
+        }
+        else {
+            var sellTrade = sellTrades[0];
+            stats.Sales.push({
+                Time: buyTrade.Time,
+                IsComplete: true,
+                Return: (sellTrade.Price - buyTrade.Price) / buyTrade.Price,
+                InstrumentName: buyTrade.InstrumentName
+            });
+            completeCount++;
+        }
+    }
+
+    stats.openCount = openCount;
+    stats.completeCount = completeCount;
+
+    return stats;
+}
+
+function getErrors(stats) {
+
+    var errors = "";
+
+    if (stats.portfolio) {
+
+        if (stats.openCount != stats.portfolio.OpenCount) {
+            errors = "Open trade count mismatch: expected " + stats.portfolio.OpenCount + ", actual " + stats.openCount + ".";
+        }
+
+        if (stats.completeCount != stats.portfolio.CompleteCount) {
+            if (erros.length > 0) {
+                errors += " ";
+            }
+            errors += "Complete trade count mismatch: expected " + stats.portfolio.CompleteCount + ", actual " + stats.completeCount + ".";
+        }
+    }
+
+    return errors;
+}
+
 exports.getStats = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
 
-            var stats = {};
-            stats.Sales = [];
+            var stats = await getStatsForUser(req.user.email);
 
-            stats.portfolios = await model.portfolio.findAll({
-                where: {
-                    User: req.user.email
-                },
-                order: [["Time", "ASC"]]
-            });
+            var errors = getErrors(stats);
+            
+            if (errors.length > 0) {
 
-            if (stats.portfolios && stats.portfolios.length > 0) {
-                stats.portfolio = stats.portfolios[stats.portfolios.length - 1];
-            }
+                if (portfolioJob.getUserLock(req.user.email)) {
 
-            var trades = await sql.query(stats_sql, {
-                "@userName": req.user.email
-            });
-
-            var openTradeValues = await sql.query(open_trade_values_sql, {
-                "@userName": req.user.email
-            });
-
-            var openCount = 0;
-            var completeCount = 0;
-
-            var buyTrades = {};
-            for (var i = 0; i < trades.length; ++i) {
-                var trade = trades[i];
-
-                if (trade.Decision == "buy") {
-
-                    var open = openTradeValues.filter(x => x.ID == trade.ID);
-                    if (open.length == 1) {
-                        stats.Sales.push({
-                            Time: trade.Time,
-                            IsComplete: false,
-                            Return: (open[0].LatestPrice - trade.Price) / trade.Price,
-                            InstrumentName: trade.InstrumentName
+                    try {
+                        await model.portfolio.destroy({
+                            where: {
+                                User: req.user.email
+                            }
                         });
-                        openCount++;
+
+                        await model.trade.destroy({
+                            where: {
+                                User: req.user.email
+                            }
+                        });
+
+                        await portfolioJob.updateUser(req.user.email);
+
+                        stats = await getStatsForUser(req.user.email);
+
+                        var errors = getErrors(stats);                        
+                        if (errors.length > 0) {
+                            throw { message: errors };
+                        }
                     }
-                    else {
-                        buyTrades[trade.InstrumentId] = trade;
+                    catch (error) {
+                        errors += " ";
+                        errors += error.message;
+                        throw { message: errors };
                     }
+                    finally {
+                        portfolioJob.releaseUserLock(req.user.email);
+                    }
+
                 }
                 else {
-
-                    var buyTrade = buyTrades[trade.InstrumentId];
-                    if (typeof (buyTrade) === 'undefined') {
-                        throw { message: "could not find buy trade for user " + req.user.email + " and instrument " + trade.InstrumentId };
-                    }
-
-                    delete buyTrades[trade.InstrumentId];
-
-                    stats.Sales.push({
-                        Time: buyTrade.Time,
-                        IsComplete: true,
-                        Return: (trade.Price - buyTrade.Price) / buyTrade.Price,
-                        InstrumentName: trade.InstrumentName
-                    });
-                    completeCount++;
-                }
-            }
-
-            var missing = Object.keys(buyTrades);
-            for (var i = 0; i < missing.length; ++i) {
-                var buyTrade = buyTrades[missing[i]];
-                var sellTrades = await sql.query(next_sell_trade_sql, {
-                    "@userName": req.user.email,
-                    "@instrumentId": buyTrade.InstrumentId,
-                    "@fromTime": buyTrade.Time,
-                });
-                if (sellTrades.length == 0) {
-                    throw { message: "could not determine sell price for buy trade " + buyTrade.ID };
-                }
-                else {
-                    var sellTrade = sellTrades[0];
-                    stats.Sales.push({
-                        Time: buyTrade.Time,
-                        IsComplete: true,
-                        Return: (sellTrade.Price - buyTrade.Price) / buyTrade.Price,
-                        InstrumentName: buyTrade.InstrumentName
-                    });
-                    completeCount++;
-                }
-            }
-
-            if (stats.portfolio) {
-
-                if (openCount != stats.portfolio.OpenCount) {
-                    throw { message: "open trade count mismatch: expected " + stats.portfolio.OpenCount + ", actual " + openCount };
-                }
-
-                if (completeCount != stats.portfolio.CompleteCount) {
-                    throw { message: "complete trade count mismatch: expected " + stats.portfolio.CompleteCount + ", actual " + completeCount };
+                    errors += " Please wait a few minutes for the stats to be rebuild.";
+                    throw { message: errors };
                 }
             }
 
