@@ -132,8 +132,8 @@ exports.getStats = async function (req, res) {
                 }
             }
 
-            var missing = Object.values(buyTrades);
-            for(var i = 0; i < missing.length; ++i) {
+            var missing = Object.keys(buyTrades);
+            for (var i = 0; i < missing.length; ++i) {
                 var buyTrade = buyTrades[missing[i]];
                 var sellTrades = await sql.query(next_sell_trade_sql, {
                     "@userName": req.user.email,

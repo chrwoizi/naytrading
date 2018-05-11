@@ -31,7 +31,7 @@ var sql = require('./app/sql/sql');
         `data` text COLLATE utf8mb4_bin,\
         PRIMARY KEY (`session_id`)\
     ) ENGINE=InnoDB");
-    var sessionStore = new MySQLStore(config.database);
+    var sessionStore = new MySQLStore(config.session);
     app.use(session({
         key: 'session',
         secret: 'stockflow',

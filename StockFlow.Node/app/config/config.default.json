@@ -28,7 +28,10 @@
     "import_secret": "enter secret token here",
     "admin_user": "enter admin user email here",
     "log_path": "stockflow.log",
-    "proxy": null
+    "proxy": null,
+    "session": {
+      "expiration": 2592000000
+    }
   },
   "production": {
     "port": 5000,
@@ -59,6 +62,9 @@
     "import_secret": "enter secret token here",
     "admin_user": "enter admin user email here",
     "log_path": "stockflow.log",
-    "proxy": null
+    "proxy": null,
+    "session": {
+      "expiration": 2592000000
+    }
   }
 }
