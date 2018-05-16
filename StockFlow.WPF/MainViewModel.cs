@@ -48,6 +48,15 @@ namespace StockFlow
         private string _augmentInfo;
         private string _mergeInfo;
         private string _processLog;
+        private bool _preserveTestIds = true;
+        private bool _splitBuy = true;
+        private bool _splitSell = false;
+        private bool _splitTestTrainBuy = true;
+        private bool _splitTestTrainSell = false;
+        private bool _augmentBuy = true;
+        private bool _augmentSell = false;
+        private bool _mergeBuy = true;
+        private bool _mergeSell = false;
 
         private int flatBuyCount;
         private int flatNoBuyCount;
@@ -473,6 +482,168 @@ namespace StockFlow
             }
         }
 
+        public bool PreserveTestIds
+        {
+            get
+            {
+                return _preserveTestIds;
+            }
+
+            set
+            {
+                _preserveTestIds = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool SplitBuy
+        {
+            get
+            {
+                return _splitBuy;
+            }
+
+            set
+            {
+                _splitBuy = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool SplitSell
+        {
+            get
+            {
+                return _splitSell;
+            }
+
+            set
+            {
+                _splitSell = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool SplitTestTrainBuy
+        {
+            get
+            {
+                return _splitTestTrainBuy;
+            }
+
+            set
+            {
+                _splitTestTrainBuy = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(SplitTestTrainBuyVisibility));
+            }
+        }
+
+        public bool SplitTestTrainSell
+        {
+            get
+            {
+                return _splitTestTrainSell;
+            }
+
+            set
+            {
+                _splitTestTrainSell = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(SplitTestTrainSellVisibility));
+            }
+        }
+
+        public Visibility SplitTestTrainBuyVisibility
+        {
+            get
+            {
+                return _splitTestTrainBuy ? Visibility.Visible : Visibility.Collapsed;
+            }
+        }
+
+        public Visibility SplitTestTrainSellVisibility
+        {
+            get
+            {
+                return _splitTestTrainSell ? Visibility.Visible : Visibility.Collapsed;
+            }
+        }
+
+        public bool AugmentBuy
+        {
+            get
+            {
+                return _augmentBuy;
+            }
+
+            set
+            {
+                _augmentBuy = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(AugmentBuyVisibility));
+            }
+        }
+
+        public bool AugmentSell
+        {
+            get
+            {
+                return _augmentSell;
+            }
+
+            set
+            {
+                _augmentSell = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(AugmentSellVisibility));
+            }
+        }
+
+        public Visibility AugmentBuyVisibility
+        {
+            get
+            {
+                return _augmentBuy ? Visibility.Visible : Visibility.Collapsed;
+            }
+        }
+
+        public Visibility AugmentSellVisibility
+        {
+            get
+            {
+                return _augmentSell ? Visibility.Visible : Visibility.Collapsed;
+            }
+        }
+
+        public bool MergeBuy
+        {
+            get
+            {
+                return _mergeBuy;
+            }
+
+            set
+            {
+                _mergeBuy = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool MergeSell
+        {
+            get
+            {
+                return _mergeSell;
+            }
+
+            set
+            {
+                _mergeSell = value;
+                OnPropertyChanged();
+            }
+        }
+        
         public event Action<string> OutputDataReceived;
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -565,7 +736,7 @@ namespace StockFlow
             {
                 try
                 {
-                    DumpProcessor.SplitByDecision();
+                    DumpProcessor.SplitByDecision(SplitBuy, SplitSell);
                 }
                 finally
                 {
@@ -607,19 +778,28 @@ namespace StockFlow
             var noSellSliderValue = (int)SplitNoSellCount;
 
             var sum = flatBuyCount + flatNoBuyCount + flatSellCount + flatNoSellCount;
-            var buyProgressScale = flatBuyCount / sum;
-            var noBuyProgressScale = flatNoBuyCount / sum;
-            var sellProgressScale = flatSellCount / sum;
-            var noSellProgressScale = flatNoSellCount / sum;
+            var buyProgressScale = SplitTestTrainBuy ? flatBuyCount / sum : 0;
+            var noBuyProgressScale = SplitTestTrainBuy ? flatNoBuyCount / sum : 0;
+            var sellProgressScale = SplitTestTrainSell ? flatSellCount / sum : 0;
+            var noSellProgressScale = SplitTestTrainSell ? flatNoSellCount / sum : 0;
+
+            var preserveTestIds = PreserveTestIds;
 
             Task.Run(() =>
             {
                 try
                 {
-                    DumpProcessor.SplitRandomTrainTest(DumpProcessor.FlatBuyFile, DumpProcessor.TestBuyFile, DumpProcessor.TrainBuyFile, ratio, buySliderValue, x => ReportProgress(x * buyProgressScale));
-                    DumpProcessor.SplitRandomTrainTest(DumpProcessor.FlatNoBuyFile, DumpProcessor.TestNoBuyFile, DumpProcessor.TrainNoBuyFile, ratio, noBuySliderValue, x => ReportProgress(buyProgressScale + x * noBuyProgressScale));
-                    DumpProcessor.SplitRandomTrainTest(DumpProcessor.FlatSellFile, DumpProcessor.TestSellFile, DumpProcessor.TrainSellFile, ratio, sellSliderValue, x => ReportProgress(buyProgressScale + noBuyProgressScale + x * sellProgressScale));
-                    DumpProcessor.SplitRandomTrainTest(DumpProcessor.FlatNoSellFile, DumpProcessor.TestNoSellFile, DumpProcessor.TrainNoSellFile, ratio, noSellSliderValue, x => ReportProgress(buyProgressScale + noBuyProgressScale + sellProgressScale + x * noSellProgressScale));
+                    if (SplitTestTrainBuy)
+                    {
+                        DumpProcessor.SplitRandomTrainTest(DumpProcessor.FlatBuyFile, DumpProcessor.TestBuyFile, DumpProcessor.TrainBuyFile, ratio, buySliderValue, preserveTestIds, x => ReportProgress(x * buyProgressScale));
+                        DumpProcessor.SplitRandomTrainTest(DumpProcessor.FlatNoBuyFile, DumpProcessor.TestNoBuyFile, DumpProcessor.TrainNoBuyFile, ratio, noBuySliderValue, preserveTestIds, x => ReportProgress(buyProgressScale + x * noBuyProgressScale));
+                    }
+
+                    if (SplitTestTrainSell)
+                    {
+                        DumpProcessor.SplitRandomTrainTest(DumpProcessor.FlatSellFile, DumpProcessor.TestSellFile, DumpProcessor.TrainSellFile, ratio, sellSliderValue, preserveTestIds, x => ReportProgress(buyProgressScale + noBuyProgressScale + x * sellProgressScale));
+                        DumpProcessor.SplitRandomTrainTest(DumpProcessor.FlatNoSellFile, DumpProcessor.TestNoSellFile, DumpProcessor.TrainNoSellFile, ratio, noSellSliderValue, preserveTestIds, x => ReportProgress(buyProgressScale + noBuyProgressScale + sellProgressScale + x * noSellProgressScale));
+                    }
                 }
                 finally
                 {
@@ -650,19 +830,26 @@ namespace StockFlow
             var buyRatio = buySum / (double)(buySum + sellSum);
             var sellRatio = sellSum / (double)(buySum + sellSum);
 
-            var buyProgressScale = buyRatio * buySliderValue / buySlidersValueSum;
-            var noBuyProgressScale = buyRatio * noBuySliderValue / buySlidersValueSum;
-            var sellProgressScale = sellRatio * sellSliderValue / sellSlidersValueSum;
-            var noSellProgressScale = sellRatio * noSellSliderValue / sellSlidersValueSum;
+            var buyProgressScale = AugmentBuy ? buyRatio * buySliderValue / buySlidersValueSum : 0;
+            var noBuyProgressScale = AugmentBuy ? buyRatio * noBuySliderValue / buySlidersValueSum : 0;
+            var sellProgressScale = AugmentSell ? sellRatio * sellSliderValue / sellSlidersValueSum : 0;
+            var noSellProgressScale = AugmentSell ? sellRatio * noSellSliderValue / sellSlidersValueSum : 0;
 
             Task.Run(() =>
             {
                 try
                 {
-                    DumpProcessor.Augment(DumpProcessor.TrainBuyFile, DumpProcessor.TrainBuyAugFile, buySliderValue, x => ReportProgress(x * buyProgressScale));
-                    DumpProcessor.Augment(DumpProcessor.TrainNoBuyFile, DumpProcessor.TrainNoBuyAugFile, noBuySliderValue, x => ReportProgress(buyProgressScale + x * noBuyProgressScale));
-                    DumpProcessor.Augment(DumpProcessor.TrainSellFile, DumpProcessor.TrainSellAugFile, sellSliderValue, x => ReportProgress(buyProgressScale + noBuyProgressScale + x * sellProgressScale));
-                    DumpProcessor.Augment(DumpProcessor.TrainNoSellFile, DumpProcessor.TrainNoSellAugFile, noSellSliderValue, x => ReportProgress(buyProgressScale + noBuyProgressScale + sellProgressScale + x * noSellProgressScale));
+                    if (AugmentBuy)
+                    {
+                        DumpProcessor.Augment(DumpProcessor.TrainBuyFile, DumpProcessor.TrainBuyAugFile, buySliderValue, x => ReportProgress(x * buyProgressScale));
+                        DumpProcessor.Augment(DumpProcessor.TrainNoBuyFile, DumpProcessor.TrainNoBuyAugFile, noBuySliderValue, x => ReportProgress(buyProgressScale + x * noBuyProgressScale));
+                    }
+
+                    if (AugmentSell)
+                    {
+                        DumpProcessor.Augment(DumpProcessor.TrainSellFile, DumpProcessor.TrainSellAugFile, sellSliderValue, x => ReportProgress(buyProgressScale + noBuyProgressScale + x * sellProgressScale));
+                        DumpProcessor.Augment(DumpProcessor.TrainNoSellFile, DumpProcessor.TrainNoSellAugFile, noSellSliderValue, x => ReportProgress(buyProgressScale + noBuyProgressScale + sellProgressScale + x * noSellProgressScale));
+                    }
                 }
                 finally
                 {
@@ -679,20 +866,38 @@ namespace StockFlow
         {
             IsBusy = true;
 
-            var sum = testBuyCount + testNoBuyCount + testSellCount + testNoSellCount + trainBuyAugCount + trainNoBuyAugCount + trainSellAugCount + trainNoSellAugCount;
-            var testBuyingProgressScale = (testBuyCount + testNoBuyCount) / (double)sum;
-            var testSellingProgressScale = (testSellCount + testNoSellCount) / (double)sum;
-            var trainBuyingProgressScale = (trainBuyAugCount + trainNoBuyAugCount) / (double)sum;
-            var trainSellingProgressScale = (trainSellAugCount + trainNoSellAugCount) / (double)sum;
+            var sum = 0;
+
+            if (MergeBuy)
+            {
+                sum += testBuyCount + testNoBuyCount + trainBuyAugCount + trainNoBuyAugCount;
+            }
+
+            if (MergeSell)
+            {
+                sum += testSellCount + testNoSellCount + trainSellAugCount + trainNoSellAugCount;
+            }
+
+            var testBuyingProgressScale = MergeBuy ? (testBuyCount + testNoBuyCount) / (double)sum : 0;
+            var trainBuyingProgressScale = MergeBuy ? (trainBuyAugCount + trainNoBuyAugCount) / (double)sum : 0;
+            var testSellingProgressScale = MergeSell ? (testSellCount + testNoSellCount) / (double)sum : 0;
+            var trainSellingProgressScale = MergeSell ? (trainSellAugCount + trainNoSellAugCount) / (double)sum : 0;
 
             Task.Run(() =>
             {
                 try
                 {
-                    DumpProcessor.MergeRandom(DumpProcessor.TestBuyFile, DumpProcessor.TestNoBuyFile, DumpProcessor.TestBuyingFile, x => ReportProgress(x * testBuyingProgressScale));
-                    DumpProcessor.MergeRandom(DumpProcessor.TestSellFile, DumpProcessor.TestNoSellFile, DumpProcessor.TestSellingFile, x => ReportProgress(testBuyingProgressScale + x * testSellingProgressScale));
-                    DumpProcessor.MergeRandom(DumpProcessor.TrainBuyAugFile, DumpProcessor.TrainNoBuyAugFile, DumpProcessor.TrainBuyingFile, x => ReportProgress(testBuyingProgressScale + testSellingProgressScale + x * trainBuyingProgressScale));
-                    DumpProcessor.MergeRandom(DumpProcessor.TrainSellAugFile, DumpProcessor.TrainNoSellAugFile, DumpProcessor.TrainSellingFile, x => ReportProgress(testBuyingProgressScale + testSellingProgressScale + trainBuyingProgressScale + x * trainSellingProgressScale));
+                    if (MergeBuy)
+                    {
+                        DumpProcessor.MergeRandom(DumpProcessor.TestBuyFile, DumpProcessor.TestNoBuyFile, DumpProcessor.TestBuyingFile, x => ReportProgress(x * testBuyingProgressScale));
+                        DumpProcessor.MergeRandom(DumpProcessor.TrainBuyAugFile, DumpProcessor.TrainNoBuyAugFile, DumpProcessor.TrainBuyingFile, x => ReportProgress(testBuyingProgressScale + x * trainBuyingProgressScale));
+                    }
+
+                    if (MergeSell)
+                    {
+                        DumpProcessor.MergeRandom(DumpProcessor.TestSellFile, DumpProcessor.TestNoSellFile, DumpProcessor.TestSellingFile, x => ReportProgress(testBuyingProgressScale + trainBuyingProgressScale + x * testSellingProgressScale));
+                        DumpProcessor.MergeRandom(DumpProcessor.TrainSellAugFile, DumpProcessor.TrainNoSellAugFile, DumpProcessor.TrainSellingFile, x => ReportProgress(testBuyingProgressScale + trainBuyingProgressScale + testSellingProgressScale + x * trainSellingProgressScale));
+                    }
                 }
                 finally
                 {

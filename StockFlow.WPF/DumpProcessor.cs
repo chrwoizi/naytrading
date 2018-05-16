@@ -228,7 +228,7 @@ namespace StockFlow
             return metas;
         }
 
-        public static void SplitByDecision()
+        public static void SplitByDecision(bool writeBuy, bool writeSell)
         {
             List<SnapshotMetadata> metas = GetDumpMetadata();
 
@@ -238,19 +238,27 @@ namespace StockFlow
 
             using (var reader = new StreamReader(File.Open(FlatDumpFile, FileMode.Open)))
             {
-                using (var buyWriter = new StreamWriter(File.Open(FlatBuyFile, FileMode.Create)))
+                using (var buyWriter = writeBuy ? new StreamWriter(File.Open(FlatBuyFile, FileMode.Create)) : null)
                 {
-                    using (var nobuyWriter = new StreamWriter(File.Open(FlatNoBuyFile, FileMode.Create)))
+                    using (var nobuyWriter = writeBuy ? new StreamWriter(File.Open(FlatNoBuyFile, FileMode.Create)) : null)
                     {
-                        using (var sellWriter = new StreamWriter(File.Open(FlatSellFile, FileMode.Create)))
+                        using (var sellWriter = writeSell ? new StreamWriter(File.Open(FlatSellFile, FileMode.Create)) : null)
                         {
-                            using (var nosellWriter = new StreamWriter(File.Open(FlatNoSellFile, FileMode.Create)))
+                            using (var nosellWriter = writeSell ? new StreamWriter(File.Open(FlatNoSellFile, FileMode.Create)) : null)
                             {
                                 var header = reader.ReadLine();
-                                buyWriter.WriteLine("id;" + header);
-                                nobuyWriter.WriteLine("id;" + header);
-                                sellWriter.WriteLine("id;" + header);
-                                nosellWriter.WriteLine("id;" + header);
+
+                                if (writeBuy)
+                                {
+                                    buyWriter.WriteLine("id;" + header);
+                                    nobuyWriter.WriteLine("id;" + header);
+                                }
+
+                                if (writeSell)
+                                {
+                                    sellWriter.WriteLine("id;" + header);
+                                    nosellWriter.WriteLine("id;" + header);
+                                }
 
                                 var linesRead = 1;
                                 foreach (var meta in distinctMetas.OrderBy(x => x.Line))
@@ -270,31 +278,46 @@ namespace StockFlow
                                         {
                                             if (meta.Decision == "sell")
                                             {
-                                                sellWriter.WriteLine(linesRead + ";" + line);
+                                                if (writeSell)
+                                                {
+                                                    sellWriter.WriteLine(linesRead + ";" + line);
+                                                }
                                             }
                                             else if (meta.Decision == "ignore")
                                             {
-                                                if (meta.PreviousBuyRate > 0 && meta.PreviousBuyRate < (meta.CurrentPrice * 1.01m))
+                                                if (writeBuy)
                                                 {
-                                                    var firstSemicolon = line.IndexOf(';');
-                                                    var lineAsBuy = line.Substring(0, firstSemicolon + 1) 
-                                                        + "buy"
-                                                        + line.Substring(line.IndexOf(';', firstSemicolon + 1));
-                                                    buyWriter.WriteLine(linesRead + ";" + lineAsBuy);
+                                                    if (meta.PreviousBuyRate > 0 && meta.PreviousBuyRate < (meta.CurrentPrice * 1.01m))
+                                                    {
+                                                        var firstSemicolon = line.IndexOf(';');
+                                                        var lineAsBuy = line.Substring(0, firstSemicolon + 1)
+                                                            + "buy"
+                                                            + line.Substring(line.IndexOf(';', firstSemicolon + 1));
+                                                        buyWriter.WriteLine(linesRead + ";" + lineAsBuy);
+                                                    }
                                                 }
 
-                                                nosellWriter.WriteLine(linesRead + ";" + line);
+                                                if (writeSell)
+                                                {
+                                                    nosellWriter.WriteLine(linesRead + ";" + line);
+                                                }
                                             }
                                         }
                                         else
                                         {
                                             if (meta.Decision == "buy")
                                             {
-                                                buyWriter.WriteLine(linesRead + ";" + line);
+                                                if (writeBuy)
+                                                {
+                                                    buyWriter.WriteLine(linesRead + ";" + line);
+                                                }
                                             }
                                             else if (meta.Decision == "ignore")
                                             {
-                                                nobuyWriter.WriteLine(linesRead + ";" + line);
+                                                if (writeBuy)
+                                                {
+                                                    nobuyWriter.WriteLine(linesRead + ";" + line);
+                                                }
                                             }
                                         }
                                     }
@@ -306,24 +329,53 @@ namespace StockFlow
             }
         }
 
-        public static void SplitRandomTrainTest(string inPath, string testPath, string trainPath, double factor, int samples, Action<double> reportProgress)
+        public static void SplitRandomTrainTest(string inPath, string testPath, string trainPath, double factor, int samples, bool preserveTestIds, Action<double> reportProgress)
         {
             reportProgress(0);
 
+            var testIds = new HashSet<string>();
+            if (preserveTestIds && File.Exists(testPath))
+            {
+                using (var reader = new StreamReader(File.Open(testPath, FileMode.Open)))
+                {
+                    var header = reader.ReadLine();
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        var id = line.Substring(0, line.IndexOf(';'));
+                        testIds.Add(id);
+                    }
+                }
+            }
+
             using (var reader = new UnbufferedStreamReader(File.Open(inPath, FileMode.Open)))
             {
-                var linePositions = new Dictionary<int, long>();
-                GetLinePositions(linePositions, reader);
+                var linePositions = new Dictionary<int, LineInfo>();
+                GetLinePositions(linePositions, reader, true);
 
                 var randomLinePositions = linePositions.Select(x => new { r = random.NextDouble(), v = x }).OrderBy(x => x.r).Select(x => x.v).Take(samples).ToList();
+
+                var testCount = (int)(randomLinePositions.Count * factor);
+
+                var testLines = randomLinePositions.Take(testCount).ToList();
+                var trainLines = randomLinePositions.Skip(testCount).ToList();
+
+                var moveFromTrainToTest = trainLines.Where(x => testIds.Contains(x.Value.Id)).ToList();
+                var potentialTrainInTest = testLines.Where(x => !testIds.Contains(x.Value.Id)).ToList();
+                var moveFromTestToTrain = potentialTrainInTest.Take(Math.Min(moveFromTrainToTest.Count, potentialTrainInTest.Count)).ToList();
+
+                testLines = testLines.Except(moveFromTestToTrain).Concat(moveFromTrainToTest).ToList();
+                trainLines = trainLines.Except(moveFromTrainToTest).Concat(moveFromTestToTrain).ToList();
+
+                Debug.Assert(trainLines.All(x => !testIds.Contains(x.Value.Id)));
+                Debug.Assert(!trainLines.Intersect(testLines).Any());
+                Debug.Assert(trainLines.Union(testLines).Count() == randomLinePositions.Count);
 
                 Debug.Assert(reader.BaseStream.CanSeek);
 
                 reader.BaseStream.Seek(0, SeekOrigin.Begin);
                 var header = reader.ReadLine();
-
-                var testCount = (int)(randomLinePositions.Count * factor);
-
+                
                 int i = 0;
 
                 reader.BaseStream.Seek(0, SeekOrigin.Begin);
@@ -331,9 +383,9 @@ namespace StockFlow
                 {
                     writer.WriteLine(header);
                     
-                    foreach (var item in randomLinePositions.Take(testCount))
+                    foreach (var item in testLines)
                     {
-                        reader.BaseStream.Seek(item.Value, SeekOrigin.Begin);
+                        reader.BaseStream.Seek(item.Value.Position, SeekOrigin.Begin);
                         var line = reader.ReadLine();
                         Debug.Assert(line.Split(';').Length == 4 + 1815);
                         writer.WriteLine(line);
@@ -348,9 +400,9 @@ namespace StockFlow
                 {
                     writer.WriteLine(header);
 
-                    foreach (var item in randomLinePositions.Skip(testCount))
+                    foreach (var item in trainLines)
                     {
-                        reader.BaseStream.Seek(item.Value, SeekOrigin.Begin);
+                        reader.BaseStream.Seek(item.Value.Position, SeekOrigin.Begin);
                         var line = reader.ReadLine();
                         Debug.Assert(line.Split(';').Length == 4 + 1815);
                         writer.WriteLine(line);
@@ -413,8 +465,8 @@ namespace StockFlow
 
         public static void MergeRandom(string inPath1, string inPath2, string outPath, Action<double> reportProgress)
         {
-            var linePositions1 = new Dictionary<int, long>();
-            var linePositions2 = new Dictionary<int, long>();
+            var linePositions1 = new Dictionary<int, LineInfo>();
+            var linePositions2 = new Dictionary<int, LineInfo>();
 
             reportProgress(0);
 
@@ -422,12 +474,12 @@ namespace StockFlow
             {
                 using (var reader2 = new UnbufferedStreamReader(File.Open(inPath2, FileMode.Open)))
                 {
-                    GetLinePositions(linePositions1, reader1);
-                    GetLinePositions(linePositions2, reader2);
+                    GetLinePositions(linePositions1, reader1, false);
+                    GetLinePositions(linePositions2, reader2, false);
 
                     var randomLinePositions =
-                        linePositions1.Select(x => new Tuple<UnbufferedStreamReader, KeyValuePair<int, long>>(reader1, x))
-                        .Concat(linePositions2.Select(x => new Tuple<UnbufferedStreamReader, KeyValuePair<int, long>>(reader2, x)))
+                        linePositions1.Select(x => new Tuple<UnbufferedStreamReader, KeyValuePair<int, LineInfo>>(reader1, x))
+                        .Concat(linePositions2.Select(x => new Tuple<UnbufferedStreamReader, KeyValuePair<int, LineInfo>>(reader2, x)))
                         .Select(x => new { r = random.NextDouble(), v = x })
                         .OrderBy(x => x.r)
                         .Select(x => x.v)
@@ -444,7 +496,7 @@ namespace StockFlow
                         foreach (var item in randomLinePositions)
                         {
                             var reader = item.Item1;
-                            reader.BaseStream.Seek(item.Item2.Value, SeekOrigin.Begin);
+                            reader.BaseStream.Seek(item.Item2.Value.Position, SeekOrigin.Begin);
 
                             var line = reader.ReadLine();
                             var split = line.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
@@ -469,17 +521,25 @@ namespace StockFlow
             reportProgress(1);
         }
 
-        private static void GetLinePositions(Dictionary<int, long> linePositions1, UnbufferedStreamReader reader)
+        public class LineInfo
+        {
+            public long Position;
+            public string Id;
+        }
+
+        private static void GetLinePositions(Dictionary<int, LineInfo> linePositions1, UnbufferedStreamReader reader, bool readId)
         {
             var lineIndex = 0;
             while (reader.BaseStream.Position < reader.BaseStream.Length)
             {
+                var position = reader.BaseStream.Position;
+                var line = reader.ReadLine();
+
                 if (lineIndex > 0)
                 {
-                    linePositions1.Add(lineIndex, reader.BaseStream.Position);
+                    linePositions1.Add(lineIndex, new LineInfo { Position = position, Id = readId ? line.Substring(line.IndexOf(';')) : null });
                 }
 
-                reader.ReadLine();
                 lineIndex++;
             }
 

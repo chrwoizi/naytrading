@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="StockFlow" Height="430" Width="868"
+        Title="StockFlow" Height="500" Width="868"
         Closing="Window_Closing"
         Background="#F0F0F0">
     <Window.Resources>
@@ -75,6 +75,18 @@
                                     Content="Split by Action"
                                     IsEnabled="{Binding Path=IsNotBusy}" />
 
+                            <CheckBox IsChecked="{Binding Path=SplitBuy, Mode=TwoWay}"
+                                      Grid.Row="6"
+                                      Grid.ColumnSpan="2"
+                                      Margin="0,10,0,0"
+                                      Content="buy" />
+
+                            <CheckBox IsChecked="{Binding Path=SplitSell, Mode=TwoWay}"
+                                      Grid.Row="7"
+                                      Grid.ColumnSpan="2"
+                                      Margin="0,10,0,0"
+                                      Content="sell" />
+
                             <TextBlock Margin="0,10,0,10"
                                        Text="{Binding Path=SplitFileInfo}" />
                         </StackPanel>
@@ -88,6 +100,9 @@
 
                         <Grid>
                             <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
@@ -110,24 +125,28 @@
                                        Margin="0,10,10,0"
                                        HorizontalAlignment="Left"
                                        VerticalAlignment="Center"
+                                       Visibility="{Binding Path=SplitTestTrainBuyVisibility}"
                                        Text="Buy" />
                             <TextBlock Grid.Row="2"
                                        Grid.Column="0"
                                        Margin="0,10,10,0"
                                        HorizontalAlignment="Left"
                                        VerticalAlignment="Center"
+                                       Visibility="{Binding Path=SplitTestTrainBuyVisibility}"
                                        Text="No Buy" />
                             <TextBlock Grid.Row="3"
                                        Grid.Column="0"
                                        Margin="0,10,10,0"
                                        HorizontalAlignment="Left"
                                        VerticalAlignment="Center"
+                                       Visibility="{Binding Path=SplitTestTrainSellVisibility}"
                                        Text="Sell" />
                             <TextBlock Grid.Row="4"
                                        Grid.Column="0"
                                        Margin="0,10,10,0"
                                        HorizontalAlignment="Left"
                                        VerticalAlignment="Center"
+                                       Visibility="{Binding Path=SplitTestTrainSellVisibility}"
                                        Text="No Sell" />
 
                             <Slider Grid.Row="0"
@@ -151,6 +170,7 @@
                                     SmallChange="1"
                                     LargeChange="10"
                                     Interval="1"
+                                    Visibility="{Binding Path=SplitTestTrainBuyVisibility}"
                                     IsEnabled="{Binding Path=IsNotBusy}" />
                             <Slider Grid.Row="2"
                                     Grid.Column="1"
@@ -162,6 +182,7 @@
                                     SmallChange="1"
                                     LargeChange="10"
                                     Interval="1"
+                                    Visibility="{Binding Path=SplitTestTrainBuyVisibility}"
                                     IsEnabled="{Binding Path=IsNotBusy}" />
                             <Slider Grid.Row="3"
                                     Grid.Column="1"
@@ -173,6 +194,7 @@
                                     SmallChange="1"
                                     LargeChange="10"
                                     Interval="1"
+                                    Visibility="{Binding Path=SplitTestTrainSellVisibility}"
                                     IsEnabled="{Binding Path=IsNotBusy}" />
                             <Slider Grid.Row="4"
                                     Grid.Column="1"
@@ -184,6 +206,7 @@
                                     SmallChange="1"
                                     LargeChange="10"
                                     Interval="1"
+                                    Visibility="{Binding Path=SplitTestTrainSellVisibility}"
                                     IsEnabled="{Binding Path=IsNotBusy}" />
                             <TextBlock Grid.Row="0"
                                    Grid.Column="2"
@@ -197,6 +220,7 @@
                                        HorizontalAlignment="Right"
                                        VerticalAlignment="Center"
                                        x:Name="SplitBuyLabel"
+                                       Visibility="{Binding Path=SplitTestTrainBuyVisibility}"
                                        Text="{Binding Path=SplitBuyCount, StringFormat='{}{0:F0}'}" />
                             <TextBlock Grid.Row="2"
                                        Grid.Column="2"
@@ -204,6 +228,7 @@
                                        HorizontalAlignment="Right"
                                        VerticalAlignment="Center"
                                        x:Name="SplitNoBuyLabel"
+                                       Visibility="{Binding Path=SplitTestTrainBuyVisibility}"
                                        Text="{Binding Path=SplitNoBuyCount, StringFormat='{}{0:F0}'}" />
                             <TextBlock Grid.Row="3"
                                        Grid.Column="2"
@@ -211,6 +236,7 @@
                                        HorizontalAlignment="Right"
                                        VerticalAlignment="Center"
                                        x:Name="SplitSellLabel"
+                                       Visibility="{Binding Path=SplitTestTrainSellVisibility}"
                                        Text="{Binding Path=SplitSellCount, StringFormat='{}{0:F0}'}" />
                             <TextBlock Grid.Row="4"
                                        Grid.Column="2"
@@ -218,7 +244,26 @@
                                        HorizontalAlignment="Right"
                                        VerticalAlignment="Center"
                                        x:Name="SplitNoSellLabel"
+                                       Visibility="{Binding Path=SplitTestTrainSellVisibility}"
                                        Text="{Binding Path=SplitNoSellCount, StringFormat='{}{0:F0}'}" />
+
+                            <CheckBox IsChecked="{Binding Path=PreserveTestIds, Mode=TwoWay}"
+                                      Grid.Row="5"
+                                      Grid.ColumnSpan="3"
+                                      Margin="0,10,0,0"
+                                      Content="Reassign test rows" />
+
+                            <CheckBox IsChecked="{Binding Path=SplitTestTrainBuy, Mode=TwoWay}"
+                                      Grid.Row="6"
+                                      Grid.ColumnSpan="2"
+                                      Margin="0,10,0,0"
+                                      Content="buy" />
+
+                            <CheckBox IsChecked="{Binding Path=SplitTestTrainSell, Mode=TwoWay}"
+                                      Grid.Row="7"
+                                      Grid.ColumnSpan="2"
+                                      Margin="0,10,0,0"
+                                      Content="sell" />
                         </Grid>
                         <TextBlock Margin="0,10,0,10"
                                    Text="{Binding Path=SplitTrainTestInfo}" />
@@ -233,6 +278,8 @@
 
                         <Grid>
                             <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
@@ -256,24 +303,28 @@
                                        Margin="0,10,10,0"
                                        HorizontalAlignment="Left"
                                        VerticalAlignment="Center"
+                                       Visibility="{Binding Path=AugmentBuyVisibility}"
                                        Text="Buy" />
                             <TextBlock Grid.Row="2"
                                        Grid.Column="0"
                                        Margin="0,10,10,0"
                                        HorizontalAlignment="Left"
                                        VerticalAlignment="Center"
+                                       Visibility="{Binding Path=AugmentBuyVisibility}"
                                        Text="No Buy" />
                             <TextBlock Grid.Row="3"
                                        Grid.Column="0"
                                        Margin="0,10,10,0"
                                        HorizontalAlignment="Left"
                                        VerticalAlignment="Center"
+                                       Visibility="{Binding Path=AugmentSellVisibility}"
                                        Text="Sell" />
                             <TextBlock Grid.Row="4"
                                        Grid.Column="0"
                                        Margin="0,10,10,0"
                                        HorizontalAlignment="Left"
                                        VerticalAlignment="Center"
+                                       Visibility="{Binding Path=AugmentSellVisibility}"
                                        Text="No Sell" />
                             <Slider Grid.Row="0"
                                     Grid.Column="1"
@@ -296,6 +347,7 @@
                                     SmallChange="1"
                                     LargeChange="10"
                                     Interval="1"
+                                    Visibility="{Binding Path=AugmentBuyVisibility}"
                                     IsEnabled="{Binding Path=IsNotBusy}" />
                             <Slider Grid.Row="2"
                                     Grid.Column="1"
@@ -307,6 +359,7 @@
                                     SmallChange="1"
                                     LargeChange="10"
                                     Interval="1"
+                                    Visibility="{Binding Path=AugmentBuyVisibility}"
                                     IsEnabled="{Binding Path=IsNotBusy}" />
                             <Slider Grid.Row="3"
                                     Grid.Column="1"
@@ -318,6 +371,7 @@
                                     SmallChange="1"
                                     LargeChange="10"
                                     Interval="1"
+                                    Visibility="{Binding Path=AugmentSellVisibility}"
                                     IsEnabled="{Binding Path=IsNotBusy}" />
                             <Slider Grid.Row="4"
                                     Grid.Column="1"
@@ -329,6 +383,7 @@
                                     SmallChange="1"
                                     LargeChange="10"
                                     Interval="1"
+                                    Visibility="{Binding Path=AugmentSellVisibility}"
                                     IsEnabled="{Binding Path=IsNotBusy}" />
                             <TextBlock Grid.Row="0"
                                        Grid.Column="2"
@@ -341,25 +396,41 @@
                                        Margin="0,10,0,0"
                                        HorizontalAlignment="Right"
                                        VerticalAlignment="Center"
+                                       Visibility="{Binding Path=AugmentBuyVisibility}"
                                        Text="{Binding Path=AugmentBuyFactor, StringFormat='{}{0:F0}x'}" />
                             <TextBlock Grid.Row="2"
                                        Grid.Column="2"
                                        Margin="0,10,0,0"
                                        HorizontalAlignment="Right"
                                        VerticalAlignment="Center"
+                                       Visibility="{Binding Path=AugmentBuyVisibility}"
                                        Text="{Binding Path=AugmentNoBuyFactor, StringFormat='{}{0:F0}x'}" />
                             <TextBlock Grid.Row="3"
                                        Grid.Column="2"
                                        Margin="0,10,0,0"
                                        HorizontalAlignment="Right"
                                        VerticalAlignment="Center"
+                                       Visibility="{Binding Path=AugmentSellVisibility}"
                                        Text="{Binding Path=AugmentSellFactor, StringFormat='{}{0:F0}x'}" />
                             <TextBlock Grid.Row="4"
                                        Grid.Column="2"
                                        Margin="0,10,0,0"
                                        HorizontalAlignment="Right"
                                        VerticalAlignment="Center"
+                                       Visibility="{Binding Path=AugmentSellVisibility}"
                                        Text="{Binding Path=AugmentNoSellFactor, StringFormat='{}{0:F0}x'}" />
+
+                            <CheckBox IsChecked="{Binding Path=AugmentBuy, Mode=TwoWay}"
+                                      Grid.Row="6"
+                                      Grid.ColumnSpan="2"
+                                      Margin="0,10,0,0"
+                                      Content="buy" />
+
+                            <CheckBox IsChecked="{Binding Path=AugmentSell, Mode=TwoWay}"
+                                      Grid.Row="7"
+                                      Grid.ColumnSpan="2"
+                                      Margin="0,10,0,0"
+                                      Content="sell" />
                         </Grid>
 
                         <TextBlock Margin="0,10,0,10"
@@ -373,6 +444,18 @@
                             <Button Command="{Binding Path=MergeCommand}"
                                     Content="Normalize + Merge"
                                     IsEnabled="{Binding Path=IsNotBusy}" />
+
+                            <CheckBox IsChecked="{Binding Path=MergeBuy, Mode=TwoWay}"
+                                      Grid.Row="6"
+                                      Grid.ColumnSpan="2"
+                                      Margin="0,10,0,0"
+                                      Content="buy" />
+
+                            <CheckBox IsChecked="{Binding Path=MergeSell, Mode=TwoWay}"
+                                      Grid.Row="7"
+                                      Grid.ColumnSpan="2"
+                                      Margin="0,10,0,0"
+                                      Content="sell" />
 
                             <TextBlock Margin="0,10,0,10"
                                        Text="{Binding Path=MergeInfo}" />
