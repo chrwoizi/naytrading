@@ -89,15 +89,15 @@ namespace StockFlow
                         reportProgress(current / (double)count);
                     }
 
-                    if (!string.IsNullOrEmpty(snapshot.Decision) && snapshot.Rates != null)
+                    if (!string.IsNullOrEmpty(snapshot.Decision) && snapshot.snapshotrates != null)
                     {
-                        var rates = snapshot.Rates.Where(x => x.Close.HasValue).ToList();
+                        var rates = snapshot.snapshotrates.Where(x => x.Close.HasValue).ToList();
 
                         var firstDate = snapshot.Time.Date.AddDays(-Days + 1);
 
                         writer.WriteLine();
 
-                        writer.Write(snapshot.Instrument.ID);
+                        writer.Write(snapshot.instrument.ID);
                         writer.Write(";");
 
                         writer.Write(snapshot.Decision);
@@ -108,7 +108,7 @@ namespace StockFlow
 
                         if (rates.Any() && rates.First().Time.Date <= firstDate)
                         {
-                            var remainingRates = snapshot.Rates;
+                            var remainingRates = snapshot.snapshotrates;
                             var previousRate = remainingRates.LastOrDefault(x => x.Time.Date < firstDate) ?? remainingRates.First();
                             for (DateTime date = firstDate; date <= snapshot.Time.Date; date = date.AddDays(1))
                             {

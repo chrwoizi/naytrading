@@ -116,7 +116,6 @@
     <Content Include="views\contact.hbs" />
     <Content Include="views\about.hbs" />
     <Content Include="views\app.hbs" />
-    <Content Include="views\home.hbs" />
     <Content Include="views\layouts\main.hbs" />
     <Content Include="views\signin.hbs" />
     <Content Include="views\signup.hbs" />

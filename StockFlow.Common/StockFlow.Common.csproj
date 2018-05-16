@@ -49,11 +49,7 @@
     <Compile Include="HttpProvider.cs" />
     <Compile Include="Importer.cs" />
     <Compile Include="Models\Instrument.cs" />
-    <Compile Include="Models\StatsViewModel.cs" />
-    <Compile Include="Models\Stats.cs" />
     <Compile Include="Models\Trade.cs" />
-    <Compile Include="Models\SnapshotRateViewModel.cs" />
-    <Compile Include="Models\SnapshotViewModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Models\Snapshot.cs" />
     <Compile Include="Models\SnapshotRate.cs" />
