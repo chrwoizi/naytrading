@@ -299,7 +299,7 @@ def main(model_dir, load_ckpt, epochs, start_epoch, batch_size, test_file, train
             optimizer = tf.train.AdamOptimizer(learning_rate=0.0005, epsilon=0.5).minimize(model.loss)
 
     print('Saver')
-    saver = tf.train.Saver(var_list=tf.trainable_variables(), max_to_keep=1000000)
+    saver = tf.train.Saver(var_list=tf.trainable_variables(), max_to_keep=100)
 
     #Popen('tensorboard.exe --logdir=%s' % model_dir, creationflags=CREATE_NEW_CONSOLE)
 
@@ -328,10 +328,13 @@ def main(model_dir, load_ckpt, epochs, start_epoch, batch_size, test_file, train
                 print('Save model')
                 saver.save(sess, ckpt_file + "initial")
 
+            graph_writer = tf.summary.FileWriter(log_dir + '/graph', sess.graph)
+            graph_writer.flush()
+
             for epoch in range(start_epoch, epochs):
                 begin = time.time()
 
-                train_writer = tf.summary.FileWriter(log_dir + '/train', sess.graph)
+                train_writer = tf.summary.FileWriter(log_dir + '/train')
                 test_writer = tf.summary.FileWriter(log_dir + '/test')
 
                 train_acc_mean = train(data, sess, model, optimizer, merged, train_writer, epoch)
