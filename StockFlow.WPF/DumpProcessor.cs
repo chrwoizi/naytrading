@@ -18,6 +18,8 @@ namespace StockFlow
         private static Random random = new Random();
 
         public const int Days = 5 * 365 - 10;
+        public const int MaxMissingDays = 120;
+        public const int WeekDays = (5 * Days) / 7;
 
         public const string FlatDumpFile = "dump.csv";
 
@@ -94,70 +96,67 @@ namespace StockFlow
                         var rates = snapshot.snapshotrates.Where(x => x.Close.HasValue).ToList();
 
                         var firstDate = snapshot.Time.Date.AddDays(-Days + 1);
+                        var numDays = (snapshot.Time - firstDate).TotalDays;
 
-                        writer.WriteLine();
-
-                        writer.Write(snapshot.instrument.ID);
-                        writer.Write(";");
-
-                        writer.Write(snapshot.Decision);
-                        writer.Write(";");
-                        
-                        writer.Write(snapshot.Time.ToString("yyyyMMdd", CultureInfo.InvariantCulture));
-                        writer.Write(";");
-
-                        if (rates.Any() && rates.First().Time.Date <= firstDate)
+                        if (rates.Any())
                         {
-                            var remainingRates = snapshot.snapshotrates;
-                            var previousRate = remainingRates.LastOrDefault(x => x.Time.Date < firstDate) ?? remainingRates.First();
-                            for (DateTime date = firstDate; date <= snapshot.Time.Date; date = date.AddDays(1))
-                            {
-                                remainingRates = remainingRates.SkipWhile(x => x.Time.Date < date).ToList();
+                            var previousRate = rates.LastOrDefault(x => x.Time.Date < firstDate) ?? rates.First();
 
-                                var rate = previousRate;
-                                if (remainingRates.Any())
+                            var remainingRates = rates.SkipWhile(x => x.Time.Date < firstDate).ToList();
+                            
+                            if (previousRate.Time.Date <= firstDate && remainingRates.Count >= WeekDays - MaxMissingDays)
+                            {
+                                writer.WriteLine();
+
+                                writer.Write(snapshot.instrument.ID);
+                                writer.Write(";");
+
+                                writer.Write(snapshot.Decision);
+                                writer.Write(";");
+
+                                writer.Write(snapshot.Time.ToString("yyyyMMdd", CultureInfo.InvariantCulture));
+                                writer.Write(";");
+
+                                for (DateTime date = firstDate; date <= snapshot.Time.Date; date = date.AddDays(1))
                                 {
-                                    var firstRate = remainingRates.First();
-                                    if (firstRate.Time.Date == date)
+                                    remainingRates = remainingRates.SkipWhile(x => x.Time.Date < date).ToList();
+
+                                    var rate = previousRate;
+                                    if (remainingRates.Any())
                                     {
-                                        rate = firstRate;
+                                        var firstRate = remainingRates.First();
+                                        if (firstRate.Time.Date == date)
+                                        {
+                                            rate = firstRate;
+                                        }
+                                        else
+                                        {
+                                            // encountered future rate. use previous rate.
+                                        }
                                     }
                                     else
                                     {
-                                        // encountered future rate. use previous rate.
+                                        // no remaining rates. use previous rate.
                                     }
-                                }
-                                else
-                                {
-                                    // no remaining rates. use previous rate.
-                                }
 
-                                var value = rate.Close.Value.ToString("F2", CultureInfo.InvariantCulture);
-                                writer.Write(value);
+                                    var value = rate.Close.Value.ToString("F2", CultureInfo.InvariantCulture);
+                                    writer.Write(value);
 
-                                if (date < snapshot.Time.Date)
-                                {
-                                    writer.Write(";");
+                                    if (date < snapshot.Time.Date)
+                                    {
+                                        writer.Write(";");
+                                    }
+
+                                    previousRate = rate;
                                 }
-
-                                previousRate = rate;
                             }
-                        }
-                        else
-                        {
-                            for (DateTime date = firstDate; date <= snapshot.Time.Date; date = date.AddDays(1))
+                            else
                             {
-                                var value = 0m.ToString("F2", CultureInfo.InvariantCulture);
-                                writer.Write(value);
-
-                                if (date < snapshot.Time.Date)
-                                {
-                                    writer.Write(";");
-                                }
+                                Debug.WriteLine(snapshot.instrument.InstrumentName + " has insufficient rates: " + remainingRates.Count);
                             }
-                        }
 
-                        writer.Flush();
+                            writer.Flush();
+                        }
                     }
                 });
 

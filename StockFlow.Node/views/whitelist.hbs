@@ -1,0 +1,34 @@
+<h2>Whitelist</h2>
+<div class="row row-spacer">
+</div>
+
+<div class="row row-spacer">
+    <form class="form-inline" method="POST" action="/whitelist/add">
+        <div class="col-2">
+            <p style="margin-bottom: 0;">Email:</p>
+        </div>
+        <div class="col-7">
+            <input type="text" name="email">
+        </div>
+        <div class="col-3">
+            <input class="btn btn-info" type="submit" value="Add"></input>
+        </div>
+    </form>
+</div>
+
+<div class="row row-spacer">
+</div>
+
+{{#each whitelists}}
+<div class="row">
+    <div class="col-2">
+        <form method="POST" action="/whitelist/remove">
+            <input type="hidden" name="email" value="{{email}}"></input>
+            <input type="submit" class="btn btn-info list-button" value="delete"></a>
+        </form>
+    </div>
+    <div class="col-9">
+        <span>{{email}}</span>
+    </div>
+</div>
+{{/each}}

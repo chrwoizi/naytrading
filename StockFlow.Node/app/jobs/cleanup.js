@@ -4,10 +4,25 @@ var sequelize = require('sequelize');
 var sql = require('../sql/sql');
 var fs = require('fs');
 var config = require('../config/envconfig');
+var newSnapshotController = require('../controllers/new_snapshot_controller');
 
 var duplicates_sql = "";
 try {
     duplicates_sql = fs.readFileSync(__dirname + '/../sql/duplicates.sql', 'utf8');
+} catch (e) {
+    console.log('Error:', e.stack);
+}
+
+var missing_rates_sql = "";
+try {
+    missing_rates_sql = fs.readFileSync(__dirname + '/../sql/missing_rates.sql', 'utf8');
+} catch (e) {
+    console.log('Error:', e.stack);
+}
+
+var late_rates_sql = "";
+try {
+    late_rates_sql = fs.readFileSync(__dirname + '/../sql/late_rates.sql', 'utf8');
 } catch (e) {
     console.log('Error:', e.stack);
 }
@@ -25,48 +40,84 @@ function groupBy(xs, key, equals) {
     }, []);
 }
 
+async function cleanupDuplicates() {
+    var rows = await sql.query(duplicates_sql, {});
+
+    var groups = groupBy(rows, x => {
+        return {
+            User: x.User,
+            Instrument_ID: x.Instrument_ID,
+            Time: x.Time.getTime()
+        };
+    }, (a, b) => {
+        return a.User == b.User && a.Instrument_ID == b.Instrument_ID && a.Time == b.Time;
+        });
+
+    for (var i = 0; i < groups.length; ++i) {
+
+        var snapshots = groups[i].values.sort((a, b) => {
+            if (a.Decision == null && b.Decision == null) {
+                return b.Time - a.Time;
+            }
+            else if (a.Decision != null && b.decision != null) {
+                return b.Time - a.Time;
+            }
+            else if (a.Decision != null) {
+                return -1;
+            }
+            else {
+                return 1;
+            }
+        });
+
+        for (var i = 1; i < snapshots.length; ++i) {
+            console.log("deleting duplicate snapshot " + snapshots[i].ID + " for instrument " + snapshots[i].Instrument_ID);
+            await model.snapshot.destroy({
+                where: {
+                    ID: snapshots[i].ID
+                }
+            })
+        }
+
+    }
+}
+
+async function cleanupMissingRates() {
+    var rows = await sql.query(missing_rates_sql, {
+        "@minRates": newSnapshotController.minDays
+    });
+
+    for (var i = 1; i < rows.length; ++i) {
+        console.log("deleting snapshot " + rows[i].ID + " for instrument " + rows[i].Instrument_ID + " because of missing rates in time span");
+        await model.snapshot.destroy({
+            where: {
+                ID: rows[i].ID
+            }
+        })
+    }
+}
+
+async function cleanupLateBegin() {
+    var rows = await sql.query(late_rates_sql, {
+        "@minDays": (config.chart_period_seconds - config.discard_threshold_seconds) / 60 / 60 / 24
+    });
+
+    for (var i = 1; i < rows.length; ++i) {
+        console.log("deleting snapshot " + rows[i].ID + " for instrument " + rows[i].Instrument_ID + " because first rate is late");
+        await model.snapshot.destroy({
+            where: {
+                ID: rows[i].ID
+            }
+        })
+    }
+}
+
 exports.run = async function () {
     try {
 
-        var rows = await sql.query(duplicates_sql, {});
-
-        var groups = groupBy(rows, x => {
-            return {
-                User: x.User,
-                Instrument_ID: x.Instrument_ID,
-                Time: x.Time.getTime()
-            };
-        }, (a, b) => {
-            return a.User == b.User && a.Instrument_ID == b.Instrument_ID && a.Time == b.Time;
-            });
-
-        for (var i = 0; i < groups.length; ++i) {
-
-            var snapshots = groups[i].values.sort((a, b) => {
-                if (a.Decision == null && b.Decision == null) {
-                    return b.Time - a.Time;
-                }
-                else if (a.Decision != null && b.decision != null) {
-                    return b.Time - a.Time;
-                }
-                else if (a.Decision != null) {
-                    return -1;
-                }
-                else {
-                    return 1;
-                }
-            });
-
-            for (var i = 1; i < snapshots.length; ++i) {
-                console.log("deleting duplicate snapshot " + snapshots[i].ID + " for instrument " + snapshots[i].Instrument_ID);
-                await model.snapshot.destroy({
-                    where: {
-                        ID: snapshots[i].ID
-                    }
-                })
-            }
-
-        }
+        await cleanupDuplicates();
+        await cleanupMissingRates();
+        await cleanupLateBegin();
 
     }
     catch (error) {

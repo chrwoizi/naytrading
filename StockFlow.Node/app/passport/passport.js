@@ -1,5 +1,7 @@
 //load bcrypt
 var bCrypt = require('bcrypt-nodejs');
+var config = require('../config/envconfig');
+var model = require('../models/index');
 
 
 module.exports = function (passport, user) {
@@ -44,49 +46,64 @@ module.exports = function (passport, user) {
 
                 } else {
 
-                    if (password != req.body.confirmPassword) {
+                    model.whitelist.findOne({
+                        where: {
+                            email: email
+                        }
+                    }).then(function (whitelist) {
 
-                        return done(null, false, {
-                            hasError: true,
-                            message: 'Password not confirmed correctly'
-                        });
+                        if (config.whitelist && email != config.admin_user && whitelist == null) {
+                            return done(null, false, {
+                                hasError: true,
+                                message: 'That email is not on the whitelist'
+                            });
+                        }
 
-                    }
+                        if (password != req.body.confirmPassword) {
 
-                    if (!isValidPasswordFormat(password)) {
-
-                        return done(null, false, {
-                            hasError: true,
-                            message: 'Password must be between 8 and 200 characters'
-                        });
-
-                    }
-
-                    var userPassword = generateHash(password);
-
-                    var data =
-                        {
-                            email: email,
-
-                            password: userPassword
-
-                        };
-
-                    User.create(data).then(function (newUser, created) {
-
-                        if (!newUser) {
-
-                            return done(null, false);
+                            return done(null, false, {
+                                hasError: true,
+                                message: 'Password not confirmed correctly'
+                            });
 
                         }
 
-                        if (newUser) {
+                        if (!isValidPasswordFormat(password)) {
 
-                            return done(null, newUser);
+                            return done(null, false, {
+                                hasError: true,
+                                message: 'Password must be between 8 and 200 characters'
+                            });
 
                         }
 
-                    });
+                        var userPassword = generateHash(password);
+
+                        var data =
+                            {
+                                email: email,
+
+                                password: userPassword
+
+                            };
+
+                        User.create(data).then(function (newUser, created) {
+
+                            if (!newUser) {
+
+                                return done(null, false);
+
+                            }
+
+                            if (newUser) {
+
+                                return done(null, newUser);
+
+                            }
+
+                        });
+
+                    })
 
                 }
 
@@ -95,7 +112,7 @@ module.exports = function (passport, user) {
         }
 
     ));
-    
+
     passport.use('local-signin', new LocalStrategy(
         {
             // by default, local strategy uses username and password, we will override with email
@@ -137,7 +154,7 @@ module.exports = function (passport, user) {
                     });
 
                 }
-                
+
                 var userinfo = user.get();
                 return done(null, userinfo);
 

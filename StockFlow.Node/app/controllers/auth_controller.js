@@ -1,5 +1,8 @@
 var exports = module.exports = {}
 
+var config = require('../config/envconfig');
+var model = require('../models/index');
+
 function getDefaultArgs(req) {
     return {
         isAuthenticated: req.isAuthenticated(),
@@ -46,4 +49,72 @@ exports.logout = function (req, res) {
 
     });
 
+}
+
+exports.whitelist = async function (req, res) {
+    try {
+        if (req.isAuthenticated() && req.user.email == config.admin_user) {
+
+            var whitelists = await model.whitelist.findAll();
+
+            var args = getDefaultArgs(req);
+            args.whitelists = whitelists;
+            res.render('whitelist', args);
+
+        }
+        else {
+            res.status(401);
+			res.json({ error: "unauthorized" });
+        }
+    }
+    catch (error) {
+        res.status(500);
+        res.json({ error: error.message });
+    }
+}
+
+exports.addWhitelist = async function (req, res) {
+    try {
+        if (req.isAuthenticated() && req.user.email == config.admin_user) {
+
+            await model.whitelist.create({
+                email: req.body.email
+            });
+
+            res.redirect('/whitelist');
+
+        }
+        else {
+            res.status(401);
+			res.json({ error: "unauthorized" });
+        }
+    }
+    catch (error) {
+        res.status(500);
+        res.json({ error: error.message });
+    }
+}
+
+exports.removeWhitelist = async function (req, res) {
+    try {
+        if (req.isAuthenticated() && req.user.email == config.admin_user) {
+
+            await model.whitelist.destroy({
+                where: {
+                    email: req.body.email
+                }
+            });
+            
+            res.redirect('/whitelist');
+
+        }
+        else {
+            res.status(401);
+			res.json({ error: "unauthorized" });
+        }
+    }
+    catch (error) {
+        res.status(500);
+        res.json({ error: error.message });
+    }
 }

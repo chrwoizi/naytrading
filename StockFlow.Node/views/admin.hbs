@@ -3,11 +3,9 @@
     <p class="text-success">{{statusMessage}}</p>
     <hr />
     <dl class="dl-horizontal">
-        <dt>Cache:</dt>
+        <dt>Whitelist:</dt>
         <dd>
-            <form action="/api/clear/instruments/{{import_secret}}" method="post" enctype="multipart/form-data">
-                <button type="submit" class="btn btn-secondary">Refresh Default Instruments</button>
-            </form>
+            <a href="/whitelist" class="btn btn-secondary" role="button">Manage Whitelist</a>
         </dd>
         <dt>Export:</dt>
         <dd>
@@ -27,7 +25,7 @@
                         Delete all existing instruments
                     </label>
                 </div>
-                <button type="submit" class="btn btn-secondary">Import All Instruments</button>
+                <button type="submit" class="btn btn-danger">Import All Instruments</button>
             </form>
         </dd>
         <dt>Import All Snapshots:</dt>
@@ -42,7 +40,13 @@
                         Delete all existing snapshots
                     </label>
                 </div>
-                <button type="submit" class="btn btn-secondary">Import All Snapshots</button>
+                <button type="submit" class="btn btn-danger">Import All Snapshots</button>
+            </form>
+        </dd>
+        <dt>Cache:</dt>
+        <dd>
+            <form action="/api/clear/instruments/{{import_secret}}" method="post" enctype="multipart/form-data">
+                <button type="submit" class="btn btn-danger">Refresh Default Instruments</button>
             </form>
         </dd>
     </dl>

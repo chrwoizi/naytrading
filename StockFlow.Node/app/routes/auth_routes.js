@@ -75,6 +75,10 @@ module.exports = function (app, passport) {
             }
         })(req, res, next);
     });
+    
+    app.get('/whitelist', authController.whitelist);
+    app.post('/whitelist/add', authController.addWhitelist);
+    app.post('/whitelist/remove', authController.removeWhitelist);
 
     function isLoggedIn(req, res, next) {
 

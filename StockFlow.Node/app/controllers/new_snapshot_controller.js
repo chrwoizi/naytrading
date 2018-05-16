@@ -19,10 +19,10 @@ var lockFlag = 0;
 
 
 function isEmpty(str) {
-    return typeof(str) === 'undefined' || str == null || !str.length;
+    return typeof (str) === 'undefined' || str == null || !str.length;
 }
 
-exports.getNewSnapshotInstruments = async function(endTime, userName) {
+exports.getNewSnapshotInstruments = async function (endTime, userName) {
 
     var upToDateFrom = new Date(endTime.getTime() - config.snapshot_valid_seconds * 1000);
 
@@ -71,7 +71,9 @@ function getRandomIndex(count, randomRange) {
     return index;
 }
 
-exports.isAutoIgnore = async function(newSnapshot) {
+exports.minDays = 5 * (config.chart_period_seconds / 60 / 60 / 24 / 7) - config.discard_threshold_missing_workdays;
+
+exports.isAutoIgnore = async function (newSnapshot) {
     if (newSnapshot.PreviousDecision == "buy") {
         if (newSnapshot.Rates && newSnapshot.Rates.length > 0 && newSnapshot.PreviousBuyRate != null) {
             var lastRate = newSnapshot.Rates[newSnapshot.Rates.length - 1];
@@ -84,7 +86,7 @@ exports.isAutoIgnore = async function(newSnapshot) {
     }
     else {
         var endTime = new Date();
-        endTime.setHours(0,0,0,0);
+        endTime.setHours(0, 0, 0, 0);
         var startTime = new Date(endTime.getTime() - config.chart_period_seconds * 1000);
 
         var timeDiff = endTime - startTime;
@@ -106,9 +108,9 @@ exports.isAutoIgnore = async function(newSnapshot) {
     }
 }
 
-exports.createNewSnapshotFromRandomInstrument = async function(instrumentIds) {
+exports.createNewSnapshotFromRandomInstrument = async function (instrumentIds) {
     var endTime = new Date();
-    endTime.setHours(0,0,0,0);
+    endTime.setHours(0, 0, 0, 0);
     var startTime = new Date(endTime.getTime() - config.chart_period_seconds * 1000);
 
     // try to load rates of a random instrument. 
@@ -124,7 +126,7 @@ exports.createNewSnapshotFromRandomInstrument = async function(instrumentIds) {
             var rates = ratesResponse.rates;
             var isin = ratesResponse.isin;
             var wkn = ratesResponse.wkn;
-                    
+
             var updated = false;
             var fields = {};
             if (isEmpty(instrument.Isin) && !isEmpty(isin)) {
@@ -139,11 +141,26 @@ exports.createNewSnapshotFromRandomInstrument = async function(instrumentIds) {
                 await instrument.updateAttributes(fields);
                 instrument = await model.instrument.findOne({ where: { ID: instrumentIds[index].ID } });
             }
-            
+
             var minRateTime = new Date(startTime.getTime() + 1000 * config.discard_threshold_seconds);
             var maxRateTime = new Date(endTime.getTime() - 1000 * config.discard_threshold_seconds);
 
-            if (rates != null && rates.length > 0 && rates[0].Time <= minRateTime && rates[rates.length - 1].Time >= maxRateTime) {
+            var strikes = instrument.Strikes;
+            var reason = null;
+            if (rates == null || rates.length == 0) {
+                strikes = instrument.Strikes + 5;
+                reason = "there are no rates";
+            }
+            else if (rates[0].Time > minRateTime || rates[rates.length - 1].Time < maxRateTime) {
+                strikes = config.max_strikes + 6;
+                reason = "the rates are not available for the full time span";
+            }
+            else if (rates.length < exports.minDays) {
+                strikes = config.max_strikes + 6;
+                reason = "too many rates are missing within time span";
+            }
+
+            if (reason == null) {
                 var similar = await model.snapshot.findAll({
                     include: [{
                         model: model.instrument
@@ -157,8 +174,8 @@ exports.createNewSnapshotFromRandomInstrument = async function(instrumentIds) {
                         Time: endTime
                     },
                     order: [
-                        ['Time'], 
-                        ['ID'], 
+                        ['Time'],
+                        ['ID'],
                         [model.snapshotrate, "Time", "ASC"]
                     ],
                     limit: 1
@@ -194,26 +211,15 @@ exports.createNewSnapshotFromRandomInstrument = async function(instrumentIds) {
                 return snapshot;
             }
             else {
-                if (rates && rates.length > 0) {
-                    var strikes = config.max_strikes + 6;
-                    console.log("Setting " + strikes + " strikes on instrument " + instrument.InstrumentName + " because it has insufficient rates. Available rates are from " + dateFormat(rates[0].Time, 'dd.mm.yy') + " to " + dateFormat(rates[rates.length - 1].Time, 'dd.mm.yy'));
-                    await instrument.updateAttributes({
-                        Strikes: strikes,
-                        LastStrikeTime: new Date()
-                    });
-                }
-                else {
-                    console.log("Adding 5 strikes to instrument " + instrument.InstrumentName + " because the server returned no rates");
-                    await instrument.updateAttributes({
-                        Strikes: instrument.Strikes + 5,
-                        LastStrikeTime: new Date()
-                    });
-                }
-
+                console.log("Changing strikes on instrument " + instrument.InstrumentName + " from " + instrument.Strikes + " to " + strikes + " because " + reason);
+                await instrument.updateAttributes({
+                    Strikes: strikes,
+                    LastStrikeTime: new Date()
+                });
             }
         }
         catch (error) {
-            if(error ==***REMOVED***market_not_found) {
+            if (error ==***REMOVED***market_not_found) {
                 var strikes = config.max_strikes + 12;
                 console.log("Setting " + strikes + " strikes on instrument " + instrument.InstrumentName + " because the market id does not exist");
                 await instrument.updateAttributes({
@@ -221,7 +227,7 @@ exports.createNewSnapshotFromRandomInstrument = async function(instrumentIds) {
                     LastStrikeTime: new Date()
                 });
             }
-            else if(error ==***REMOVED***invalid_response) {
+            else if (error ==***REMOVED***invalid_response) {
                 console.log("Adding 5 strikes to instrument " + instrument.InstrumentName + " because the server returned an unexpected response");
                 await instrument.updateAttributes({
                     Strikes: instrument.Strikes + 5,
@@ -251,7 +257,7 @@ exports.createNewRandomSnapshot = async function (req, res) {
         if (req.isAuthenticated()) {
 
             var endTime = new Date();
-            endTime.setHours(0,0,0,0);
+            endTime.setHours(0, 0, 0, 0);
 
             var forgotten = await model.snapshot.findAll({
                 limit: 1,
@@ -265,7 +271,7 @@ exports.createNewRandomSnapshot = async function (req, res) {
                     Decision: null
                 },
                 order: [
-                    ['Time', 'ASC'], 
+                    ['Time', 'ASC'],
                     ['ID', 'ASC'],
                     [model.snapshotrate, "Time", "ASC"]
                 ]
@@ -320,7 +326,7 @@ exports.createNewRandomSnapshot = async function (req, res) {
         }
         else {
             res.status(401);
-			res.json({ error: "unauthorized" });
+            res.json({ error: "unauthorized" });
         }
     }
     catch (error) {
@@ -349,7 +355,7 @@ exports.createNewSnapshotByInstrumentId = async function (req, res) {
         }
         else {
             res.status(401);
-			res.json({ error: "unauthorized" });
+            res.json({ error: "unauthorized" });
         }
     }
     catch (error) {

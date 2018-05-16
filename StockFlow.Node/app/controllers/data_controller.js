@@ -170,7 +170,7 @@ function getErrors(stats) {
         }
 
         if (stats.completeCount != stats.portfolio.CompleteCount) {
-            if (erros.length > 0) {
+            if (errors.length > 0) {
                 errors += " ";
             }
             errors += "Complete trade count mismatch: expected " + stats.portfolio.CompleteCount + ", actual " + stats.completeCount + ".";
