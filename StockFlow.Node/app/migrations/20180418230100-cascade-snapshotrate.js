@@ -23,8 +23,8 @@ module.exports = {
                 }
             });
     },
-    down: (queryInterface, Sequelize) => {
-        return queryInterface.sequelize.query("SELECT CONSTRAINT_NAME FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS WHERE TABLE_NAME = 'snapshotrates' AND CONSTRAINT_TYPE='FOREIGN KEY'")
+    down: (queryInterface, Sequelize, onDone) => {
+        return queryInterface.sequelize.query("SELECT CONSTRAINT_NAME AS name FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS WHERE TABLE_NAME = 'snapshotrates' AND CONSTRAINT_TYPE='FOREIGN KEY'")
             .then(names => {
 
                 var name = "snapshotrates_ibfk_1";

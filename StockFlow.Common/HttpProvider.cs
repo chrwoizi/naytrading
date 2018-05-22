@@ -29,15 +29,10 @@ namespace StockFlow.Common
                 {
                     httpClient.Timeout = TimeSpan.FromMinutes(2);
 
-                    var pageWithToken = await httpClient.GetAsync(httpClient.BaseAddress);
-                    var verificationToken = GetVerificationToken(await pageWithToken.Content.ReadAsStringAsync());
-
                     var contentToSend = new FormUrlEncodedContent(new[]
                         {
-                        new KeyValuePair<string, string>("__RequestVerificationToken", verificationToken),
-                        new KeyValuePair<string, string>("Email", user),
-                        new KeyValuePair<string, string>("Password", password),
-                        new KeyValuePair<string, string>("RememberMe", "true"),
+                        new KeyValuePair<string, string>("email", user),
+                        new KeyValuePair<string, string>("password", password),
                     });
 
                     var response = await httpClient.PostAsync(httpClient.BaseAddress, contentToSend);
@@ -55,6 +50,22 @@ namespace StockFlow.Common
                     httpClient.Timeout = TimeSpan.FromMinutes(2);
 
                     return await httpClient.GetStringAsync(httpClient.BaseAddress);
+                }
+            }
+        }
+
+        public async Task<string> Post(string url)
+        {
+            using (HttpClientHandler handler = CreateHandler())
+            {
+                using (HttpClient httpClient = new HttpClient(handler) { BaseAddress = new Uri(url) })
+                {
+                    httpClient.Timeout = TimeSpan.FromMinutes(2);
+                    
+                    var contentToSend = new ByteArrayContent(new byte[0]);
+
+                    var response = await httpClient.PostAsync(httpClient.BaseAddress, contentToSend);
+                    return await response.Content.ReadAsStringAsync();
                 }
             }
         }
@@ -84,18 +95,6 @@ namespace StockFlow.Common
                 handler.Dispose();
                 throw;
             }
-        }
-
-        private static string GetVerificationToken(string verificationToken)
-        {
-            if (verificationToken != null && verificationToken.Length > 0)
-            {
-                verificationToken = verificationToken.Substring(verificationToken.IndexOf("__RequestVerificationToken"));
-                verificationToken = verificationToken.Substring(verificationToken.IndexOf("value=\"") + 7);
-                verificationToken = verificationToken.Substring(0, verificationToken.IndexOf("\""));
-            }
-
-            return verificationToken;
         }
 
         private HttpClientHandler CreateHandler()

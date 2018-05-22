@@ -41,7 +41,8 @@ exports.getNewSnapshotInstruments = async function (endTime, userName) {
         "@strikesOrderWeight": config.strikes_order_weight,
         "@boughtOrderWeight": config.bought_order_weight,
         "@capitalizationOrderWeight": config.capitalization_order_weight,
-        "@snapshotCountOrderWeight": config.snapshot_count_order_weight
+        "@snapshotCountOrderWeight": config.snapshot_count_order_weight,
+        "@staticWeight": config.static_weight
     };
 
     var rows = await sql.query(rank_instruments, args);

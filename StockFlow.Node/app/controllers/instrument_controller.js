@@ -36,7 +36,7 @@ exports.addDefault = async function (req, res) {
         }
         else {
             res.status(401);
-			res.json({ error: "unauthorized" });
+            res.json({ error: "unauthorized" });
         }
     }
     catch (error) {
@@ -71,11 +71,11 @@ exports.addUrl = async function (req, res) {
                 res.status(200);
                 res.json({ added: 0 });
             }
-            
+
         }
         else {
             res.status(401);
-			res.json({ error: "unauthorized" });
+            res.json({ error: "unauthorized" });
         }
     }
     catch (error) {
@@ -95,12 +95,13 @@ exports.instruments = async function (req, res) {
                 order: [['Capitalization', 'DESC']]
             });
 
+            res.status(200);
             res.json(instruments.map(getInstrumentViewModel));
 
         }
         else {
             res.status(401);
-			res.json({ error: "unauthorized" });
+            res.json({ error: "unauthorized" });
         }
     }
     catch (error) {
@@ -113,7 +114,7 @@ exports.instrument = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
 
-            await model.instrument.find({
+            var instrument = await model.instrument.find({
                 where: {
                     ID: req.params.id,
                     User: req.user.email
@@ -121,7 +122,8 @@ exports.instrument = async function (req, res) {
             });
 
             if (instrument) {
-                res.json(instrument.map(getInstrumentViewModel));
+                res.status(200);
+                res.json(getInstrumentViewModel(instrument));
             }
             else {
                 res.status(404);
@@ -130,7 +132,7 @@ exports.instrument = async function (req, res) {
         }
         else {
             res.status(401);
-			res.json({ error: "unauthorized" });
+            res.json({ error: "unauthorized" });
         }
     }
     catch (error) {
@@ -145,7 +147,7 @@ exports.clearDefaultInstruments = async function (req, res) {
         if (req.params.importSecret == config.import_secret) {
 
             var result = await sql.query('DELETE instrument FROM instruments AS instrument WHERE instrument.User IS NULL');
-            
+
             res.status(200);
             res.json({ deleted: result.affectedRows });
 
@@ -155,6 +157,130 @@ exports.clearDefaultInstruments = async function (req, res) {
             res.json({ error: "unauthorized" });
         }
 
+    }
+    catch (error) {
+        res.status(500);
+        res.json({ error: error.message });
+    }
+}
+
+exports.getWeight = async function (req, res) {
+    try {
+        if (req.isAuthenticated()) {
+
+            var instrument = await model.instrument.find({
+                where: {
+                    User: req.user.email,
+                    [sequelize.Op.or]: [
+                        { Isin: req.params.instrumentId },
+                        { Wkn: req.params.instrumentId }
+                    ]
+                }
+            })
+
+            if (instrument) {
+
+                var weight = await model.weight.find({
+                    where: {
+                        User: req.user.email,
+                        Instrument_ID: instrument.ID,
+                        Type: req.params.type
+                    }
+                });
+
+                res.status(200);
+                if (weight) {
+                    res.json(weight.Weight);
+                }
+                else {
+                    res.json(null);
+                }
+            }
+            else {
+                res.status(404);
+                res.json({ error: "instrument not found" });
+            }
+        }
+        else {
+            res.status(401);
+            res.json({ error: "unauthorized" });
+        }
+    }
+    catch (error) {
+        res.status(500);
+        res.json({ error: error.message });
+    }
+}
+
+
+exports.setWeight = async function (req, res) {
+    try {
+        if (req.isAuthenticated()) {
+
+            var instrument = await model.instrument.find({
+                where: {
+                    User: req.user.email,
+                    [sequelize.Op.or]: [
+                        { Isin: req.params.instrumentId },
+                        { Wkn: req.params.instrumentId }
+                    ]
+                }
+            })
+
+            if (instrument) {
+
+                var weight = await model.weight.find({
+                    where: {
+                        User: req.user.email,
+                        Instrument_ID: instrument.ID,
+                        Type: req.params.type
+                    }
+                });
+
+                var value = parseFloat(req.params.weight);
+
+                if (weight) {
+
+                    if (weight.Weight != value) {
+
+                        await model.weight.update(
+                            {
+                                Weight: value
+                            },
+                            {
+                                where: {
+                                    User: req.user.email,
+                                    Instrument_ID: instrument.ID,
+                                    Type: req.params.type
+                                }
+                            }
+                        );
+                    }
+                }
+                else {
+
+                    await model.weight.create(
+                        {
+                            User: req.user.email,
+                            Instrument_ID: instrument.ID,
+                            Type: req.params.type,
+                            Weight: value
+                        }
+                    );
+                }
+
+                res.status(200);
+                res.json({});
+            }
+            else {
+                res.status(404);
+                res.json({ error: "instrument not found" });
+            }
+        }
+        else {
+            res.status(401);
+            res.json({ error: "unauthorized" });
+        }
     }
     catch (error) {
         res.status(500);

@@ -41,7 +41,14 @@ module.exports = (sequelize, DataTypes) => {
 
     },
     {
-        indexes: [{ fields: ['User'] }, { fields: ['Time'] }]
+        indexes: [
+            { fields: ['User'] }, 
+            { fields: ['Time'] },
+            { fields: ['User', 'Snapshot_ID'] },
+            { fields: ['User', 'Time'] },
+            { fields: ['User', 'Time', 'Snapshot_ID'] },
+            { fields: ['Time', 'Snapshot_ID'] }
+        ]
     });
     trade.associate = function (models) {
         trade.belongsTo(models.snapshot, { foreignKey: 'Snapshot_ID', allowNull: false });

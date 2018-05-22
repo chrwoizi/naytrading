@@ -938,7 +938,7 @@ namespace StockFlow
             };
 
             var response = await httpProvider.Login(
-                Settings.Default.StockFlowAddress + "/Account/Login", 
+                Settings.Default.StockFlowAddress + "/signin", 
                 Settings.Default.StockFlowUser, 
                 Settings.Default.StockFlowPassword);
 
@@ -947,7 +947,7 @@ namespace StockFlow
             var couunt = int.Parse(countJson);
 
             var stream = await httpProvider.GetStream(
-                string.Format(Settings.Default.StockFlowAddress + "/api/export/user/snapshots/all"));
+                string.Format(Settings.Default.StockFlowAddress + "/api/export/user/snapshots/19700101"));
             return new Tuple<int, Stream>(couunt, stream);
         }
 

@@ -111,7 +111,7 @@
     <Compile Include="Broker\FlatexTanProvider.cs" />
     <Compile Include="Models\TradeSuggestion.cs" />
     <Compile Include="Models\TradeLog.cs" />
-    <Compile Include="TradeSuggestionProvider.cs" />
+    <Compile Include="StockFlowClient.cs" />
     <Compile Include="TradingAction.cs" />
   </ItemGroup>
   <ItemGroup>

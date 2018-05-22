@@ -106,14 +106,14 @@ namespace StockFlow.Trader
         {
             try
             {
-                string stockflowUser = ConfigurationManager.AppSettings["TradeDecisionsUser"];
+                string stockflowUser = ConfigurationManager.AppSettings["StockFlowUser"];
                 if (string.IsNullOrEmpty(stockflowUser))
                 {
                     Console.Write("Stockflow User: ");
                     stockflowUser = Console.ReadLine();
                 }
 
-                string stockflowPassword = ConfigurationManager.AppSettings["TradeDecisionsPassword"];
+                string stockflowPassword = ConfigurationManager.AppSettings["StockFlowPassword"];
                 if (string.IsNullOrEmpty(stockflowPassword))
                 {
                     Console.Write("Stockflow Password: ");
@@ -143,12 +143,14 @@ namespace StockFlow.Trader
                     // check password
                     new FlatexTanProvider(tanFilePassword).GetTan("A1", "A1", "A1");
                 }
-
+                
                 while (true)
                 {
                     var globalLogger = new ConsoleLogger();
+                    var stockFlowClient = new StockFlowClient();
 
-                    TradeSuggestionProvider.Refresh(stockflowUser, stockflowPassword).Wait();
+                    stockFlowClient.Login(stockflowUser, stockflowPassword).Wait();
+                    stockFlowClient.Refresh().Wait();
 
                     bool isStockExchangeOpen = IsStockExchangeOpen();
                     if (isStockExchangeOpen)
@@ -179,7 +181,7 @@ namespace StockFlow.Trader
                                     var availableFunds = controller.GetAvailableFunds();
                                     foreach (var suggestion in suggestions)
                                     {
-                                        ProcessSuggestion(suggestion, ref availableFunds, minBuyOrderPrice, maxBuyOrderPrice, orderFee, db, controller, globalLogger);
+                                        ProcessSuggestion(suggestion, ref availableFunds, minBuyOrderPrice, maxBuyOrderPrice, orderFee, db, controller, stockFlowClient, globalLogger);
                                     }
                                 }
                             }
@@ -216,7 +218,7 @@ namespace StockFlow.Trader
             return DateTime.Now > openingTime && DateTime.Now < closingTime;
         }
 
-        private static void ProcessSuggestion(TradeSuggestion suggestion, ref decimal availableFunds, decimal minBuyOrderPrice, decimal maxBuyOrderPrice, decimal orderFee, TradeDBContext db, OrderController controller, ILogger globalLogger)
+        private static void ProcessSuggestion(TradeSuggestion suggestion, ref decimal availableFunds, decimal minBuyOrderPrice, decimal maxBuyOrderPrice, decimal orderFee, TradeDBContext db, OrderController controller, StockFlowClient stockFlowClient, ILogger globalLogger)
         {
             globalLogger.WriteLine(string.Format("Processing snapshot {0}: {1} {2} at {3} EUR", suggestion.SnapshotId, suggestion.Action, suggestion.InstrumentName, suggestion.Price));
 
@@ -282,12 +284,14 @@ namespace StockFlow.Trader
                     {
                         availableFunds -= quantity * suggestion.Price;
                         availableFunds -= orderFee;
+                        stockFlowClient.SetInstrumentWeight(suggestion.Isin ?? suggestion.Wkn, "Trader-bought", decimal.Parse(ConfigurationManager.AppSettings["BoughtInstrumentWeight"])).Wait();
                     }
                     else if (action == TradingAction.Sell)
                     {
                         availableFunds += quantity * suggestion.Price;
                         availableFunds -= 0.25m * quantity * suggestion.Price;
                         availableFunds -= orderFee;
+                        stockFlowClient.SetInstrumentWeight(suggestion.Isin ?? suggestion.Wkn, "Trader-bought", 0).Wait();
                     }
                 }
                 catch (CancelOrderException)

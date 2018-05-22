@@ -59,7 +59,14 @@ module.exports = (sequelize, DataTypes) => {
         indexes: [
             { fields: ['User'] },
             { fields: ['Time'] },
-            { fields: ['Decision'] }
+            { fields: ['Decision'] },
+            { fields: ['User', 'Time'] },
+            { fields: ['User', 'Instrument_ID'] },
+            { fields: ['User', 'Instrument_ID', 'Decision'] },
+            { fields: ['User', 'Time', 'Instrument_ID'] },
+            { fields: ['User', 'Decision'] },
+            { fields: ['Time', 'Decision'] },
+            { fields: ['User', 'Time', 'Decision', 'Instrument_ID'] }
         ]
     });
     snapshot.associate = function (models) {

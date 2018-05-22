@@ -74,12 +74,15 @@ module.exports = (sequelize, DataTypes) => {
         indexes: [
             { fields: ['User'] },
             { fields: ['Strikes'] },
-            { fields: ['Capitalization'] },
+            { fields: ['Capitalization'] },            
             { fields: ['InstrumentId'] },
             { fields: ['Source'] },
             { fields: ['Isin'] },
             { fields: ['Wkn'] },
-            { fields: ['LastStrikeTime'] }
+            { fields: ['LastStrikeTime'] },
+            { fields: ['User', 'Source', 'InstrumentId'] },
+            { fields: ['User', 'Strikes'] },
+            { fields: ['Strikes', 'LastStrikeTime'] }
         ]
     });
     instrument.associate = function (models) {

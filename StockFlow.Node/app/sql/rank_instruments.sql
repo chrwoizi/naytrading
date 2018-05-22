@@ -5,6 +5,7 @@ SELECT
 		+ @boughtOrderWeight * (CASE WHEN 'buy' = instrument.previousDecision THEN 1 ELSE 0 END)
 		+ @capitalizationOrderWeight * (CASE WHEN instrument.Capitalization IS NOT NULL THEN instrument.Capitalization / @maxCapitalization ELSE 0 END)
 		+ @snapshotCountOrderWeight * (CASE WHEN instrument.snapshotCount > 0 THEN 1 / instrument.snapshotCount ELSE 0 END)
+		+ @staticWeight * (CASE WHEN instrument.staticWeight IS NOT NULL THEN instrument.staticWeight ELSE 0 END)
 	) AS `Order`
 FROM
 (
@@ -24,7 +25,8 @@ FROM
 			ORDER BY snapshot.Time DESC
 			LIMIT 1
 		) AS previousDecision,
-		(SELECT COUNT(1) FROM snapshots AS snapshot WHERE instrument.ID = snapshot.Instrument_ID) AS snapshotCount
+		(SELECT COUNT(1) FROM snapshots AS snapshot WHERE instrument.ID = snapshot.Instrument_ID) AS snapshotCount,
+        (SELECT SUM(w.Weight) FROM weights AS w WHERE w.Instrument_ID = instrument.ID AND w.User = @userName) AS staticWeight
 	FROM
 		instruments AS instrument
 	WHERE

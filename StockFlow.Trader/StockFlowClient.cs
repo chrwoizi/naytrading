@@ -12,19 +12,49 @@ using System.Threading.Tasks;
 
 namespace StockFlow.Trader
 {
-    public class TradeSuggestionProvider
+    public class StockFlowClient
     {
-        public static async Task Refresh(string user, string password)
+        private HttpProvider httpProvider;
+
+        public StockFlowClient()
         {
-            var httpProvider = new HttpProvider();
+            httpProvider = new HttpProvider();
             httpProvider.ProxyAddress = ConfigurationManager.AppSettings.Get("ProxyAddress");
             httpProvider.ProxyUser = ConfigurationManager.AppSettings.Get("ProxyUser");
             httpProvider.ProxyPassword = ConfigurationManager.AppSettings.Get("ProxyPassword");
+        }
 
+        public async Task Login(string user, string password)
+        {
             Console.WriteLine("Signing in at stockflow...");
-            var response = await httpProvider.Login(ConfigurationManager.AppSettings["TradeDecisionsLoginAddress"], user, password);
+            var response = await httpProvider.Login(ConfigurationManager.AppSettings["StockFlowLoginAddress"], user, password);
             Console.WriteLine("Signed in");
+        }
 
+        public async Task SetInstrumentWeight(string isinOrWkn, string type, decimal weight)
+        {
+            try
+            {
+                Console.WriteLine("Setting weight " + type + " of instrument " + isinOrWkn + " to " + weight + " at stockflow...");
+                var url = string.Format(ConfigurationManager.AppSettings["StockFlowWeightAddress"], isinOrWkn, type, weight);
+                var response = await httpProvider.Post(url);
+                if (response == "{}")
+                {
+                    Console.WriteLine("Weight is set");
+                }
+                else
+                {
+                    throw new Exception(response);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error while setting instrument weight: " + ex.Message);
+            }
+        }
+
+        public async Task Refresh()
+        {
             DateTime date;
             using (var db = new TradeDBContext())
             {
@@ -37,7 +67,7 @@ namespace StockFlow.Trader
 
             Console.WriteLine("Loading trade suggestions after " + date.ToString("dd.MM.yyyy HH:mm:ss") + "...");
 
-            var url = ConfigurationManager.AppSettings["TradeDecisionsDataAddress"];
+            var url = ConfigurationManager.AppSettings["StockFlowTradesAddress"];
             var json = await httpProvider.Get(string.Format(url, date));
 
             var trades = JsonConvert.DeserializeObject<Trade[]>(json);
