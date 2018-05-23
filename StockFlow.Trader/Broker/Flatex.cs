@@ -20,13 +20,24 @@ namespace StockFlow.Trader
         {
             chrome.Navigate().GoToUrl("https://www.flatex.de/kunden-login/");
 
-            chrome.FindElementById("uname_app").SendKeys(user);
-            chrome.FindElementById("password_app").SendKeys(password);
+            var userElement = WaitForElementById(chrome, "uname_app", element => true);
+            var passwordElement = WaitForElementById(chrome, "password_app", element => true);
+            var sessionElement = WaitForElementById(chrome, "sessionpass", element => true);
+            var buttonElement = WaitForElementByXPath(chrome, "//*[@id='webfiliale_login']//div[@title='Anmelden']", element => true);
+            
+            userElement.SendKeys(user);
+            passwordElement.SendKeys(password);
 
-            if (chrome.FindElementById("sessionpass").Selected)
-                chrome.FindElementById("sessionpass").Click();
+            var closeModalElement = chrome.FindElementById("closeModal");
+            if (closeModalElement != null && closeModalElement.Displayed)
+                closeModalElement.Click();
 
-            chrome.FindElementByXPath("//*[@id='webfiliale_login']//div[@title='Anmelden']").Click();
+            Thread.Sleep(1000);
+
+            if (sessionElement.Selected)
+                sessionElement.Click();
+
+            buttonElement.Click();
 
             var wait = new WebDriverWait(chrome, TimeSpan.FromSeconds(30));
             wait.Until(x => x.FindElement(By.XPath("//tr[td/text()='Gesamt Verfügbar']/td/table/tbody/tr/td/span[text()!='']")));
@@ -177,10 +188,10 @@ namespace StockFlow.Trader
             switch (action)
             {
                 case TradingAction.Buy:
-                    xpath = "//table[@id='paperSearchForm_paperInfoSubComponent_tradingPlaceTable']/tbody/tr/td/table[2]/tbody/tr[contains(td/div/text(),'flatex Preis')]/td[count(//*[@id='paperSearchForm_paperInfoSubComponent_tradingPlaceTable']/tbody/tr/td/table[2]/thead/tr[1]/td[div/a/text()='Brief']/preceding-sibling::*)+1]/span[text()!='']";
+                    xpath = "//table[@id='paperSearchForm_paperInfoSubComponent_tradingPlaceTable']/tbody/tr/td/table/tbody/tr[contains(td/div/text(),'flatex Preis')]/td[count(//*[@id='paperSearchForm_paperInfoSubComponent_tradingPlaceTable']/tbody/tr/td/table/thead/tr[1]/td[div/a/text()='Brief']/preceding-sibling::*)+1]/span[text()!='']";
                     break;
                 case TradingAction.Sell:
-                    xpath = "//table[@id='paperSearchForm_paperInfoSubComponent_tradingPlaceTable']/tbody/tr/td/table[2]/tbody/tr[contains(td/div/text(),'flatex Preis')]/td[count(//*[@id='paperSearchForm_paperInfoSubComponent_tradingPlaceTable']/tbody/tr/td/table[2]/thead/tr[1]/td[div/a/text()='Geld']/preceding-sibling::*)+1]/span[text()!='']";
+                    xpath = "//table[@id='paperSearchForm_paperInfoSubComponent_tradingPlaceTable']/tbody/tr/td/table/tbody/tr[contains(td/div/text(),'flatex Preis')]/td[count(//*[@id='paperSearchForm_paperInfoSubComponent_tradingPlaceTable']/tbody/tr/td/table/thead/tr[1]/td[div/a/text()='Geld']/preceding-sibling::*)+1]/span[text()!='']";
                     break;
                 default:
                     throw new Exception("Unknown trading action " + action);
@@ -222,10 +233,10 @@ namespace StockFlow.Trader
                 switch (action)
                 {
                     case TradingAction.Buy:
-                        xpath = "//table[@id='paperSearchForm_paperInfoSubComponent_tradingPlaceTable']/tbody/tr/td/table[2]/tbody/tr[contains(td/div/text(),'flatex Preis')]/td/table/tbody/tr/td/input[@value='K']";
+                        xpath = "//table[@id='paperSearchForm_paperInfoSubComponent_tradingPlaceTable']/tbody/tr/td/table/tbody/tr[contains(td/div/text(),'flatex Preis')]/td/table/tbody/tr/td/input[@value='K']";
                         break;
                     case TradingAction.Sell:
-                        xpath = "//table[@id='paperSearchForm_paperInfoSubComponent_tradingPlaceTable']/tbody/tr/td/table[2]/tbody/tr[contains(td/div/text(),'flatex Preis')]/td/table/tbody/tr/td/input[@value='V']";
+                        xpath = "//table[@id='paperSearchForm_paperInfoSubComponent_tradingPlaceTable']/tbody/tr/td/table/tbody/tr[contains(td/div/text(),'flatex Preis')]/td/table/tbody/tr/td/input[@value='V']";
                         break;
                     default:
                         throw new Exception("Unknown trading action " + action);
@@ -376,7 +387,7 @@ namespace StockFlow.Trader
                     return;
                 }
 
-                throw new Exception("Order was not confirmed as expected: " + message);
+                throw new CancelOrderException(Status.TemporaryError, "Order was not confirmed as expected: " + message);
             }
 
             var errorElement = WaitForElementByXPath(chrome, "//*[@id='serverErrors']/div/table/tbody/tr/td[2]/ul/li", element =>
@@ -392,7 +403,7 @@ namespace StockFlow.Trader
 
             if (errorElement != null)
             {
-                throw new Exception("Error message from broker: " + errorElement.GetAttribute("innerText"));
+                throw new CancelOrderException(Status.TemporaryError, "Error message from broker: " + errorElement.GetAttribute("innerText"));
             }
         }
 
