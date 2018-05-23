@@ -63,7 +63,7 @@ def login(session, stockflow_url, user, password, proxies):
 
 def new_snapshot(session, stockflow_url, proxies):
     random_url = stockflow_url + '/api/snapshot/new/random'
-    r = session.get(random_url, proxies = proxies)
+    r = session.get(random_url, proxies = proxies, timeout = 30)
     if r.status_code != 200:
         raise Exception('%s returned %d' %(random_url, r.status_code))
     data = r.json()
@@ -72,7 +72,7 @@ def new_snapshot(session, stockflow_url, proxies):
 
 def set_decision(session, stockflow_url, snapshot_id, decision, proxies):
     decision_url = stockflow_url + '/api/snapshot/%d/set/%s'
-    r = session.get(decision_url % (snapshot_id, decision), proxies = proxies)
+    r = session.get(decision_url % (snapshot_id, decision), proxies = proxies, timeout = 30)
     if r.status_code != 200:
         raise Exception('%s returned %d' %(decision_url, r.status_code))
 
