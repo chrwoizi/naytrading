@@ -1,18 +1,18 @@
 'use strict';
 module.exports = {
     up: (queryInterface, Sequelize) => {
-        return queryInterface.addIndex('snapshots', ['LastPriceTime'])
+        return queryInterface.addIndex('snapshots', ['FirstPriceTime'])
             .then(() => {
-                return queryInterface.addIndex('snapshots', ['PriceTime', 'LastPriceTime']);
+                return queryInterface.addIndex('snapshots', ['PriceTime', 'FirstPriceTime']);
             })
             .then(() => {
                 return queryInterface.addIndex('snapshots', ['PriceTime']);
             });
     },
     down: (queryInterface, Sequelize) => {
-        return queryInterface.removeIndex('snapshots', ['LastPriceTime'])
+        return queryInterface.removeIndex('snapshots', ['FirstPriceTime'])
         .then(() => {
-            return queryInterface.removeIndex('snapshots', ['PriceTime', 'LastPriceTime']);
+            return queryInterface.removeIndex('snapshots', ['PriceTime', 'FirstPriceTime']);
         })
         .then(() => {
             return queryInterface.removeIndex('snapshots', ['PriceTime']);
