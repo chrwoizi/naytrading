@@ -1,6 +1,8 @@
 ﻿using OpenQA.Selenium.Chrome;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -35,8 +37,17 @@ namespace StockFlow.Trader
             var service = ChromeDriverService.CreateDefaultService();
             service.SuppressInitialDiagnosticInformation = true;
             service.HideCommandPromptWindow = true;
+            
             ChromeOptions option = new ChromeOptions();
             option.AddArgument("--window-size=1920,1080");
+
+            var directory = ConfigurationManager.AppSettings["ChromeProfile"];
+            if (!string.IsNullOrEmpty(directory))
+            {
+                Directory.CreateDirectory(directory);
+                option.AddArguments("--user-data-dir=" + Path.GetFullPath(directory));
+            }
+
             if (headless)
             {
                 option.AddArgument("--headless");
