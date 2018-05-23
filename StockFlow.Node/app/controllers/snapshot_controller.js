@@ -242,9 +242,6 @@ exports.setDecision = async function (req, res) {
                 );
             }
 
-            res.status(200);
-            res.json({});
-
             if (deletePortfolio) {
                 var fromTime = new Date(snapshot.Time);
                     
@@ -278,6 +275,8 @@ exports.setDecision = async function (req, res) {
                     }
                 });    
             }
+            
+            res.json({});
         }
         else {
             res.status(401);

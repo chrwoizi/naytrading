@@ -19,17 +19,17 @@ os.environ["CUDA_VISIBLE_DEVICES"]="-1"
 import numpy as np
 import tensorflow as tf
 
-#from GoogLeNet import GoogLeNet
-from InceptionResNetV2 import InceptionResNetV2
+from GoogLeNet import GoogLeNet
+#from InceptionResNetV2 import InceptionResNetV2
 
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument('--checkpoint_dir', type=str, default='model', help='Base directory for the model checkpoint.')
+parser.add_argument('--checkpoint_dir', type=str, default='checkpoint', help='Base directory for the model checkpoint.')
 parser.add_argument('--proxy_url', type=str, default='', help='Proxy URL.')
 parser.add_argument('--proxy_user', type=str, default='', help='Proxy user.')
 parser.add_argument('--proxy_password', type=str, default='', help='Proxy password.')
-parser.add_argument('--stockflow_url', type=str, default='', help='StockFlow base url.')
+parser.add_argument('--stockflow_url', type=str, default='http://localhost:5000', help='StockFlow base url.')
 parser.add_argument('--stockflow_user', type=str, default='', help='StockFlow user.')
 parser.add_argument('--stockflow_password', type=str, default='', help='StockFlow password.')
 
@@ -182,8 +182,8 @@ def main(checkpoint_dir, proxy_url, proxy_user, proxy_password, stockflow_url, s
     iter = dataset.make_initializable_iterator()
 
     print('Model')
-    #model = GoogLeNet(1, iter, iter)
-    model = InceptionResNetV2(1, iter, iter)
+    model = GoogLeNet(1, iter, iter)
+    #model = InceptionResNetV2(1, iter, iter)
 
     print('Saver')
     saver = tf.train.Saver(tf.trainable_variables())
@@ -205,15 +205,14 @@ def main(checkpoint_dir, proxy_url, proxy_user, proxy_password, stockflow_url, s
         while True:
             try:
                 snapshot = new_snapshot(session, stockflow_url, proxies)
-
                 chart = get_chart(snapshot)
                 # plot(chart)
 
-                if snapshot['PreviousDecision'] != 'buy':
+                if 'PreviousDecision' not in snapshot or snapshot['PreviousDecision'] != 'buy':
                     sess.run([iter.initializer], feed_dict={ features: np.reshape(chart, [1,1024,1,1]) })
 
-                    feed_dict = { model.is_train: False, model.fc_dropout_keep: 1.0, model.residual_scale: 0.1 } #InceptionResNetV2
-                    #feed_dict = { model.is_train: False, model.fc_dropout_keep: 1.0, model.aux_fc_dropout_keep: 1, model.aux_exit_4a_weight: 0.3, model.aux_exit_4e_weight: 0.3, model.exit_weight: 1.0 } #GoogLeNet
+                    #feed_dict = { model.is_train: False, model.fc_dropout_keep: 1.0, model.residual_scale: 0.1 } #InceptionResNetV2
+                    feed_dict = { model.is_train: False, model.fc_dropout_keep: 1.0, model.aux_fc_dropout_keep: 1, model.aux_exit_4a_weight: 0, model.aux_exit_4e_weight: 0, model.exit_weight: 1.0 } #GoogLeNet
 
                     pred = sess.run([model.pred], feed_dict = feed_dict)
                     if pred[0] == 1:

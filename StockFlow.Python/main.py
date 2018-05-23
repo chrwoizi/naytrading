@@ -233,7 +233,7 @@ def main(model_dir, load_ckpt, epochs, start_epoch, batch_size, test_file, train
 
     ckpt_file = model_dir + '\\checkpoint\\'
     output_file = model_dir + '\\prediction.txt'
-    log_dir = model_dir + '\\logs\\'
+    log_dir = model_dir + '\\checkpoint\\logs\\'
 
     if not os.path.exists(ckpt_file):
         os.makedirs(ckpt_file)

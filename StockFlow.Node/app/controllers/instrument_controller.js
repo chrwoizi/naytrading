@@ -31,7 +31,6 @@ exports.addDefault = async function (req, res) {
                 "@userName": req.user.email
             });
 
-            res.status(200);
             res.json({ added: result.affectedRows });
         }
         else {
@@ -64,11 +63,9 @@ exports.addUrl = async function (req, res) {
                 instrument.Strikes = 0;
                 instrument.LastStrikeTime = new Date();
                 await model.instrument.create(instrument);
-                res.status(200);
                 res.json({ added: 1 });
             }
             else {
-                res.status(200);
                 res.json({ added: 0 });
             }
 
@@ -95,7 +92,6 @@ exports.instruments = async function (req, res) {
                 order: [['Capitalization', 'DESC']]
             });
 
-            res.status(200);
             res.json(instruments.map(getInstrumentViewModel));
 
         }
@@ -122,7 +118,6 @@ exports.instrument = async function (req, res) {
             });
 
             if (instrument) {
-                res.status(200);
                 res.json(getInstrumentViewModel(instrument));
             }
             else {
@@ -148,7 +143,6 @@ exports.clearDefaultInstruments = async function (req, res) {
 
             var result = await sql.query('DELETE instrument FROM instruments AS instrument WHERE instrument.User IS NULL');
 
-            res.status(200);
             res.json({ deleted: result.affectedRows });
 
         }
@@ -188,7 +182,6 @@ exports.getWeight = async function (req, res) {
                     }
                 });
 
-                res.status(200);
                 if (weight) {
                     res.json(weight.Weight);
                 }
@@ -269,7 +262,6 @@ exports.setWeight = async function (req, res) {
                     );
                 }
 
-                res.status(200);
                 res.json({});
             }
             else {
