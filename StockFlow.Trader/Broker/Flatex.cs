@@ -13,7 +13,6 @@ using System.Threading.Tasks;
 
 namespace StockFlow.Trader
 {
-
     public class Flatex : IBroker
     {
         public void Login(string user, string password, ChromeDriver chrome)
@@ -25,19 +24,19 @@ namespace StockFlow.Trader
             var sessionElement = WaitForElementById(chrome, "sessionpass", element => true);
             var buttonElement = WaitForElementByXPath(chrome, "//*[@id='webfiliale_login']//div[@title='Anmelden']", element => true);
             
-            userElement.SendKeys(user);
-            passwordElement.SendKeys(password);
+            SendKeys(chrome, userElement, user);
+            SendKeys(chrome, passwordElement, password);
 
             var closeModalElement = chrome.FindElementById("closeModal");
             if (closeModalElement != null && closeModalElement.Displayed)
-                closeModalElement.Click();
+                Click(chrome, closeModalElement);
 
             Thread.Sleep(1000);
 
             if (sessionElement.Selected)
-                sessionElement.Click();
+                Click(chrome, sessionElement);
 
-            buttonElement.Click();
+            Click(chrome, buttonElement);
 
             var wait = new WebDriverWait(chrome, TimeSpan.FromSeconds(30));
             wait.Until(x => x.FindElement(By.XPath("//tr[td/text()='Gesamt Verfügbar']/td/table/tbody/tr/td/span[text()!='']")));
@@ -61,9 +60,9 @@ namespace StockFlow.Trader
                 throw new Exception("Could not find refresh button");
             }
 
-            refreshButton.Click();
+            Click(chrome, refreshButton);
 
-            Thread.Sleep(5000);
+            Thread.Sleep(1000);
 
             var quantityElement = WaitForElementByXPath(chrome, xpath, element =>
             {
@@ -100,18 +99,8 @@ namespace StockFlow.Trader
             {
                 throw new Exception("Could not find main menu element");
             }
-
-            var overlays = chrome.FindElementsByXPath("//div[contains(@class,'ui-widget-overlay')]");
-            if(overlays != null && overlays.Count > 0)
-            {
-                var count = overlays.Count;
-                for (var i = 0; i < count; ++i)
-                {
-                    chrome.ExecuteScript("$x(\"//td[contains(@class,'Entry Active WithChildren First')]\")[" + i + "].style.display = \"none\";");
-                }
-            }
-
-            menu.Click();
+            
+            Click(chrome, menu);
 
             var submenu = WaitForElementByXPath(chrome, "//td[@id='menu_overviewMenu']/div/div[text()='Depotbestand']", x => true);
             if (submenu == null)
@@ -119,7 +108,7 @@ namespace StockFlow.Trader
                 throw new Exception("Could not find Depotbestand menu element");
             }
 
-            submenu.Click();
+            Click(chrome, submenu);
 
             var refreshXpath = "//a[@id='depositStatementForm_refreshButton']";
             var refreshButton = WaitForElementByXPath(chrome, refreshXpath, x => x.Displayed);
@@ -128,9 +117,9 @@ namespace StockFlow.Trader
                 throw new Exception("Could not find refresh button");
             }
 
-            refreshButton.Click();
+            Click(chrome, refreshButton);
 
-            Thread.Sleep(5000);
+            Thread.Sleep(1000);
 
             var sb = new StringBuilder();
             if (!string.IsNullOrEmpty(isin))
@@ -184,15 +173,15 @@ namespace StockFlow.Trader
             var menuButton = chrome.FindElementById("ToggleSearchButton");
             if (menuButton != null && menuButton.Displayed)
             {
-                menuButton.Click();
+                Click(chrome, menuButton);
 
                 var wait2 = new WebDriverWait(chrome, TimeSpan.FromSeconds(30));
                 wait2.Until(x => x.FindElement(By.Id("headerAreaForm_searchEditFieldWidget_editField")));
             }
 
-            chrome.FindElementById("headerAreaForm_searchEditFieldWidget_editField").SendKeys(isin);
+            SendKeys(chrome, chrome.FindElementById("headerAreaForm_searchEditFieldWidget_editField"), isin);
 
-            chrome.FindElementById("headerAreaForm_searchEditFieldWidget_searchButton").Click();
+            Click(chrome, chrome.FindElementById("headerAreaForm_searchEditFieldWidget_searchButton"));
 
             string xpath;
             switch (action)
@@ -255,7 +244,7 @@ namespace StockFlow.Trader
             else
             {
                 var row = chrome.FindElementByXPath("//div[@id='paperSearchForm_paperInfoSubComponent_tradingPlaceTableSmall']/div/div[div/div/div[contains(text(),'flatex Preis')]]");
-                row.Click();
+                Click(chrome, row);
 
                 switch (action)
                 {
@@ -274,13 +263,13 @@ namespace StockFlow.Trader
             wait.Until(x => x.FindElement(By.XPath(xpath)));
 
             var tradeButton = chrome.FindElementByXPath(xpath);
-            tradeButton.Click();
+            Click(chrome, tradeButton);
 
             var priceElement = WaitForElementById(chrome, "paperOrderSubmissionForm_quantity_amountEditField", element => true);
 
-            chrome.FindElementById("paperOrderSubmissionForm_quantity_amountEditField").SendKeys(quantity.ToString());
+            SendKeys(chrome, chrome.FindElementById("paperOrderSubmissionForm_quantity_amountEditField"), quantity.ToString());
 
-            chrome.FindElementById("paperOrderSubmissionForm_transactionFlowSubForm_nextButton").Click();
+            Click(chrome, chrome.FindElementById("paperOrderSubmissionForm_transactionFlowSubForm_nextButton"));
 
             var challengeXpath = "//*[@id='paperOrderSubmissionForm_transactionSecuritySubForm_tanLabel']/table/tbody/tr/td[contains(@class,'Challenge')]";
             var challengeElement = WaitForElementByXPath(chrome, challengeXpath, element =>
@@ -318,9 +307,9 @@ namespace StockFlow.Trader
             var wait = new WebDriverWait(chrome, TimeSpan.FromSeconds(30));
             wait.Until(x => x.FindElement(By.Id("paperOrderSubmissionForm_transactionSecuritySubForm_tan")));
 
-            chrome.FindElementById("paperOrderSubmissionForm_transactionSecuritySubForm_tan").SendKeys(tan);
+            SendKeys(chrome, chrome.FindElementById("paperOrderSubmissionForm_transactionSecuritySubForm_tan"), tan);
 
-            chrome.FindElementById("paperOrderSubmissionForm_quoteButton").Click();
+            Click(chrome, chrome.FindElementById("paperOrderSubmissionForm_quoteButton"));
 
             var priceXpath = "//div[@id='PaperOrder_Quote']/div/div[@class='Value']";
             var priceElement = WaitForElementByXPath(chrome, priceXpath, element =>
@@ -376,7 +365,7 @@ namespace StockFlow.Trader
                 throw new CancelOrderException(Status.TemporaryError, "Order button not visible");
             }
 
-            button.Click();
+            Click(chrome, button);
 
             var messageElement = WaitForElementByXPath(chrome, "//div[@id='TransactionDetailsComponent']/div/div[contains(@class,'Title')]", element =>
             {
@@ -422,19 +411,19 @@ namespace StockFlow.Trader
             var menuButton = chrome.FindElementById("OpenMobileMenuIcon");
             if (menuButton != null && menuButton.Displayed)
             {
-                menuButton.Click();
+                Click(chrome, menuButton);
 
                 var wait2 = new WebDriverWait(chrome, TimeSpan.FromSeconds(30));
                 wait2.Until(x => x.FindElement(By.XPath("//div[@data-widgetname='sessionControlComponentMobile.logoutLink']")));
 
-                chrome.FindElementByXPath("//div[@data-widgetname='sessionControlComponentMobile.logoutLink']").Click();
+                Click(chrome, chrome.FindElementByXPath("//div[@data-widgetname='sessionControlComponentMobile.logoutLink']"));
             }
             else
             {
                 var wait2 = new WebDriverWait(chrome, TimeSpan.FromSeconds(30));
                 wait2.Until(x => x.FindElement(By.XPath("//div[@data-widgetname='sessionControlComponent.logoutLink']")));
 
-                chrome.FindElementByXPath("//div[@data-widgetname='sessionControlComponent.logoutLink']").Click();
+                Click(chrome, chrome.FindElementByXPath("//div[@data-widgetname='sessionControlComponent.logoutLink']"));
             }
 
             WaitForElementByXPath(chrome, "//li[contains(text(),'abgemeldet')]", x => true);
@@ -470,7 +459,7 @@ namespace StockFlow.Trader
 
         private static IWebElement WaitForElementById(ChromeDriver chrome, string id, Func<IWebElement, bool> validate)
         {
-            for (int i = 0; i < 300; i++)
+            for (int i = 0; i < 200; i++)
             {
                 Thread.Sleep(100);
 
@@ -494,6 +483,36 @@ namespace StockFlow.Trader
             }
 
             return null;
+        }
+
+        private static void Click(ChromeDriver chrome, IWebElement element)
+        {
+            Thread.Sleep(1000);
+            KillOverlay(chrome);
+            chrome.ExecuteScript("arguments[0].click();", element);
+        }
+
+        private static void SendKeys(ChromeDriver chrome, IWebElement element, string value)
+        {
+            Thread.Sleep(1000);
+            KillOverlay(chrome);
+            element.Clear();
+            element.SendKeys(value);
+        }
+
+        private static void KillOverlay(ChromeDriver chrome)
+        {
+            var retry = chrome.FindElementsById("previousActionNotFinishedOverlayFormContainer");
+            if (retry != null && retry.Count > 0)
+            {
+                chrome.ExecuteScript("arguments[0].setAttribute('display','none');", retry[0]);
+            }
+
+            var overlay = chrome.FindElementsByXPath("//div[contains(@class,'ui-widget-overlay')]");
+            if (overlay != null && overlay.Count > 0)
+            {
+                chrome.ExecuteScript("arguments[0].setAttribute('display','none');", overlay[0]);
+            }
         }
 
         public class TanChallenge

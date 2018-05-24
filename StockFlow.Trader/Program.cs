@@ -299,6 +299,8 @@ namespace StockFlow.Trader
                         availableFunds -= orderFee;
                         stockFlowClient.SetInstrumentWeight(suggestion.Isin ?? suggestion.Wkn, "Trader-bought", 0).Wait();
                     }
+
+                    Thread.Sleep(10000);
                 }
                 catch (CancelOrderException)
                 {
@@ -311,7 +313,7 @@ namespace StockFlow.Trader
             }
             catch (CancelOrderException ex)
             {
-                suggestionLogger.WriteLine("Order cancelled: [" + ex.Status + "] " + ex.Message);
+                suggestionLogger.WriteLine("Order cancelled: [" + ex.Status + "] " + ex);
                 log.Status = ex.Status.ToString();
 
                 try
