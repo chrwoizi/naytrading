@@ -27,7 +27,8 @@ namespace StockFlow.Trader
         public async Task Login(string user, string password)
         {
             Console.WriteLine("Signing in at stockflow...");
-            var response = await httpProvider.Login(ConfigurationManager.AppSettings["StockFlowLoginAddress"], user, password);
+			var url = ConfigurationManager.AppSettings["StockFlowLoginAddress"] + "/signin"
+            var response = await httpProvider.Login(url, user, password);
             Console.WriteLine("Signed in");
         }
 
@@ -36,7 +37,7 @@ namespace StockFlow.Trader
             try
             {
                 Console.WriteLine("Setting weight " + type + " of instrument " + isinOrWkn + " to " + weight + " at stockflow...");
-                var url = string.Format(ConfigurationManager.AppSettings["StockFlowWeightAddress"], isinOrWkn, type, weight);
+                var url = string.Format(ConfigurationManager.AppSettings["StockFlowWeightAddress"] + "/api/weight/{0}/{1}/{2}", isinOrWkn, type, weight);
                 var response = await httpProvider.Post(url);
                 if (response == "{}")
                 {
@@ -67,8 +68,8 @@ namespace StockFlow.Trader
 
             Console.WriteLine("Loading trade suggestions after " + date.ToString("dd.MM.yyyy HH:mm:ss") + "...");
 
-            var url = ConfigurationManager.AppSettings["StockFlowTradesAddress"];
-            var json = await httpProvider.Get(string.Format(url, date));
+            var url = string.Format(ConfigurationManager.AppSettings["StockFlowTradesAddress"] + "/api/export/user/trades/{0:yyyyMMdd}", date);
+            var json = await httpProvider.Get(url);
 
             var trades = JsonConvert.DeserializeObject<Trade[]>(json);
             Console.WriteLine("Received " + trades.Length + " trade suggestions");
