@@ -101,6 +101,16 @@ namespace StockFlow.Trader
                 throw new Exception("Could not find main menu element");
             }
 
+            var overlays = chrome.FindElementsByXPath("//div[contains(@class,'ui-widget-overlay')]");
+            if(overlays != null && overlays.Count > 0)
+            {
+                var count = overlays.Count;
+                for (var i = 0; i < count; ++i)
+                {
+                    chrome.ExecuteScript("$x(\"//td[contains(@class,'Entry Active WithChildren First')]\")[" + i + "].style.display = \"none\";");
+                }
+            }
+
             menu.Click();
 
             var submenu = WaitForElementByXPath(chrome, "//td[@id='menu_overviewMenu']/div/div[text()='Depotbestand']", x => true);

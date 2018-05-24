@@ -305,7 +305,7 @@ namespace StockFlow.Trader
             }
             catch (CancelOrderException ex)
             {
-                suggestionLogger.WriteLine("Order cancelled: [" + ex.Status + "] " + ex);
+                suggestionLogger.WriteLine("Order cancelled: [" + ex.Status + "] " + ex.Message);
                 log.Status = ex.Status.ToString();
 
                 try

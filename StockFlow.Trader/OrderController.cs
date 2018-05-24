@@ -161,7 +161,7 @@ namespace StockFlow.Trader
             {
                 logger.WriteLine("Placing order...");
                 broker.PlaceOrder(chrome);
-                logger.WriteLine("Order complete...");
+                logger.WriteLine("Order complete");
             }
             catch (Exception ex)
             {
