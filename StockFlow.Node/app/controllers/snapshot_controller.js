@@ -276,7 +276,7 @@ exports.setDecision = async function (req, res) {
                 });    
             }
             
-            res.json({});
+            res.json({ status: "ok" });
         }
         else {
             res.status(401);
