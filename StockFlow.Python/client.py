@@ -64,8 +64,10 @@ def login(session, stockflow_url, user, password, proxies):
 def new_snapshot(session, stockflow_url, proxies):
     random_url = stockflow_url + '/api/snapshot/new/random'
     r = session.get(random_url, proxies = proxies, timeout = 30)
+
     if r.status_code != 200:
         raise Exception('%s returned %d' %(random_url, r.status_code))
+
     data = r.json()
     return data
 
@@ -73,8 +75,17 @@ def new_snapshot(session, stockflow_url, proxies):
 def set_decision(session, stockflow_url, snapshot_id, decision, proxies):
     decision_url = stockflow_url + '/api/snapshot/%d/set/%s'
     r = session.get(decision_url % (snapshot_id, decision), proxies = proxies, timeout = 30)
+
     if r.status_code != 200:
         raise Exception('%s returned %d' %(decision_url, r.status_code))
+
+    data = r.json()
+
+    if 'status' not in data:
+        raise Exception('%s returned no status' %(decision_url))
+
+    if data['status'] != 'ok':
+        raise Exception('%s returned status %d' %(decision_url, data['status']))
 
 
 def sample(chart, x):
@@ -233,7 +244,7 @@ def main(checkpoint_dir, proxy_url, proxy_user, proxy_password, stockflow_url, s
             except Exception as e:
                 print("Unexpected error:", str(e))
 
-            time.sleep(5)
+            time.sleep(60)
 
 
 
