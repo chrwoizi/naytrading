@@ -44,6 +44,11 @@ module.exports = (sequelize, DataTypes) => {
             allowNull: false
         },
 
+        FirstPriceTime: {
+            type: DataTypes.DATE,
+            allowNull: false
+        },
+
         createdAt: {
             allowNull: false,
             type: DataTypes.DATE
