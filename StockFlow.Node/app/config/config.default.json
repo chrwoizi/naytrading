@@ -35,7 +35,8 @@
     "session": {
       "expiration": 2592000000
     },
-    "whitelist": true
+    "whitelist": true,
+    "max_unused_snapshot_age_hours": 48
   },
   "production": {
     "port": 5000,
@@ -73,6 +74,7 @@
     "session": {
       "expiration": 2592000000
     },
-    "whitelist": true
+    "whitelist": true,
+    "max_unused_snapshot_age_hours": 48
   }
 }

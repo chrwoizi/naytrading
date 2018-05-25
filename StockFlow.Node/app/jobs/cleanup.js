@@ -106,12 +106,19 @@ async function cleanupLateBegin() {
     }
 }
 
+async function cleanupOldUnseen() {
+    await sql.query("DELETE FROM s USING snapshots AS s WHERE NOT EXISTS (SELECT 1 FROM usersnapshots AS u WHERE u.Snapshot_ID = s.ID) AND s.Time < NOW() - INTERVAL @hours HOUR", {
+        "@hours": config.max_unused_snapshot_age_hours + 1
+    });
+}
+
 exports.run = async function () {
     try {
 
         await cleanupDuplicates();
         await cleanupMissingRates();
         await cleanupLateBegin();
+        await cleanupOldUnseen();
 
     }
     catch (error) {

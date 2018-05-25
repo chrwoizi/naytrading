@@ -181,7 +181,7 @@ namespace StockFlow.Trader
 
             SendKeys(chrome, chrome.FindElementById("headerAreaForm_searchEditFieldWidget_editField"), isin);
 
-            for (var i = 0; i <= 3; ++i)
+            for (var i = 0; i <= 4; ++i)
             {
                 Click(chrome, chrome.FindElementById("headerAreaForm_searchEditFieldWidget_searchButton"));
 
@@ -446,7 +446,7 @@ namespace StockFlow.Trader
 
         private static IWebElement WaitForElementByXPath(ChromeDriver chrome, string xpath, Func<IWebElement, bool> validate)
         {
-            for (int i = 0; i < 200; i++)
+            for (int i = 0; i < 300; i++)
             {
                 Thread.Sleep(100);
 
@@ -474,7 +474,7 @@ namespace StockFlow.Trader
 
         private static IWebElement WaitForElementById(ChromeDriver chrome, string id, Func<IWebElement, bool> validate)
         {
-            for (int i = 0; i < 200; i++)
+            for (int i = 0; i < 300; i++)
             {
                 Thread.Sleep(100);
 

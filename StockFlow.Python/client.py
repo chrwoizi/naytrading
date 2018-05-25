@@ -244,7 +244,7 @@ def main(checkpoint_dir, proxy_url, proxy_user, proxy_password, stockflow_url, s
             except Exception as e:
                 print("Unexpected error:", str(e))
 
-            time.sleep(60)
+            time.sleep(300)
 
 
 

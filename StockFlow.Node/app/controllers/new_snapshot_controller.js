@@ -253,12 +253,14 @@ exports.createNewRandomSnapshot = async function (req, res) {
             var endTime = new Date();
             endTime.setHours(0, 0, 0, 0);
 
-            var forgotten = await sql.query("SELECT s.ID FROM snapshots AS s WHERE NOT EXISTS (SELECT 1 FROM usersnapshots AS u WHERE u.Snapshot_ID = s.ID AND u.User = @userName) ORDER BY s.Time DESC, s.ID DESC LIMIT 1", {
-                "@userName": req.user.email
+            var forgotten = await sql.query("SELECT s.ID FROM snapshots AS s WHERE NOT EXISTS (SELECT 1 FROM usersnapshots AS u WHERE u.Snapshot_ID = s.ID AND u.User = @userName) AND s.Time > NOW() - INTERVAL @hours HOUR ORDER BY s.Time ASC, s.ID ASC", {
+                "@userName": req.user.email,
+                "@hours": config.max_unused_snapshot_age_hours
             });
 
-            if (forgotten && forgotten.length == 1) {
-                var viewModel = await snapshotController.getSnapshot(forgotten[0].ID, req.user.email);
+            if (forgotten && forgotten.length > 0) {
+                var index = getRandomIndex(forgotten.length, config.random_order_weight);
+                var viewModel = await snapshotController.getSnapshot(forgotten[index].ID, req.user.email);
                 res.json(viewModel);
                 return;
             }
