@@ -205,6 +205,12 @@ namespace StockFlow.Trader
 
         private static bool IsStockExchangeOpen()
         {
+            if (DateTime.Today.DayOfWeek == DayOfWeek.Saturday)
+                return false;
+
+            if (DateTime.Today.DayOfWeek == DayOfWeek.Sunday)
+                return false;
+
             bool isHoliday = new GermanPublicHoliday().IsPublicHoliday(DateTime.Today);
             if (isHoliday)
             {
@@ -293,6 +299,8 @@ namespace StockFlow.Trader
                         availableFunds -= orderFee;
                         stockFlowClient.SetInstrumentWeight(suggestion.Isin ?? suggestion.Wkn, "Trader-bought", 0).Wait();
                     }
+
+                    Thread.Sleep(10000);
                 }
                 catch (CancelOrderException)
                 {

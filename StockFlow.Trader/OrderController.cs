@@ -105,7 +105,7 @@ namespace StockFlow.Trader
             }
             catch (Exception ex)
             {
-                throw new CancelOrderException(Status.FatalError, ex.Message, ex);
+                throw new CancelOrderException(Status.TemporaryError, ex.Message, ex);
             }
         }
 
@@ -151,7 +151,7 @@ namespace StockFlow.Trader
             }
             catch (Exception ex)
             {
-                throw new CancelOrderException(Status.FatalError, ex.Message, ex);
+                throw new CancelOrderException(Status.TemporaryError, ex.Message, ex);
             }
         }
 
@@ -161,7 +161,7 @@ namespace StockFlow.Trader
             {
                 logger.WriteLine("Placing order...");
                 broker.PlaceOrder(chrome);
-                logger.WriteLine("Order complete...");
+                logger.WriteLine("Order complete");
             }
             catch (Exception ex)
             {
