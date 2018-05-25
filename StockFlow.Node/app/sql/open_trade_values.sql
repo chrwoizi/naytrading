@@ -6,13 +6,8 @@ SELECT
 			latestSnapshot.Price
 		FROM
 			snapshots AS latestSnapshot
-		INNER JOIN
-			usersnapshots AS latestUserSnapshot
-		ON
-			latestUserSnapshot.Snapshot_ID = latestSnapshot.ID
 		WHERE
-			latestUserSnapshot.User = @userName
-			AND latestSnapshot.Instrument_ID = buySnapshot.Instrument_ID
+			latestSnapshot.Instrument_ID = buySnapshot.Instrument_ID
 			AND latestSnapshot.Time >= buySnapshot.Time
 		ORDER BY
 			latestSnapshot.Time DESC
@@ -23,6 +18,7 @@ INNER JOIN snapshots AS buySnapshot
 ON buySnapshot.ID = trade.Snapshot_ID
 INNER JOIN usersnapshots AS buyUserSnapshot
 ON buyUserSnapshot.Snapshot_ID = trade.Snapshot_ID
+AND buyUserSnapshot.User = @userName
 WHERE 
 	trade.User = @userName
 	AND buyUserSnapshot.Decision = 'buy'

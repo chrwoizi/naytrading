@@ -13,52 +13,23 @@ FROM
 		i.ID,
 		i.Capitalization,
 		i.Strikes,
-		d.buyRate,
+        (
+			SELECT
+				SUM(CASE u.Decision WHEN 'buy' THEN 1 WHEN 'sell' THEN -1 ELSE 0 END) / GREATEST(COUNT(1), 1) AS buyRate
+			FROM
+				usersnapshots AS u
+			INNER JOIN
+				snapshots AS s
+			ON
+				s.ID = u.Snapshot_ID
+			WHERE
+				s.Instrument_ID = i.ID
+				AND (u.Decision = 'buy' OR u.Decision = 'sell')
+		) AS buyRate,
 		(SELECT COUNT(1) FROM snapshots AS s WHERE s.Instrument_ID = i.ID) AS snapshotCount,
         LEAST(GREATEST(0, (SELECT SUM(w.Weight) FROM weights AS w WHERE w.Instrument_ID = i.ID)), 1) AS staticWeight
 	FROM
 		instruments AS i
-	LEFT JOIN
-    (
-		SELECT
-			d.Instrument_ID,
-			COUNT(CASE WHEN d.Decision = 'buy' THEN 1 ELSE NULL END) / GREATEST(COUNT(1), 1) AS buyRate
-		FROM
-		(
-			SELECT
-				(
-					SELECT 
-						u.Decision
-					FROM
-						usersnapshots AS u
-					INNER JOIN
-						snapshots AS s
-					ON
-						s.ID = u.Snapshot_ID
-					WHERE
-						u.User = us.User
-						AND s.Instrument_ID = us.Instrument_ID
-						AND (u.Decision = 'buy' OR u.Decision = 'sell')
-					ORDER BY s.Time DESC
-					LIMIT 1
-				) AS Decision,
-                us.Instrument_ID
-			FROM
-				(
-					SELECT
-						DISTINCT u.User, s.Instrument_ID
-					FROM
-						usersnapshots AS u
-					INNER JOIN
-						snapshots AS s
-					ON
-						s.ID = u.Snapshot_ID
-				) AS us
-		) AS d
-		GROUP BY
-			d.Instrument_ID
-    ) AS d
-		ON d.Instrument_ID = i.ID
 	WHERE
 		i.Strikes <= @maxStrikes
 		AND NOT EXISTS
