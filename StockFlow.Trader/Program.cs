@@ -176,7 +176,7 @@ namespace StockFlow.Trader
 
                             if (suggestions.Any())
                             {
-                                using (var controller = new OrderController(brokerUser, brokerPassword, true, new Flatex(), globalLogger, new FlatexTanProvider(tanFilePassword)))
+                                using (var controller = new OrderController(brokerUser, brokerPassword, ConfigurationManager.AppSettings["ShowBrowser"] != "true", new Flatex(), globalLogger, new FlatexTanProvider(tanFilePassword)))
                                 {
                                     var availableFunds = controller.GetAvailableFunds();
                                     foreach (var suggestion in suggestions)

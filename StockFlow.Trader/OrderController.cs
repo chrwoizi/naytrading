@@ -111,12 +111,23 @@ namespace StockFlow.Trader
 
         public decimal GetCurrentPrice(string isin, TradingAction action)
         {
-            SleepRandom();
-            logger.WriteLine("Getting current price...");
-            var instrumentPrice = broker.GetPrice(isin, action, chrome);
-            logger.WriteLine("Current price: " + instrumentPrice + " EUR");
+            try
+            {
+                SleepRandom();
+                logger.WriteLine("Getting current price...");
+                var instrumentPrice = broker.GetPrice(isin, action, chrome);
+                logger.WriteLine("Current price: " + instrumentPrice + " EUR");
 
-            return instrumentPrice;
+                return instrumentPrice;
+            }
+            catch (CancelOrderException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new CancelOrderException(Status.TemporaryError, ex.Message, ex);
+            }
         }
 
         public void PrepareOrder(TradingAction action, decimal priceLimit, int quantity)

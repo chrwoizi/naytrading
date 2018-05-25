@@ -16,8 +16,6 @@ namespace StockFlow.Web.Models
         public string MarketId { get; set; }
 
         public decimal? Capitalization { get; set; }
-
-        public string User { get; set; }
         
         public int Strikes { get; set; }
         

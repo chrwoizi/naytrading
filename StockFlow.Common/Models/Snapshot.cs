@@ -16,8 +16,6 @@ namespace StockFlow.Web.Models
 
         public string Decision { get; set; }
 
-        public string User { get; set; }
-
         public decimal Price { get; set; }
 
         public DateTime PriceTime { get; set; }

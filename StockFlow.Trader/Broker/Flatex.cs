@@ -181,7 +181,22 @@ namespace StockFlow.Trader
 
             SendKeys(chrome, chrome.FindElementById("headerAreaForm_searchEditFieldWidget_editField"), isin);
 
-            Click(chrome, chrome.FindElementById("headerAreaForm_searchEditFieldWidget_searchButton"));
+            for (var i = 0; i <= 3; ++i)
+            {
+                Click(chrome, chrome.FindElementById("headerAreaForm_searchEditFieldWidget_searchButton"));
+
+                var nameElement = WaitForElementByXPath(chrome, "//div[@class='PaperName']", x => true);
+
+                if (nameElement != null)
+                {
+                    break;
+                }
+
+                if (i == 3)
+                {
+                    throw new Exception("Could not find stock using the search feature");
+                }
+            }
 
             string xpath;
             switch (action)
@@ -488,6 +503,7 @@ namespace StockFlow.Trader
         private static void Click(ChromeDriver chrome, IWebElement element)
         {
             Thread.Sleep(1000);
+            CheckPreviousAction(chrome);
             KillOverlay(chrome);
             chrome.ExecuteScript("arguments[0].click();", element);
         }
@@ -495,19 +511,23 @@ namespace StockFlow.Trader
         private static void SendKeys(ChromeDriver chrome, IWebElement element, string value)
         {
             Thread.Sleep(1000);
+            CheckPreviousAction(chrome);
             KillOverlay(chrome);
             element.Clear();
             element.SendKeys(value);
         }
 
-        private static void KillOverlay(ChromeDriver chrome)
+        private static void CheckPreviousAction(ChromeDriver chrome)
         {
             var retry = chrome.FindElementsById("previousActionNotFinishedOverlayFormContainer");
             if (retry != null && retry.Count > 0)
             {
-                chrome.ExecuteScript("arguments[0].setAttribute('display','none');", retry[0]);
+                throw new Exception("Previous action was not finished");
             }
+        }
 
+        private static void KillOverlay(ChromeDriver chrome)
+        {
             var overlay = chrome.FindElementsByXPath("//div[contains(@class,'ui-widget-overlay')]");
             if (overlay != null && overlay.Count > 0)
             {
