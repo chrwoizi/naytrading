@@ -34,11 +34,6 @@ module.exports = (sequelize, DataTypes) => {
             allowNull: true
         },
 
-        User: {
-            type: DataTypes.STRING,
-            allowNull: true
-        },
-
         Strikes: {
             type: DataTypes.INTEGER,
             allowNull: false
@@ -72,7 +67,6 @@ module.exports = (sequelize, DataTypes) => {
     },
     {
         indexes: [
-            { fields: ['User'] },
             { fields: ['Strikes'] },
             { fields: ['Capitalization'] },            
             { fields: ['InstrumentId'] },
@@ -80,13 +74,13 @@ module.exports = (sequelize, DataTypes) => {
             { fields: ['Isin'] },
             { fields: ['Wkn'] },
             { fields: ['LastStrikeTime'] },
-            { fields: ['User', 'Source', 'InstrumentId'] },
-            { fields: ['User', 'Strikes'] },
+            { fields: ['Source', 'InstrumentId'] },
             { fields: ['Strikes', 'LastStrikeTime'] }
         ]
     });
     instrument.associate = function (models) {
         instrument.hasMany(models.snapshot, { foreignKey: 'Instrument_ID', onDelete: 'CASCADE', hooks: true });
+        instrument.hasMany(models.userinstrument, { foreignKey: 'Instrument_ID', onDelete: 'CASCADE', hooks: true });
     };
     return instrument;
 };

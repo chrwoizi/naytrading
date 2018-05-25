@@ -205,7 +205,7 @@ exports.updateUser = async function(user) {
 exports.run = async function () {
     try {
 
-        var users = await sql.query('SELECT DISTINCT(snapshot.User) FROM snapshots AS snapshot');
+        var users = await sql.query('SELECT DISTINCT(u.User) FROM usersnapshots AS u');
 
         for (var i = 0; i < users.length; ++i) {
             var user = users[i].User;

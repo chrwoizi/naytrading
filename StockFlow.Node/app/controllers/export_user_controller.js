@@ -17,11 +17,14 @@ function return500(res, e) {
     res.json({ error: e.message });
 }
 
-exports.exportInstruments = async function (req, res) {
+exports.exportUserInstruments = async function (req, res) {
     try {
-        if (req.params.exportSecret == config.export_secret) {
+        if (req.isAuthenticated()) {
 
-            var ids = await sql.query('SELECT instrument.ID FROM instruments AS instrument ORDER BY instrument.ID', {});
+            var ids = await sql.query('SELECT instrument.ID FROM instruments AS instrument WHERE instrument.User = @userName ORDER BY instrument.ID',
+                {
+                    "@userName": req.user.email
+                });
 
             res.header('Content-disposition', 'attachment; filename=instruments.json');
             res.header('Content-type', 'application/json');
@@ -31,9 +34,6 @@ exports.exportInstruments = async function (req, res) {
             for (var i = 0; i < ids.length; ++i) {
 
                 var instrument = await model.instrument.find({
-                    include: [{
-                        model: model.userinstruments
-                    }],
                     where: {
                         ID: ids[i].ID
                     }
@@ -64,50 +64,50 @@ exports.exportInstruments = async function (req, res) {
     }
 }
 
-exports.exportSnapshots = async function (req, res) {
+exports.exportUserSnapshots = async function (req, res) {
     try {
-        if (req.params.exportSecret == config.export_secret) {
+        if (req.isAuthenticated()) {
 
             if (typeof (req.params.fromDate) !== 'string' || req.params.fromDate.length != 8) {
 
-                res.status(500);
-                res.json({ error: 'invalid date format' });
+                return500(res, { message: 'invalid date format' });
                 return;
             }
 
             var fromDate = new Date(req.params.fromDate.substr(0, 4), parseInt(req.params.fromDate.substr(4, 2)) - 1, req.params.fromDate.substr(6, 2));
 
-            cancel = false;
-
-            var ids = await sql.query('SELECT snapshot.ID FROM snapshots AS snapshot WHERE snapshot.Time >= @fromDate ORDER BY snapshot.Time',
+            var ids = await sql.query('SELECT userSnapshot.ID FROM usersnapshots AS userSnapshot WHERE userSnapshot.User = @userName AND userSnapshot.ModifiedTime >= @fromDate ORDER BY userSnapshot.ModifiedTime',
                 {
-                    "@fromDate": fromDate
+                    "@userName": req.user.email,
+                    "@fromDate": req.params.fromDate
                 });
 
-            res.header('Content-disposition', 'attachment; filename=snapshots.json');
+            res.header('Content-disposition', 'attachment; filename=usersnapshots.json');
             res.header('Content-type', 'application/json');
 
             res.write('[');
 
-            for (var i = 0; i < ids.length; ++i && !cancel) {
+            for (var i = 0; i < ids.length; ++i) {
+
+                var usersnapshot = await model.usersnapshot.find({
+                    where: {
+                        ID: ids[i].ID
+                    }
+                });
 
                 var snapshot = await model.snapshot.find({
                     include: [{
                         model: model.instrument
                     }, {
                         model: model.snapshotrate
-                    }, {
-                        model: model.usersnapshot
                     }],
                     where: {
-                        ID: ids[i].ID
+                        ID: usersnapshot.Snapshot_ID
                     },
                     order: [
-                        [model.snapshotrate, "Time", "ASC"],
-                        [model.usersnapshot, "ModifiedTime", "ASC"]
+                        [model.snapshotrate, "Time", "ASC"]
                     ]
                 });
-
                 snapshot = snapshot.get({ plain: true });
 
                 for (var r = 0; r < snapshot.snapshotrates.length; ++r) {
@@ -115,18 +115,15 @@ exports.exportSnapshots = async function (req, res) {
                     delete rate.createdAt;
                     delete rate.updatedAt;
                 }
-
-                for (var r = 0; r < snapshot.usersnapshots.length; ++r) {
-                    var u = snapshot.usersnapshots[r];
-                    delete u.createdAt;
-                    delete u.updatedAt;
-                }
-
+                
                 delete snapshot.instrument.createdAt;
                 delete snapshot.instrument.updatedAt;
 
                 delete snapshot.createdAt;
                 delete snapshot.updatedAt;
+
+                snapshot.Decision = usersnapshot.Decision;
+                snapshot.ModifiedTime = usersnapshot.ModifiedTime;
                 
                 if (i > 0) {
                     res.write(',');
@@ -149,11 +146,42 @@ exports.exportSnapshots = async function (req, res) {
     }
 }
 
-exports.exportLog = async function (req, res) {
+exports.exportUserTrades = async function (req, res) {
     try {
-        if (req.isAuthenticated() && req.user.email == config.admin_user) {
+        if (req.isAuthenticated()) {
 
-            res.download(__dirname + '/../../' + config.log_path);
+            if (typeof (req.params.fromDate) !== 'string' || req.params.fromDate.length != 8) {
+
+                return500(res, { message: 'invalid date format' });
+                return;
+            }
+
+            var fromDate = new Date(req.params.fromDate.substr(0, 4), parseInt(req.params.fromDate.substr(4, 2)) - 1, req.params.fromDate.substr(6, 2));
+
+            var trades = await sql.query(trades_sql,
+                {
+                    "@userName": req.user.email,
+                    "@fromDate": req.params.fromDate
+                });
+
+            res.header('Content-disposition', 'attachment; filename=trades.json');
+            res.header('Content-type', 'application/json');
+
+            res.write('[');
+
+            for (var i = 0; i < trades.length; ++i) {
+
+                var trade = trades[i];
+                
+                if (i > 0) {
+                    res.write(',');
+                }
+
+                res.write(JSON.stringify(trade));
+            }
+
+            res.write(']');
+            res.end();
 
         }
         else {

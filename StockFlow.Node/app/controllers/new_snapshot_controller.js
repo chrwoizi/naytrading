@@ -22,7 +22,7 @@ function isEmpty(str) {
     return typeof (str) === 'undefined' || str == null || !str.length;
 }
 
-exports.getNewSnapshotInstruments = async function (endTime, userName) {
+exports.getNewSnapshotInstruments = async function (endTime) {
 
     var upToDateFrom = new Date(endTime.getTime() - config.snapshot_valid_seconds * 1000);
 
@@ -34,7 +34,6 @@ exports.getNewSnapshotInstruments = async function (endTime, userName) {
     maxCapitalization = Math.max(maxCapitalization, 1);
 
     var args = {
-        "@userName": userName,
         "@validFromDateTime": upToDateFrom,
         "@maxCapitalization": maxCapitalization,
         "@maxStrikes": config.max_strikes,
@@ -74,39 +73,40 @@ function getRandomIndex(count, randomRange) {
 
 exports.minDays = 5 * (config.chart_period_seconds / 60 / 60 / 24 / 7) - config.discard_threshold_missing_workdays;
 
-exports.isAutoIgnore = async function (newSnapshot) {
+exports.isUserAutoIgnore = async function (newSnapshot) {
     if (newSnapshot.PreviousDecision == "buy") {
         if (newSnapshot.Rates && newSnapshot.Rates.length > 0 && newSnapshot.PreviousBuyRate != null) {
             var lastRate = newSnapshot.Rates[newSnapshot.Rates.length - 1];
-            if (lastRate.Close < newSnapshot.PreviousBuyRate) {
+            if (lastRate.C < newSnapshot.PreviousBuyRate) {
                 return true;
             }
         }
 
         return false;
     }
-    else {
-        var endTime = new Date();
-        endTime.setHours(0, 0, 0, 0);
-        var startTime = new Date(endTime.getTime() - config.chart_period_seconds * 1000);
+}
 
-        var timeDiff = endTime - startTime;
-        var firstRatesUntil = new Date(startTime.getTime() + 1000 * (config.chart_period_seconds * 0.2));
-        var lastRatesFrom = new Date(endTime.getTime() - 1000 * (config.chart_period_seconds * 0.2));
+exports.isGlobalAutoIgnore = async function (rates) {
+    var endTime = new Date();
+    endTime.setHours(0, 0, 0, 0);
+    var startTime = new Date(endTime.getTime() - config.chart_period_seconds * 1000);
 
-        var firstRates = newSnapshot.Rates.filter(x => x.Time < firstRatesUntil);
-        var lastRates = newSnapshot.Rates.filter(x => x.Time > lastRatesFrom);
+    var timeDiff = endTime - startTime;
+    var firstRatesUntil = new Date(startTime.getTime() + 1000 * (config.chart_period_seconds * 0.2));
+    var lastRatesFrom = new Date(endTime.getTime() - 1000 * (config.chart_period_seconds * 0.2));
 
-        if (firstRates.length == 0 || lastRates.length == 0) {
-            return false;
-        }
+    var firstRates = rates.filter(x => x.Time < firstRatesUntil);
+    var lastRates = rates.filter(x => x.Time > lastRatesFrom);
 
-        var firstAverage = firstRates.reduce((a, b) => a.Close + b.Close) / firstRates.length;
-        var lastAverage = lastRates.reduce((a, b) => a.Close + b.Close) / lastRates.length;
-
-        // overall bearish trend
-        return lastAverage < firstAverage;
+    if (firstRates.length == 0 || lastRates.length == 0) {
+        return false;
     }
+
+    var firstAverage = firstRates.map(x => x.Close).reduce((a, b) => a + b) / firstRates.length;
+    var lastAverage = lastRates.map(x => x.Close).reduce((a, b) => a + b) / lastRates.length;
+
+    // overall bearish trend
+    return lastAverage < firstAverage;
 }
 
 exports.createNewSnapshotFromRandomInstrument = async function (instrumentIds) {
@@ -169,7 +169,6 @@ exports.createNewSnapshotFromRandomInstrument = async function (instrumentIds) {
                         model: model.snapshotrate
                     }],
                     where: {
-                        User: instrument.User,
                         Instrument_ID: instrument.ID,
                         StartTime: startTime,
                         Time: endTime
@@ -183,24 +182,17 @@ exports.createNewSnapshotFromRandomInstrument = async function (instrumentIds) {
                 })
 
                 if (similar != null && similar.length > 0) {
-                    if (similar[0].Decision == null) {
-                        return similar[0];
-                    }
-                    else {
-                        return null;
-                    }
+                    return similar[0];
                 }
 
                 var snapshot = await model.snapshot.create({
                     StartTime: startTime,
                     Time: endTime,
-                    ModifiedTime: new Date(),
                     snapshotrates: rates,
                     Price: rates[rates.length - 1].Close,
                     PriceTime: rates[rates.length - 1].Time,
                     FirstPriceTime: rates[0].Time,
-                    Instrument_ID: instrument.ID,
-                    User: instrument.User
+                    Instrument_ID: instrument.ID
                 }, {
                         include: [{
                             model: model.instrument
@@ -261,32 +253,17 @@ exports.createNewRandomSnapshot = async function (req, res) {
             var endTime = new Date();
             endTime.setHours(0, 0, 0, 0);
 
-            var forgotten = await model.snapshot.findAll({
-                limit: 1,
-                include: [{
-                    model: model.instrument
-                }, {
-                    model: model.snapshotrate
-                }],
-                where: {
-                    User: req.user.email,
-                    Decision: null
-                },
-                order: [
-                    ['Time', 'ASC'],
-                    ['ID', 'ASC'],
-                    [model.snapshotrate, "Time", "ASC"]
-                ]
+            var forgotten = await sql.query("SELECT s.ID FROM snapshots AS s WHERE NOT EXISTS (SELECT 1 FROM usersnapshots AS u WHERE u.Snapshot_ID = s.ID AND u.User = @userName) ORDER BY s.Time DESC, s.ID DESC LIMIT 1", {
+                "@userName": req.user.email
             });
 
             if (forgotten && forgotten.length == 1) {
-                var previous = await snapshotController.getPreviousDecision(forgotten[0]);
-                var viewModel = snapshotController.getSnapshotViewModel(forgotten[0], previous);
+                var viewModel = await snapshotController.getSnapshot(forgotten[0].ID, req.user.email);
                 res.json(viewModel);
                 return;
             }
 
-            var instrumentIds = await exports.getNewSnapshotInstruments(endTime, req.user.email);
+            var instrumentIds = await exports.getNewSnapshotInstruments(endTime);
 
             var newSnapshot = null;
             for (var i = 0; i <= config.automatic_ignores; ++i) {
@@ -296,21 +273,16 @@ exports.createNewRandomSnapshot = async function (req, res) {
                     var k = instrumentIds.indexOf(newSnapshot.Instrument_ID);
                     instrumentIds.splice(k, 1);
 
-                    var previous = await snapshotController.getPreviousDecision(newSnapshot);
-                    var viewModel = snapshotController.getSnapshotViewModel(newSnapshot, previous);
+                    var previous = await snapshotController.getPreviousDecision(newSnapshot, req.user.email);
+                    var viewModel = snapshotController.getSnapshotViewModel(newSnapshot, previous, req.user.email);
 
-                    if (i < config.automatic_ignores && exports.isAutoIgnore(viewModel)) {
-                        await model.snapshot.update(
-                            {
-                                Decision: "ignore",
-                                ModifiedTime: new Date()
-                            },
-                            {
-                                where: {
-                                    Id: newSnapshot.ID
-                                }
-                            }
-                        );
+                    if (i < config.automatic_ignores && (exports.isUserAutoIgnore(viewModel) || exports.isGlobalAutoIgnore(viewModel.Rates))) {
+                        await model.usersnapshot.create({
+                            User: req.user.email,
+                            Snapshot_ID: newSnapshot.ID,
+                            Decision: "ignore",
+                            ModifiedTime: new Date()
+                        });
                     }
                     else {
                         res.json(viewModel);
@@ -345,7 +317,7 @@ exports.createNewSnapshotByInstrumentId = async function (req, res) {
 
             var newSnapshot = await exports.createNewSnapshotFromRandomInstrument(instrumentIds);
             if (newSnapshot != null) {
-                var viewModel = snapshotController.getSnapshotViewModel(newSnapshot);
+                var viewModel = snapshotController.getSnapshotViewModel(newSnapshot, undefined, req.user.email);
                 res.json(viewModel);
                 return;
             }

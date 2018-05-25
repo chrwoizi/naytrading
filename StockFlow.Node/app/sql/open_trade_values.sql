@@ -6,8 +6,12 @@ SELECT
 			latestSnapshot.Price
 		FROM
 			snapshots AS latestSnapshot
+		INNER JOIN
+			usersnapshots AS latestUserSnapshot
+		ON
+			latestUserSnapshot.Snapshot_ID = latestSnapshot.ID
 		WHERE
-			latestSnapshot.User = @userName
+			latestUserSnapshot.User = @userName
 			AND latestSnapshot.Instrument_ID = buySnapshot.Instrument_ID
 			AND latestSnapshot.Time >= buySnapshot.Time
 		ORDER BY
@@ -17,18 +21,22 @@ SELECT
 FROM trades AS trade
 INNER JOIN snapshots AS buySnapshot
 ON buySnapshot.ID = trade.Snapshot_ID
+INNER JOIN usersnapshots AS buyUserSnapshot
+ON buyUserSnapshot.Snapshot_ID = trade.Snapshot_ID
 WHERE 
 	trade.User = @userName
-	AND buySnapshot.Decision = 'buy'
+	AND buyUserSnapshot.Decision = 'buy'
 	AND NOT EXISTS 
 	(
 		SELECT 1
 		FROM snapshots AS newerSnapshot
+		INNER JOIN usersnapshots AS newerUserSnapshot
+		ON newerUserSnapshot.Snapshot_ID = newerSnapshot.ID
 		WHERE 
-			newerSnapshot.User = @userName
+			newerUserSnapshot.User = @userName
 			AND newerSnapshot.Instrument_ID = buySnapshot.Instrument_ID
 			AND newerSnapshot.Time > buySnapshot.Time
-			AND newerSnapshot.Decision = 'sell'
+			AND newerUserSnapshot.Decision = 'sell'
 		LIMIT 1
 	)
 ORDER BY trade.Time ASC;

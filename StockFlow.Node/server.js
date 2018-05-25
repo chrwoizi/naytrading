@@ -10,7 +10,6 @@ var instrumentsJob = require('./app/jobs/instruments');
 var cleanupJob = require('./app/jobs/cleanup');
 var preloadJob = require('./app/jobs/preload');
 var strikesJob = require('./app/jobs/strikes');
-var isinWknJob = require('./app/jobs/isinwkn');
 var portfoliosJob = require('./app/jobs/portfolios');
 var config = require('./app/config/envconfig');
 var sql = require('./app/sql/sql');
@@ -111,19 +110,15 @@ var sql = require('./app/sql/sql');
     }, 4000);
     
     setTimeout(function () {
-        new Promise(function (resolve, reject) { preloadJob.run(); });
+        new Promise(function (resolve, reject) { strikesJob.run(); });
     }, 6000);
     
     setTimeout(function () {
-        new Promise(function (resolve, reject) { strikesJob.run(); });
+        new Promise(function (resolve, reject) { portfoliosJob.run(); });
     }, 8000);
-    
+
     setTimeout(function () {
-        new Promise(function (resolve, reject) { isinWknJob.run(); });
+        new Promise(function (resolve, reject) { preloadJob.run(); });
     }, 10000);
     
-    setTimeout(function () {
-        new Promise(function (resolve, reject) { portfoliosJob.run(); });
-    }, 12000);
-
 })();

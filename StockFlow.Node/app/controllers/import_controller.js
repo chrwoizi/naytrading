@@ -7,123 +7,8 @@ var multiparty = require('multiparty');
 var stream = require('stream');
 var fs = require('fs');
 var config = require('../config/envconfig');
+var tools = require('./import_tools');
 
-
-function return500(res, e) {
-    res.json({ error: e.message });
-    res.status(500);
-}
-
-async function importFromFormSubmit(req, res, getExistingEntities, getEntityKey, createEntity, destroyEntity, prepareEntity) {
-    var filePath = undefined;
-
-    try {
-        var form = new multiparty.Form();
-
-        form.parse(req, async (error, fields, files) => {
-
-            if (!(files && files.file && files.file.length == 1 && files.file[0].path && files.file[0].size > 0)) {
-                return500(res, { message: "no file received" });
-                return;
-            }
-
-            filePath = files.file[0].path;
-
-            var existing = await getExistingEntities();
-            var remaining = Object.assign({}, existing);
-
-            var addedCount = 0;
-            var removedCount = 0;
-            var errors = [];
-
-            var processor = new stream.Transform({ objectMode: true });
-            processor._transform = function (data, encoding, onDone) {
-                try {
-                    if (prepareEntity) {
-                        prepareEntity(data);
-                    }
-                    var key = getEntityKey(data);
-                    console.log("importing " + key);
-                    var value = existing[key];
-                    if (value) {
-                        delete remaining[key];
-                        onDone();
-                    }
-                    else {
-                        createEntity(data).then(() => {
-                            addedCount++;
-                            onDone();
-                        })
-                            .catch(e => {
-                                errors.push(e);
-                                onDone(e);
-                            });
-                    }
-                }
-                catch (e) {
-                    errors.push(e);
-                    onDone(e);
-                }
-            };
-
-            fs.createReadStream(filePath)
-                .pipe(JSONStream.parse('*'))
-                .pipe(processor)
-                .on('finish', async () => {
-                    try {
-                        if (errors.length == 0) {
-                            if (fields.delete && fields.delete.length == 1 && fields.delete[0] == "on") {
-                                for (var key in remaining) {
-                                    if (remaining.hasOwnProperty(key)) {
-                                        console.log("deleting " + key);
-                                        removedCount += await destroyEntity(remaining[key]);
-                                    }
-                                }
-                            }
-                        }
-
-                        console.log("import complete. added: " + addedCount + ", removed: " + removedCount + ", errors: " + JSON.stringify(errors));
-                        res.json({ added: addedCount, removed: removedCount, errors: errors });
-                    }
-                    catch (e) {
-                        return500(res, e);
-                    }
-
-                    try {
-                        fs.unlinkSync(filePath);
-                    }
-                    catch (e) { }
-                })
-                .on('error', err => {
-                    return500(res, err);
-                    try {
-                        fs.unlinkSync(filePath);
-                    }
-                    catch (e) { }
-                });
-
-        });
-    }
-    catch (error) {
-        return500(res, error);
-        if (filePath) {
-            try {
-                fs.unlinkSync(filePath);
-            }
-            catch (e) { }
-        }
-    }
-}
-
-function toDictionary(existing, getKey) {
-    var dict = {};
-    for (var i = 0; i < existing.length; ++i) {
-        var item = existing[i];
-        var key = getKey(item);
-        dict[key] = item;
-    };
-    return dict;
-}
 
 function getInstrumentKey(data) {
     return data.Source + '/' + data.InstrumentId;
@@ -138,66 +23,118 @@ function getSnapshotKey(data) {
 }
 
 function prepareSnapshot(data) {
-    // map old data format
-
-    delete data.StartTimeString;
-    delete data.TimeString;
-    delete data.ModifiedTimeString;
-    delete data.ModifiedDateString;
-    delete data.PreviousDecision;
-    delete data.PreviousBuyRate;
-    delete data.PreviousTime;
-    delete data.PreviousTimeString;
-
-    data.instrument = data.instrument || data.Instrument;
-    delete data.Instrument;
-
-    data.snapshotrates = data.snapshotrates || data.Rates;
-    delete data.Rates;
-    for (var i = 0; i < data.snapshotrates.length; ++i) {
-        delete data.snapshotrates[i].TimeString;
-    }
 
     data.Price = data.Price || data.snapshotrates[data.snapshotrates.length - 1].Close;
     data.PriceTime = data.PriceTime || data.snapshotrates[data.snapshotrates.length - 1].Time;
+    data.FirstPriceTime = data.FirstPriceTime || data.snapshotrates[0].Time;
 
     return data;
 }
 
 function addSnapshot(data, instrumentsDict) {
     return new Promise(async (resolve, reject) => {
-        var instrumentKey = getInstrumentKey(data.instrument);
-        var instrument = instrumentsDict[instrumentKey];
-        if (instrument) {
-            data.Instrument_ID = instrument.ID;
+        try {
+            var instrumentKey = getInstrumentKey(data.instrument);
+            var instrument = instrumentsDict[instrumentKey];
+            if (instrument) {
+                data.Instrument_ID = instrument.ID;
+            }
+            else {
+
+                delete data.instrument.ID;
+                delete data.instrument.createdAt;
+                delete data.instrument.updatedAt;
+
+                instrument = await model.instrument.create(data.instrument);
+                instrumentsDict[instrumentKey] = instrument;
+
+                data.Instrument_ID = instrument.ID;
+            }
+
+            delete data.ID;
+            delete data.createdAt;
+            delete data.updatedAt;
+            for (var i = 0; i < data.snapshotrates.length; ++i) {
+                delete data.snapshotrates[i].ID;
+                delete data.snapshotrates[i].createdAt;
+                delete data.snapshotrates[i].updatedAt;
+            }
+
+            await model.snapshot.create(data, {
+                include: [{
+                    model: model.snapshotrate
+                }]
+            });
+
+            resolve();
         }
-        else {
-
-            delete data.instrument.ID;
-            delete data.instrument.createdAt;
-            delete data.instrument.updatedAt;
-            data.instrument.User = data.User;
-
-            instrument = await model.instrument.create(data.instrument);
-            instrumentsDict[instrumentKey] = instrument;
-
-            data.Instrument_ID = instrument.ID;
+        catch (e) {
+            reject(e);
         }
+    });
+}
 
-        delete data.ID;
-        delete data.createdAt;
-        delete data.updatedAt;
-        for (var i = 0; i < data.snapshotrates.length; ++i) {
-            delete data.snapshotrates[i].ID;
-            delete data.snapshotrates[i].createdAt;
-            delete data.snapshotrates[i].updatedAt;
+function updateSnapshot(data, existing) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            if (data.usersnapshots) {
+                for (var i = 0; i < data.usersnapshots.length; ++i) {
+                    var u = data.usersnapshots[i];
+                    var existingU = await model.usersnapshot.find({
+                        where: {
+                            User: u.User,
+                            Snapshot_ID: existing.ID
+                        }
+                    });
+                    if (existingU) {
+                        await model.usersnapshot.update(
+                            {
+                                Decision: u.Decision,
+                                ModifiedTime: u.ModifiedTime
+                            },
+                            {
+                                where: {
+                                    ID: existingU.ID
+                                }
+                            });
+                    }
+                    else {
+                        await model.usersnapshot.create({
+                            User: u.User,
+                            Decision: u.Decision,
+                            ModifiedTime: u.ModifiedTime,
+                            Snapshot_ID: existing.ID
+                        })
+                    }
+                }
+
+                var existingUs = await sql.query('SELECT u.ID, u.User FROM usersnapshots AS u WHERE u.Snapshot_ID = @snapshotId',
+                    {
+                        "@snapshotId": existing.ID
+                    });
+                for (var i = 0; i < existingUs.length; ++i) {
+                    var exists = false;
+                    for (var k = 0; k < data.usersnapshots.length; ++k) {
+                        if (existingUs[i].User == data.usersnapshots[k].User) {
+                            exists = true;
+                            break;
+                        }
+                    }
+                    if (!exists) {
+                        model.usersnapshot.destroy({
+                            where: {
+                                ID: existingUs[i].ID
+                            }
+                        })
+                    }
+                }
+
+                resolve();
+            }
         }
-
-        model.snapshot.create(data, {
-            include: [{
-                model: model.snapshotrate
-            }]
-        }).then(resolve);
+        catch (e) {
+            reject(e);
+        }
     });
 }
 
@@ -214,10 +151,80 @@ async function removeSnapshot(dictValue) {
 
 function addInstrument(data) {
     return new Promise(async (resolve, reject) => {
-        delete data.ID;
-        delete data.createdAt;
-        delete data.updatedAt;
-        model.instrument.create(data).then(resolve);
+        try {
+            delete data.ID;
+            delete data.createdAt;
+            delete data.updatedAt;
+            await model.instrument.create(data);
+            resolve();
+        }
+        catch (e) {
+            reject(e);
+        }
+    });
+}
+
+function updateInstrument(data, existing) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            if (data.userinstruments) {
+                for (var i = 0; i < data.userinstruments.length; ++i) {
+                    var u = data.userinstruments[i];
+                    var existingU = await model.userinstrument.find({
+                        where: {
+                            User: u.User,
+                            Instrument_ID: existing.ID
+                        }
+                    });
+                    if (existingU) {
+                        await model.userinstrument.update(
+                            {
+                                Decision: u.Decision,
+                                ModifiedTime: u.ModifiedTime
+                            },
+                            {
+                                where: {
+                                    ID: existingU.ID
+                                }
+                            });
+                    }
+                    else {
+                        await model.userinstrument.create({
+                            User: u.User,
+                            Decision: u.Decision,
+                            ModifiedTime: u.ModifiedTime,
+                            Instrument_ID: existing.ID
+                        })
+                    }
+                }
+
+                var existingUs = await sql.query('SELECT u.ID, u.User FROM userinstruments AS u WHERE u.Instrument_ID = @instrumentId',
+                    {
+                        "@instrumentId": existing.ID
+                    });
+                for (var i = 0; i < existingUs.length; ++i) {
+                    var exists = false;
+                    for (var k = 0; k < data.userinstruments.length; ++k) {
+                        if (existingUs[i].User == data.userinstruments[k].User) {
+                            exists = true;
+                            break;
+                        }
+                    }
+                    if (!exists) {
+                        model.userinstrument.destroy({
+                            where: {
+                                ID: existingUs[i].ID
+                            }
+                        })
+                    }
+                }
+            }
+
+            resolve();
+        }
+        catch (e) {
+            reject(e);
+        }
     });
 }
 
@@ -234,48 +241,18 @@ exports.importInstruments = async function (req, res) {
     if (req.params.importSecret == config.import_secret) {
 
         async function getExistingInstruments() {
-            var existing = await sql.query('SELECT instrument.ID, instrument.Source, instrument.InstrumentId FROM instruments AS instrument');
-            return toDictionary(existing, getInstrumentKey);
+            var existing = await sql.query('SELECT i.ID, i.Source, i.InstrumentId FROM instruments AS i');
+            return tools.toDictionary(existing, getInstrumentKey);
         }
 
-        importFromFormSubmit(
+        tools.importFromFormSubmit(
             req,
             res,
             getExistingInstruments,
             getInstrumentKey,
             addInstrument,
+            updateInstrument,
             removeInstrument);
-
-    }
-    else {
-        res.status(401);
-        res.json({ error: "unauthorized" });
-    }
-}
-
-exports.importUserInstruments = async function (req, res) {
-
-    if (req.isAuthenticated()) {
-
-        async function getExistingInstruments() {
-            var existing = await sql.query('SELECT instrument.ID, instrument.Source, instrument.InstrumentId FROM instruments AS instrument WHERE instrument.User = @userName',
-                {
-                    "@userName": req.user.email
-                });
-            return toDictionary(existing, getInstrumentKey);
-        }
-
-        importFromFormSubmit(
-            req,
-            res,
-            getExistingInstruments,
-            getInstrumentKey,
-            instrument => {
-                instrument.User = req.user.email;
-                return addInstrument(instrument);
-            },
-            removeInstrument);
-
     }
     else {
         res.status(401);
@@ -288,18 +265,18 @@ exports.importSnapshots = async function (req, res) {
     if (req.params.importSecret == config.import_secret) {
 
         async function getExistingInstruments() {
-            var existing = await sql.query('SELECT instrument.ID, instrument.Source, instrument.InstrumentId FROM instruments AS instrument');
-            return toDictionary(existing, getInstrumentKey);
+            var existing = await sql.query('SELECT i.ID, i.Source, i.InstrumentId FROM instruments AS i');
+            return tools.toDictionary(existing, getInstrumentKey);
         }
 
         async function getExistingSnapshots() {
-            var existing = await sql.query('SELECT snapshot.ID, instrument.Source, instrument.InstrumentId, snapshot.Time FROM snapshots AS snapshot INNER JOIN instruments AS instrument ON instrument.ID = snapshot.Instrument_ID');
-            return toDictionary(existing, getExistingSnapshotKey);
+            var existing = await sql.query('SELECT s.ID, i.Source, i.InstrumentId, s.Time FROM snapshots AS s INNER JOIN instruments AS i ON i.ID = s.Instrument_ID');
+            return tools.toDictionary(existing, getExistingSnapshotKey);
         }
 
         var instrumentsDict = await getExistingInstruments();
 
-        importFromFormSubmit(
+        tools.importFromFormSubmit(
             req,
             res,
             getExistingSnapshots,
@@ -307,47 +284,7 @@ exports.importSnapshots = async function (req, res) {
             snapshot => {
                 return addSnapshot(snapshot, instrumentsDict);
             },
-            removeSnapshot,
-            prepareSnapshot);
-
-    }
-    else {
-        res.status(401);
-        res.json({ error: "unauthorized" });
-    }
-}
-
-exports.importUserSnapshots = async function (req, res) {
-
-    if (req.isAuthenticated()) {
-
-        async function getExistingInstruments() {
-            var existing = await sql.query('SELECT instrument.ID, instrument.Source, instrument.InstrumentId FROM instruments AS instrument WHERE instrument.User = @userName',
-                {
-                    "@userName": req.user.email
-                });
-            return toDictionary(existing, getInstrumentKey);
-        }
-
-        async function getExistingSnapshots() {
-            var existing = await sql.query('SELECT snapshot.ID, instrument.Source, instrument.InstrumentId, snapshot.Time FROM snapshots AS snapshot INNER JOIN instruments AS instrument ON instrument.ID = snapshot.Instrument_ID WHERE snapshot.User = @userName',
-                {
-                    "@userName": req.user.email
-                });
-            return toDictionary(existing, getExistingSnapshotKey);
-        }
-
-        var instrumentsDict = await getExistingInstruments();
-
-        importFromFormSubmit(
-            req,
-            res,
-            getExistingSnapshots,
-            getSnapshotKey,
-            snapshot => {
-                snapshot.User = req.user.email;
-                return addSnapshot(snapshot, instrumentsDict);
-            },
+            updateSnapshot,
             removeSnapshot,
             prepareSnapshot);
 

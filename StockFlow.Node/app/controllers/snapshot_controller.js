@@ -6,7 +6,18 @@ var dateFormat = require('dateformat');
 var viewsController = require('./views_controller.js');
 
 
-exports.getSnapshotViewModel = function (snapshot, previous) {
+exports.getSnapshotViewModel = function (snapshot, previous, user) {
+
+    var decision = null;
+    var modifiedTime = new Date();
+
+    if (snapshot.usersnapshots) {
+        var usersnapshot = snapshot.usersnapshots.filter(x => x.User = user);
+        if (usersnapshot.length > 0) {
+            decision = usersnapshot[0].Decision;
+            modifiedTime = usersnapshot[0].ModifiedTime;
+        }
+    }
 
     function getInstrumentViewModel(instrument) {
         return {
@@ -28,10 +39,10 @@ exports.getSnapshotViewModel = function (snapshot, previous) {
         StartTime: dateFormat(snapshot.StartTime, 'dd.mm.yy'),
         Date: dateFormat(snapshot.Time, 'dd.mm.yy'),
         DateSortable: dateFormat(snapshot.Time, 'yymmdd'),
-        ModifiedDateSortable: dateFormat(snapshot.ModifiedTime, 'yymmddHHMMss'),
-        ModifiedDate: dateFormat(snapshot.ModifiedTime, 'dd.mm.yy'),
+        ModifiedDateSortable: dateFormat(modifiedTime, 'yymmddHHMMss'),
+        ModifiedDate: dateFormat(modifiedTime, 'dd.mm.yy'),
         Rates: snapshot.snapshotrates ? snapshot.snapshotrates.map(getSnapshotRateViewModel) : undefined,
-        Decision: snapshot.Decision,
+        Decision: decision,
         PreviousDecision: previous ? previous.PreviousDecision : undefined,
         PreviousBuyRate: previous ? previous.PreviousBuyRate : undefined,
         PreviousTime: previous ? previous.PreviousTime : undefined
@@ -67,14 +78,16 @@ exports.snapshots = async function (req, res) {
             var snapshots = await model.snapshot.findAll({
                 include: [{
                     model: model.instrument
-                }],
-                where: {
-                    User: req.user.email
-                },
-                order: [['ModifiedTime', 'DESC']]
+                }, {
+                    model: model.usersnapshot,
+                    where: {
+                        User: req.user.email
+                    },
+                    required: true
+                }]
             });
 
-            var viewModels = snapshots.map(snapshot => exports.getSnapshotViewModel(snapshot, undefined));
+            var viewModels = snapshots.map(snapshot => exports.getSnapshotViewModel(snapshot, undefined, req.user.email));
             res.json(viewModels);
 
         }
@@ -89,77 +102,51 @@ exports.snapshots = async function (req, res) {
     }
 }
 
+exports.getSnapshot = async function (id, user) {
+
+    var snapshot = await model.snapshot.find({
+        include: [{
+            model: model.instrument
+        }, {
+            model: model.snapshotrate
+        }, {
+            model: model.usersnapshot,
+            where: {
+                User: user
+            },
+            required: false
+        }],
+        where: {
+            ID: id
+        },
+        order: [
+            [model.snapshotrate, "Time", "ASC"]
+        ]
+    });
+
+    if (snapshot) {
+        var previous = await exports.getPreviousDecision(snapshot, user);
+        var viewModel = exports.getSnapshotViewModel(snapshot, previous, user);
+        return viewModel;
+    }
+    else {
+        return null;
+    }
+}
+
 exports.snapshot = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
 
-            var snapshot = await model.snapshot.find({
-                include: [{
-                    model: model.instrument
-                }, {
-                    model: model.snapshotrate
-                }],
-                where: {
-                    ID: req.params.id,
-                    User: req.user.email
-                },
-                order: [
-                    [model.snapshotrate, "Time", "ASC"]
-                ]
-            });
+            var viewModel = await exports.getSnapshot(req.params.id, req.user.email);
 
-            if (snapshot) {
-
-                var previous = await exports.getPreviousDecision(snapshot);
-
-                var viewModel = exports.getSnapshotViewModel(snapshot, previous);
-
-                var previous = await model.snapshot.findAll({
-                    limit: 1,
-                    where: {
-                        User: req.user.email,
-                        ID: { [sequelize.Op.ne]: snapshot.ID },
-                        Instrument_ID: snapshot.Instrument_ID,
-                        Time: { [sequelize.Op.lt]: snapshot.Time },
-                        Decision: { [sequelize.Op.or]: ['buy', 'sell'] }
-                    },
-                    order: [['Time', 'DESC']]
-                });
-
-                if (previous && previous.length == 1) {
-                    viewModel.PreviousDecision = previous[0].Decision;
-                    if (viewModel.PreviousDecision == 'buy') {
-
-                        var lastRates = await model.snapshotrate.findAll({
-                            limit: 1,
-                            where: {
-                                Snapshot_ID: previous[0].ID
-                            },
-                            order: [['Time', 'DESC']]
-                        });
-
-                        if (lastRates && lastRates.length == 1) {
-                            viewModel.PreviousBuyRate = lastRates[0].Close;
-                            viewModel.PreviousTime = dateFormat(lastRates[0].Time, 'yymmdd');
-                        }
-
-                        res.json(viewModel);
-
-                    }
-                    else {
-                        res.json(viewModel);
-                    }
-                }
-                else {
-                    res.json(viewModel);
-                }
-
+            if (viewModel != null) {
+                res.json(viewModel);
             }
             else {
                 res.status(404);
                 res.json({ error: 'snapshot not found' });
             }
-
         }
         else {
             res.status(401);
@@ -172,19 +159,17 @@ exports.snapshot = async function (req, res) {
     }
 }
 
-exports.getPreviousDecision = async function (snapshot) {
+exports.getPreviousDecision = async function (snapshot, user) {
 
-    var previous = await model.snapshot.findAll({
-        limit: 1,
-        where: {
-            User: snapshot.User,
-            ID: { [sequelize.Op.ne]: snapshot.ID },
-            Instrument_ID: snapshot.Instrument_ID,
-            Time: { [sequelize.Op.lt]: snapshot.Time },
-            Decision: { [sequelize.Op.or]: ['buy', 'sell'] }
-        },
-        order: [['Time', 'DESC']]
-    });
+    var previous = await sql.query("SELECT s.ID, u.Decision FROM snapshots AS s INNER JOIN usersnapshots AS u ON u.Snapshot_ID = s.ID \
+        WHERE u.User = @userName AND s.ID <> @snapshotId AND s.Instrument_ID = @instrumentId AND s.Time < @time AND (u.Decision = 'buy' OR u.Decision = 'sell') \
+        ORDER BY s.Time DESC LIMIT 1",
+        {
+            "@userName": user,
+            "@snapshotId": snapshot.ID,
+            "@instrumentId": snapshot.Instrument_ID,
+            "@time": snapshot.Time
+        });
 
     result = {};
 
@@ -215,67 +200,83 @@ exports.setDecision = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
 
-            var snapshot = await model.snapshot.find({
+            var usersnapshot = await model.usersnapshot.find({
                 where: {
                     User: req.user.email,
-                    Id: req.params.id
+                    Snapshot_ID: req.params.id
                 }
             });
 
             var deletePortfolio = false;
 
-            if (snapshot.Decision != req.params.decision) {
+            if (usersnapshot) {
+                if (usersnapshot.Decision != req.params.decision) {
 
-                deletePortfolio = true;
+                    deletePortfolio = true;
 
-                await model.snapshot.update(
-                    {
-                        Decision: req.params.decision,
-                        ModifiedTime: new Date()
-                    },
-                    {
-                        where: {
-                            User: req.user.email,
-                            Id: req.params.id
+                    await model.usersnapshot.update(
+                        {
+                            Decision: req.params.decision,
+                            ModifiedTime: new Date()
+                        },
+                        {
+                            where: {
+                                User: req.user.email,
+                                Snapshot_ID: req.params.id
+                            }
                         }
-                    }
-                );
-            }
-
-            if (deletePortfolio) {
-                var fromTime = new Date(snapshot.Time);
-                    
-                await model.portfolio.destroy({
-                    where: {
-                        User: req.user.email,
-                        Time: {
-                            [sequelize.Op.gte]: fromTime
-                        }
-                    }
-                });
-
-                var latest = await model.portfolio.find({
-                    where: {
-                        User: req.user.email
-                    },
-                    order: [["Time", "DESC"]],
-                    limit: 1
-                });
-
-                if (latest) {
-                    fromTime = new Date(latest.Time);
+                    );
                 }
 
-                await model.trade.destroy({
-                    where: {
-                        User: req.user.email,
-                        Time: {
-                            [sequelize.Op.gte]: fromTime
+                if (deletePortfolio) {
+                    var snapshot = await model.snapshot.find({
+                        where: {
+                            ID: req.params.id
                         }
+                    });
+
+                    var fromTime = new Date(snapshot.Time);
+
+                    await model.portfolio.destroy({
+                        where: {
+                            User: req.user.email,
+                            Time: {
+                                [sequelize.Op.gte]: fromTime
+                            }
+                        }
+                    });
+
+                    var latest = await model.portfolio.find({
+                        where: {
+                            User: req.user.email
+                        },
+                        order: [["Time", "DESC"]],
+                        limit: 1
+                    });
+
+                    if (latest) {
+                        fromTime = new Date(latest.Time);
                     }
-                });    
+
+                    await model.trade.destroy({
+                        where: {
+                            User: req.user.email,
+                            Time: {
+                                [sequelize.Op.gte]: fromTime
+                            }
+                        }
+                    });
+                }
             }
-            
+            else {
+                await model.usersnapshot.create({
+                    Snapshot_ID: req.params.id,
+                    User: req.user.email,
+                    Decision: req.params.decision,
+                    ModifiedTime: new Date()
+                });
+            }
+
             res.json({ status: "ok" });
         }
         else {

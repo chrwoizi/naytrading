@@ -19,21 +19,6 @@ module.exports = (sequelize, DataTypes) => {
             allowNull: false
         },
 
-        ModifiedTime: {
-            type: DataTypes.DATE,
-            allowNull: false
-        },
-
-        Decision: {
-            type: DataTypes.STRING(6),
-            allowNull: true
-        },
-
-        User: {
-            type: DataTypes.STRING,
-            allowNull: true
-        },
-
         Price: {
             type: DataTypes.DECIMAL(8,2),
             allowNull: false
@@ -62,21 +47,18 @@ module.exports = (sequelize, DataTypes) => {
     },
     {
         indexes: [
-            { fields: ['User'] },
             { fields: ['Time'] },
-            { fields: ['Decision'] },
-            { fields: ['User', 'Time'] },
-            { fields: ['User', 'Instrument_ID'] },
-            { fields: ['User', 'Instrument_ID', 'Decision'] },
-            { fields: ['User', 'Time', 'Instrument_ID'] },
-            { fields: ['User', 'Decision'] },
-            { fields: ['Time', 'Decision'] },
-            { fields: ['User', 'Time', 'Decision', 'Instrument_ID'] }
+            { fields: ['Instrument_ID'] },
+            { fields: ['Time', 'Instrument_ID'] },
+            { fields: ['PriceTime'] },
+            { fields: ['PriceTime', 'FirstPriceTime'] },
+            { fields: ['FirstPriceTime'] }
         ]
     });
     snapshot.associate = function (models) {
         snapshot.belongsTo(models.instrument, { foreignKey: 'Instrument_ID', allowNull: false });
         snapshot.hasMany(models.snapshotrate, { foreignKey: 'Snapshot_ID', onDelete: 'CASCADE', hooks: true });
+        snapshot.hasMany(models.usersnapshot, { foreignKey: 'Snapshot_ID', onDelete: 'CASCADE', hooks: true });
     };
     return snapshot;
 };

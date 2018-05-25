@@ -45,40 +45,34 @@ async function cleanupDuplicates() {
 
     var groups = groupBy(rows, x => {
         return {
-            User: x.User,
             Instrument_ID: x.Instrument_ID,
             Time: x.Time.getTime()
         };
     }, (a, b) => {
-        return a.User == b.User && a.Instrument_ID == b.Instrument_ID && a.Time == b.Time;
-        });
+        return a.Instrument_ID == b.Instrument_ID && a.Time == b.Time;
+    });
 
     for (var i = 0; i < groups.length; ++i) {
 
-        var snapshots = groups[i].values.sort((a, b) => {
-            if (a.Decision == null && b.Decision == null) {
-                return b.Time - a.Time;
-            }
-            else if (a.Decision != null && b.decision != null) {
-                return b.Time - a.Time;
-            }
-            else if (a.Decision != null) {
-                return -1;
-            }
-            else {
-                return 1;
-            }
-        });
+        var snapshots = groups[i].values;
 
         for (var i = 1; i < snapshots.length; ++i) {
             console.log("deleting duplicate snapshot " + snapshots[i].ID + " for instrument " + snapshots[i].Instrument_ID);
+            await model.usersnapshot.update(
+                {
+                    Snapshot_ID: snapshots[0].ID
+                },
+                {
+                    where: {
+                        Snapshot_ID: snapshots[i].ID
+                    }
+                });
             await model.snapshot.destroy({
                 where: {
                     ID: snapshots[i].ID
                 }
-            })
+            });
         }
-
     }
 }
 
@@ -87,7 +81,7 @@ async function cleanupMissingRates() {
         "@minRates": newSnapshotController.minDays
     });
 
-    for (var i = 1; i < rows.length; ++i) {
+    for (var i = 0; i < rows.length; ++i) {
         console.log("deleting snapshot " + rows[i].ID + " for instrument " + rows[i].Instrument_ID + " because of missing rates in time span");
         await model.snapshot.destroy({
             where: {
@@ -102,7 +96,7 @@ async function cleanupLateBegin() {
         "@minDays": (config.chart_period_seconds - config.discard_threshold_seconds) / 60 / 60 / 24
     });
 
-    for (var i = 1; i < rows.length; ++i) {
+    for (var i = 0; i < rows.length; ++i) {
         console.log("deleting snapshot " + rows[i].ID + " for instrument " + rows[i].Instrument_ID + " because first rate is late");
         await model.snapshot.destroy({
             where: {

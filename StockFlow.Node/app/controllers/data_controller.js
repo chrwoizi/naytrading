@@ -250,7 +250,7 @@ exports.clearDecisions = async function (req, res) {
 
             if (req.user.email.endsWith('.ai')) {
 
-                await model.snapshot.update({
+                await model.usersnapshot.update({
                     Decision: null,
                     ModifiedTime: new Date()
                 }, {

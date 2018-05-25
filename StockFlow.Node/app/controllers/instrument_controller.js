@@ -6,6 +6,7 @@ var***REMOVED***= require('../providers***REMOVED***);
 var sql = require('../sql/sql');
 var fs = require('fs');
 var config = require('../config/envconfig');
+var settings = require('../config/settings');
 
 var copy_sql = "";
 try {
@@ -50,25 +51,46 @@ exports.addUrl = async function (req, res) {
 
             var instrument = await***REMOVED***getInstrumentByUrl(req.params.url);
 
-            var knownInstruments = await model.instrument.findAll({
-                where: {
-                    User: req.user.email,
-                    Source:***REMOVED***source,
-                    InstrumentId: instrument.InstrumentId
-                }
-            });
+            if (instrument.InstrumentId > 0) {
+                var knownInstrument = await model.instrument.find({
+                    where: {
+                        Source:***REMOVED***source,
+                        InstrumentId: instrument.InstrumentId
+                    }
+                });
 
-            if (knownInstruments.length == 0) {
-                instrument.User = req.user.email;
-                instrument.Strikes = 0;
-                instrument.LastStrikeTime = new Date();
-                await model.instrument.create(instrument);
-                res.json({ added: 1 });
+                if (knownInstrument) {
+                    var existing = await model.userinstrument.find({
+                        where: {
+                            Instrument_ID: knownInstrument.ID,
+                            User: req.user.email
+                        }
+                    });
+                    if (existing) {
+                        res.json({ added: 0 });
+                    }
+                    else {
+                        await model.userinstrument.create({
+                            Instrument_ID: knownInstrument.ID,
+                            User: req.user.email
+                        });
+                        res.json({ added: 1 });
+                    }
+                }
+                else {
+                    instrument.Strikes = 0;
+                    instrument.LastStrikeTime = new Date();
+                    var instrument = await model.instrument.create(instrument);
+                    await model.userinstrument.create({
+                        Instrument_ID: instrument.ID,
+                        User: req.user.email
+                    });
+                    res.json({ added: 1 });
+                }
             }
             else {
                 res.json({ added: 0 });
             }
-
         }
         else {
             res.status(401);
@@ -85,12 +107,10 @@ exports.instruments = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
 
-            var instruments = await model.instrument.findAll({
-                where: {
-                    User: req.user.email
-                },
-                order: [['Capitalization', 'DESC']]
-            });
+            var instruments = await sql.query("SELECT i.ID, i.InstrumentName, i.Capitalization FROM instruments AS i INNER JOIN userinstruments AS u ON u.Instrument_ID = i.ID WHERE u.User = @userName ORDER BY i.Capitalization DESC",
+                {
+                    "@userName": req.user.email
+                });
 
             res.json(instruments.map(getInstrumentViewModel));
 
@@ -112,8 +132,7 @@ exports.instrument = async function (req, res) {
 
             var instrument = await model.instrument.find({
                 where: {
-                    ID: req.params.id,
-                    User: req.user.email
+                    ID: req.params.id
                 }
             });
 
@@ -136,35 +155,12 @@ exports.instrument = async function (req, res) {
     }
 }
 
-exports.clearDefaultInstruments = async function (req, res) {
-    try {
-
-        if (req.params.importSecret == config.import_secret) {
-
-            var result = await sql.query('DELETE instrument FROM instruments AS instrument WHERE instrument.User IS NULL');
-
-            res.json({ deleted: result.affectedRows });
-
-        }
-        else {
-            res.status(401);
-            res.json({ error: "unauthorized" });
-        }
-
-    }
-    catch (error) {
-        res.status(500);
-        res.json({ error: error.message });
-    }
-}
-
 exports.getWeight = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
 
             var instrument = await model.instrument.find({
                 where: {
-                    User: req.user.email,
                     [sequelize.Op.or]: [
                         { Isin: req.params.instrumentId },
                         { Wkn: req.params.instrumentId }
@@ -212,7 +208,6 @@ exports.setWeight = async function (req, res) {
 
             var instrument = await model.instrument.find({
                 where: {
-                    User: req.user.email,
                     [sequelize.Op.or]: [
                         { Isin: req.params.instrumentId },
                         { Wkn: req.params.instrumentId }
@@ -273,6 +268,28 @@ exports.setWeight = async function (req, res) {
             res.status(401);
             res.json({ error: "unauthorized" });
         }
+    }
+    catch (error) {
+        res.status(500);
+        res.json({ error: error.message });
+    }
+}
+
+exports.updateInstruments = async function (req, res) {
+    try {
+
+        if (req.params.importSecret == config.import_secret) {
+
+            await settings.set("update_instruments", "true");
+
+            res.json({ status: "ok" });
+
+        }
+        else {
+            res.status(401);
+            res.json({ error: "unauthorized" });
+        }
+
     }
     catch (error) {
         res.status(500);

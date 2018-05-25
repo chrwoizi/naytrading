@@ -55,7 +55,7 @@ exports.whitelist = async function (req, res) {
     try {
         if (req.isAuthenticated() && req.user.email == config.admin_user) {
 
-            var whitelists = await model.whitelist.findAll();
+            var whitelists = await model.whitelist.findAll({});
 
             var args = getDefaultArgs(req);
             args.whitelists = whitelists;

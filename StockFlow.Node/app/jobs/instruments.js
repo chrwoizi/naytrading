@@ -4,16 +4,13 @@ var sequelize = require('sequelize');
 var sql = require('../sql/sql');
 var***REMOVED***= require('../providers***REMOVED***);
 var config = require('../config/envconfig');
+var settings = require('../config/settings');
 
 
 async function updateGlobalInstruments() {
     var allInstruments = await***REMOVED***getAllInstruments(config.job_instruments_min_capitalization);
 
-    var knownInstruments = await model.instrument.findAll({
-        where: {
-            User: null
-        }
-    });
+    var knownInstruments = await model.instrument.findAll({});
 
     var knownIds = knownInstruments.filter(x => x.Source ==***REMOVED***source).map(x => x.InstrumentId);
 
@@ -21,7 +18,6 @@ async function updateGlobalInstruments() {
 
     for (var i = 0; i < newInstruments.length; ++i) {
         var instrument = newInstruments[i];
-        instrument.User = null;
         instrument.Strikes = 0;
         instrument.LastStrikeTime = new Date();
         await model.instrument.create(instrument);
@@ -31,9 +27,8 @@ async function updateGlobalInstruments() {
 exports.run = async function () {
     try {
 
-        var result = await sql.query("SELECT COUNT(*) AS Count FROM instruments AS instrument WHERE instrument.User IS NULL");
-        
-        if (result[0].Count == 0) {
+        if (settings.get("update_instruments") == "true") {
+            await settings.set("update_instruments", "false");
             await updateGlobalInstruments();
         }
                 

@@ -1,38 +1,20 @@
-INSERT INTO instruments
+INSERT INTO userinstruments
 (
-	Source,
-    InstrumentName,
-    InstrumentId,
-    MarketId,
-    Capitalization,
     User,
-    Strikes,
-    Isin,
-    Wkn,
-    LastStrikeTime,
+    Instrument_ID,
     createdAt,
     updatedAt
 )
 SELECT
-	Source,
-    InstrumentName,
-    InstrumentId,
-    MarketId,
-    Capitalization,
     @userName AS User,
-    0 AS Strikes,
-    Isin,
-    Wkn,
-    NOW() AS LastStrikeTime,
+    i.ID AS Instrument_ID,
     NOW() AS createdAt,
     NOW() AS updatedAt
-FROM instruments AS global 
-WHERE global.User IS NULL
-AND NOT EXISTS 
+FROM instruments AS i
+WHERE NOT EXISTS 
 (
 	SELECT 1 
-	FROM instruments AS existing 
+	FROM userinstruments AS existing 
 	WHERE existing.User = @userName
-	AND existing.Source = global.Source 
-	AND existing.InstrumentId = global.InstrumentId
+	AND existing.Instrument_ID = i.ID
 );

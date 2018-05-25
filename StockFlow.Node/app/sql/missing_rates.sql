@@ -1,17 +1,7 @@
 SELECT
 	s.ID,
 	s.Instrument_ID 
-FROM 
-(
-	SELECT 
-		r.Snapshot_ID, 
-		COUNT(1) as c 
-	FROM 
-		snapshotrates r 
-	GROUP BY 
-		r.Snapshot_ID
-) AS r 
-INNER JOIN 
-	snapshots s 
-	ON s.ID = r.Snapshot_ID 
-WHERE r.c < @minRates
+FROM
+	snapshots s
+WHERE 
+	(SELECT COUNT(1) FROM snapshotrates r WHERE r.Snapshot_ID = s.ID) < @minRates
