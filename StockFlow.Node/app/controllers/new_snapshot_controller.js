@@ -15,6 +15,13 @@ try {
     console.log('Error:', e.stack);
 }
 
+var rank_open_snapshots = "";
+try {
+    rank_open_snapshots = fs.readFileSync(__dirname + '/../sql/rank_open_snapshots.sql', 'utf8');
+} catch (e) {
+    console.log('Error:', e.stack);
+}
+
 var lockFlag = 0;
 
 
@@ -253,7 +260,7 @@ exports.createNewRandomSnapshot = async function (req, res) {
             var endTime = new Date();
             endTime.setHours(0, 0, 0, 0);
 
-            var forgotten = await sql.query("SELECT s.ID FROM snapshots AS s WHERE NOT EXISTS (SELECT 1 FROM usersnapshots AS u WHERE u.Snapshot_ID = s.ID AND u.User = @userName) AND s.Time > NOW() - INTERVAL @hours HOUR ORDER BY s.Time ASC, s.ID ASC", {
+            var forgotten = await sql.query(rank_open_snapshots, {
                 "@userName": req.user.email,
                 "@hours": config.max_unused_snapshot_age_hours
             });
