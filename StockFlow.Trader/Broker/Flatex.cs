@@ -110,8 +110,36 @@ namespace StockFlow.Trader
 
             Click(chrome, submenu);
 
-            var refreshXpath = "//a[@id='depositStatementForm_refreshButton']";
-            var refreshButton = WaitForElementByXPath(chrome, refreshXpath, x => x.Displayed);
+            var toggleSearchButton = WaitForElementById(chrome, "depositStatementForm_tableSearchWidget_toggleSearchBarButton", x => x.Displayed);
+            if (toggleSearchButton == null)
+            {
+                throw new Exception("Could not find toggle search button");
+            }
+
+            if (toggleSearchButton.GetAttribute("title") == "Suche")
+            {
+                Click(chrome, toggleSearchButton);
+            }
+
+            var searchField = WaitForElementById(chrome, "depositStatementForm_tableSearchWidget_searchEditFieldWidget_editField", x => x.Displayed);
+            if (searchField == null)
+            {
+                throw new Exception("Could not find search field");
+            }
+
+            SendKeys(chrome, searchField, !string.IsNullOrEmpty(isin) ? isin : wkn);
+
+            var startSearchButton = WaitForElementById(chrome, "depositStatementForm_tableSearchWidget_searchEditFieldWidget_searchButton", x => x.Displayed);
+            if (startSearchButton == null)
+            {
+                throw new Exception("Could not find start search button");
+            }
+
+            Click(chrome, startSearchButton);
+
+            Thread.Sleep(1000);
+            
+            var refreshButton = WaitForElementById(chrome, "depositStatementForm_refreshButton", x => x.Displayed);
             if (refreshButton == null)
             {
                 throw new Exception("Could not find refresh button");
@@ -187,12 +215,12 @@ namespace StockFlow.Trader
 
                 var nameElement = WaitForElementByXPath(chrome, "//div[@class='PaperName']", x => true);
 
-                if (nameElement != null)
+                if (nameElement != null && nameElement.Displayed)
                 {
                     break;
                 }
 
-                if (i == 3)
+                if (i == 4)
                 {
                     throw new Exception("Could not find stock using the search feature");
                 }
@@ -452,15 +480,15 @@ namespace StockFlow.Trader
 
                 try
                 {
-                    var element = chrome.FindElementByXPath(xpath);
-                    if (element == null)
+                    var elements = chrome.FindElementsByXPath(xpath);
+                    if (elements == null || elements.Count == 0)
                     {
                         continue;
                     }
 
-                    if (validate(element))
+                    if (validate(elements[0]))
                     {
-                        return element;
+                        return elements[0];
                     }
                 }
                 catch (Exception ex)
@@ -480,15 +508,15 @@ namespace StockFlow.Trader
 
                 try
                 {
-                    var element = chrome.FindElementById(id);
-                    if (element == null)
+                    var elements = chrome.FindElementsById(id);
+                    if (elements == null || elements.Count == 0)
                     {
                         continue;
                     }
 
-                    if (validate(element))
+                    if (validate(elements[0]))
                     {
-                        return element;
+                        return elements[0];
                     }
                 }
                 catch (Exception ex)
@@ -505,7 +533,7 @@ namespace StockFlow.Trader
             Thread.Sleep(1000);
             CheckPreviousAction(chrome);
             KillOverlay(chrome);
-            chrome.ExecuteScript("arguments[0].click();", element);
+            chrome.ExecuteScript("$(arguments[0]).click();", element);
         }
 
         private static void SendKeys(ChromeDriver chrome, IWebElement element, string value)
@@ -513,8 +541,7 @@ namespace StockFlow.Trader
             Thread.Sleep(1000);
             CheckPreviousAction(chrome);
             KillOverlay(chrome);
-            element.Clear();
-            element.SendKeys(value);
+            chrome.ExecuteScript("$(arguments[0]).val(arguments[1]);", element, value);
         }
 
         private static void CheckPreviousAction(ChromeDriver chrome)
