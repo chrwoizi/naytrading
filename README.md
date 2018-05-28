@@ -6,6 +6,8 @@ The user's analysis philosophy must be purely technical, i.e. the only resource 
 ## :pencil: Recording the user's trade decisions ##
 The website [StockFlow.Node](StockFlow.Node) presents a stock price chart to the user and lets him/her choose whether to buy, ignore, or sell the stock. The price history and the decision are stored in a database. 
 
+**Try the official online version: [stockflow.net](http://stockflow.net)**
+
 <details>
 <summary>How to install</summary>
 
