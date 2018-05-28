@@ -51,12 +51,16 @@ namespace StockFlow.Trader
         {
             chrome.Navigate().GoToUrl("https://konto.flatex.de/banking-flatex");
 
-            var xpath = "//div[@id='accountOverviewForm_accountOverviewTableSmall']/div/div/div[div/text()='Cashkonto']/div[contains(@class,'SimpleBalance')]/span";
-            var checkElement = WaitForElementByXPath(chrome, xpath, 50, element =>
+            var title = WaitForElementById(chrome, "accountOverviewForm_TitleLine", 50, element =>
             {
                 var x = element.GetAttribute("innerText");
                 return !string.IsNullOrWhiteSpace(x);
             });
+            if (title == null)
+            {
+                SaveScreenshot(chrome);
+                throw new Exception("Could not reach landing page");
+            }
 
             var refreshXpath = "//a[@id='accountOverviewForm_refreshButton']";
             var refreshButton = WaitForElementByXPath(chrome, refreshXpath, 10, x => true);
@@ -68,8 +72,9 @@ namespace StockFlow.Trader
 
             Click(chrome, refreshButton);
 
-            Thread.Sleep(1000);
+            Thread.Sleep(10000);
 
+            var xpath = "//div[@id='accountOverviewForm_accountOverviewTableSmall']/div/div/div[div/text()='Cashkonto']/div[contains(@class,'SimpleBalance')]/span";
             var quantityElement = WaitForElementByXPath(chrome, xpath, 50, element =>
             {
                 var x = element.GetAttribute("innerText");
@@ -102,6 +107,19 @@ namespace StockFlow.Trader
 
         public int GetOwnedQuantity(string isin, string wkn, ChromeDriver chrome)
         {
+            chrome.Navigate().GoToUrl("https://konto.flatex.de/banking-flatex");
+
+            var title = WaitForElementById(chrome, "accountOverviewForm_TitleLine", 50, element =>
+            {
+                var x = element.GetAttribute("innerText");
+                return !string.IsNullOrWhiteSpace(x);
+            });
+            if (title == null)
+            {
+                SaveScreenshot(chrome);
+                throw new Exception("Could not reach landing page");
+            }
+
             var menu = WaitForElementById(chrome, "menu_overviewMenu", 1, x => true);
             if (menu == null)
             {
@@ -168,7 +186,7 @@ namespace StockFlow.Trader
 
             Click(chrome, refreshButton);
 
-            Thread.Sleep(1000);
+            Thread.Sleep(5000);
 
             dataTable = WaitForElementByXPath(chrome, "//table[@id='depositStatementForm_depositStatementTable']/tbody/tr/td/table[@class='Data']", 50, x => x.Displayed);
             if (dataTable == null)
@@ -247,7 +265,7 @@ namespace StockFlow.Trader
             {
                 Click(chrome, searchButton);
 
-                var nameElement = WaitForElementByXPath(chrome, "//div[@class='PaperName']", 50, x => true);
+                var nameElement = WaitForElementByXPath(chrome, "//div[@class='PaperInfoSubComponent']", 50, x => true);
 
                 if (nameElement != null && nameElement.Displayed)
                 {
@@ -617,7 +635,6 @@ namespace StockFlow.Trader
 
         private static void Click(ChromeDriver chrome, IWebElement element)
         {
-            Thread.Sleep(1000);
             CheckPreviousAction(chrome);
             KillOverlay(chrome);
             chrome.ExecuteScript("$(arguments[0]).click();", element);
@@ -625,7 +642,6 @@ namespace StockFlow.Trader
 
         private static void SendKeys(ChromeDriver chrome, IWebElement element, string value)
         {
-            Thread.Sleep(1000);
             CheckPreviousAction(chrome);
             KillOverlay(chrome);
             chrome.ExecuteScript("$(arguments[0]).val(arguments[1]);", element, value);
