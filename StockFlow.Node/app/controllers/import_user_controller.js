@@ -112,8 +112,7 @@ function addUserInstrument(data, user) {
             var existingI = await model.instrument.find({
                 where: {
                     Source: data.Source,
-                    InstrumentId: data.InstrumentId,
-                    MarketId: data.MarketId
+                    InstrumentId: data.InstrumentId
                 }
             });
 

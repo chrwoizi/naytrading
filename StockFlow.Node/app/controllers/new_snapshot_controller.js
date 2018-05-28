@@ -130,7 +130,54 @@ exports.createNewSnapshotFromRandomInstrument = async function (instrumentIds) {
         var instrument = await model.instrument.findOne({ where: { ID: instrumentIds[index].ID } });
 
         try {
-            var ratesResponse = await***REMOVED***getRates(instrument.InstrumentId, instrument.MarketId, startTime, endTime);
+            var ratesResponse = null;
+
+            var marketIds = config.***REMOVED***markets;
+            if (instrument.MarketId != null && typeof (instrument.MarketId) === 'string' && instrument.MarketId.length > 0) {
+
+                var index = config.***REMOVED***markets.indexOf(instrument.MarketId);
+                if (index > -1) {
+                    // remove known market from list
+                    marketIds.splice(index, 1);
+                }
+
+                // push known market to front of list
+                marketIds.unshift(instrument.MarketId);
+            }
+
+            for (var m = 0; m < marketIds.length; ++m) {
+                try {
+                    var marketId = marketIds[m];
+
+                    ratesResponse = await***REMOVED***getRates(instrument.InstrumentId, marketId, startTime, endTime);
+
+                    if (marketId != instrument.MarketId) {
+                        // change preferred market id for instrument
+                        instrument.MarketId = marketId;
+                        await model.instrument.update(
+                            {
+                                MarketId: marketId
+                            },
+                            {
+                                where: {
+                                    ID: instrument.ID
+                                }
+                            });
+                    }
+
+                    break;
+                }
+                catch (e) {
+                    // try next market or abort if none left
+                    if (e ==***REMOVED***market_not_found && m < marketIds.length - 1) {
+                        continue;
+                    }
+                    else {
+                        throw e;
+                    }
+                }
+            }
+
             var rates = ratesResponse.rates;
             var isin = ratesResponse.isin;
             var wkn = ratesResponse.wkn;

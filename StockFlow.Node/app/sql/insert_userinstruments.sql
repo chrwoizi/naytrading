@@ -9,8 +9,7 @@ FROM (
 			FROM instruments AS g 
 			WHERE
 				g.Source = i.Source 
-				AND g.InstrumentId = i.InstrumentId 
-				AND g.MarketId = i.MarketId
+				AND g.InstrumentId = i.InstrumentId
 		) AS Instrument_ID, 
 		NOW() AS createdAt, 
 		NOW() AS updatedAt 
