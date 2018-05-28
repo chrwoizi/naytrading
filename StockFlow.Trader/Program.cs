@@ -147,49 +147,57 @@ namespace StockFlow.Trader
                 while (true)
                 {
                     var globalLogger = new ConsoleLogger();
-                    var stockFlowClient = new StockFlowClient();
 
-                    stockFlowClient.Login(stockflowUser, stockflowPassword).Wait();
-                    stockFlowClient.Refresh().Wait();
-
-                    bool isStockExchangeOpen = IsStockExchangeOpen();
-                    if (isStockExchangeOpen)
+                    try
                     {
-                        using (var db = new TradeDBContext())
+                        var stockFlowClient = new StockFlowClient();
+
+                        stockFlowClient.Login(stockflowUser, stockflowPassword).Wait();
+                        stockFlowClient.Refresh().Wait();
+
+                        bool isStockExchangeOpen = IsStockExchangeOpen();
+                        if (isStockExchangeOpen)
                         {
-                            var oldestSuggestionTime = DateTime.UtcNow.AddHours(-double.Parse(ConfigurationManager.AppSettings["MaxSuggestionAge"], CultureInfo.InvariantCulture));
-                            var maxRetryCount = int.Parse(ConfigurationManager.AppSettings["MaxRetryCount"], CultureInfo.InvariantCulture);
-                            var minBuyOrderPrice = decimal.Parse(ConfigurationManager.AppSettings["MinBuyOrderPrice"], CultureInfo.InvariantCulture);
-                            var maxBuyOrderPrice = decimal.Parse(ConfigurationManager.AppSettings["MaxBuyOrderPrice"], CultureInfo.InvariantCulture);
-                            var orderFee = decimal.Parse(ConfigurationManager.AppSettings["OrderFee"], CultureInfo.InvariantCulture);
-
-                            var suggestionsQuery =
-                                from suggestion in db.TradeSuggestions
-                                where suggestion.Time >= oldestSuggestionTime
-                                where suggestion.Logs.All(x => x.Status != Status.Complete.ToString())
-                                let lastLog = suggestion.Logs.OrderByDescending(x => x.Time).FirstOrDefault()
-                                where lastLog == null || lastLog.Status == Status.Initial.ToString() || lastLog.Status == Status.TemporaryError.ToString()
-                                where suggestion.Logs.Count(x => x.Status == Status.TemporaryError.ToString()) < maxRetryCount
-                                select suggestion;
-
-                            var suggestions = suggestionsQuery.ToList();
-
-                            if (suggestions.Any())
+                            using (var db = new TradeDBContext())
                             {
-                                using (var controller = new OrderController(brokerUser, brokerPassword, ConfigurationManager.AppSettings["ShowBrowser"] != "true", new Flatex(), globalLogger, new FlatexTanProvider(tanFilePassword)))
+                                var oldestSuggestionTime = DateTime.UtcNow.AddHours(-double.Parse(ConfigurationManager.AppSettings["MaxSuggestionAge"], CultureInfo.InvariantCulture));
+                                var maxRetryCount = int.Parse(ConfigurationManager.AppSettings["MaxRetryCount"], CultureInfo.InvariantCulture);
+                                var minBuyOrderPrice = decimal.Parse(ConfigurationManager.AppSettings["MinBuyOrderPrice"], CultureInfo.InvariantCulture);
+                                var maxBuyOrderPrice = decimal.Parse(ConfigurationManager.AppSettings["MaxBuyOrderPrice"], CultureInfo.InvariantCulture);
+                                var orderFee = decimal.Parse(ConfigurationManager.AppSettings["OrderFee"], CultureInfo.InvariantCulture);
+
+                                var suggestionsQuery =
+                                    from suggestion in db.TradeSuggestions
+                                    where suggestion.Time >= oldestSuggestionTime
+                                    where suggestion.Logs.All(x => x.Status != Status.Complete.ToString())
+                                    let lastLog = suggestion.Logs.OrderByDescending(x => x.Time).FirstOrDefault()
+                                    where lastLog == null || lastLog.Status == Status.Initial.ToString() || lastLog.Status == Status.TemporaryError.ToString()
+                                    where suggestion.Logs.Count(x => x.Status == Status.TemporaryError.ToString()) < maxRetryCount
+                                    select suggestion;
+
+                                var suggestions = suggestionsQuery.ToList();
+
+                                if (suggestions.Any())
                                 {
-                                    var availableFunds = controller.GetAvailableFunds();
-                                    foreach (var suggestion in suggestions)
+                                    using (var controller = new OrderController(brokerUser, brokerPassword, ConfigurationManager.AppSettings["ShowBrowser"] != "true", new Flatex(), globalLogger, new FlatexTanProvider(tanFilePassword)))
                                     {
-                                        ProcessSuggestion(suggestion, ref availableFunds, minBuyOrderPrice, maxBuyOrderPrice, orderFee, db, controller, stockFlowClient, globalLogger);
+                                        var availableFunds = controller.GetAvailableFunds();
+                                        foreach (var suggestion in suggestions)
+                                        {
+                                            ProcessSuggestion(suggestion, ref availableFunds, minBuyOrderPrice, maxBuyOrderPrice, orderFee, db, controller, stockFlowClient, globalLogger);
+                                        }
                                     }
                                 }
-                            }
-                            else
-                            {
-                                globalLogger.WriteLine("No active suggestions");
+                                else
+                                {
+                                    globalLogger.WriteLine("No active suggestions");
+                                }
                             }
                         }
+                    }
+                    catch(Exception ex)
+                    {
+                        globalLogger.WriteLine("Exception: " + ex);
                     }
 
                     var sleep = TimeSpan.FromMinutes(double.Parse(ConfigurationManager.AppSettings["SleepMinutesBetweenRuns"], CultureInfo.InvariantCulture));
