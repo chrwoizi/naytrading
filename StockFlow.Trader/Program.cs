@@ -368,6 +368,11 @@ namespace StockFlow.Trader
                 throw new CancelOrderException(Status.TemporaryError, "Too cheap to sell at " + currentPrice + ". Expected price to be " + suggestion.Price + " EUR or more");
             }
 
+            if (quantity <= 0)
+            {
+                throw new CancelOrderException(Status.FatalError, "Invalid quantity: " + quantity);
+            }
+
             return quantity;
         }
 
@@ -394,6 +399,11 @@ namespace StockFlow.Trader
             if (total < minBuyOrderPrice)
             {
                 throw new CancelOrderException(Status.TemporaryError, "Buy order total is too low");
+            }
+
+            if (quantity <= 0)
+            {
+                throw new CancelOrderException(Status.FatalError, "Invalid quantity: " + quantity);
             }
 
             return quantity;

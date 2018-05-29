@@ -103,6 +103,10 @@ namespace StockFlow.Trader
 
                 return quantity;
             }
+            catch (CancelOrderException)
+            {
+                throw;
+            }
             catch (Exception ex)
             {
                 throw new CancelOrderException(Status.TemporaryError, ex.Message, ex);
@@ -173,6 +177,10 @@ namespace StockFlow.Trader
                 logger.WriteLine("Placing order...");
                 broker.PlaceOrder(chrome);
                 logger.WriteLine("Order complete");
+            }
+            catch (CancelOrderException)
+            {
+                throw;
             }
             catch (Exception ex)
             {
