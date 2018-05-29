@@ -316,6 +316,12 @@ namespace StockFlow.Trader
                 var euros = match.Groups[1].Value.Replace(".", "");
                 var cents = match.Groups[3].Value;
                 var amount = decimal.Parse(euros + "." + cents, CultureInfo.InvariantCulture);
+                if (amount <= 0)
+                {
+                    SaveScreenshot(chrome);
+                    throw new CancelOrderException(Status.TemporaryError, "Invalid price: " + amount);
+                }
+
                 return amount;
             }
             else
@@ -476,20 +482,38 @@ namespace StockFlow.Trader
                     var error = element.GetAttribute("innerText");
                     if (!string.IsNullOrEmpty(error))
                     {
-                        SaveScreenshot(chrome);
-                        throw new Exception("Error message from broker: " + error);
-                    }
-                    else
-                    {
-                        SaveScreenshot(chrome);
-                        throw new Exception("Could not get offer");
+                        if (error.Contains("Die Preisanfrage ist zur Zeit nicht möglich"))
+                        {
+                            throw new CancelOrderException(Status.TemporaryError, "Error message from broker: " + error);
+                        }
+                        else
+                        {
+                            SaveScreenshot(chrome);
+                            throw new Exception("Error message from broker: " + error);
+                        }
                     }
                 }
-                else
+
+                element = WaitForElementById(chrome, "serverErrors", 1, x => true);
+                if (element != null)
                 {
-                    SaveScreenshot(chrome);
-                    throw new Exception("Could not get offer or error message");
+                    var error = element.GetAttribute("innerText");
+                    if (!string.IsNullOrEmpty(error))
+                    {
+                        if (error.Contains("Die Preisanfrage ist zur Zeit nicht möglich"))
+                        {
+                            throw new CancelOrderException(Status.TemporaryError, "Error message from broker: " + error);
+                        }
+                        else
+                        {
+                            SaveScreenshot(chrome);
+                            throw new Exception("Error message from broker: " + error);
+                        }
+                    }
                 }
+
+                SaveScreenshot(chrome);
+                throw new CancelOrderException(Status.TemporaryError, "Could not get offer or error message");
             }
 
             var priceText = priceElement.GetAttribute("innerText");
@@ -516,7 +540,7 @@ namespace StockFlow.Trader
             if (button == null)
             {
                 SaveScreenshot(chrome);
-                throw new Exception("Order button not found");
+                throw new CancelOrderException(Status.TemporaryError, "Order button not found");
             }
 
             if (!button.Displayed)
@@ -547,7 +571,7 @@ namespace StockFlow.Trader
                 }
 
                 SaveScreenshot(chrome);
-                throw new CancelOrderException(Status.TemporaryError, "Order was not confirmed as expected: " + message);
+                throw new CancelOrderException(Status.FatalError, "Order was not confirmed as expected: " + message);
             }
 
             var errorElement = WaitForElementByXPath(chrome, "//*[@id='serverErrors']/div/table/tbody/tr/td[2]/ul/li", 1, element =>
@@ -563,8 +587,21 @@ namespace StockFlow.Trader
 
             if (errorElement != null)
             {
+                var text = errorElement.GetAttribute("innerText");
+                if (text != null && text.Contains("Ihre Anfrage wurde von der Börse abgelehnt"))
+                {
+                    throw new CancelOrderException(Status.TemporaryError, "Error message from broker: " + text);
+                }
+                else
+                {
+                    SaveScreenshot(chrome);
+                    throw new CancelOrderException(Status.FatalError, "Error message from broker: " + text);
+                }
+            }
+            else
+            {
                 SaveScreenshot(chrome);
-                throw new CancelOrderException(Status.TemporaryError, "Error message from broker: " + errorElement.GetAttribute("innerText"));
+                throw new CancelOrderException(Status.FatalError, "Could not get confirmation or error message");
             }
         }
 
