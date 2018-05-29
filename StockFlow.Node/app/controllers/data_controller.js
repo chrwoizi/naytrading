@@ -100,7 +100,7 @@ async function getStatsForUser(user) {
             var open = openTradeValues.filter(x => x.ID == trade.ID);
             if (open.length == 1) {
                 stats.Sales.push({
-                    Time: trade.Time,
+                    Time: open[0].Time,
                     IsComplete: false,
                     Return: (open[0].LatestPrice - trade.Price) / trade.Price,
                     InstrumentName: trade.InstrumentName
