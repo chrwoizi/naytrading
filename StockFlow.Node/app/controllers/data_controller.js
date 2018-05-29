@@ -121,7 +121,7 @@ async function getStatsForUser(user) {
             delete buyTrades[trade.InstrumentId];
 
             stats.Sales.push({
-                Time: buyTrade.Time,
+                Time: trade.Time,
                 IsComplete: true,
                 Return: (trade.Price - buyTrade.Price) / buyTrade.Price,
                 InstrumentName: trade.InstrumentName
@@ -144,7 +144,7 @@ async function getStatsForUser(user) {
         else {
             var sellTrade = sellTrades[0];
             stats.Sales.push({
-                Time: buyTrade.Time,
+                Time: sellTrade.Time,
                 IsComplete: true,
                 Return: (sellTrade.Price - buyTrade.Price) / buyTrade.Price,
                 InstrumentName: buyTrade.InstrumentName
