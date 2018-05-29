@@ -369,6 +369,21 @@ exports.createNewSnapshotByInstrumentId = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
 
+            var upToDateFrom = new Date(new Date().getTime() - config.snapshot_valid_seconds * 1000);
+            var existing = await model.snapshot.findOne({
+                where: {
+                    Instrument_ID: req.params.instrumentId,
+                    Time: {
+                        [sequelize.Op.gte]: upToDateFrom
+                    }
+                }
+            });
+            if (existing != null) {
+                var viewModel = await snapshotController.getSnapshot(existing.ID, req.user.email);
+                res.json(viewModel);
+                return;
+            }
+
             var instrumentIds = [{ ID: req.params.instrumentId, Order: 1 }];
 
             var newSnapshot = await exports.createNewSnapshotFromRandomInstrument(instrumentIds);
