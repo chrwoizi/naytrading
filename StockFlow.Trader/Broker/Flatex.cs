@@ -355,7 +355,7 @@ namespace StockFlow.Trader
             if (priceElement == null)
             {
                 SaveScreenshot(chrome);
-                throw new Exception("Could not find price element matching config key FlatexExchanges");
+                throw new CancelOrderException(Status.FatalError, "Could not find price element matching config key FlatexExchanges");
             }
 
             return priceElement;

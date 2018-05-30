@@ -174,7 +174,7 @@ namespace StockFlow
             if (round >= 2 && round < 100)
             {
                 var frac = factor - round;
-                if (Math.Abs(frac) < 0.01m * round)
+                if (Math.Abs(frac) < 0.05m)
                 {
                     return round;
                 }
@@ -185,7 +185,7 @@ namespace StockFlow
             if (round >= 2 && round < 100)
             {
                 var frac = factor - round;
-                if (Math.Abs(frac) < 0.01m * round)
+                if (Math.Abs(frac) < 0.05m)
                 {
                     return 1 / round;
                 }
