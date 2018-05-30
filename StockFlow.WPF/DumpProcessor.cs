@@ -103,7 +103,7 @@ namespace StockFlow
                             var previousRate = rates.LastOrDefault(x => x.Time.Date < firstDate) ?? rates.First();
 
                             var remainingRates = rates.SkipWhile(x => x.Time.Date < firstDate).ToList();
-                            
+
                             if (previousRate.Time.Date <= firstDate && remainingRates.Count >= WeekDays - MaxMissingDays)
                             {
                                 writer.WriteLine();
@@ -117,6 +117,7 @@ namespace StockFlow
                                 writer.Write(snapshot.Time.ToString("yyyyMMdd", CultureInfo.InvariantCulture));
                                 writer.Write(";");
 
+                                var splitFactor = 1m;
                                 for (DateTime date = firstDate; date <= snapshot.Time.Date; date = date.AddDays(1))
                                 {
                                     remainingRates = remainingRates.SkipWhile(x => x.Time.Date < date).ToList();
@@ -139,7 +140,9 @@ namespace StockFlow
                                         // no remaining rates. use previous rate.
                                     }
 
-                                    var value = rate.Close.Value.ToString("F2", CultureInfo.InvariantCulture);
+                                    splitFactor *= GetSplitFactor(previousRate.Close.Value, rate.Close.Value);
+
+                                    var value = (splitFactor * rate.Close.Value).ToString("F2", CultureInfo.InvariantCulture);
                                     writer.Write(value);
 
                                     if (date < snapshot.Time.Date)
@@ -162,6 +165,33 @@ namespace StockFlow
 
                 reportProgress(1);
             }
+        }
+
+        private static decimal GetSplitFactor(decimal previousRate, decimal rate)
+        {
+            var factor = previousRate / rate;
+            var round = Math.Round(factor);
+            if (round >= 2 && round < 100)
+            {
+                var frac = factor - round;
+                if (Math.Abs(frac) < 0.01m * round)
+                {
+                    return round;
+                }
+            }
+
+            factor = rate / previousRate;
+            round = Math.Round(factor);
+            if (round >= 2 && round < 100)
+            {
+                var frac = factor - round;
+                if (Math.Abs(frac) < 0.01m * round)
+                {
+                    return 1 / round;
+                }
+            }
+
+            return 1;
         }
 
         public static List<SnapshotMetadata> GetDumpMetadata()
@@ -375,14 +405,14 @@ namespace StockFlow
 
                 reader.BaseStream.Seek(0, SeekOrigin.Begin);
                 var header = reader.ReadLine();
-                
+
                 int i = 0;
 
                 reader.BaseStream.Seek(0, SeekOrigin.Begin);
                 using (var writer = new StreamWriter(File.Open(testPath, FileMode.Create)))
                 {
                     writer.WriteLine(header);
-                    
+
                     foreach (var item in testLines)
                     {
                         reader.BaseStream.Seek(item.Value.Position, SeekOrigin.Begin);
@@ -443,7 +473,7 @@ namespace StockFlow
                             var time = split[2];
                             var decision = split[3];
                             var rates = split.Skip(4).Select(x => decimal.Parse(x, CultureInfo.InvariantCulture)).ToArray();
-                            
+
                             writer.WriteLine(Serialize(originalId + "-0", instrumentId, time, decision, rates));
                             lineIndex++;
                             reportProgress(lineIndex / (double)(lineCount * factor));

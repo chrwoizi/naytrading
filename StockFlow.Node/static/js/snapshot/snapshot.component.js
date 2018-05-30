@@ -13,7 +13,7 @@ angular.
 
                 var currentLocation = window.location.href;
 
-                var service = undefined;                
+                var service = undefined;
                 var params = undefined;
                 if ($routeParams.id == "new") {
                     service = NewSnapshotService;
@@ -37,7 +37,7 @@ angular.
 
                         window.location.href = '#!/snapshots';
 
-                        if (typeof(error.data) !== 'undefined' && error.data != null) {
+                        if (typeof (error.data) !== 'undefined' && error.data != null) {
                             console.error('error: ' + JSON.stringify(error.data));
                         }
                     }
@@ -118,7 +118,7 @@ angular.
                         var d = date.getDate();
                         var mm = m < 10 ? '0' + m : m;
                         var dd = d < 10 ? '0' + d : d;
-                        return '' + (y%100) + mm + dd;
+                        return '' + (y % 100) + mm + dd;
                     }
 
                     function parseDate(dateString) {
@@ -148,7 +148,7 @@ angular.
                                     break;
                                 }
                             }
-                            
+
                             return [
                                 rates.map(function (v, i) {
                                     if (i <= previousSnapshotIndex)
@@ -188,15 +188,46 @@ angular.
                         }
                     }
 
+                    function getSplitFactor(previousRate, rate) {
+                        var factor = previousRate / rate;
+                        var round = Math.round(factor);
+                        if (round >= 2 && round < 100) {
+                            var frac = factor - round;
+                            if (Math.abs(frac) < 0.01 * round) {
+                                return round;
+                            }
+                        }
+
+                        factor = rate / previousRate;
+                        round = Math.round(factor);
+                        if (round >= 2 && round < 100) {
+                            var frac = factor - round;
+                            if (Math.abs(frac) < 0.01 * round) {
+                                return 1 / round;
+                            }
+                        }
+
+                        return 1;
+                    }
+
+                    var previousRate = snapshot.Rates[0].C;
+                    var splitFactor = 1;
+                    for (var i = 0; i < snapshot.Rates.length; ++i) {
+                        var currentRate = snapshot.Rates[i].C;
+                        splitFactor *= getSplitFactor(previousRate, currentRate);
+                        snapshot.Rates[i].C = splitFactor * currentRate;
+                        previousRate = currentRate;
+                    }
+
                     $scope.labels5 = snapshot.Rates.map(function (v) {
                         return v.T.substr(4, 2) + "." + v.T.substr(2, 2) + "." + v.T.substr(0, 2);
                     });
-                    
+
                     $scope.data5 = GetData(snapshot.Rates);
 
                     var endDate = parseDate(snapshot.Date);
                     var startDate = yymmdd(new Date(endDate.setMonth(endDate.getMonth() - 12)));
-                    
+
                     var startDateIndex = snapshot.Rates.length - 1;
                     for (; startDateIndex >= 0; --startDateIndex) {
                         var rateDate = snapshot.Rates[startDateIndex].T;
@@ -208,7 +239,7 @@ angular.
                             break;
                         }
                     }
-                    
+
                     $scope.labels1 = $scope.labels5.slice(startDateIndex);
 
                     if (snapshot.PreviousTime == null) {
