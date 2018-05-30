@@ -103,14 +103,14 @@ def get_split_factor(previousRate, rate):
     rounded = round(factor)
     if rounded >= 2 and rounded < 100:
         fraction = factor - rounded
-        if abs(fraction) < 0.01 * rounded:
+        if abs(fraction) < 0.05:
             return rounded
 
     factor = rate / previousRate
     rounded = round(factor)
     if rounded >= 2 and rounded < 100:
         fraction = factor - rounded
-        if abs(fraction) < 0.01 * rounded:
+        if abs(fraction) < 0.05:
             return 1 / rounded
 
     return 1;
