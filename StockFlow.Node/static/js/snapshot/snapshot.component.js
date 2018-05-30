@@ -193,7 +193,7 @@ angular.
                         var round = Math.round(factor);
                         if (round >= 2 && round < 100) {
                             var frac = factor - round;
-                            if (Math.abs(frac) < 0.05) {
+                            if (Math.abs(frac) < 0.1) {
                                 return round;
                             }
                         }
@@ -202,7 +202,7 @@ angular.
                         round = Math.round(factor);
                         if (round >= 2 && round < 100) {
                             var frac = factor - round;
-                            if (Math.abs(frac) < 0.05) {
+                            if (Math.abs(frac) < 0.1) {
                                 return 1 / round;
                             }
                         }
