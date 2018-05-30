@@ -14,6 +14,12 @@ from shutil import copyfile
 from subprocess import Popen, CREATE_NEW_CONSOLE
 
 #os.environ["CUDA_VISIBLE_DEVICES"]="-1"
+adam_keep = 100
+adam_reset = False
+adam_learning_rate = 0.0005
+adam_epsilon = 0.5
+gln_aux_exit_4a_weight = 0.005
+gln_aux_exit_4e_weight = 0.01
 
 import numpy as np
 import tensorflow as tf
@@ -196,13 +202,13 @@ def run(name, sess, model, data, epoch, optimizer, batches, feed_dict, summary, 
 
 def train(data, sess, model, optimizer, summary, summary_writer, epoch):
     #feed_dict = { model.is_train: True, model.fc_dropout_keep: 0.8, model.residual_scale: 0.1 } # InceptionResNetV2
-    feed_dict = { model.is_train: True, model.fc_dropout_keep: 0.4, model.aux_fc_dropout_keep: 0.3, model.aux_exit_4a_weight: 0.3, model.aux_exit_4e_weight: 0.3, model.exit_weight: 1.0 } # GoogLeNet
+    feed_dict = { model.is_train: True, model.fc_dropout_keep: 0.4, model.aux_fc_dropout_keep: 0.3, model.aux_exit_4a_weight: gln_aux_exit_4a_weight, model.aux_exit_4e_weight: gln_aux_exit_4e_weight, model.exit_weight: 1.0 } # GoogLeNet
     return run('Train', sess, model, data, epoch, optimizer, data.train_batches, feed_dict, summary, summary_writer)
 
 
 def measure_accuracy(data, sess, model, summary, summary_writer, epoch):
     #feed_dict = { model.is_train: False, model.fc_dropout_keep: 1.0, model.residual_scale: 0.1 } # InceptionResNetV2
-    feed_dict = { model.is_train: False, model.fc_dropout_keep: 1.0, model.aux_fc_dropout_keep: 1, model.aux_exit_4a_weight: 0.3, model.aux_exit_4e_weight: 0.3, model.exit_weight: 1.0 } #GoogLeNet
+    feed_dict = { model.is_train: False, model.fc_dropout_keep: 1.0, model.aux_fc_dropout_keep: 1, model.aux_exit_4a_weight: gln_aux_exit_4a_weight, model.aux_exit_4e_weight: gln_aux_exit_4e_weight, model.exit_weight: 1.0 } #GoogLeNet
     return run('Test', sess, model, data, epoch, None, data.test_batches, feed_dict, summary, summary_writer)
 
 
@@ -296,10 +302,7 @@ def main(model_dir, load_ckpt, epochs, start_epoch, batch_size, test_file, train
     with tf.name_scope('adam'):  
         update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
         with tf.control_dependencies(update_ops):
-            optimizer = tf.train.AdamOptimizer(learning_rate=0.0005, epsilon=0.5).minimize(model.loss)
-
-    print('Saver')
-    saver = tf.train.Saver(var_list=tf.trainable_variables(), max_to_keep=100)
+            optimizer = tf.train.AdamOptimizer(learning_rate=adam_learning_rate, adam_epsilon=0.5).minimize(model.loss)
 
     #Popen('tensorboard.exe --logdir=%s' % model_dir, creationflags=CREATE_NEW_CONSOLE)
 
@@ -313,8 +316,16 @@ def main(model_dir, load_ckpt, epochs, start_epoch, batch_size, test_file, train
 
         if load_ckpt:
             print('Restoring parameters from %s' % (load_ckpt_file))
+            var_list = None
+            if adam_reset:
+                var_list = tf.trainable_variables()
+            saver = tf.train.Saver(var_list=var_list, max_to_keep=adam_keep)
             saver.restore(sess, load_ckpt_file)
 
+        print('Saver')
+        saver = tf.train.Saver(var_list=tf.trainable_variables(), max_to_keep=adam_keep)
+
+        print('Initialize variables')
         sess.run([data.test_iter.initializer, data.train_iter.initializer], feed_dict={
             data.epochs_tensor: epochs, data.batch_size_tensor: data.batch_size,
             data.test_count_tensor: data.test_count, data.train_count_tensor: data.train_count})
