@@ -10,8 +10,8 @@ import matplotlib.pyplot as plt
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument('--test', type=int, default=1000, help='Number of test data rows.')
-parser.add_argument('--train', type=int, default=100000, help='Number of train data rows.')
+parser.add_argument('--test', type=int, default=10000, help='Number of test data rows.')
+parser.add_argument('--train', type=int, default=50000, help='Number of train data rows.')
 
 
 def random_range(min, max):
