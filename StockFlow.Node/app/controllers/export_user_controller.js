@@ -129,8 +129,9 @@ exports.exportUserSnapshots = async function (req, res) {
                 delete snapshot.createdAt;
                 delete snapshot.updatedAt;
 
+                snapshot.DecisionId = usersnapshot.ID;
                 snapshot.Decision = usersnapshot.Decision;
-                snapshot.ModifiedTime = usersnapshot.ModifiedTime;
+                snapshot.DecisionTime = usersnapshot.ModifiedTime;
                 
                 if (i > 0) {
                     res.write(',');

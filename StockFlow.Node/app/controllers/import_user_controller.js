@@ -77,7 +77,7 @@ function updateUserSnapshot(data, existing) {
                 await model.usersnapshot.update(
                     {
                         Decision: data.Decision,
-                        ModifiedTime: data.ModifiedTime
+                        ModifiedTime: data.DecisionTime
                     },
                     {
                         where: {
