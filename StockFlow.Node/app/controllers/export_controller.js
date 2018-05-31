@@ -68,14 +68,21 @@ exports.exportSnapshots = async function (req, res) {
     try {
         if (req.params.exportSecret == config.export_secret) {
 
-            if (typeof (req.params.fromDate) !== 'string' || req.params.fromDate.length != 8) {
+            if (typeof (req.params.fromDate) !== 'string' || !(req.params.fromDate.length == 8 || req.params.fromDate.length == 14)) {
 
                 res.status(500);
                 res.json({ error: 'invalid date format' });
                 return;
             }
 
-            var fromDate = new Date(req.params.fromDate.substr(0, 4), parseInt(req.params.fromDate.substr(4, 2)) - 1, req.params.fromDate.substr(6, 2));
+            var fromDate = new Date(1970, 0, 1);
+            if (req.params.fromDate.length == 8) {
+                fromDate = new Date(req.params.fromDate.substr(0, 4), parseInt(req.params.fromDate.substr(4, 2)) - 1, req.params.fromDate.substr(6, 2));
+            }
+            else if (req.params.fromDate.length == 14) {
+                fromDate = new Date(req.params.fromDate.substr(0, 4), parseInt(req.params.fromDate.substr(4, 2)) - 1, req.params.fromDate.substr(6, 2),
+                    req.params.fromDate.substr(8, 2), parseInt(req.params.fromDate.substr(10, 2)), req.params.fromDate.substr(12, 2));
+            }
 
             cancel = false;
 
