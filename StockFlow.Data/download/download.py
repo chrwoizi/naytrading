@@ -54,10 +54,16 @@ def main(proxy_url, proxy_user, proxy_password, stockflow_url, stockflow_user, s
             max_date = max(max_date, date)
 
     stockflow = StockFlow(proxy_url, proxy_user, proxy_password, stockflow_url)
+
+    print('Logging in at StockFlow')
     stockflow.login(stockflow_user, stockflow_password)
 
     now = datetime.datetime.utcnow()
-    stockflow.export_snapshots(max_date, 'data\\' + now.strftime('%Y%m%d%H%M%S') + '.json')
+    out_path = 'data\\' + now.strftime('%Y%m%d%H%M%S') + '.json'
+    print('Downloading snapshots from %s to %s' % (max_date.strftime('%Y-%m-%d %H:%M:%s'), out_path))
+    stockflow.export_snapshots(max_date, out_path)
+
+    print('Done')
 
 
 if __name__ == '__main__':
