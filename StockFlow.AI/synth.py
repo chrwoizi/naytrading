@@ -264,7 +264,7 @@ if __name__ == '__main__':
                     now = datetime.datetime.now()
                     last_duration = now - last_log
                     last_log = now
-                    rows = i - last_count;
+                    rows = i - last_count
                     last_count = i
                     if rows > 0:
                         durations.append(last_duration.total_seconds() / rows)

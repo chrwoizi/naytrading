@@ -62,7 +62,7 @@ def get_split_factor(previousRate, rate):
         if abs(fraction) < 0.1:
             return 1 / rounded
 
-    return 1;
+    return 1
 
 
 def normalize(chart):
