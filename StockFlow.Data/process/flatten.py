@@ -2,10 +2,10 @@ import os
 import glob
 import argparse
 import datetime
-import ijson
 import itertools
 from decimal import Decimal
 from Progress import Progress
+from Importer import *
 
 parser = argparse.ArgumentParser()
 
@@ -38,6 +38,11 @@ def get_split_factor(previousRate, rate):
 
     return 1
 
+class Rate():
+    def __init__(self, date, close):
+        self.Date = date
+        self.Close = close
+
 def main(input_path, output_path, days, max_missing_days):
 
     weekdays = (5 * days) / 7
@@ -60,37 +65,36 @@ def main(input_path, output_path, days, max_missing_days):
             with open(file_path, 'r') as in_file:
                 progress.begin_file(file_path, in_file)
 
-                snapshots = ijson.items(in_file, 'item')
-                for snapshot in snapshots:
-
-                    id = snapshot['DecisionId']
+                def flatten_snapshot(snapshot):
+                    id = snapshot.DecisionId
                     if id in known_ids:
-                        continue
+                        return
 
-                    if snapshot['Decision'] is not None and snapshot['snapshotrates'] is not None:
+                    if snapshot.Decision is not None and snapshot.snapshotrates is not None:
 
                         known_ids.add(id)
 
-                        snapshot_date = datetime.datetime.strptime(snapshot['Time'], '%Y-%m-%d %H:%M:%S').date()
+                        snapshot_date = datetime.datetime.strptime(snapshot.Time, '%Y-%m-%d %H:%M:%S').date()
                         first_date = snapshot_date - datetime.timedelta(days - 1)
 
-                        rates = list(filter(lambda r: r['Close'] is not None and r['Close'] > 0, snapshot['snapshotrates']))
-                        rates = list(map(lambda r: dict(Date=datetime.datetime.strptime(r['Time'], '%Y-%m-%d %H:%M:%S').date(), Close=r['Close']), rates))
+                        rates = list(filter(lambda r: r.Close is not None and r.Close > 0, snapshot.snapshotrates))
+                        rates = list(map(lambda r: Rate(datetime.datetime.strptime(r.Time, '%Y-%m-%d %H:%M:%S').date(), r.Close), rates))
 
                         if len(rates) > 0:
-                            previous_rate = lastOrDefault((r for r in rates if r['Date'] < first_date), rates[0])
-                            remaining_rates = list(itertools.dropwhile(lambda r: r['Date'] < first_date, rates))
+                            previous_rate = lastOrDefault((r for r in rates if r.Date < first_date), rates[0])
+                            remaining_rates = list(itertools.dropwhile(lambda r: r.Date < first_date, rates))
 
-                            if previous_rate['Date'] <= first_date and len(remaining_rates) >= weekdays - max_missing_days:
+                            if previous_rate.Date <= first_date and len(
+                                    remaining_rates) >= weekdays - max_missing_days:
                                 out_file.write('\n')
 
                                 out_file.write(str(id))
                                 out_file.write(';')
 
-                                out_file.write(str(snapshot['instrument']['ID']))
+                                out_file.write(str(snapshot.instrument.ID))
                                 out_file.write(';')
 
-                                out_file.write(snapshot['Decision'])
+                                out_file.write(snapshot.Decision)
                                 out_file.write(';')
 
                                 out_file.write(snapshot_date.strftime('%Y%m%d'))
@@ -103,19 +107,19 @@ def main(input_path, output_path, days, max_missing_days):
 
                                     date = first_date + datetime.timedelta(days=day)
 
-                                    remaining_rates = list(itertools.dropwhile(lambda r: r['Date'] < date, remaining_rates))
+                                    remaining_rates = list(itertools.dropwhile(lambda r: r.Date < date, remaining_rates))
 
                                     rate = previous_rate
-                                    if (len(remaining_rates) > 0):
+                                    if len(remaining_rates) > 0:
                                         firstRate = remaining_rates[0]
-                                        if (firstRate['Date'] == date):
+                                        if firstRate.Date == date:
                                             rate = firstRate
-                                        #else: #encountered future rate. use previous rate.
-                                    #else: #no remaining rates. use previous rate.
+                                        # else: #encountered future rate. use previous rate.
+                                    # else: #no remaining rates. use previous rate.
 
-                                    split_factor *= get_split_factor(previous_rate['Close'], rate['Close'])
+                                    split_factor *= get_split_factor(previous_rate.Close, rate.Close)
 
-                                    value = "%.2f" % (split_factor * rate['Close'])
+                                    value = '%.2f' % (split_factor * rate.Close)
                                     out_file.write(value)
 
                                     if day < snapshot_days - 1:
@@ -124,10 +128,18 @@ def main(input_path, output_path, days, max_missing_days):
                                     previous_rate = rate
 
                             else:
-                                print("%s has insufficient rates: %d" % (snapshot['instrument']['InstrumentName'], len(remaining_rates)))
+                                print("%s has insufficient rates: %d" % (
+                                snapshot.instrument.InstrumentName, len(remaining_rates)))
 
                     progress.print()
                     progress.next_item()
+
+                importer = Importer()
+                importer.import_stream(in_file, flatten_snapshot)
+
+                #snapshots = ijson.items(in_file, 'item')
+                #for snapshot in snapshots:
+                #    flatten_snapshot(snapshot)
 
                 progress.end_file()
 
