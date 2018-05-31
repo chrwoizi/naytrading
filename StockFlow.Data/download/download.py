@@ -18,7 +18,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--proxy_url', type=str, default='', help='Proxy URL.')
 parser.add_argument('--proxy_user', type=str, default='', help='Proxy user.')
 parser.add_argument('--proxy_password', type=str, default='', help='Proxy password.')
-parser.add_argument('--stockflow_url', type=str, default='http://localhost:5000', help='StockFlow base url.')
+parser.add_argument('--stockflow_url', type=str, default='http://stockflow.net', help='StockFlow base url.')
 parser.add_argument('--stockflow_user', type=str, default='', help='StockFlow user.')
 parser.add_argument('--stockflow_password', type=str, default='', help='StockFlow password.')
 
@@ -60,7 +60,8 @@ def main(proxy_url, proxy_user, proxy_password, stockflow_url, stockflow_user, s
 
     now = datetime.datetime.utcnow()
     out_path = 'data\\' + now.strftime('%Y%m%d%H%M%S') + '.json'
-    print('Downloading snapshots from %s to %s' % (max_date.strftime('%Y-%m-%d %H:%M:%s'), out_path))
+    max_date_str = max_date.strftime('%Y-%m-%d %H:%M:%S')
+    print('Downloading snapshots from %s to %s' % (max_date_str, out_path))
     stockflow.export_snapshots(max_date, out_path)
 
     print('Done')
