@@ -68,18 +68,25 @@ exports.exportUserSnapshots = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
 
-            if (typeof (req.params.fromDate) !== 'string' || req.params.fromDate.length != 8) {
+            if (typeof (req.params.fromDate) !== 'string' || !(req.params.fromDate.length == 8 || req.params.fromDate.length == 14)) {
 
                 return500(res, { message: 'invalid date format' });
                 return;
             }
 
-            var fromDate = new Date(req.params.fromDate.substr(0, 4), parseInt(req.params.fromDate.substr(4, 2)) - 1, req.params.fromDate.substr(6, 2));
+            var fromDate = new Date(1970, 0, 1);
+            if (req.params.fromDate.length == 8) {
+                fromDate = new Date(req.params.fromDate.substr(0, 4), parseInt(req.params.fromDate.substr(4, 2)) - 1, req.params.fromDate.substr(6, 2));
+            }
+            else if (req.params.fromDate.length == 14) {
+                fromDate = new Date(req.params.fromDate.substr(0, 4), parseInt(req.params.fromDate.substr(4, 2)) - 1, req.params.fromDate.substr(6, 2),
+                    req.params.fromDate.substr(8, 2), parseInt(req.params.fromDate.substr(10, 2)), req.params.fromDate.substr(12, 2));
+            }
 
             var ids = await sql.query('SELECT userSnapshot.ID FROM usersnapshots AS userSnapshot WHERE userSnapshot.User = @userName AND userSnapshot.ModifiedTime >= @fromDate ORDER BY userSnapshot.ModifiedTime',
                 {
                     "@userName": req.user.email,
-                    "@fromDate": req.params.fromDate
+                    "@fromDate": fromDate
                 });
 
             res.header('Content-disposition', 'attachment; filename=usersnapshots.json');
@@ -150,18 +157,25 @@ exports.exportUserTrades = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
 
-            if (typeof (req.params.fromDate) !== 'string' || req.params.fromDate.length != 8) {
+            if (typeof (req.params.fromDate) !== 'string' || !(req.params.fromDate.length == 8 || req.params.fromDate.length == 14)) {
 
                 return500(res, { message: 'invalid date format' });
                 return;
             }
 
-            var fromDate = new Date(req.params.fromDate.substr(0, 4), parseInt(req.params.fromDate.substr(4, 2)) - 1, req.params.fromDate.substr(6, 2));
+            var fromDate = new Date(1970, 0, 1);
+            if (req.params.fromDate.length == 8) {
+                fromDate = new Date(req.params.fromDate.substr(0, 4), parseInt(req.params.fromDate.substr(4, 2)) - 1, req.params.fromDate.substr(6, 2));
+            }
+            else if (req.params.fromDate.length == 14) {
+                fromDate = new Date(req.params.fromDate.substr(0, 4), parseInt(req.params.fromDate.substr(4, 2)) - 1, req.params.fromDate.substr(6, 2),
+                    req.params.fromDate.substr(8, 2), parseInt(req.params.fromDate.substr(10, 2)), req.params.fromDate.substr(12, 2));
+            }
 
             var trades = await sql.query(trades_sql,
                 {
                     "@userName": req.user.email,
-                    "@fromDate": req.params.fromDate
+                    "@fromDate": fromDate
                 });
 
             res.header('Content-disposition', 'attachment; filename=trades.json');
