@@ -22,12 +22,7 @@
 /StockFlow.Web/App_Data/curl/*.json
 /StockFlow.Web/Properties/PublishProfiles/*.pubxml
 /StockFlow.Trader/*.user
-/StockFlow.Python/model*
-/StockFlow.Python/.idea
-/StockFlow.Python/__pycache__
-/StockFlow.Python/*.csv
 /StockFlow.Web/*.log
-/StockFlow.Python/run_client.bat
 /StockFlow.Node/node_modules
 /StockFlow.Node/.env
 /StockFlow.Node/StockFlow.Node.njsproj.user
@@ -39,3 +34,5 @@
 /StockFlow.Data/download/data
 /StockFlow.Data/generate/data
 /StockFlow.Data/process/data
+/StockFlow.AI/model*
+__pycache__
