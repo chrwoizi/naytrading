@@ -118,8 +118,9 @@ exports.isGlobalAutoIgnore = async function (rates) {
 
 exports.createNewSnapshotFromRandomInstrument = async function (instrumentIds) {
     var endTime = new Date();
-    endTime.setHours(0, 0, 0, 0);
-    var startTime = new Date(endTime.getTime() - config.chart_period_seconds * 1000);
+    var endDate = new Date(endTime.getTime());
+    endDate.setHours(0, 0, 0, 0);
+    var startTime = new Date(endDate.getTime() - config.chart_period_seconds * 1000);
 
     // try to load rates of a random instrument. 
     // if rates can not be loaded, try another random instrument. 
@@ -193,7 +194,9 @@ exports.createNewSnapshotFromRandomInstrument = async function (instrumentIds) {
                     where: {
                         Instrument_ID: instrument.ID,
                         StartTime: startTime,
-                        Time: endTime
+                        Time: {
+                            [sequelize.Op.$gte]: endDate
+                        }
                     },
                     order: [
                         ['Time'],
