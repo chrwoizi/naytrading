@@ -22,6 +22,9 @@ import tensorflow as tf
 from GoogLeNet import GoogLeNet
 #from InceptionResNetV2 import InceptionResNetV2
 
+sys.path.append('../StockFlow.Common')
+from StockFlow import StockFlow
+
 
 parser = argparse.ArgumentParser()
 
@@ -32,60 +35,6 @@ parser.add_argument('--proxy_password', type=str, default='', help='Proxy passwo
 parser.add_argument('--stockflow_url', type=str, default='http://localhost:5000', help='StockFlow base url.')
 parser.add_argument('--stockflow_user', type=str, default='', help='StockFlow user.')
 parser.add_argument('--stockflow_password', type=str, default='', help='StockFlow password.')
-
-
-def get_proxy_config(proxy_url, user, password):
-    if len(proxy_url) > 0:
-        if len(user) > 0:
-            proxies = {
-                'http': proxy_url % (user, password)
-            }
-        else:
-            proxies = {
-                'http': proxy_url
-            }
-    else:
-        proxies = None
-    return proxies
-
-
-def login(session, stockflow_url, user, password, proxies):
-    login_url = stockflow_url + '/signin'
-
-    r = session.post(login_url, {
-        'email': user,
-        'password': password
-    }, proxies = proxies)
-
-    if r.status_code != 200:
-        raise Exception('%s returned %d' %(login_url, r.status_code))
-
-
-def new_snapshot(session, stockflow_url, proxies):
-    random_url = stockflow_url + '/api/snapshot/new/random'
-    r = session.get(random_url, proxies = proxies, timeout = 30)
-
-    if r.status_code != 200:
-        raise Exception('%s returned %d' %(random_url, r.status_code))
-
-    data = r.json()
-    return data
-
-
-def set_decision(session, stockflow_url, snapshot_id, decision, proxies):
-    decision_url = stockflow_url + '/api/snapshot/%d/set/%s'
-    r = session.get(decision_url % (snapshot_id, decision), proxies = proxies, timeout = 30)
-
-    if r.status_code != 200:
-        raise Exception('%s returned %d' %(decision_url, r.status_code))
-
-    data = r.json()
-
-    if 'status' not in data:
-        raise Exception('%s returned no status' %(decision_url))
-
-    if data['status'] != 'ok':
-        raise Exception('%s returned status %d' %(decision_url, data['status']))
 
 
 def sample(chart, x):
@@ -232,13 +181,12 @@ def main(checkpoint_dir, proxy_url, proxy_user, proxy_password, stockflow_url, s
 
         saver.restore(sess, ckpt_file)
 
-        session = requests.Session()
-        proxies = get_proxy_config(proxy_url, proxy_user, proxy_password)
-        login(session, stockflow_url, stockflow_user, stockflow_password, proxies)
+        stockflow = StockFlow(proxy_url, proxy_user, proxy_password, stockflow_url)
+        stockflow.login(stockflow_user, stockflow_password)
 
         while True:
             try:
-                snapshot = new_snapshot(session, stockflow_url, proxies)
+                snapshot = stockflow.new_snapshot()
                 chart = get_chart(snapshot)
                 # plot(chart)
 
@@ -262,7 +210,7 @@ def main(checkpoint_dir, proxy_url, proxy_user, proxy_password, stockflow_url, s
                 print('%s %s on %s (snapshot %d)%s' % (
                     decision, snapshot['Instrument']['InstrumentName'], snapshot['Date'], snapshot['ID'], reason))
 
-                set_decision(session, stockflow_url, snapshot['ID'], decision, proxies)
+                stockflow.set_decision(stockflow_url, snapshot['ID'], decision)
 
             except Exception as e:
                 print("Unexpected error:", str(e))

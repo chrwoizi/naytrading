@@ -46,11 +46,11 @@ parser.add_argument(
     '--batch_size', type=int, default=48, help='Number of examples per batch.')
 
 parser.add_argument(
-    '--test_file', type=str, default='..\\StockFlow.WPF\\bin\\Debug\\test_buying.csv',
+    '--test_file', type=str, default='..\\StockFlow.Data\\generate\\data\\test_buying.csv',
     help='Path to the test data.')
 
 parser.add_argument(
-    '--train_file', type=str, default='..\\StockFlow.WPF\\bin\\Debug\\train_buying.csv',
+    '--train_file', type=str, default='..\\StockFlow.Data\\generate\\data\\train_buying.csv',
     help='Path to the train data.')
 
 parser.add_argument(

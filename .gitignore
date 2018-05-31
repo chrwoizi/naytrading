@@ -36,3 +36,6 @@
 /StockFlow.Node/app/config/config.json
 /StockFlow.Node/*.log
 /StockFlow.Node/app/config/database.json
+/StockFlow.Data/download/data
+/StockFlow.Data/generate/data
+/StockFlow.Data/process/data
