@@ -3,16 +3,9 @@
   <component name="ChangeListManager">
     <list default="true" id="33556e94-7971-4160-96f4-817f4469354d" name="Default" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/StockFlow.Common/Progress.py" beforeDir="false" afterPath="$PROJECT_DIR$/StockFlow.Common/Progress.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/StockFlow.Common/ReadFileProgress.py" beforeDir="false" afterPath="$PROJECT_DIR$/StockFlow.Common/FileItemProgress.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/StockFlow.Common/WriteFileProgress.py" beforeDir="false" afterPath="$PROJECT_DIR$/StockFlow.Common/FileBinaryProgress.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/StockFlow.Data/download/download.py" beforeDir="false" afterPath="$PROJECT_DIR$/StockFlow.Data/download/download.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/StockFlow.Data/process/Common.py" beforeDir="false" afterPath="$PROJECT_DIR$/StockFlow.Data/process/Common.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/StockFlow.Data/process/augment.py" beforeDir="false" afterPath="$PROJECT_DIR$/StockFlow.Data/process/augment.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/StockFlow.Data/process/flatten.py" beforeDir="false" afterPath="$PROJECT_DIR$/StockFlow.Data/process/flatten.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/StockFlow.Data/process/merge.py" beforeDir="false" afterPath="$PROJECT_DIR$/StockFlow.Data/process/merge.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/StockFlow.Data/process/normalize.py" beforeDir="false" afterPath="$PROJECT_DIR$/StockFlow.Data/process/normalize.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/StockFlow.Data/process/process.bat" beforeDir="false" afterPath="$PROJECT_DIR$/StockFlow.Data/process/process.bat" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/StockFlow.Data/process/split_by_decision.py" beforeDir="false" afterPath="$PROJECT_DIR$/StockFlow.Data/process/split_by_decision.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/StockFlow.Data/process/split_train_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/StockFlow.Data/process/split_train_test.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/StockFlow.Node/app/config/config.default.json" beforeDir="false" afterPath="$PROJECT_DIR$/StockFlow.Node/app/config/config.default.json" afterDir="false" />
@@ -29,8 +22,8 @@
       <file leaf-file-name="augment.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/StockFlow.Data/process/augment.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-195">
-              <caret line="64" column="30" selection-start-line="64" selection-start-column="30" selection-end-line="64" selection-end-column="30" />
+            <state relative-caret-position="444">
+              <caret line="71" column="29" selection-start-line="71" selection-start-column="29" selection-end-line="71" selection-end-column="29" />
               <folding>
                 <element signature="e#0#9#0" expanded="true" />
               </folding>
@@ -38,20 +31,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="Importer.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/StockFlow.Data/process/Importer.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="773">
-              <caret line="59" selection-start-line="59" selection-end-line="59" />
-            </state>
-          </provider>
-        </entry>
-      </file>
       <file leaf-file-name="normalize.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/StockFlow.Data/process/normalize.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="616">
-              <caret line="38" column="59" selection-start-line="38" selection-start-column="59" selection-end-line="38" selection-end-column="59" />
+            <state relative-caret-position="72">
+              <caret line="30" column="37" selection-start-line="30" selection-start-column="37" selection-end-line="30" selection-end-column="37" />
               <folding>
                 <element signature="e#0#9#0" expanded="true" />
               </folding>
@@ -62,8 +46,8 @@
       <file leaf-file-name="merge.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/StockFlow.Data/process/merge.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="714">
-              <caret line="45" column="50" selection-start-line="45" selection-start-column="50" selection-end-line="45" selection-end-column="50" />
+            <state relative-caret-position="391">
+              <caret line="53" column="40" selection-start-line="53" selection-start-column="40" selection-end-line="53" selection-end-column="40" />
               <folding>
                 <element signature="e#0#9#0" expanded="true" />
               </folding>
@@ -71,11 +55,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="split_by_decision.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="split_by_decision.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/StockFlow.Data/process/split_by_decision.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="17">
-              <caret line="32" column="29" selection-start-line="32" selection-start-column="29" selection-end-line="32" selection-end-column="29" />
+            <state relative-caret-position="221">
+              <caret line="71" column="22" selection-start-line="71" selection-start-column="22" selection-end-line="71" selection-end-column="22" />
               <folding>
                 <element signature="e#0#9#0" expanded="true" />
               </folding>
@@ -86,8 +70,8 @@
       <file leaf-file-name="split_train_test.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/StockFlow.Data/process/split_train_test.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-449">
-              <caret line="44" column="50" selection-start-line="44" selection-start-column="50" selection-end-line="44" selection-end-column="50" />
+            <state relative-caret-position="136">
+              <caret line="83" column="27" selection-start-line="83" selection-start-column="27" selection-end-line="83" selection-end-column="27" />
               <folding>
                 <element signature="e#0#9#0" expanded="true" />
               </folding>
@@ -107,11 +91,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="Common.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="Common.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/StockFlow.Data/process/Common.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="272">
-              <caret line="25" column="34" selection-start-line="25" selection-start-column="34" selection-end-line="25" selection-end-column="34" />
+            <state relative-caret-position="269">
+              <caret line="54" column="62" selection-start-line="54" selection-start-column="62" selection-end-line="54" selection-end-column="62" />
               <folding>
                 <element signature="e#0#11#0" expanded="true" />
               </folding>
@@ -151,8 +135,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>GetLinePositions</find>
-      <find>Serialize</find>
       <find>CountLines</find>
       <find>item</find>
       <find>linePositions2</find>
@@ -177,10 +159,12 @@
       <find>, 'r') as</find>
       <find>, buffering=0</find>
       <find>get_line_positions</find>
-      <find>tell</find>
       <find>WriteFileProgress</find>
       <find>FileBinaryProgress</find>
       <find>tell()</find>
+      <find>seek(</find>
+      <find>while True:</find>
+      <find>tell</find>
     </findStrings>
     <replaceStrings>
       <replace>item</replace>
@@ -211,17 +195,17 @@
         <option value="$PROJECT_DIR$/StockFlow.Data/download/KillFile.py" />
         <option value="$PROJECT_DIR$/StockFlow.Common/KillFileMonitor.py" />
         <option value="$PROJECT_DIR$/StockFlow.Common/Progress.py" />
-        <option value="$PROJECT_DIR$/StockFlow.Data/process/normalize.py" />
         <option value="$PROJECT_DIR$/StockFlow.Data/download/download.py" />
-        <option value="$PROJECT_DIR$/StockFlow.Data/process/merge.py" />
         <option value="$PROJECT_DIR$/StockFlow.Data/process/flatten.py" />
-        <option value="$PROJECT_DIR$/StockFlow.Data/process/split_train_test.py" />
-        <option value="$PROJECT_DIR$/StockFlow.Data/process/split_by_decision.py" />
-        <option value="$PROJECT_DIR$/StockFlow.Data/process/augment.py" />
         <option value="$PROJECT_DIR$/StockFlow.Common/WriteFileProgress.py" />
         <option value="$PROJECT_DIR$/StockFlow.Common/ReadFileProgress.py" />
         <option value="$PROJECT_DIR$/StockFlow.Common/FileBinaryProgress.py" />
+        <option value="$PROJECT_DIR$/StockFlow.Data/process/normalize.py" />
+        <option value="$PROJECT_DIR$/StockFlow.Data/process/augment.py" />
+        <option value="$PROJECT_DIR$/StockFlow.Data/process/split_train_test.py" />
+        <option value="$PROJECT_DIR$/StockFlow.Data/process/merge.py" />
         <option value="$PROJECT_DIR$/StockFlow.Data/process/Common.py" />
+        <option value="$PROJECT_DIR$/StockFlow.Data/process/split_by_decision.py" />
       </list>
     </option>
   </component>
@@ -320,7 +304,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.split_train_test">
+  <component name="RunManager" selected="Python.split_by_decision">
     <configuration name="augment" type="PythonConfigurationType" factoryName="Python">
       <module name="stockflow" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -499,11 +483,11 @@
       <window_info anchor="bottom" id="Find" order="1" weight="0.32937366" />
       <window_info anchor="bottom" id="Version Control" order="7" />
       <window_info anchor="bottom" id="Python Console" order="7" weight="0.23650108" />
-      <window_info anchor="bottom" id="Run" order="2" weight="0.32829374" />
+      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.32829374" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info anchor="bottom" id="Terminal" order="7" weight="0.32937366" />
       <window_info id="Favorites" order="2" side_tool="true" />
-      <window_info active="true" anchor="bottom" id="Debug" order="3" visible="true" weight="0.24946004" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.24946004" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
       <window_info anchor="right" id="Commander" order="0" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
@@ -522,16 +506,6 @@
           <url>file://$PROJECT_DIR$/StockFlow.Data/process/normalize.py</url>
           <option name="timeStamp" value="45" />
         </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/StockFlow.Data/process/split_train_test.py</url>
-          <line>112</line>
-          <option name="timeStamp" value="53" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/StockFlow.Data/process/Common.py</url>
-          <line>52</line>
-          <option name="timeStamp" value="70" />
-        </line-breakpoint>
       </breakpoints>
       <default-breakpoints>
         <breakpoint type="python-exception">
@@ -540,16 +514,36 @@
           </properties>
         </breakpoint>
       </default-breakpoints>
-      <option name="time" value="73" />
+      <option name="time" value="100" />
     </breakpoint-manager>
     <watches-manager>
       <configuration name="PythonConfigurationType">
-        <watch expression="str(line)" language="Python" />
+        <watch expression="list(v)" language="Python" />
       </configuration>
     </watches-manager>
   </component>
   <component name="debuggerHistoryManager">
     <expressions id="watch">
+      <expression>
+        <expression-string>list(v)</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>line[-2:]</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>line.endswith('\r\n')</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>line.decode(&quot;utf-8&quot;)[-1]</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
       <expression>
         <expression-string>str(line)</expression-string>
         <language-id>Python</language-id>
@@ -580,26 +574,6 @@
         <language-id>Python</language-id>
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
-      <expression>
-        <expression-string>isinstance(v, list)</expression-string>
-        <language-id>Python</language-id>
-        <evaluation-mode>EXPRESSION</evaluation-mode>
-      </expression>
-      <expression>
-        <expression-string>super(Importer)</expression-string>
-        <language-id>Python</language-id>
-        <evaluation-mode>EXPRESSION</evaluation-mode>
-      </expression>
-      <expression>
-        <expression-string>isinstance(v, dict)</expression-string>
-        <language-id>Python</language-id>
-        <evaluation-mode>EXPRESSION</evaluation-mode>
-      </expression>
-      <expression>
-        <expression-string>v is dict</expression-string>
-        <language-id>Python</language-id>
-        <evaluation-mode>EXPRESSION</evaluation-mode>
-      </expression>
     </expressions>
     <expressions id="evaluateExpression">
       <expression>
@@ -610,13 +584,6 @@
     </expressions>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/StockFlow.Data/generate/generate.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="102">
-          <caret line="13" column="39" selection-start-line="13" selection-start-column="39" selection-end-line="13" selection-end-column="39" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/StockFlow.Data/download/download.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="850">
@@ -797,26 +764,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/StockFlow.Data/process/merge.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="714">
-          <caret line="45" column="50" selection-start-line="45" selection-start-column="50" selection-end-line="45" selection-end-column="50" />
-          <folding>
-            <element signature="e#0#9#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/StockFlow.Data/process/normalize.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="616">
-          <caret line="38" column="59" selection-start-line="38" selection-start-column="59" selection-end-line="38" selection-end-column="59" />
-          <folding>
-            <element signature="e#0#9#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/StockFlow.Data/process/Importer.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="773">
@@ -824,40 +771,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/StockFlow.Data/process/split_by_decision.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="17">
-          <caret line="32" column="29" selection-start-line="32" selection-start-column="29" selection-end-line="32" selection-end-column="29" />
-          <folding>
-            <element signature="e#0#9#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/StockFlow.Data/process/augment.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-195">
-          <caret line="64" column="30" selection-start-line="64" selection-start-column="30" selection-end-line="64" selection-end-column="30" />
-          <folding>
-            <element signature="e#0#9#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/StockFlow.Data/process/flatten.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="119">
           <caret line="7" selection-start-line="7" selection-end-line="8" selection-end-column="60" />
-          <folding>
-            <element signature="e#0#9#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/StockFlow.Data/process/split_train_test.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-449">
-          <caret line="44" column="50" selection-start-line="44" selection-start-column="50" selection-end-line="44" selection-end-column="50" />
           <folding>
             <element signature="e#0#9#0" expanded="true" />
           </folding>
@@ -881,12 +798,69 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/StockFlow.Data/process/normalize.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="72">
+          <caret line="30" column="37" selection-start-line="30" selection-start-column="37" selection-end-line="30" selection-end-column="37" />
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/StockFlow.Data/process/augment.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="444">
+          <caret line="71" column="29" selection-start-line="71" selection-start-column="29" selection-end-line="71" selection-end-column="29" />
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/StockFlow.Data/process/merge.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="391">
+          <caret line="53" column="40" selection-start-line="53" selection-start-column="40" selection-end-line="53" selection-end-column="40" />
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/StockFlow.Data/process/Common.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="272">
-          <caret line="25" column="34" selection-start-line="25" selection-start-column="34" selection-end-line="25" selection-end-column="34" />
+        <state relative-caret-position="269">
+          <caret line="54" column="62" selection-start-line="54" selection-start-column="62" selection-end-line="54" selection-end-column="62" />
           <folding>
             <element signature="e#0#11#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/StockFlow.Data/process/split_train_test.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="136">
+          <caret line="83" column="27" selection-start-line="83" selection-start-column="27" selection-end-line="83" selection-end-column="27" />
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/.PyCharmCE2018.1/system/python_stubs/-1204195383/itertools.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="222">
+          <caret line="395" column="8" selection-start-line="395" selection-start-column="8" selection-end-line="395" selection-end-column="8" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/StockFlow.Data/process/split_by_decision.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="221">
+          <caret line="71" column="22" selection-start-line="71" selection-start-column="22" selection-end-line="71" selection-end-column="22" />
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
           </folding>
         </state>
       </provider>

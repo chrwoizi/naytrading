@@ -46,7 +46,7 @@ def main(input_path, output_path):
                 while True:
                     killfile_monitor.maybe_check_killfile()
                     line = in_file.readline()
-                    if not line or len(line) == 0:
+                    if not line or len(line) <= 2:
                         break
 
                     split = line.split(';')

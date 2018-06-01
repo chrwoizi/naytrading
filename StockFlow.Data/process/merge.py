@@ -50,6 +50,8 @@ def main(input_path_1, input_path_2, output_path):
                         in_file, line_position = item
                         in_file.seek(line_position['Position'])
                         line = in_file.readline()
+                        if not line.endswith('\n'):
+                            line += '\n'
                         out_file.writelines([line])
                         progress.add_item()
                         progress.maybe_print()
