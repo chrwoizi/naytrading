@@ -7,7 +7,7 @@ import itertools
 from Importer import *
 
 sys.path.append(os.path.abspath('..\\..\\StockFlow.Common'))
-from ReadFileProgress import *
+from FileItemProgress import *
 from KillFileMonitor import *
 
 
@@ -67,7 +67,7 @@ def main(input_path, output_path, days, max_missing_days):
                 if day < 0:
                     out_file.write(';')
 
-            progress = ReadFileProgress(1, None, None)
+            progress = FileItemProgress('flatten: ', 1, None, None)
             known_ids = set()
 
             for file_path in sorted(glob.iglob(input_path), reverse=True):

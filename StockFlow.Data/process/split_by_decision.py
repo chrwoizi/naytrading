@@ -45,7 +45,6 @@ def get_metadata(input_path, report_progress):
                         instrument_id = split[1]
                         decision = split[2]
                         time = datetime.datetime.strptime(split[3], '%Y%m%d').date()
-                        first_rate = Decimal(split[4])
                         last_rate = Decimal(split[len(split)-1])
 
                         meta = dict(
@@ -85,22 +84,22 @@ def get_metadata(input_path, report_progress):
 def main(input_path, output_path_buy, output_path_no_buy, output_path_sell, output_path_no_sell):
     output_dir = '.'
 
-    if output_path_buy is not None:
+    if output_path_buy and len(output_path_buy) > 0:
         output_dir = os.path.dirname(os.path.abspath(output_path_buy))
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
 
-    if output_path_no_buy is not None:
+    if output_path_no_buy and len(output_path_no_buy) > 0:
         output_dir = os.path.dirname(os.path.abspath(output_path_no_buy))
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
 
-    if output_path_sell is not None:
+    if output_path_sell and len(output_path_sell) > 0:
         output_dir = os.path.dirname(os.path.abspath(output_path_sell))
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
 
-    if output_path_no_sell is not None:
+    if output_path_no_sell and len(output_path_no_sell) > 0:
         output_dir = os.path.dirname(os.path.abspath(output_path_no_sell))
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
@@ -108,19 +107,19 @@ def main(input_path, output_path_buy, output_path_no_buy, output_path_sell, outp
     kill_path = output_dir + '\\kill'
     killfile_monitor = KillFileMonitor(kill_path, 1)
 
-    output_path_buy_temp = (output_path_buy + '.incomplete') if len(output_path_buy) > 0 else None
-    output_path_no_buy_temp = (output_path_no_buy + '.incomplete') if len(output_path_no_buy) > 0 else None
-    output_path_sell_temp = (output_path_sell + '.incomplete') if len(output_path_sell) > 0 else None
-    output_path_no_sell_temp = (output_path_no_sell + '.incomplete') if len(output_path_no_sell) > 0 else None
+    output_path_buy_temp = (output_path_buy + '.incomplete') if output_path_buy and len(output_path_buy) > 0 else None
+    output_path_no_buy_temp = (output_path_no_buy + '.incomplete') if output_path_no_buy and len(output_path_no_buy) > 0 else None
+    output_path_sell_temp = (output_path_sell + '.incomplete') if output_path_sell and len(output_path_sell) > 0 else None
+    output_path_no_sell_temp = (output_path_no_sell + '.incomplete') if output_path_no_sell and len(output_path_no_sell) > 0 else None
 
     try:
         metas = get_metadata(input_path, lambda: killfile_monitor.maybe_check_killfile())
 
         with open(input_path, 'r') as in_file:
-            with open(output_path_buy_temp, 'w') if len(output_path_buy_temp) > 0 else None as out_file_buy:
-                with open(output_path_no_buy_temp, 'w') if len(output_path_no_buy_temp) > 0 else None as out_file_no_buy:
-                    with open(output_path_sell_temp, 'w') if len(output_path_sell_temp) > 0 else None as out_file_sell:
-                        with open(output_path_no_sell_temp, 'w') if len(output_path_no_sell_temp) > 0 else None as out_file_no_sell:
+            with open(output_path_buy_temp, 'w') if output_path_buy_temp else None as out_file_buy:
+                with open(output_path_no_buy_temp, 'w') if output_path_no_buy_temp else None as out_file_no_buy:
+                    with open(output_path_sell_temp, 'w') if output_path_sell_temp else None as out_file_sell:
+                        with open(output_path_no_sell_temp, 'w') if output_path_no_sell_temp else None as out_file_no_sell:
 
                             header = "index;" + in_file.readline()
 
@@ -136,7 +135,7 @@ def main(input_path, output_path_buy, output_path_no_buy, output_path_sell, outp
                             if out_file_no_sell:
                                 out_file_no_sell.writelines([header])
 
-                            progress = Progress(1)
+                            progress = Progress('split decision: ', 1)
                             progress.set_count(len(metas))
 
                             lines_read = 1

@@ -3,8 +3,9 @@ import numpy as np
 from IntervalCall import *
 
 class Progress(IntervalCall):
-    def __init__(self, seconds):
+    def __init__(self, prefix, seconds):
         super().__init__(seconds)
+        self.prefix = prefix
         self.last_i = 0
         self.durations = []
         self.i = 0
@@ -37,6 +38,6 @@ class Progress(IntervalCall):
 
     def print_progress(self, seconds_per_item):
         if self.count is None:
-            print("item %d # %.2f items/s" % (self.i + 1, 1 / seconds_per_item))
+            print("%sitem %d # %.2f items/s" % (self.prefix, self.i + 1, 1 / seconds_per_item))
         else:
-            print("item %d/%d # %.2f items/s # %.2f%%" % (self.i + 1, self.count, 1 / seconds_per_item, 100 * self.i / self.count))
+            print("%sitem %d/%d # %.2f items/s # %.2f%%" % (self.prefix, self.i + 1, self.count, 1 / seconds_per_item, 100 * self.i / self.count))

@@ -26,11 +26,11 @@ def main(input_path_1, input_path_2, output_path):
 
     output_path_temp = output_path + '.incomplete'
     try:
+        line_positions_1 = get_line_positions(input_path_1, lambda: killfile_monitor.maybe_check_killfile())
+        line_positions_2 = get_line_positions(input_path_2, lambda: killfile_monitor.maybe_check_killfile())
+
         with open(input_path_1, 'r') as in_file_1:
             with open(input_path_2, 'r') as in_file_2:
-
-                line_positions_1 = get_line_positions(in_file_1, lambda: killfile_monitor.maybe_check_killfile())
-                line_positions_2 = get_line_positions(in_file_2, lambda: killfile_monitor.maybe_check_killfile())
 
                 line_positions_1 = [(in_file_1, x) for x in line_positions_1]
                 line_positions_2 = [(in_file_2, x) for x in line_positions_2]
@@ -43,7 +43,7 @@ def main(input_path_1, input_path_2, output_path):
                     header = in_file_1.readline()
                     out_file.writelines([header])
 
-                    progress = Progress(1)
+                    progress = Progress('merge: ', 1)
                     progress.set_count(len(line_positions))
 
                     for item in line_positions:
