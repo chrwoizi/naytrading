@@ -47,9 +47,10 @@ def main(input_path, output_path_train, output_path_test, factor, samples, prese
                     id = line[0 : line.index(';')]
                     test_ids.add(id)
 
+        random_line_positions = get_line_positions(input_path, lambda: killfile_monitor.maybe_check_killfile())
+
         with open(input_path, 'r') as in_file:
 
-            random_line_positions = get_line_positions(in_file, lambda: killfile_monitor.maybe_check_killfile())
             shuffle(random_line_positions)
 
             if samples:
@@ -82,7 +83,7 @@ def main(input_path, output_path_train, output_path_test, factor, samples, prese
 
             in_file.seek(0)
 
-            progress = Progress(1)
+            progress = Progress('split test/train: ', 1)
             progress.set_count(len(random_line_positions))
 
             with open(output_path_test_temp, 'w') as out_file:

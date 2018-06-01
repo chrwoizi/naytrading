@@ -8,7 +8,7 @@ from noise import pnoise1
 from Common import *
 
 sys.path.append(os.path.abspath('..\\..\\StockFlow.Common'))
-from ReadFileProgress import *
+from FileItemProgress import *
 from KillFileMonitor import *
 
 parser = argparse.ArgumentParser()
@@ -55,7 +55,7 @@ def main(input_path, output_path, factor):
         with open(input_path, 'r') as in_file:
             with open(output_path_temp, 'w') as out_file:
 
-                progress = ReadFileProgress(1, input_path, in_file)
+                progress = FileItemProgress('augment: ', 1, input_path, in_file)
 
                 header = in_file.readline()
                 split_header = header.split(';')

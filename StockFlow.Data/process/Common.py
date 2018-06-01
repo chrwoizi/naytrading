@@ -1,31 +1,54 @@
 import math
+import sys
+import os
 from decimal import Decimal
 
-def get_line_positions(in_file, report_progress):
+sys.path.append(os.path.abspath('..\\..\\StockFlow.Common'))
+from FileBinaryProgress import *
+
+
+def get_line_positions(file_path, report_progress):
 
     line_positions = []
 
-    in_file.seek(0, 2)
-    length = in_file.tell()
-    in_file.seek(0, 0)
-
     line_index = 0
-    while in_file.tell() < length:
-        position = in_file.tell()
 
-        line = in_file.readline()
-        if not line or len(line) == 0:
-            break
+    position = 0
 
-        if line_index > 0:
-            first = line.index(';')
-            skipped_index = line[first + 1:]
-            second = skipped_index.index(';')
-            line_positions += [dict(Position = position, Id = skipped_index[0:second])]
+    progress = FileBinaryProgress('index: ', 1, file_path, os.path.getsize(file_path))
 
-        line_index += 1
+    line_ending_length = 0
+    with open(file_path, 'rb', 0) as file:
+        line = file.readline()
+        if line.endswith(b'\r\n'):
+            line_ending_length = 2
+        else:
+            line_ending_length = 1
 
-    in_file.seek(0)
+    with open(file_path, 'r') as file:
+        for line in iter(file.readline, ''):
+            report_progress()
+
+            if len(line) > 2:
+
+                if line[-1] == '\n':
+                    if line[-2] == '\r':
+                        line = line[0:len(line)-2]
+                    else:
+                        line = line[0:len(line)-1]
+
+                if line_index > 0:
+                    first = line.index(';')
+                    skipped_index = line[first + 1:]
+                    second = skipped_index.index(';')
+                    line_positions += [dict(Position = position, Id = skipped_index[0:second])]
+
+            position += len(line.encode("utf-8")) + 2
+
+            progress.set_items(position)
+            progress.maybe_print()
+
+            line_index += 1
 
     return line_positions
 

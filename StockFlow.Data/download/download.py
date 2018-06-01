@@ -7,7 +7,7 @@ import getpass
 import datetime
 
 sys.path.append(os.path.abspath('..\\..\\StockFlow.Common'))
-from WriteFileProgress import *
+from FileBinaryProgress import *
 from StockFlow import *
 from KillFileMonitor import *
 
@@ -62,7 +62,7 @@ def main(proxy_url, proxy_user, proxy_password, stockflow_url, stockflow_user, s
 
     killfile_monitor.maybe_check_killfile()
 
-    progress = WriteFileProgress(1)
+    progress = FileBinaryProgress('download: ', 1, out_path, None)
     def report_progress(bytes):
         progress.set_items(bytes)
         progress.maybe_print()

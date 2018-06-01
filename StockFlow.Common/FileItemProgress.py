@@ -2,9 +2,9 @@ import os
 
 from Progress import *
 
-class ReadFileProgress(Progress):
-    def __init__(self, seconds, path, file):
-        super().__init__(seconds)
+class FileItemProgress(Progress):
+    def __init__(self, prefix, seconds, path, file):
+        super().__init__(prefix, seconds)
         self.set_file(path, file)
 
     def set_file(self, path, file):
@@ -18,4 +18,4 @@ class ReadFileProgress(Progress):
             self.file_length = None
 
     def print_progress(self, seconds_per_item):
-        print("item %d # %.2f items/s # %.2f%% of %s" % (self.i + 1, 1 / seconds_per_item, 100 * self.file.tell() / self.file_length, self.file_name))
+        print("%sitem %d # %.2f items/s # %.2f%% of %s" % (self.prefix, self.i + 1, 1 / seconds_per_item, 100 * self.file.tell() / self.file_length, self.file_name))
