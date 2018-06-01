@@ -126,6 +126,7 @@ exports.exportSnapshots = async function (req, res) {
 
                 for (var r = 0; r < snapshot.usersnapshots.length; ++r) {
                     var u = snapshot.usersnapshots[r];
+                    delete u.ID;
                     delete u.createdAt;
                     delete u.updatedAt;
                     delete u.Snapshot_ID;
