@@ -1,7 +1,7 @@
 import math
 from decimal import Decimal
 
-def get_line_positions(in_file):
+def get_line_positions(in_file, report_progress):
 
     line_positions = []
 

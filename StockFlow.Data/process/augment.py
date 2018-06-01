@@ -1,11 +1,15 @@
 import os
+import sys
 import argparse
 import random
 import math
 from decimal import Decimal
 from noise import pnoise1
-from Progress import *
 from Common import *
+
+sys.path.append(os.path.abspath('..\\..\\StockFlow.Common'))
+from ReadFileProgress import *
+from KillFileMonitor import *
 
 parser = argparse.ArgumentParser()
 
@@ -38,48 +42,65 @@ def augment(rates, maxSkew, maxJitterX, maxJitterY):
     return newRates
 
 def main(input_path, output_path, factor):
+    output_dir = os.path.dirname(os.path.abspath(output_path))
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
 
-    dir = os.path.dirname(os.path.abspath(output_path))
-    if not os.path.exists(dir):
-        os.makedirs(dir)
+    output_path_temp = output_path + '.incomplete'
 
-    with open(input_path, 'r') as in_file:
-        with open(output_path, 'w') as out_file:
+    kill_path = output_dir + '\\kill'
+    killfile_monitor = KillFileMonitor(kill_path, 1)
 
-            progress = Progress()
-            progress.begin_file(input_path, in_file)
+    try:
+        with open(input_path, 'r') as in_file:
+            with open(output_path_temp, 'w') as out_file:
 
-            header = in_file.readline()
-            split_header = header.split(';')
-            normalized_header = ';'.join(split_header[0:5] + [str(x) for x in range(0, 1024)]) + '\n'
-            out_file.writelines([normalized_header])
+                progress = ReadFileProgress(1, input_path, in_file)
 
-            line_index = 1
+                header = in_file.readline()
+                split_header = header.split(';')
+                normalized_header = ';'.join(split_header[0:5] + [str(x) for x in range(0, 1024)]) + '\n'
+                out_file.writelines([normalized_header])
 
-            while True:
-                line = in_file.readline()
-                if not line or len(line) == 0:
-                    break
+                line_index = 1
 
-                split = line.split(';')
+                while True:
+                    killfile_monitor.maybe_check_killfile()
 
-                index = split[0]
-                id = split[1]
-                instrumentId = split[2]
-                time = split[3]
-                decision = split[4]
-                rates = [Decimal(x) for x in split[5:]]
+                    line = in_file.readline()
+                    if not line or len(line) == 0:
+                        break
 
-                out_file.writelines([serialize(index + "-0", id, instrumentId, time, decision, rates) + '\n'])
-                line_index += 1
+                    split = line.split(';')
 
-                for i in range(1, factor):
-                    augmented_rates = augment(rates, 0.2, 20, 0.05)
-                    out_file.writelines([serialize(index + "-" + str(i), id, instrumentId, time, decision, augmented_rates) + '\n'])
+                    index = split[0]
+                    id = split[1]
+                    instrumentId = split[2]
+                    time = split[3]
+                    decision = split[4]
+                    rates = [Decimal(x) for x in split[5:]]
+
+                    out_file.writelines([serialize(index + "-0", id, instrumentId, time, decision, rates) + '\n'])
                     line_index += 1
 
-                progress.print()
-                progress.next_item()
+                    for i in range(1, factor):
+                        killfile_monitor.maybe_check_killfile()
+                        augmented_rates = augment(rates, 0.2, 20, 0.05)
+                        out_file.writelines([serialize(index + "-" + str(i), id, instrumentId, time, decision, augmented_rates) + '\n'])
+                        line_index += 1
+
+                    progress.maybe_print()
+                    progress.add_item()
+
+        if os.path.exists(output_path):
+            os.remove(output_path)
+        os.rename(output_path_temp, output_path)
+
+    except KilledException:
+        killfile_monitor.delete_killfile()
+        if os.path.exists(output_path_temp):
+            os.remove(output_path_temp)
+        print('Killed.')
 
 
 if __name__ == '__main__':

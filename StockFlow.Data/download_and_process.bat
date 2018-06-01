@@ -1,6 +1,6 @@
 @cd download
-@call download.bat "SILENT=1"
+@call download.bat "SILENT=True"
 @cd ..
 @cd process
-@call process.bat "SILENT=1"
+@call process.bat "SILENT=True"
 @cd ..
