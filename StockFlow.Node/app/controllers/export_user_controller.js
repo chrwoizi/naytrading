@@ -121,6 +121,7 @@ exports.exportUserSnapshots = async function (req, res) {
                     var rate = snapshot.snapshotrates[r];
                     delete rate.createdAt;
                     delete rate.updatedAt;
+                    delete rate.Snapshot_ID;
                 }
                 
                 delete snapshot.instrument.createdAt;

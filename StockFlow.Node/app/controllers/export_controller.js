@@ -121,12 +121,14 @@ exports.exportSnapshots = async function (req, res) {
                     var rate = snapshot.snapshotrates[r];
                     delete rate.createdAt;
                     delete rate.updatedAt;
+                    delete rate.Snapshot_ID;
                 }
 
                 for (var r = 0; r < snapshot.usersnapshots.length; ++r) {
                     var u = snapshot.usersnapshots[r];
                     delete u.createdAt;
                     delete u.updatedAt;
+                    delete u.Snapshot_ID;
                 }
 
                 delete snapshot.instrument.createdAt;
