@@ -23,7 +23,7 @@ module.exports = function (app, passport) {
 
     app.post('/api/weight/:instrumentId/:type/:weight', instrumentController.setWeight);
 
-    app.post('/api/count/snapshots', snapshotController.countSnapshots);
+    app.get('/api/count/snapshots/:fromDate', snapshotController.countSnapshots);
 
     app.get('/api/snapshot', snapshotController.snapshots);
 
