@@ -64,7 +64,17 @@ def main(proxy_url, proxy_user, proxy_password, stockflow_url, stockflow_user, s
     print('Downloading snapshots from %s to %s' % (max_date_str, out_path))
     stockflow.export_snapshots(max_date, out_path)
 
-    print('Done')
+    is_empty = False
+    with open(out_path) as f:
+        chars = f.read(2)
+        if chars == "[]":
+            is_empty = True
+
+    if is_empty:
+        print('No new snapshots available.')
+        os.remove(out_path)
+
+    print('Done.')
 
 
 if __name__ == '__main__':
