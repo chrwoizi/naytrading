@@ -4,7 +4,6 @@ import glob
 import argparse
 import datetime
 import itertools
-from decimal import Decimal
 from Importer import *
 
 sys.path.append(os.path.abspath('..\\..\\StockFlow.Common'))
@@ -32,14 +31,14 @@ def get_split_factor(previousRate, rate):
     if rounded >= 2 and rounded < 100:
         fraction = factor - rounded
         if abs(fraction) < 0.1:
-            return Decimal(rounded)
+            return rounded
 
     factor = rate / previousRate
     rounded = round(factor)
     if rounded >= 2 and rounded < 100:
         fraction = factor - rounded
         if abs(fraction) < 0.1:
-            return Decimal(1 / rounded)
+            return 1 / rounded
 
     return 1
 
