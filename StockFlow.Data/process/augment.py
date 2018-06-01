@@ -13,8 +13,8 @@ from KillFileMonitor import *
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument('--input_path', type=str, default='data\\buying_train.csv', help='Input file path.')
-parser.add_argument('--output_path', type=str, default='data\\buying_train_aug.csv', help='Output file path.')
+parser.add_argument('--input_path', type=str, default='data\\buy_test.csv', help='Input file path.')
+parser.add_argument('--output_path', type=str, default='data\\buy_test_aug.csv', help='Output file path.')
 parser.add_argument('--factor', type=int, default=5, help='Number of data sets to output per original data set.')
 
 def sphere():
@@ -68,7 +68,7 @@ def main(input_path, output_path, factor):
                     killfile_monitor.maybe_check_killfile()
 
                     line = in_file.readline()
-                    if not line or len(line) == 0:
+                    if not line or len(line) <= 2:
                         break
 
                     split = line.split(';')

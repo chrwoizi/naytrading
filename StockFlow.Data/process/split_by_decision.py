@@ -36,7 +36,7 @@ def get_metadata(input_path, report_progress):
             report_progress()
             try:
                 line = in_file.readline()
-                if len(line) > 0:
+                if len(line) > 2:
 
                     if line_index > 0:
 
@@ -64,12 +64,14 @@ def get_metadata(input_path, report_progress):
             except EOFError:
                 break
 
-    for group in groupby(metas, lambda x: x['InstrumentId']):
+    by_instrument = groupby(sorted(metas, key=lambda x: x['InstrumentId']), lambda x: x['InstrumentId'])
+    for group in by_instrument:
         report_progress()
         invested = False
         previous_buy_rate = Decimal(0)
         (k, v) = group
-        for meta in sorted(v, key=lambda x: x['Time']):
+        by_time = sorted(v, key=lambda x: x['Time'])
+        for meta in by_time:
             meta['Invested'] = invested
             meta['PreviousBuyRate'] = previous_buy_rate
             if meta['Decision'] == 'buy':
@@ -138,8 +140,10 @@ def main(input_path, output_path_buy, output_path_no_buy, output_path_sell, outp
                             progress = Progress('split decision: ', 1)
                             progress.set_count(len(metas))
 
+                            sorted_meta = sorted(metas, key=lambda x: x['Line'])
+
                             lines_read = 1
-                            for meta in sorted(metas, key=lambda x: x['Line']):
+                            for meta in sorted_meta:
                                 killfile_monitor.maybe_check_killfile()
                                 while meta['Line'] > lines_read:
                                     in_file.readline()
@@ -148,7 +152,7 @@ def main(input_path, output_path_buy, output_path_no_buy, output_path_sell, outp
                                 line = in_file.readline()
                                 lines_read += 1
 
-                                if len(line) > 0:
+                                if len(line) > 2:
                                     if meta['Invested']:
 
                                         if meta['Decision'] == 'sell':

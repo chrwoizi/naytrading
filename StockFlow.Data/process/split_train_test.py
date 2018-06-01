@@ -11,9 +11,9 @@ from KillFileMonitor import *
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument('--input_path', type=str, default='data\\buy.csv', help='Input file path.')
-parser.add_argument('--output_path_train', type=str, default='data\\buy_train.csv', help='Output file path for the training set.')
-parser.add_argument('--output_path_test', type=str, default='data\\buy_test.csv', help='Output file path for the validation set.')
+parser.add_argument('--input_path', type=str, default='data\\no_buy.csv', help='Input file path.')
+parser.add_argument('--output_path_train', type=str, default='data\\no_buy_train.csv', help='Output file path for the training set.')
+parser.add_argument('--output_path_test', type=str, default='data\\no_buy_test.csv', help='Output file path for the validation set.')
 parser.add_argument('--factor', type=float, default=0.2, help='Output file path for the validation set.')
 parser.add_argument('--samples', type=int, default=None, help='Output file path for the validation set.')
 parser.add_argument('--preserve_test_ids', type=bool, default=True, help='Output file path for the validation set.')
@@ -42,7 +42,7 @@ def main(input_path, output_path_train, output_path_test, factor, samples, prese
                 while True:
                     killfile_monitor.maybe_check_killfile()
                     line = in_file.readline()
-                    if not line or len(line) == 0:
+                    if not line or len(line) <= 2:
                         break
                     id = line[0 : line.index(';')]
                     test_ids.add(id)
@@ -92,9 +92,8 @@ def main(input_path, output_path_train, output_path_test, factor, samples, prese
                     killfile_monitor.maybe_check_killfile()
                     in_file.seek(item['Position'])
                     line = in_file.readline()
-                    columns = len(line.split(';'))
-                    if columns != 5 + 1815:
-                        raise Exception('unexpected column count: %d' % columns)
+                    if not line.endswith('\n'):
+                        line += '\n'
                     out_file.writelines([line])
                     progress.add_item()
                     progress.maybe_print()
@@ -108,9 +107,8 @@ def main(input_path, output_path_train, output_path_test, factor, samples, prese
                     killfile_monitor.maybe_check_killfile()
                     in_file.seek(item['Position'])
                     line = in_file.readline()
-                    columns = len(line.split(';'))
-                    if columns != 5 + 1815:
-                        raise Exception('unexpected column count: %d' % columns)
+                    if not line.endswith('\n'):
+                        line += '\n'
                     out_file.writelines([line])
                     progress.add_item()
                     progress.maybe_print()
