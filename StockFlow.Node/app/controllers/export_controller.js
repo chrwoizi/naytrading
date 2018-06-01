@@ -21,6 +21,16 @@ exports.exportInstruments = async function (req, res) {
     try {
         if (req.params.exportSecret == config.export_secret) {
 
+            var cancel = false;
+
+            req.on("close", function() {
+                cancel = true;
+            });
+
+            req.on("end", function() {
+                cancel = true;
+            });
+
             var ids = await sql.query('SELECT instrument.ID FROM instruments AS instrument ORDER BY instrument.ID', {});
 
             res.header('Content-disposition', 'attachment; filename=instruments.json');
@@ -28,7 +38,7 @@ exports.exportInstruments = async function (req, res) {
 
             res.write('[');
 
-            for (var i = 0; i < ids.length; ++i) {
+            for (var i = 0; i < ids.length && !cancel; ++i) {
 
                 var instrument = await model.instrument.find({
                     include: [{
@@ -53,6 +63,9 @@ exports.exportInstruments = async function (req, res) {
             res.write(']');
             res.end();
 
+            if (cancel) {
+                throw { message: "client disconnected" }
+            }
         }
         else {
             res.status(401);
@@ -84,7 +97,15 @@ exports.exportSnapshots = async function (req, res) {
                     req.params.fromDate.substr(8, 2), parseInt(req.params.fromDate.substr(10, 2)), req.params.fromDate.substr(12, 2)));
             }
 
-            cancel = false;
+            var cancel = false;
+
+            req.on("close", function() {
+                cancel = true;
+            });
+
+            req.on("end", function() {
+                cancel = true;
+            });
 
             var ids = await sql.query('SELECT snapshot.ID FROM snapshots AS snapshot WHERE snapshot.Time >= @fromDate ORDER BY snapshot.Time',
                 {
@@ -96,7 +117,7 @@ exports.exportSnapshots = async function (req, res) {
 
             res.write('[');
 
-            for (var i = 0; i < ids.length; ++i && !cancel) {
+            for (var i = 0; i < ids.length && !cancel; ++i) {
 
                 var snapshot = await model.snapshot.find({
                     include: [{
@@ -148,6 +169,9 @@ exports.exportSnapshots = async function (req, res) {
             res.write(']');
             res.end();
 
+            if (cancel) {
+                throw { message: "client disconnected" }
+            }
         }
         else {
             res.status(401);
