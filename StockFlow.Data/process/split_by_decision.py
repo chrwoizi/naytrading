@@ -1,9 +1,14 @@
 import os
+import sys
 import argparse
 import datetime
 from decimal import Decimal
 from itertools import groupby
-from Progress import Progress
+
+sys.path.append(os.path.abspath('..\\..\\StockFlow.Common'))
+from Progress import *
+from KillFileMonitor import *
+
 
 parser = argparse.ArgumentParser()
 
@@ -22,12 +27,13 @@ def distinct(sequence, get_key):
             seen.add(key)
             yield s
 
-def get_metadata(input_path):
+def get_metadata(input_path, report_progress):
     metas = []
 
     with open(input_path, 'r') as in_file:
         line_index = 0
         while True:
+            report_progress()
             try:
                 line = in_file.readline()
                 if len(line) > 0:
@@ -60,6 +66,7 @@ def get_metadata(input_path):
                 break
 
     for group in groupby(metas, lambda x: x['InstrumentId']):
+        report_progress()
         invested = False
         previous_buy_rate = Decimal(0)
         (k, v) = group
@@ -76,89 +83,141 @@ def get_metadata(input_path):
     return metas
 
 def main(input_path, output_path_buy, output_path_no_buy, output_path_sell, output_path_no_sell):
+    output_dir = '.'
 
-    dir = os.path.dirname(os.path.abspath(output_path_buy))
-    if not os.path.exists(dir):
-        os.makedirs(dir)
+    if output_path_buy is not None:
+        output_dir = os.path.dirname(os.path.abspath(output_path_buy))
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
 
-    dir = os.path.dirname(os.path.abspath(output_path_no_buy))
-    if not os.path.exists(dir):
-        os.makedirs(dir)
+    if output_path_no_buy is not None:
+        output_dir = os.path.dirname(os.path.abspath(output_path_no_buy))
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
 
-    dir = os.path.dirname(os.path.abspath(output_path_sell))
-    if not os.path.exists(dir):
-        os.makedirs(dir)
+    if output_path_sell is not None:
+        output_dir = os.path.dirname(os.path.abspath(output_path_sell))
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
 
-    dir = os.path.dirname(os.path.abspath(output_path_no_sell))
-    if not os.path.exists(dir):
-        os.makedirs(dir)
+    if output_path_no_sell is not None:
+        output_dir = os.path.dirname(os.path.abspath(output_path_no_sell))
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
 
-    metas = get_metadata(input_path)
+    kill_path = output_dir + '\\kill'
+    killfile_monitor = KillFileMonitor(kill_path, 1)
 
-    with open(input_path, 'r') as in_file:
-        with open(output_path_buy, 'w') if len(output_path_buy) > 0 else None as out_file_buy:
-            with open(output_path_no_buy, 'w') if len(output_path_no_buy) > 0 else None as out_file_no_buy:
-                with open(output_path_sell, 'w') if len(output_path_sell) > 0 else None as out_file_sell:
-                    with open(output_path_no_sell, 'w') if len(output_path_no_sell) > 0 else None as out_file_no_sell:
+    output_path_buy_temp = (output_path_buy + '.incomplete') if len(output_path_buy) > 0 else None
+    output_path_no_buy_temp = (output_path_no_buy + '.incomplete') if len(output_path_no_buy) > 0 else None
+    output_path_sell_temp = (output_path_sell + '.incomplete') if len(output_path_sell) > 0 else None
+    output_path_no_sell_temp = (output_path_no_sell + '.incomplete') if len(output_path_no_sell) > 0 else None
 
-                        header = "index;" + in_file.readline()
+    try:
+        metas = get_metadata(input_path, lambda: killfile_monitor.maybe_check_killfile())
 
-                        if out_file_buy:
-                            out_file_buy.writelines([header])
+        with open(input_path, 'r') as in_file:
+            with open(output_path_buy_temp, 'w') if len(output_path_buy_temp) > 0 else None as out_file_buy:
+                with open(output_path_no_buy_temp, 'w') if len(output_path_no_buy_temp) > 0 else None as out_file_no_buy:
+                    with open(output_path_sell_temp, 'w') if len(output_path_sell_temp) > 0 else None as out_file_sell:
+                        with open(output_path_no_sell_temp, 'w') if len(output_path_no_sell_temp) > 0 else None as out_file_no_sell:
 
-                        if out_file_no_buy:
-                            out_file_no_buy.writelines([header])
+                            header = "index;" + in_file.readline()
 
-                        if out_file_sell:
-                            out_file_sell.writelines([header])
+                            if out_file_buy:
+                                out_file_buy.writelines([header])
 
-                        if out_file_no_sell:
-                            out_file_no_sell.writelines([header])
+                            if out_file_no_buy:
+                                out_file_no_buy.writelines([header])
 
-                        progress = Progress()
-                        progress.set_count(len(metas))
+                            if out_file_sell:
+                                out_file_sell.writelines([header])
 
-                        lines_read = 1
-                        for meta in sorted(metas, key=lambda x: x['Line']):
-                            while meta['Line'] > lines_read:
-                                in_file.readline()
+                            if out_file_no_sell:
+                                out_file_no_sell.writelines([header])
+
+                            progress = Progress(1)
+                            progress.set_count(len(metas))
+
+                            lines_read = 1
+                            for meta in sorted(metas, key=lambda x: x['Line']):
+                                killfile_monitor.maybe_check_killfile()
+                                while meta['Line'] > lines_read:
+                                    in_file.readline()
+                                    lines_read += 1
+
+                                line = in_file.readline()
                                 lines_read += 1
 
-                            line = in_file.readline()
-                            lines_read += 1
+                                if len(line) > 0:
+                                    if meta['Invested']:
 
-                            if len(line) > 0:
-                                if meta['Invested']:
+                                        if meta['Decision'] == 'sell':
 
-                                    if meta['Decision'] == 'sell':
+                                            if out_file_sell:
+                                                out_file_sell.writelines([str(lines_read) + ';' + line])
 
-                                        if out_file_sell:
-                                            out_file_sell.writelines([str(lines_read) + ';' + line])
+                                        elif meta['Decision'] == 'ignore':
 
-                                    elif meta['Decision'] == 'ignore':
+                                            if out_file_buy:
 
-                                        if out_file_buy:
+                                                if meta['PreviousBuyRate'] > 0 and meta['PreviousBuyRate'] < meta['CurrentPrice'] * Decimal(1.01):
+                                                    first_semicolon = line.index(';')
+                                                    line_as_buy = line[0 : first_semicolon + 1] + 'buy' + line[line.index(';', first_semicolon + 1):]
+                                                    out_file_buy.writelines([str(lines_read) + ';' + line_as_buy])
 
-                                            if meta['PreviousBuyRate'] > 0 and meta['PreviousBuyRate'] < meta['CurrentPrice'] * Decimal(1.01):
-                                                first_semicolon = line.index(';')
-                                                line_as_buy = line[0 : first_semicolon + 1] + 'buy' + line[line.index(';', first_semicolon + 1):]
-                                                out_file_buy.writelines([str(lines_read) + ';' + line_as_buy])
+                                            if out_file_no_sell:
+                                                out_file_no_sell.writelines([str(lines_read) + ';' + line])
+                                    else:
 
-                                        if out_file_no_sell:
-                                            out_file_no_sell.writelines([str(lines_read) + ';' + line])
-                                else:
+                                        if meta['Decision'] == 'buy':
 
-                                    if meta['Decision'] == 'buy':
+                                            if out_file_buy:
+                                                out_file_buy.writelines([str(lines_read) + ';' + line])
+                                        elif meta['Decision'] == 'ignore':
 
-                                        if out_file_buy:
-                                            out_file_buy.writelines([str(lines_read) + ';' + line])
-                                    elif meta['Decision'] == 'ignore':
+                                            if out_file_no_buy:
+                                                out_file_no_buy.writelines([str(lines_read) + ';' + line])
 
-                                        if out_file_no_buy:
-                                            out_file_no_buy.writelines([str(lines_read) + ';' + line])
+                                progress.add_item()
+                                progress.maybe_print()
 
-                            progress.print()
-                            progress.next_item()
+        if output_path_buy is not None:
+            if os.path.exists(output_path_buy):
+                os.remove(output_path_buy)
+            os.rename(output_path_buy_temp, output_path_buy)
+
+        if output_path_no_buy is not None:
+            if os.path.exists(output_path_no_buy):
+                os.remove(output_path_no_buy)
+            os.rename(output_path_no_buy_temp, output_path_no_buy)
+
+        if output_path_sell is not None:
+            if os.path.exists(output_path_sell):
+                os.remove(output_path_sell)
+            os.rename(output_path_sell_temp, output_path_sell)
+
+        if output_path_no_sell is not None:
+            if os.path.exists(output_path_no_sell):
+                os.remove(output_path_no_sell)
+            os.rename(output_path_no_sell_temp, output_path_no_sell)
+
+    except KilledException:
+        killfile_monitor.delete_killfile()
+
+        if output_path_buy_temp is not None and os.path.exists(output_path_buy_temp):
+            os.remove(output_path_buy_temp)
+
+        if output_path_no_buy_temp is not None and os.path.exists(output_path_no_buy_temp):
+            os.remove(output_path_no_buy_temp)
+
+        if output_path_sell_temp is not None and os.path.exists(output_path_sell_temp):
+            os.remove(output_path_sell_temp)
+
+        if output_path_no_sell_temp is not None and os.path.exists(output_path_no_sell_temp):
+            os.remove(output_path_no_sell_temp)
+
+        print('Killed.')
 
 
 if __name__ == '__main__':

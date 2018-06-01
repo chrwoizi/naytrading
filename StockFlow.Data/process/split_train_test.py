@@ -1,8 +1,13 @@
 import os
+import sys
 import argparse
 from random import shuffle
-from Progress import *
 from Common import *
+
+sys.path.append(os.path.abspath('..\\..\\StockFlow.Common'))
+from Progress import *
+from KillFileMonitor import *
+
 
 parser = argparse.ArgumentParser()
 
@@ -15,91 +20,119 @@ parser.add_argument('--preserve_test_ids', type=bool, default=True, help='Output
 
 
 def main(input_path, output_path_train, output_path_test, factor, samples, preserve_test_ids):
+    output_dir = os.path.dirname(os.path.abspath(output_path_train))
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
 
-    dir = os.path.dirname(os.path.abspath(output_path_train))
-    if not os.path.exists(dir):
-        os.makedirs(dir)
+    output_dir = os.path.dirname(os.path.abspath(output_path_test))
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
 
-    dir = os.path.dirname(os.path.abspath(output_path_test))
-    if not os.path.exists(dir):
-        os.makedirs(dir)
+    kill_path = output_dir + '\\kill'
+    killfile_monitor = KillFileMonitor(kill_path, 1)
 
-    test_ids = set()
-    if preserve_test_ids and os.path.exists(output_path_test):
+    output_path_train_temp = output_path_train + '.incomplete'
+    output_path_test_temp = output_path_test + '.incomplete'
+
+    try:
+        test_ids = set()
+        if preserve_test_ids and os.path.exists(output_path_test):
+            with open(input_path, 'r') as in_file:
+                in_file.readline()
+                while True:
+                    killfile_monitor.maybe_check_killfile()
+                    line = in_file.readline()
+                    if not line or len(line) == 0:
+                        break
+                    id = line[0 : line.index(';')]
+                    test_ids.add(id)
+
         with open(input_path, 'r') as in_file:
-            in_file.readline()
-            while True:
-                line = in_file.readline()
-                if not line or len(line) == 0:
-                    break
-                id = line[0 : line.index(';')]
-                test_ids.add(id)
 
-    with open(input_path, 'r') as in_file:
+            random_line_positions = get_line_positions(in_file, lambda: killfile_monitor.maybe_check_killfile())
+            shuffle(random_line_positions)
 
-        random_line_positions = get_line_positions(in_file)
-        shuffle(random_line_positions)
+            if samples:
+                random_line_positions = random_line_positions[0:samples]
 
-        if samples:
-            random_line_positions = random_line_positions[0:samples]
+            testCount = int(len(random_line_positions) * factor)
 
-        testCount = int(len(random_line_positions) * factor)
+            testLines = random_line_positions[0:testCount]
+            trainLines = random_line_positions[testCount:]
 
-        testLines = random_line_positions[0:testCount]
-        trainLines = random_line_positions[testCount:]
+            moveFromTrainToTest = [x for x in trainLines if x['Id'] in test_ids]
+            potentialTrainInTest = [x for x in testLines if x['Id'] not in test_ids]
+            moveFromTestToTrain = potentialTrainInTest[:min(len(moveFromTrainToTest), len(potentialTrainInTest))]
 
-        moveFromTrainToTest = [x for x in trainLines if x['Id'] in test_ids]
-        potentialTrainInTest = [x for x in testLines if x['Id'] not in test_ids]
-        moveFromTestToTrain = potentialTrainInTest[:min(len(moveFromTrainToTest), len(potentialTrainInTest))]
+            testLines = [x for x in testLines if x not in moveFromTestToTrain] + moveFromTrainToTest
+            trainLines = [x for x in trainLines if x not in moveFromTrainToTest] + moveFromTestToTrain
 
-        testLines = [x for x in testLines if x not in moveFromTestToTrain] + moveFromTrainToTest
-        trainLines = [x for x in trainLines if x not in moveFromTrainToTest] + moveFromTestToTrain
+            if not all(not x['Id'] in test_ids for x in trainLines):
+                raise Exception("train_lines in test_ids")
 
-        if not all(not x['Id'] in test_ids for x in trainLines):
-            raise Exception("train_lines in test_ids")
+            if any(x in testLines for x in trainLines):
+                raise Exception("train_lines in test_lines")
 
-        if any(x in testLines for x in trainLines):
-            raise Exception("train_lines in test_lines")
+            if len(trainLines) + len(testLines) != len(random_line_positions):
+                raise Exception("train_lines or test_lines missing")
 
-        if len(trainLines) + len(testLines) != len(random_line_positions):
-            raise Exception("train_lines or test_lines missing")
+            header = in_file.readline()
 
-        header = in_file.readline()
+            i = 0
 
-        i = 0
+            in_file.seek(0)
 
-        in_file.seek(0)
+            progress = Progress(1)
+            progress.set_count(len(random_line_positions))
 
-        progress = Progress()
-        progress.set_count(len(random_line_positions))
+            with open(output_path_test_temp, 'w') as out_file:
+                out_file.writelines([header])
+                for item in testLines:
+                    killfile_monitor.maybe_check_killfile()
+                    in_file.seek(item['Position'])
+                    line = in_file.readline()
+                    columns = len(line.split(';'))
+                    if columns != 5 + 1815:
+                        raise Exception('unexpected column count: %d' % columns)
+                    out_file.writelines([line])
+                    progress.add_item()
+                    progress.maybe_print()
+                    i += 1
 
-        with open(output_path_test, 'w') as out_file:
-            out_file.writelines([header])
-            for item in testLines:
-                in_file.seek(item['Position'])
-                line = in_file.readline()
-                columns = len(line.split(';'))
-                if columns != 5 + 1815:
-                    raise Exception('unexpected column count: %d' % columns)
-                out_file.writelines([line])
-                progress.print()
-                progress.next_item()
-                i += 1
+            in_file.seek(0)
 
-        in_file.seek(0)
+            with open(output_path_train_temp, 'w') as out_file:
+                out_file.writelines([header])
+                for item in trainLines:
+                    killfile_monitor.maybe_check_killfile()
+                    in_file.seek(item['Position'])
+                    line = in_file.readline()
+                    columns = len(line.split(';'))
+                    if columns != 5 + 1815:
+                        raise Exception('unexpected column count: %d' % columns)
+                    out_file.writelines([line])
+                    progress.add_item()
+                    progress.maybe_print()
+                    i += 1
 
-        with open(output_path_train, 'w') as out_file:
-            out_file.writelines([header])
-            for item in trainLines:
-                in_file.seek(item['Position'])
-                line = in_file.readline()
-                columns = len(line.split(';'))
-                if columns != 5 + 1815:
-                    raise Exception('unexpected column count: %d' % columns)
-                out_file.writelines([line])
-                progress.print()
-                progress.next_item()
-                i += 1
+        if os.path.exists(output_path_train):
+            os.remove(output_path_train)
+        os.rename(output_path_train_temp, output_path_train)
+
+        if os.path.exists(output_path_test):
+            os.remove(output_path_test)
+        os.rename(output_path_test_temp, output_path_test)
+
+    except KilledException:
+        killfile_monitor.delete_killfile()
+
+        if os.path.exists(output_path_train_temp):
+            os.remove(output_path_train_temp)
+
+        if os.path.exists(output_path_test_temp):
+            os.remove(output_path_test_temp)
+
+        print('Killed.')
 
 
 if __name__ == '__main__':
