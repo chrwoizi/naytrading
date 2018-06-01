@@ -21,6 +21,16 @@ exports.exportUserInstruments = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
 
+            var cancel = false;
+
+            req.on("close", function() {
+                cancel = true;
+            });
+
+            req.on("end", function() {
+                cancel = true;
+            });
+
             var ids = await sql.query('SELECT instrument.ID FROM instruments AS instrument WHERE instrument.User = @userName ORDER BY instrument.ID',
                 {
                     "@userName": req.user.email
@@ -31,7 +41,7 @@ exports.exportUserInstruments = async function (req, res) {
 
             res.write('[');
 
-            for (var i = 0; i < ids.length; ++i) {
+            for (var i = 0; i < ids.length && !cancel; ++i) {
 
                 var instrument = await model.instrument.find({
                     where: {
@@ -53,6 +63,9 @@ exports.exportUserInstruments = async function (req, res) {
             res.write(']');
             res.end();
 
+            if (cancel) {
+                throw { message: "client disconnected" }
+            }
         }
         else {
             res.status(401);
@@ -83,6 +96,16 @@ exports.exportUserSnapshots = async function (req, res) {
                     req.params.fromDate.substr(8, 2), parseInt(req.params.fromDate.substr(10, 2)), req.params.fromDate.substr(12, 2)));
             }
 
+            var cancel = false;
+
+            req.on("close", function() {
+                cancel = true;
+            });
+
+            req.on("end", function() {
+                cancel = true;
+            });
+
             var ids = await sql.query('SELECT userSnapshot.ID FROM usersnapshots AS userSnapshot WHERE userSnapshot.User = @userName AND userSnapshot.ModifiedTime >= @fromDate ORDER BY userSnapshot.ModifiedTime',
                 {
                     "@userName": req.user.email,
@@ -94,7 +117,7 @@ exports.exportUserSnapshots = async function (req, res) {
 
             res.write('[');
 
-            for (var i = 0; i < ids.length; ++i) {
+            for (var i = 0; i < ids.length && !cancel; ++i) {
 
                 var usersnapshot = await model.usersnapshot.find({
                     where: {
@@ -145,6 +168,9 @@ exports.exportUserSnapshots = async function (req, res) {
             res.write(']');
             res.end();
 
+            if (cancel) {
+                throw { message: "client disconnected" }
+            }
         }
         else {
             res.status(401);
@@ -175,6 +201,16 @@ exports.exportUserTrades = async function (req, res) {
                     req.params.fromDate.substr(8, 2), parseInt(req.params.fromDate.substr(10, 2)), req.params.fromDate.substr(12, 2)));
             }
 
+            var cancel = false;
+
+            req.on("close", function() {
+                cancel = true;
+            });
+
+            req.on("end", function() {
+                cancel = true;
+            });
+
             var trades = await sql.query(trades_sql,
                 {
                     "@userName": req.user.email,
@@ -186,7 +222,7 @@ exports.exportUserTrades = async function (req, res) {
 
             res.write('[');
 
-            for (var i = 0; i < trades.length; ++i) {
+            for (var i = 0; i < trades.length && !cancel; ++i) {
 
                 var trade = trades[i];
                 
@@ -200,6 +236,9 @@ exports.exportUserTrades = async function (req, res) {
             res.write(']');
             res.end();
 
+            if (cancel) {
+                throw { message: "client disconnected" }
+            }
         }
         else {
             res.status(401);
