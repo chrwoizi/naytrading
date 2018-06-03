@@ -5,8 +5,9 @@ import argparse
 import datetime
 import itertools
 from Importer import *
+from Common import *
 
-sys.path.append(os.path.abspath('..\\..\\StockFlow.Common'))
+sys.path.append(os.path.abspath('../../StockFlow.Common'))
 from FileItemProgress import *
 from KillFileMonitor import *
 
@@ -55,7 +56,7 @@ def main(input_path, output_path, days, max_missing_days):
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    kill_path = output_dir + '\\kill'
+    kill_path = output_dir + '/kill'
     killfile_monitor = KillFileMonitor(kill_path, 1)
 
     output_path_temp = output_path + '.incomplete'
@@ -140,7 +141,7 @@ def main(input_path, output_path, days, max_missing_days):
                                         previous_rate = rate
 
                                 else:
-                                    print("%s has insufficient rates: %d" % (
+                                    print_flush("%s has insufficient rates: %d" % (
                                     snapshot.instrument.InstrumentName, len(remaining_rates)))
 
                         progress.add_item()
@@ -157,7 +158,7 @@ def main(input_path, output_path, days, max_missing_days):
         killfile_monitor.delete_killfile()
         if os.path.exists(output_path_temp):
             os.remove(output_path_temp)
-        print('Killed.')
+        print_flush('Killed.')
 
 
 if __name__ == '__main__':
