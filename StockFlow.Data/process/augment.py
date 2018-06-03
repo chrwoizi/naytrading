@@ -7,7 +7,7 @@ from decimal import Decimal
 from noise import pnoise1
 from Common import *
 
-sys.path.append(os.path.abspath('..\\..\\StockFlow.Common'))
+sys.path.append(os.path.abspath('../../StockFlow.Common'))
 from FileItemProgress import *
 from KillFileMonitor import *
 
@@ -48,7 +48,7 @@ def main(input_path, output_path, factor):
 
     output_path_temp = output_path + '.incomplete'
 
-    kill_path = output_dir + '\\kill'
+    kill_path = output_dir + '/kill'
     killfile_monitor = KillFileMonitor(kill_path, 1)
 
     try:
@@ -100,7 +100,7 @@ def main(input_path, output_path, factor):
         killfile_monitor.delete_killfile()
         if os.path.exists(output_path_temp):
             os.remove(output_path_temp)
-        print('Killed.')
+        print_flush('Killed.')
 
 
 if __name__ == '__main__':

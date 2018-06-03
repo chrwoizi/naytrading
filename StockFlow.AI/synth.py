@@ -272,7 +272,7 @@ if __name__ == '__main__':
                             durations.pop(0)
                     seconds_per_row = np.mean(durations) if len(durations) > 0 else 1
                     remaining = seconds_per_row * (count - i)
-                    print("%s %d/%d # %.2f rows/s # %s remaining" % (
+                    print_flush("%s %d/%d # %.2f rows/s # %s remaining" % (
                         filename, i + 1, count, 1 / seconds_per_row, datetime.timedelta(seconds=int(remaining))))
 
                 if random.randint(0, 2) == 0:

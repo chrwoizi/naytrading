@@ -18,4 +18,4 @@ class FileItemProgress(Progress):
             self.file_length = None
 
     def print_progress(self, seconds_per_item):
-        print("%sitem %d # %.2f items/s # %.2f%% of %s" % (self.prefix, self.i + 1, 1 / seconds_per_item, 100 * self.file.tell() / self.file_length, self.file_name))
+        print_flush("%sitem %d # %.2f items/s # %.2f%% of %s" % (self.prefix, self.i + 1, 1 / seconds_per_item, 100 * self.file.tell() / self.file_length, self.file_name))

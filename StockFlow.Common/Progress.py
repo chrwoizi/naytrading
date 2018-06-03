@@ -1,6 +1,11 @@
 import numpy as np
+import sys
 
 from IntervalCall import *
+
+def print_flush(s):
+    print(s)
+    sys.stdout.flush()
 
 class Progress(IntervalCall):
     def __init__(self, prefix, seconds):
@@ -38,6 +43,6 @@ class Progress(IntervalCall):
 
     def print_progress(self, seconds_per_item):
         if self.count is None:
-            print("%sitem %d # %.2f items/s" % (self.prefix, self.i + 1, 1 / seconds_per_item))
+            print_flush("%sitem %d # %.2f items/s" % (self.prefix, self.i + 1, 1 / seconds_per_item))
         else:
-            print("%sitem %d/%d # %.2f items/s # %.2f%%" % (self.prefix, self.i + 1, self.count, 1 / seconds_per_item, 100 * self.i / self.count))
+            print_flush("%sitem %d/%d # %.2f items/s # %.2f%%" % (self.prefix, self.i + 1, self.count, 1 / seconds_per_item, 100 * self.i / self.count))

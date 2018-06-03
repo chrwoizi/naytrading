@@ -3,9 +3,13 @@ import sys
 import os
 from decimal import Decimal
 
-sys.path.append(os.path.abspath('..\\..\\StockFlow.Common'))
+sys.path.append(os.path.abspath('../../StockFlow.Common'))
 from FileBinaryProgress import *
 
+
+def print_flush(s):
+    print(s)
+    sys.stdout.flush()
 
 def get_line_positions(file_path, report_progress):
 

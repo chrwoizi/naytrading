@@ -36,3 +36,4 @@
 /StockFlow.Data/process/data
 /StockFlow.AI/model*
 __pycache__
+/StockFlow.Node/processing

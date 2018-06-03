@@ -4,7 +4,7 @@ import argparse
 from random import shuffle
 from Common import *
 
-sys.path.append(os.path.abspath('..\\..\\StockFlow.Common'))
+sys.path.append(os.path.abspath('../../StockFlow.Common'))
 from Progress import *
 from KillFileMonitor import *
 
@@ -28,7 +28,7 @@ def main(input_path, output_path_train, output_path_test, factor, samples, prese
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    kill_path = output_dir + '\\kill'
+    kill_path = output_dir + '/kill'
     killfile_monitor = KillFileMonitor(kill_path, 1)
 
     output_path_train_temp = output_path_train + '.incomplete'
@@ -44,7 +44,8 @@ def main(input_path, output_path_train, output_path_test, factor, samples, prese
                     line = in_file.readline()
                     if not line or len(line) <= 2:
                         break
-                    id = line[0 : line.index(';')]
+                    id_start = line.index(';') + 1
+                    id = line[id_start:line.index(';', id_start)]
                     test_ids.add(id)
 
         random_line_positions = get_line_positions(input_path, lambda: killfile_monitor.maybe_check_killfile())
@@ -131,7 +132,7 @@ def main(input_path, output_path_train, output_path_test, factor, samples, prese
         if os.path.exists(output_path_test_temp):
             os.remove(output_path_test_temp)
 
-        print('Killed.')
+        print_flush('Killed.')
 
 
 if __name__ == '__main__':

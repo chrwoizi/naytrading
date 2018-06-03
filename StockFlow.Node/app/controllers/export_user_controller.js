@@ -106,71 +106,12 @@ exports.exportUserSnapshots = async function (req, res) {
                 cancel = true;
             });
 
-            var ids = await sql.query('SELECT userSnapshot.ID FROM usersnapshots AS userSnapshot WHERE userSnapshot.User = @userName AND userSnapshot.ModifiedTime >= @fromDate ORDER BY userSnapshot.ModifiedTime',
-                {
-                    "@userName": req.user.email,
-                    "@fromDate": fromDate
-                });
+            var user = req.user.email;
 
             res.header('Content-disposition', 'attachment; filename=usersnapshots.json');
             res.header('Content-type', 'application/json');
-
-            res.write('[');
-
-            for (var i = 0; i < ids.length && !cancel; ++i) {
-
-                var usersnapshot = await model.usersnapshot.find({
-                    where: {
-                        ID: ids[i].ID
-                    }
-                });
-
-                var snapshot = await model.snapshot.find({
-                    include: [{
-                        model: model.instrument
-                    }, {
-                        model: model.snapshotrate
-                    }],
-                    where: {
-                        ID: usersnapshot.Snapshot_ID
-                    },
-                    order: [
-                        [model.snapshotrate, "Time", "ASC"]
-                    ]
-                });
-                snapshot = snapshot.get({ plain: true });
-
-                for (var r = 0; r < snapshot.snapshotrates.length; ++r) {
-                    var rate = snapshot.snapshotrates[r];
-                    delete rate.ID;
-                    delete rate.createdAt;
-                    delete rate.updatedAt;
-                    delete rate.Snapshot_ID;
-                }
-                
-                delete snapshot.instrument.createdAt;
-                delete snapshot.instrument.updatedAt;
-
-                delete snapshot.createdAt;
-                delete snapshot.updatedAt;
-
-                snapshot.DecisionId = usersnapshot.ID;
-                snapshot.Decision = usersnapshot.Decision;
-                snapshot.DecisionTime = usersnapshot.ModifiedTime;
-                
-                if (i > 0) {
-                    res.write(',');
-                }
-
-                res.write(JSON.stringify(snapshot));
-            }
-
-            res.write(']');
-            res.end();
-
-            if (cancel) {
-                throw { message: "client disconnected" }
-            }
+        
+            await exports.exportUserSnapshotsGeneric(fromDate, user, res, () => cancel);
         }
         else {
             res.status(401);
@@ -180,6 +121,79 @@ exports.exportUserSnapshots = async function (req, res) {
     catch (error) {
         return500(res, error);
     }
+}
+
+exports.exportUserSnapshotsGeneric = async function(fromDate, user, stream, cancel, reportProgress) {
+    reportProgress(0);
+
+    var ids = await sql.query('SELECT userSnapshot.ID FROM usersnapshots AS userSnapshot WHERE userSnapshot.User = @userName AND userSnapshot.ModifiedTime >= @fromDate ORDER BY userSnapshot.ModifiedTime',
+        {
+            "@userName": user,
+            "@fromDate": fromDate
+        });
+
+    stream.write('[');
+
+    for (var i = 0; i < ids.length && !cancel(); ++i) {
+
+        reportProgress(i / ids.length);
+
+        var usersnapshot = await model.usersnapshot.find({
+            where: {
+                ID: ids[i].ID
+            }
+        });
+
+        var snapshot = await model.snapshot.find({
+            include: [{
+                model: model.instrument
+            }, {
+                model: model.snapshotrate
+            }],
+            where: {
+                ID: usersnapshot.Snapshot_ID
+            },
+            order: [
+                [model.snapshotrate, "Time", "ASC"]
+            ]
+        });
+        snapshot = snapshot.get({ plain: true });
+
+        for (var r = 0; r < snapshot.snapshotrates.length; ++r) {
+            var rate = snapshot.snapshotrates[r];
+            delete rate.ID;
+            delete rate.createdAt;
+            delete rate.updatedAt;
+            delete rate.Snapshot_ID;
+        }
+        
+        delete snapshot.instrument.createdAt;
+        delete snapshot.instrument.updatedAt;
+
+        delete snapshot.createdAt;
+        delete snapshot.updatedAt;
+
+        snapshot.DecisionId = usersnapshot.ID;
+        snapshot.Decision = usersnapshot.Decision;
+        snapshot.DecisionTime = usersnapshot.ModifiedTime;
+        
+        if (i > 0) {
+            stream.write(',');
+        }
+
+        stream.write(JSON.stringify(snapshot));
+    }
+
+    stream.write(']');
+    stream.end();
+    
+    reportProgress(1);
+
+    if (cancel()) {
+        throw { message: "cancelled" }
+    }
+
+    return ids.length;
 }
 
 exports.exportUserTrades = async function (req, res) {

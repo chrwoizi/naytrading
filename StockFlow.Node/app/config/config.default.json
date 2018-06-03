@@ -27,6 +27,7 @@
     "job_isinwkn_interval_seconds": 86400,
     "job_portfolios_interval_seconds": 86400,
     "job_portfolios_trade_volume": 1000,
+    "job_process_interval_seconds": 86400,
     "settings_refresh_interval_seconds": 10,
     "export_secret": "enter secret token here",
     "import_secret": "enter secret token here",
@@ -37,7 +38,10 @@
       "expiration": 2592000000
     },
     "whitelist": true,
-    "max_unused_snapshot_age_hours": 48
+    "max_unused_snapshot_age_hours": 48,
+    "processing_dir": "processing",
+    "processors_dir": "../StockFlow.Data/process",
+    "python": "C:\\Program Files\\Python\\Python36\\python.exe"
   },
   "production": {
     "port": 5000,
@@ -67,6 +71,7 @@
     "job_isinwkn_interval_seconds": 86400,
     "job_portfolios_interval_seconds": 86400,
     "job_portfolios_trade_volume": 1000,
+    "job_process_interval_seconds": 86400,
     "settings_refresh_interval_seconds": 10,
     "export_secret": "enter secret token here",
     "import_secret": "enter secret token here",
@@ -77,6 +82,9 @@
       "expiration": 2592000000
     },
     "whitelist": true,
-    "max_unused_snapshot_age_hours": 48
+    "max_unused_snapshot_age_hours": 48,
+    "processing_dir": "processing",
+    "processors_dir": "../StockFlow.Data/process",
+    "python": "C:\\Program Files\\Python\\Python36\\python.exe"
   }
 }

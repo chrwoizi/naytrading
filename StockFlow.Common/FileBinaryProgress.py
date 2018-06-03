@@ -19,6 +19,6 @@ class FileBinaryProgress(Progress):
 
     def print_progress(self, seconds_per_item):
         if self.file_length:
-            print("%s%s # %s/s # %.2f%% of %s" % (self.prefix, self.format_bytes(self.i + 1), self.format_bytes(1 / seconds_per_item), 100 * self.i / self.file_length, self.file_name))
+            print_flush("%s%s # %s/s # %.2f%% of %s" % (self.prefix, self.format_bytes(self.i + 1), self.format_bytes(1 / seconds_per_item), 100 * self.i / self.file_length, self.file_name))
         else:
-            print("%s%s # %s/s # %s" % (self.prefix, self.format_bytes(self.i + 1), self.format_bytes(1 / seconds_per_item), self.file_name))
+            print_flush("%s%s # %s/s # %s" % (self.prefix, self.format_bytes(self.i + 1), self.format_bytes(1 / seconds_per_item), self.file_name))
