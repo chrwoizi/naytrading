@@ -53,14 +53,19 @@ async function download(user, fromDate, filePath, cancel) {
 
     if (count > 0) {
         return new Promise((resolve, reject) => {
-            fs.rename(filePath + ".incomplete", filePath, err => {
-                if (err) {
-                    reject(err);
-                }
-                else {
-                    resolve(count);
-                }
-            });
+            try {
+                fs.rename(filePath + ".incomplete", filePath, err => {
+                    if (err) {
+                        reject(err);
+                    }
+                    else {
+                        resolve(count);
+                    }
+                });
+            }
+            catch (e) {
+                reject(e);
+            }
         });
     }
     else {
@@ -126,14 +131,19 @@ function writeFile(filePath, content) {
 
 function removeFile(filePath) {
     return new Promise((resolve, reject) => {
-        fs.unlink(filePath, err => {
-            if (err) {
-                reject(err);
-            }
-            else {
-                resolve();
-            }
-        });
+        try {
+            fs.unlink(filePath, err => {
+                if (err) {
+                    reject(err);
+                }
+                else {
+                    resolve();
+                }
+            });
+        }
+        catch (e) {
+            reject(e);
+        }
     });
 }
 

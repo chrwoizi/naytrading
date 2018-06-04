@@ -9,7 +9,12 @@ var config = require('../config/envconfig');
 
 function sleep(ms) {
     return new Promise((resolve, reject) => {
-        setTimeout(resolve, ms);
+        try {
+            setTimeout(resolve, ms);
+        }
+        catch (e) {
+            reject(e);
+        }
     });
 }
 
