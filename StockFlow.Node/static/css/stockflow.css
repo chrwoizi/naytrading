@@ -69,3 +69,14 @@ a.github-logo {
 img.github-logo {
     height: 3rem;
 }
+
+dt {
+    margin-top: 2em;
+    margin-bottom: 1em;
+    font-size: 1.2em;
+}
+
+.export-button {
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+}

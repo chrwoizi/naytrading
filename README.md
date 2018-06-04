@@ -82,11 +82,9 @@ The console application [StockFlow.Trader](StockFlow.Trader) can be used to actu
 
 ## :mortar_board: Training a Convolutional Neural Network on the recorded data ##
 
-The WPF application [StockFlow.WPF](StockFlow.WPF) can be used to export and pre-process the recorded data before feeding it into a neural network.
+The web site periodically processes the recorded data using [StockFlow.Data](StockFlow.Data) and provides CSV file downloads which are optimized for a neural network.
 
-![data pre-processing](Documentation/StockFlow.WPF.png)
-
-With [main.py](StockFlow.Python/main.py), a convolutional neural network is trained on the recorded data, using the price history as input and the user decision as desired output.
+With [main.py](StockFlow.Python/main.py), a convolutional neural network is trained on the processed data, using the price history as input and the user decision as desired output.
 
 With [synth.py](StockFlow.Python/synth.py), synthetical data can be generated to pre-train the network, potentially increasing accuracy on a small real-world training set.
 

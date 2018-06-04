@@ -21,7 +21,10 @@ def normalize(rates):
     height = max_rate - min_rate
 
     for i in range(0, len(rates)):
-        rates[i] = (rates[i] - min_rate) / height
+        if height > 0:
+            rates[i] = (rates[i] - min_rate) / height
+        else:
+            rates[i] = 0
 
 def main(input_path, output_path):
     output_dir = os.path.dirname(os.path.abspath(output_path))
