@@ -352,7 +352,7 @@ async function processUser(user) {
         "--preserve_test_ids=" + (preserveTestIds ? "True" : "False")
     ]);
 
-    var augmentFactor = 2;
+    var augmentFactor = 10;
 
     await runProcess(config.python, processorsDir, [
         "augment.py",
