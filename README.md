@@ -34,6 +34,24 @@ MariaDB [(none)]> create user 'stockflow'@'localhost' identified by 'stockflow';
 MariaDB [(none)]> grant all on stockflow.* to 'stockflow' identified by 'stockflow';
 [Ctrl+C]
 
+# install python
+root@host:~$ apt-get install -y make build-essential libssl-dev zlib1g-dev   
+root@host:~$ apt-get install -y libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm 
+root@host:~$ apt-get install -y libncurses5-dev  libncursesw5-dev xz-utils tk-dev
+root@host:~$ wget https://www.python.org/ftp/python/3.6.5/Python-3.6.5.tgz
+root@host:~$ tar xvf Python-3.6.5.tgz
+root@host:~$ cd Python-3.6.5
+root@host:~/Python-3.6.5$ ./configure --enable-optimizations --with-ensurepip=install
+root@host:~/Python-3.6.5$ make -j8
+root@host:~/Python-3.6.5$ sudo make altinstall
+root@host:~$ cd ..
+
+root@host:~$ /usr/local/bin/pip3.6 install --upgrade pip
+root@host:~$ /usr/local/bin/pip3.6 install argparse
+root@host:~$ /usr/local/bin/pip3.6 install datetime
+root@host:~$ /usr/local/bin/pip3.6 install noise
+root@host:~$ /usr/local/bin/pip3.6 install numpy
+
 # redirect port 80 to 5000 (or setup a reverse proxy)
 root@host:~$ apt-get install iptables-persistent
 root@host:~$ iptables -t nat -I PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 5000
@@ -59,6 +77,7 @@ stockflow@host:~/stockflow/StockFlow.Node/app/config$ vi config.json
 [set production.import_token to a secret value of your choice]
 [set production.admin_user to your email address]
 [set production.proxy if you access the web through a proxy]
+[set "python": "/usr/local/bin/python3.6"]
 :wq
 stockflow@host:~/stockflow/StockFlow.Node/app/config$ cd ../..
 stockflow@host:~/stockflow/StockFlow.Node$ chmod +x dbmigrate.sh
