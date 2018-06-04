@@ -29,13 +29,23 @@ class IntervalCall {
 }
 
 
+function logVerbose(message) {
+    //console.log(message);
+}
+
+
+function logError(message) {
+    console.log(message);
+}
+
+
 async function download(user, fromDate, filePath, cancel) {
     var stream = fs.createWriteStream(filePath + ".incomplete");
 
     var intervalCall = new IntervalCall(1);
     function reportProgress(progress) {
         intervalCall.maybeCall(() => {
-            console.log("" + (100 * progress).toFixed(2) + "% of snapshots exported to " + filePath + ".incomplete");
+            logVerbose("" + (100 * progress).toFixed(2) + "% of snapshots exported to " + filePath + ".incomplete");
         });
     }
 
@@ -48,22 +58,14 @@ async function download(user, fromDate, filePath, cancel) {
                     reject(err);
                 }
                 else {
-                    resolve();
+                    resolve(count);
                 }
             });
         });
     }
     else {
-        await new Promise((resolve, reject) => {
-            fs.unlink(filePath + ".incomplete", err => {
-                if (err) {
-                    reject(err);
-                }
-                else {
-                    resolve();
-                }
-            });
-        });
+        await removeFile(filePath + ".incomplete");
+        return count;
     }
 }
 
@@ -75,12 +77,12 @@ function runProcess(executable, cwd, args) {
 
             process.stdout.on('data', (data) => {
                 var message = "" + data;
-                console.log(message.substr(0, data.length - 2));
+                logVerbose(message.substr(0, data.length - 2));
             });
 
             process.stderr.on('data', (data) => {
                 var message = "" + data;
-                console.log(message.substr(0, data.length - 2));
+                logError(message.substr(0, data.length - 2));
             });
 
             process.on('close', (code) => {
@@ -103,19 +105,10 @@ function runProcess(executable, cwd, args) {
 }
 
 
-function writeMeta(filePath, now, days, maxMissingDays, testDataRatio, preserveTestIds, augmentFactor) {
-    var meta = {
-        time: dateFormat(now, "yyyymmddHHMMss"),
-        days: days,
-        max_missing_days: maxMissingDays,
-        test_data_ratio: testDataRatio,
-        preserve_test_ids: preserveTestIds ? "True" : "False",
-        augment_factor: augmentFactor
-    };
-
+function writeFile(filePath, content) {
     return new Promise((resolve, reject) => {
         try {
-            fs.writeFile(filePath, JSON.stringify(meta), function (err) {
+            fs.writeFile(filePath, content, function (err) {
                 if (err) {
                     reject(err);
                 }
@@ -128,6 +121,34 @@ function writeMeta(filePath, now, days, maxMissingDays, testDataRatio, preserveT
             reject(e);
         }
     });
+}
+
+
+function removeFile(filePath) {
+    return new Promise((resolve, reject) => {
+        fs.unlink(filePath, err => {
+            if (err) {
+                reject(err);
+            }
+            else {
+                resolve();
+            }
+        });
+    });
+}
+
+
+async function writeMeta(filePath, now, days, maxMissingDays, testDataRatio, preserveTestIds, augmentFactor) {
+    var meta = {
+        time: dateFormat(now, "yyyymmddHHMMss"),
+        days: days,
+        max_missing_days: maxMissingDays,
+        test_data_ratio: testDataRatio,
+        preserve_test_ids: preserveTestIds ? "True" : "False",
+        augment_factor: augmentFactor
+    };
+
+    await writeFile(filePath, JSON.stringify(meta));
 }
 
 
@@ -159,6 +180,12 @@ function getFiles(mask, regex) {
 }
 
 
+function parseDate(str) {
+    return new Date(Date.UTC(str.substr(0, 4), parseInt(str.substr(4, 2)) - 1, str.substr(6, 2),
+        str.substr(8, 2), parseInt(str.substr(10, 2)), str.substr(12, 2)));
+}
+
+
 function getMaxDate(files) {
     var regex = /[^\d]+(\d+).json$/;
 
@@ -168,8 +195,7 @@ function getMaxDate(files) {
         var match = regex.exec(file);
         if (match) {
             var str = match[1];
-            var date = new Date(Date.UTC(str.substr(0, 4), parseInt(str.substr(4, 2)) - 1, str.substr(6, 2),
-                str.substr(8, 2), parseInt(str.substr(10, 2)), str.substr(12, 2)));
+            var date = parseDate(str);
             if (date.getTime() > maxDate.getTime()) {
                 maxDate = date;
             }
@@ -179,11 +205,43 @@ function getMaxDate(files) {
 }
 
 
+function sleep(milliseconds) {
+    return new Promise((resolve, reject) => {
+        try {
+            setTimeout(resolve, milliseconds);
+        }
+        catch (e) {
+            reject(e);
+        }
+    });
+}
+
+
+function isUpToDate(filePath, latestSnapshotDate) {
+    if (fs.existsSync(filePath) && fs.existsSync(filePath + ".meta")) {
+        var lastMeta = JSON.parse(fs.readFileSync(filePath + ".meta", 'utf8'));
+        var lastMetaTime = parseDate(lastMeta.time);
+        if (lastMetaTime >= latestSnapshotDate) {
+            return true;
+        }
+    }
+    return false;
+}
+
+
 async function processUser(user) {
     var processingDir = path.resolve(config.processing_dir + "/" + user);
 
     if (!fs.existsSync(processingDir)) {
         fs.mkdirSync(processingDir);
+    }
+    else {
+        var killfile = processingDir + "/kill";
+        await writeFile(killfile, "");
+        await sleep(10000);
+        if (fs.existsSync(killfile)) {
+            await removeFile(killfile);
+        }
     }
 
     function cancel() {
@@ -196,9 +254,21 @@ async function processUser(user) {
     var now = new Date();
     var filePath = processingDir + "/" + dateFormat(now, "yyyymmddHHMMss") + ".json";
 
-    await download(user, fromDate, filePath, cancel);
+    var newCount = await download(user, fromDate, filePath, cancel);
 
     files = await getFiles(processingDir + "/*.json", /[^\d]+(\d+).json$/);
+
+    if (files.length == 0) {
+        return;
+    }
+
+    var latestSnapshotDate = getMaxDate(files);
+    if (isUpToDate(processingDir + "/buying_train_aug_norm.csv", latestSnapshotDate)
+        && isUpToDate(processingDir + "/buying_test_aug_norm.csv", latestSnapshotDate)
+        && isUpToDate(processingDir + "/selling_train_aug_norm.csv", latestSnapshotDate)
+        && isUpToDate(processingDir + "/selling_test_aug_norm.csv", latestSnapshotDate)) {
+        return;
+    }
 
     var processorsDir = path.resolve(config.processors_dir);
 
@@ -365,7 +435,7 @@ async function processUser(user) {
     ]);
 
     await writeMeta(
-        processingDir + "/buying_test_aug_norm.meta",
+        processingDir + "/buying_test_aug_norm.csv.meta",
         now,
         days,
         maxMissingDays,
@@ -380,7 +450,7 @@ async function processUser(user) {
     ]);
 
     await writeMeta(
-        processingDir + "/buying_train_aug_norm.meta",
+        processingDir + "/buying_train_aug_norm.csv.meta",
         now,
         days,
         maxMissingDays,
@@ -395,7 +465,7 @@ async function processUser(user) {
     ]);
 
     await writeMeta(
-        processingDir + "/selling_train_aug_norm.meta",
+        processingDir + "/selling_train_aug_norm.csv.meta",
         now,
         days,
         maxMissingDays,
@@ -410,7 +480,7 @@ async function processUser(user) {
     ]);
 
     await writeMeta(
-        processingDir + "/selling_test_aug_norm.meta",
+        processingDir + "/selling_test_aug_norm.csv.meta",
         now,
         days,
         maxMissingDays,
@@ -418,7 +488,7 @@ async function processUser(user) {
         preserveTestIds,
         augmentFactor);
 
-    console.log("done processing " + user);
+    logVerbose("done processing " + user);
 }
 
 
@@ -428,11 +498,13 @@ exports.run = async function () {
             fs.mkdirSync(config.processing_dir);
         }
 
-        var user = "***REMOVED***";
-        processUser(user);
+        var users = await sql.query("SELECT DISTINCT(User) FROM usersnapshots");
+        for (var i = 0; i < users.length; ++i) {
+            processUser(users[i].User);
+        }
     }
     catch (error) {
-        console.log("error in process job: " + error);
+        logError("error in process job: " + error);
     }
 
     setTimeout(exports.run, config.job_process_interval_seconds * 1000);

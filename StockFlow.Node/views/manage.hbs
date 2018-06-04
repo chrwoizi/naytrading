@@ -3,20 +3,156 @@
     <p class="text-success">{{statusMessage}}</p>
     <hr />
     <dl class="dl-horizontal">
-        <dt>Password:</dt>
+        <dt>Export preprocessed training data for neural networks:</dt>
         <dd>
-            <a href="/password" class="btn btn-secondary" role="button">Change</a>
+            {{#if hasProcessedData}}
+            {{#if buyingTrain}}
+            <a href="/api/export/user/train/buying/{{buyingTrain.time}}" class="btn btn-secondary" role="button">Download Buy-Training</a>
+            <table>
+                <tbody>
+                    <tr>
+                        <th>Time: </th>
+                        <td>{{buyingTrain.timeStr}}</td>
+                    </tr>
+                    <tr>
+                        <th>Days: </th>
+                        <td>{{buyingTrain.days}}</td>
+                    </tr>
+                    <tr>
+                        <th>Allow missing days: </th>
+                        <td>{{buyingTrain.max_missing_days}}</td>
+                    </tr>
+                    <tr>
+                        <th>Datasets used for validation: </th>
+                        <td>{{buyingTrain.testDataRatioPercent}}%</td>
+                    </tr>
+                    <tr>
+                        <th>Keep validation data: </th>
+                        <td>{{buyingTrain.preserve_test_ids}}</td>
+                    </tr>
+                    <tr>
+                        <th>Augmentation: </th>
+                        <td>{{buyingTrain.augment_factor}}x</td>
+                    </tr>
+                </tbody>
+            </table>
+            <br/>
+            {{/if}}
+            {{#if buyingTest}}
+            <a href="/api/export/user/test/buying/{{buyingTest.time}}" class="btn btn-secondary" role="button">Download Buy-Validation</a>
+            <table>
+                <tbody>
+                    <tr>
+                        <th>Time: </th>
+                        <td>{{buyingTest.timeStr}}</td>
+                    </tr>
+                    <tr>
+                        <th>Days: </th>
+                        <td>{{buyingTest.days}}</td>
+                    </tr>
+                    <tr>
+                        <th>Allow missing days: </th>
+                        <td>{{buyingTest.max_missing_days}}</td>
+                    </tr>
+                    <tr>
+                        <th>Datasets used for validation: </th>
+                        <td>{{buyingTest.testDataRatioPercent}}%</td>
+                    </tr>
+                    <tr>
+                        <th>Keep validation data: </th>
+                        <td>{{buyingTest.preserve_test_ids}}</td>
+                    </tr>
+                    <tr>
+                        <th>Augmentation: </th>
+                        <td>{{buyingTest.augment_factor}}x</td>
+                    </tr>
+                </tbody>
+            </table>
+            <br/>
+            {{/if}}
+            {{#if sellingTrain}}
+            <a href="/api/export/user/train/selling/{{sellingTrain.time}}" class="btn btn-secondary" role="button">Download Sell-Training</a>
+            <table>
+                <tbody>
+                    <tr>
+                        <th>Time: </th>
+                        <td>{{sellingTrain.timeStr}}</td>
+                    </tr>
+                    <tr>
+                        <th>Days: </th>
+                        <td>{{sellingTrain.days}}</td>
+                    </tr>
+                    <tr>
+                        <th>Allow missing days: </th>
+                        <td>{{sellingTrain.max_missing_days}}</td>
+                    </tr>
+                    <tr>
+                        <th>Datasets used for validation: </th>
+                        <td>{{sellingTrain.testDataRatioPercent}}%</td>
+                    </tr>
+                    <tr>
+                        <th>Keep validation data: </th>
+                        <td>{{sellingTrain.preserve_test_ids}}</td>
+                    </tr>
+                    <tr>
+                        <th>Augmentation: </th>
+                        <td>{{sellingTrain.augment_factor}}x</td>
+                    </tr>
+                </tbody>
+            </table>
+            <br/>
+            {{/if}}
+            {{#if sellingTest}}
+            <a href="/api/export/user/test/selling/{{sellingTest.time}}" class="btn btn-secondary" role="button">Download Sell-Validation</a>
+            <table>
+                <tbody>
+                    <tr>
+                        <th>Time: </th>
+                        <td>{{sellingTest.timeStr}}</td>
+                    </tr>
+                    <tr>
+                        <th>Days: </th>
+                        <td>{{sellingTest.days}}</td>
+                    </tr>
+                    <tr>
+                        <th>Allow missing days: </th>
+                        <td>{{sellingTest.max_missing_days}}</td>
+                    </tr>
+                    <tr>
+                        <th>Datasets used for validation: </th>
+                        <td>{{sellingTest.testDataRatioPercent}}%</td>
+                    </tr>
+                    <tr>
+                        <th>Keep validation data: </th>
+                        <td>{{sellingTest.preserve_test_ids}}</td>
+                    </tr>
+                    <tr>
+                        <th>Augmentation: </th>
+                        <td>{{sellingTest.augment_factor}}x</td>
+                    </tr>
+                </tbody>
+            </table>
+            {{/if}}
+            {{else}}
+            <span>The processing job runs periodically. Please wait until the data becomes available.</span>
+            {{/if}}
         </dd>
-        <dt>Export:</dt>
+        <dt>Export raw data:</dt>
         <dd>
-            <a href="/api/export/user/instruments" class="btn btn-secondary" role="button">Instruments</a>
-            <a href="/api/export/user/snapshots/19700101" class="btn btn-secondary" role="button">Snapshots</a>
-            <a href="/api/export/user/trades/19700101" class="btn btn-secondary" role="button">Trades</a>
+            <div class="export-button">
+                <a href="/api/export/user/instruments" class="btn btn-secondary" role="button">Export Instruments</a>
+            </div>
+            <div class="export-button">
+                <a href="/api/export/user/snapshots/19700101" class="btn btn-secondary" role="button">Export Snapshots</a>
+            </div>
+            <div class="export-button">
+                <a href="/api/export/user/trades/19700101" class="btn btn-secondary" role="button">Export Trades</a>
+            </div>
         </dd>
-        <dt>Import Instruments:</dt>
+        <dt>Import raw data:</dt>
         <dd>
             <form action="/api/import/user/instruments" method="post" enctype="multipart/form-data">
-                <div class="form-group">
+                <div class="form-group" style="margin-bottom:0">
                     <input type="file" name="file" class="form-control-file"></input>
                 </div>
                 <div class="form-check">
@@ -27,11 +163,9 @@
                 </div>
                 <button type="submit" class="btn btn-secondary">Import Instruments</button>
             </form>
-        </dd>
-        <dt>Import Snapshots:</dt>
-        <dd>
+            <br/>
             <form action="/api/import/user/snapshots" method="post" enctype="multipart/form-data">
-                <div class="form-group">
+                <div class="form-group" style="margin-bottom:0">
                     <input type="file" name="file" class="form-control-file"></input>
                 </div>
                 <div class="form-check">
@@ -51,5 +185,9 @@
             </form>
         </dd>
         {{/if}}
+        <dt>Password:</dt>
+        <dd>
+            <a href="/password" class="btn btn-secondary" role="button">Change</a>
+        </dd>
     </dl>
 </div>

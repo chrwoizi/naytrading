@@ -1,4 +1,6 @@
 var exports = module.exports = {}
+var fs = require('fs');
+var path = require('path');
 var model = require('../models/index');
 var sql = require('../sql/sql');
 var fs = require('fs');
@@ -17,17 +19,25 @@ function return500(res, e) {
     res.json({ error: e.message });
 }
 
+function parseDate(str) {
+    return new Date(Date.UTC(str.substr(0, 4), parseInt(str.substr(4, 2)) - 1, str.substr(6, 2)));
+}
+
+function parseTime(str) {
+    return new Date(Date.UTC(str.substr(0, 4), parseInt(str.substr(4, 2)) - 1, str.substr(6, 2), str.substr(8, 2), parseInt(str.substr(10, 2)), str.substr(12, 2)));
+}
+
 exports.exportUserInstruments = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
 
             var cancel = false;
 
-            req.on("close", function() {
+            req.on("close", function () {
                 cancel = true;
             });
 
-            req.on("end", function() {
+            req.on("end", function () {
                 cancel = true;
             });
 
@@ -56,7 +66,7 @@ exports.exportUserInstruments = async function (req, res) {
 
                 delete instrument.createdAt;
                 delete instrument.updatedAt;
-                
+
                 res.write(JSON.stringify(instrument));
             }
 
@@ -89,20 +99,19 @@ exports.exportUserSnapshots = async function (req, res) {
 
             var fromDate = new Date(Date.UTC(1970, 0, 1));
             if (req.params.fromDate.length == 8) {
-                fromDate = new Date(Date.UTC(req.params.fromDate.substr(0, 4), parseInt(req.params.fromDate.substr(4, 2)) - 1, req.params.fromDate.substr(6, 2)));
+                fromDate = parseDate(req.params.fromDate);
             }
             else if (req.params.fromDate.length == 14) {
-                fromDate = new Date(Date.UTC(req.params.fromDate.substr(0, 4), parseInt(req.params.fromDate.substr(4, 2)) - 1, req.params.fromDate.substr(6, 2),
-                    req.params.fromDate.substr(8, 2), parseInt(req.params.fromDate.substr(10, 2)), req.params.fromDate.substr(12, 2)));
+                fromDate = parseTime(req.params.fromDate);
             }
 
             var cancel = false;
 
-            req.on("close", function() {
+            req.on("close", function () {
                 cancel = true;
             });
 
-            req.on("end", function() {
+            req.on("end", function () {
                 cancel = true;
             });
 
@@ -110,7 +119,7 @@ exports.exportUserSnapshots = async function (req, res) {
 
             res.header('Content-disposition', 'attachment; filename=usersnapshots.json');
             res.header('Content-type', 'application/json');
-        
+
             await exports.exportUserSnapshotsGeneric(fromDate, user, res, () => cancel);
         }
         else {
@@ -123,7 +132,7 @@ exports.exportUserSnapshots = async function (req, res) {
     }
 }
 
-exports.exportUserSnapshotsGeneric = async function(fromDate, user, stream, cancel, reportProgress) {
+exports.exportUserSnapshotsGeneric = async function (fromDate, user, stream, cancel, reportProgress) {
     reportProgress(0);
 
     var ids = await sql.query('SELECT userSnapshot.ID FROM usersnapshots AS userSnapshot WHERE userSnapshot.User = @userName AND userSnapshot.ModifiedTime >= @fromDate ORDER BY userSnapshot.ModifiedTime',
@@ -166,7 +175,7 @@ exports.exportUserSnapshotsGeneric = async function(fromDate, user, stream, canc
             delete rate.updatedAt;
             delete rate.Snapshot_ID;
         }
-        
+
         delete snapshot.instrument.createdAt;
         delete snapshot.instrument.updatedAt;
 
@@ -176,7 +185,7 @@ exports.exportUserSnapshotsGeneric = async function(fromDate, user, stream, canc
         snapshot.DecisionId = usersnapshot.ID;
         snapshot.Decision = usersnapshot.Decision;
         snapshot.DecisionTime = usersnapshot.ModifiedTime;
-        
+
         if (i > 0) {
             stream.write(',');
         }
@@ -186,7 +195,7 @@ exports.exportUserSnapshotsGeneric = async function(fromDate, user, stream, canc
 
     stream.write(']');
     stream.end();
-    
+
     reportProgress(1);
 
     if (cancel()) {
@@ -208,20 +217,19 @@ exports.exportUserTrades = async function (req, res) {
 
             var fromDate = new Date(Date.UTC(1970, 0, 1));
             if (req.params.fromDate.length == 8) {
-                fromDate = new Date(Date.UTC(req.params.fromDate.substr(0, 4), parseInt(req.params.fromDate.substr(4, 2)) - 1, req.params.fromDate.substr(6, 2)));
+                fromDate = parseDate(req.params.fromDate);
             }
             else if (req.params.fromDate.length == 14) {
-                fromDate = new Date(Date.UTC(req.params.fromDate.substr(0, 4), parseInt(req.params.fromDate.substr(4, 2)) - 1, req.params.fromDate.substr(6, 2),
-                    req.params.fromDate.substr(8, 2), parseInt(req.params.fromDate.substr(10, 2)), req.params.fromDate.substr(12, 2)));
+                fromDate = parseTime(req.params.fromDate);
             }
 
             var cancel = false;
 
-            req.on("close", function() {
+            req.on("close", function () {
                 cancel = true;
             });
 
-            req.on("end", function() {
+            req.on("end", function () {
                 cancel = true;
             });
 
@@ -239,7 +247,7 @@ exports.exportUserTrades = async function (req, res) {
             for (var i = 0; i < trades.length && !cancel; ++i) {
 
                 var trade = trades[i];
-                
+
                 if (i > 0) {
                     res.write(',');
                 }
@@ -262,4 +270,54 @@ exports.exportUserTrades = async function (req, res) {
     catch (error) {
         return500(res, error);
     }
+}
+
+function downloadFile(req, res, filename) {
+    try {
+        if (req.isAuthenticated()) {
+
+            var filePath = path.resolve(config.processing_dir + "/" + req.user.email + "/" + filename);
+
+            if (fs.existsSync(filePath)) {
+                if (typeof (req.params.time) === 'string' && req.params.time.length == 14) {
+                    if (fs.existsSync(filePath + ".meta")) {
+                        var meta = JSON.parse(fs.readFileSync(filePath + ".meta", 'utf8'));
+                        if (req.params.time != meta.time) {
+                            res.redirect("/manage");
+                            return;
+                        }
+                    }
+                }
+
+                res.download(filePath);
+            }
+            else {
+                res.status(404);
+                res.json({ error: "file does not exist" });
+            }
+        }
+        else {
+            res.status(401);
+            res.json({ error: "unauthorized" });
+        }
+    }
+    catch (error) {
+        return500(res, error);
+    }
+}
+
+exports.downloadBuyingTrain = async function (req, res) {
+    downloadFile(req, res, "buying_train_aug_norm.csv");
+}
+
+exports.downloadBuyingTest = async function (req, res) {
+    downloadFile(req, res, "buying_test_aug_norm.csv");
+}
+
+exports.downloadSellingTrain = async function (req, res) {
+    downloadFile(req, res, "selling_train_aug_norm.csv");
+}
+
+exports.downloadSellingTest = async function (req, res) {
+    downloadFile(req, res, "selling_test_aug_norm.csv");
 }
