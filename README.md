@@ -82,7 +82,7 @@ The console application [StockFlow.Trader](StockFlow.Trader) can be used to actu
 
 ## :mortar_board: Training a Convolutional Neural Network on the recorded data ##
 
-The web site periodically processes the recorded data and provides CSV file downloads which are optimized for a neural network.
+The web site periodically processes the recorded data using [StockFlow.Data](StockFlow.Data) and provides CSV file downloads which are optimized for a neural network.
 
 With [main.py](StockFlow.Python/main.py), a convolutional neural network is trained on the processed data, using the price history as input and the user decision as desired output.
 
