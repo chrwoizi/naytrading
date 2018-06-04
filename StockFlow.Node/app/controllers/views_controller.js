@@ -1,7 +1,7 @@
 var exports = module.exports = {}
 var fs = require('fs');
 var path = require('path');
-var dateFormat = require('dateFormat');
+var dateFormat = require('dateformat');
 var config = require('../config/envconfig');
 
 function get_default_args(req) {
