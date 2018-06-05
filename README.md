@@ -38,19 +38,13 @@ MariaDB [(none)]> grant all on stockflow.* to 'stockflow' identified by 'stockfl
 root@host:~$ apt-get install -y make build-essential libssl-dev zlib1g-dev   
 root@host:~$ apt-get install -y libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm 
 root@host:~$ apt-get install -y libncurses5-dev  libncursesw5-dev xz-utils tk-dev
-root@host:~$ wget https://www.python.org/ftp/python/3.6.5/Python-3.6.5.tgz
-root@host:~$ tar xvf Python-3.6.5.tgz
-root@host:~$ cd Python-3.6.5
-root@host:~/Python-3.6.5$ ./configure --enable-optimizations --with-ensurepip=install
-root@host:~/Python-3.6.5$ make -j8
-root@host:~/Python-3.6.5$ sudo make altinstall
-root@host:~$ cd ..
-
-root@host:~$ /usr/local/bin/pip3.6 install --upgrade pip
-root@host:~$ /usr/local/bin/pip3.6 install argparse
-root@host:~$ /usr/local/bin/pip3.6 install datetime
-root@host:~$ /usr/local/bin/pip3.6 install noise
-root@host:~$ /usr/local/bin/pip3.6 install numpy
+root@host:~$ apt-get install python3
+root@host:~$ apt-get install python3-pip
+root@host:~$ pip3 install --upgrade pip
+root@host:~$ pip3 install argparse
+root@host:~$ pip3 install datetime
+root@host:~$ pip3 install noise
+root@host:~$ pip3 install numpy
 
 # redirect port 80 to 5000 (or setup a reverse proxy)
 root@host:~$ apt-get install iptables-persistent
