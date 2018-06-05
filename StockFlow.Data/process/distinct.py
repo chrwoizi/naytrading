@@ -28,7 +28,7 @@ def main(input_dir, input_exp, output_path):
 
     output_path_temp = output_path + '.incomplete'
     try:
-        with open(output_path_temp, 'w') as out_file:
+        with open(output_path_temp, 'w', encoding='utf8') as out_file:
 
             progress = FileItemProgress('distinct: ', 1, None, None)
             known_ids = set()
@@ -40,7 +40,7 @@ def main(input_dir, input_exp, output_path):
                 file_name = os.path.basename(file_path)
                 search = re.search(input_exp, file_name, re.IGNORECASE)
                 if search:
-                    with open(file_path, 'r') as in_file:
+                    with open(file_path, 'r', encoding='utf8') as in_file:
                         progress.set_file(file_path, in_file)
 
                         header = in_file.readline()

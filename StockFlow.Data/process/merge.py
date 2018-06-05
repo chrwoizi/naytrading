@@ -29,8 +29,8 @@ def main(input_path_1, input_path_2, output_path):
         line_positions_1 = get_line_positions(input_path_1, lambda: killfile_monitor.maybe_check_killfile())
         line_positions_2 = get_line_positions(input_path_2, lambda: killfile_monitor.maybe_check_killfile())
 
-        with open(input_path_1, 'r') as in_file_1:
-            with open(input_path_2, 'r') as in_file_2:
+        with open(input_path_1, 'r', encoding='utf8') as in_file_1:
+            with open(input_path_2, 'r', encoding='utf8') as in_file_2:
 
                 line_positions_1 = [(in_file_1, x) for x in line_positions_1]
                 line_positions_2 = [(in_file_2, x) for x in line_positions_2]
@@ -38,7 +38,7 @@ def main(input_path_1, input_path_2, output_path):
                 line_positions = line_positions_1 + line_positions_2
                 shuffle(line_positions)
 
-                with open(output_path_temp, 'w') as out_file:
+                with open(output_path_temp, 'w', encoding='utf8') as out_file:
 
                     header = in_file_1.readline()
                     out_file.writelines([header])

@@ -52,8 +52,8 @@ def main(input_path, output_path, factor):
     killfile_monitor = KillFileMonitor(kill_path, 1)
 
     try:
-        with open(input_path, 'r') as in_file:
-            with open(output_path_temp, 'w') as out_file:
+        with open(input_path, 'r', encoding='utf8') as in_file:
+            with open(output_path_temp, 'w', encoding='utf8') as out_file:
 
                 progress = FileItemProgress('augment: ', 1, input_path, in_file)
 

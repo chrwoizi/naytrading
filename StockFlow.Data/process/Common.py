@@ -29,7 +29,7 @@ def get_line_positions(file_path, report_progress):
         else:
             line_ending_length = 1
 
-    with open(file_path, 'r') as file:
+    with open(file_path, 'r', encoding='utf8') as file:
         for line in iter(file.readline, ''):
             report_progress()
 

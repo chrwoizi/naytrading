@@ -50,7 +50,7 @@ def main(input_path, output_path_train, output_path_test, factor, samples, prese
 
         random_line_positions = get_line_positions(input_path, lambda: killfile_monitor.maybe_check_killfile())
 
-        with open(input_path, 'r') as in_file:
+        with open(input_path, 'r', encoding='utf8') as in_file:
 
             shuffle(random_line_positions)
 
@@ -87,7 +87,7 @@ def main(input_path, output_path_train, output_path_test, factor, samples, prese
             progress = Progress('split test/train: ', 1)
             progress.set_count(len(random_line_positions))
 
-            with open(output_path_test_temp, 'w') as out_file:
+            with open(output_path_test_temp, 'w', encoding='utf8') as out_file:
                 out_file.writelines([header])
                 for item in testLines:
                     killfile_monitor.maybe_check_killfile()
@@ -102,7 +102,7 @@ def main(input_path, output_path_train, output_path_test, factor, samples, prese
 
             in_file.seek(0)
 
-            with open(output_path_train_temp, 'w') as out_file:
+            with open(output_path_train_temp, 'w', encoding='utf8') as out_file:
                 out_file.writelines([header])
                 for item in trainLines:
                     killfile_monitor.maybe_check_killfile()

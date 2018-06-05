@@ -61,7 +61,7 @@ def main(input_path, output_path, days, max_missing_days):
 
     output_path_temp = output_path + '.incomplete'
     try:
-        with open(output_path_temp, 'w') as out_file:
+        with open(output_path_temp, 'w', encoding='utf8') as out_file:
             out_file.write('id;instrument;decision;time;')
             for day in range(-days + 1, 1):
                 out_file.write(str(day))
@@ -73,7 +73,7 @@ def main(input_path, output_path, days, max_missing_days):
 
             for file_path in sorted(glob.iglob(input_path), reverse=True):
                 killfile_monitor.maybe_check_killfile()
-                with open(file_path, 'r') as in_file:
+                with open(file_path, 'r', encoding='utf8') as in_file:
                     progress.set_file(file_path, in_file)
 
                     def flatten_snapshot(snapshot):
