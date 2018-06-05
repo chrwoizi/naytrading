@@ -34,10 +34,7 @@ MariaDB [(none)]> create user 'stockflow'@'localhost' identified by 'stockflow';
 MariaDB [(none)]> grant all on stockflow.* to 'stockflow' identified by 'stockflow';
 [Ctrl+C]
 
-# install python
-root@host:~$ apt-get install -y make build-essential libssl-dev zlib1g-dev   
-root@host:~$ apt-get install -y libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm 
-root@host:~$ apt-get install -y libncurses5-dev  libncursesw5-dev xz-utils tk-dev
+# install python 3.x
 root@host:~$ apt-get install python3
 root@host:~$ apt-get install python3-pip
 root@host:~$ pip3 install --upgrade pip
