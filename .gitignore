@@ -34,3 +34,4 @@
 /StockFlow.AI/model*
 __pycache__
 /StockFlow.Node/processing
+/.idea/workspace.xml

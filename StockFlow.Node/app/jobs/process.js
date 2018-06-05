@@ -30,7 +30,9 @@ class IntervalCall {
 
 
 function logVerbose(message) {
-    //console.log(message);
+    if (config.env == "development") {
+        console.log(message);
+    }
 }
 
 
@@ -289,6 +291,9 @@ async function processUser(user) {
 
     var days = config.chart_period_seconds / 60 / 60 / 24;
     var maxMissingDays = config.discard_threshold_missing_workdays;
+    var testDataRatio = 0.2;
+    var preserveTestIds = true;
+    var augmentFactor = 10;
 
     for (var i = 0; i < files.length; ++i) {
         if (!fs.existsSync(files[i] + ".csv")) {
@@ -318,190 +323,61 @@ async function processUser(user) {
         "--output_path_no_sell=" + processingDir + "/no_sell.csv"
     ]);
 
-    var testDataRatio = 0.2;
-    var preserveTestIds = true;
+    async function processAction(action) {
 
-    await runProcess(config.python, processorsDir, [
-        "split_train_test.py",
-        "--input_path=" + processingDir + "/buy.csv",
-        "--output_path_train=" + processingDir + "/buy_train.csv",
-        "--output_path_test=" + processingDir + "/buy_test.csv",
-        "--factor=" + testDataRatio,
-        "--preserve_test_ids=" + (preserveTestIds ? "True" : "False")
-    ]);
+        async function split(file) {
+            await runProcess(config.python, processorsDir, [
+                "split_train_test.py",
+                "--input_path=" + processingDir + "/" + file + ".csv",
+                "--output_path_train=" + processingDir + "/" + file + "_train.csv",
+                "--output_path_test=" + processingDir + "/" + file + "_test.csv",
+                "--factor=" + testDataRatio,
+                "--preserve_test_ids=" + (preserveTestIds ? "True" : "False")
+            ]);
+        }
 
-    await runProcess(config.python, processorsDir, [
-        "split_train_test.py",
-        "--input_path=" + processingDir + "/no_buy.csv",
-        "--output_path_train=" + processingDir + "/no_buy_train.csv",
-        "--output_path_test=" + processingDir + "/no_buy_test.csv",
-        "--factor=" + testDataRatio,
-        "--preserve_test_ids=" + (preserveTestIds ? "True" : "False")
-    ]);
+        await Promise.all([split(action), split("no_" + action)]);
 
-    await runProcess(config.python, processorsDir, [
-        "split_train_test.py",
-        "--input_path=" + processingDir + "/sell.csv",
-        "--output_path_train=" + processingDir + "/sell_train.csv",
-        "--output_path_test=" + processingDir + "/sell_test.csv",
-        "--factor=" + testDataRatio,
-        "--preserve_test_ids=" + (preserveTestIds ? "True" : "False")
-    ]);
+        async function processDataset(dataset) {
+            
+            async function augment(file) {
+                await runProcess(config.python, processorsDir, [
+                    "augment.py",
+                    "--input_path=" + processingDir + "/" + file + "_" + dataset + ".csv",
+                    "--output_path=" + processingDir + "/" + file + "_" + dataset + "_aug.csv",
+                    "--factor=" + augmentFactor
+                ]);
+            }
 
-    await runProcess(config.python, processorsDir, [
-        "split_train_test.py",
-        "--input_path=" + processingDir + "/no_sell.csv",
-        "--output_path_train=" + processingDir + "/no_sell_train.csv",
-        "--output_path_test=" + processingDir + "/no_sell_test.csv",
-        "--factor=" + testDataRatio,
-        "--preserve_test_ids=" + (preserveTestIds ? "True" : "False")
-    ]);
+            await Promise.all([augment(action), augment("no_" + action)]);
 
-    var augmentFactor = 10;
+            await runProcess(config.python, processorsDir, [
+                "merge.py",
+                "--input_path_1=" + processingDir + "/" + action + "_" + dataset + "_aug.csv",
+                "--input_path_2=" + processingDir + "/no_" + action + "_" + dataset + "_aug.csv",
+                "--output_path=" + processingDir + "/" + action + "ing_" + dataset + "_aug.csv"
+            ]);
 
-    await runProcess(config.python, processorsDir, [
-        "augment.py",
-        "--input_path=" + processingDir + "/buy_test.csv",
-        "--output_path=" + processingDir + "/buy_test_aug.csv",
-        "--factor=" + augmentFactor
-    ]);
+            await runProcess(config.python, processorsDir, [
+                "normalize.py",
+                "--input_path=" + processingDir + "/" + action + "ing_" + dataset + "_aug.csv",
+                "--output_path=" + processingDir + "/" + action + "ing_" + dataset + "_aug_norm.csv"
+            ]);
 
-    await runProcess(config.python, processorsDir, [
-        "augment.py",
-        "--input_path=" + processingDir + "/no_buy_test.csv",
-        "--output_path=" + processingDir + "/no_buy_test_aug.csv",
-        "--factor=" + augmentFactor
-    ]);
+            await writeMeta(
+                processingDir + "/" + action + "ing_" + dataset + "_aug_norm.csv.meta",
+                now,
+                days,
+                maxMissingDays,
+                testDataRatio,
+                preserveTestIds,
+                augmentFactor);
+        }
 
-    await runProcess(config.python, processorsDir, [
-        "augment.py",
-        "--input_path=" + processingDir + "/sell_test.csv",
-        "--output_path=" + processingDir + "/sell_test_aug.csv",
-        "--factor=" + augmentFactor
-    ]);
+        await Promise.all([processDataset("train"), processDataset("test")]);
+    }
 
-    await runProcess(config.python, processorsDir, [
-        "augment.py",
-        "--input_path=" + processingDir + "/no_sell_test.csv",
-        "--output_path=" + processingDir + "/no_sell_test_aug.csv",
-        "--factor=" + augmentFactor
-    ]);
-
-    await runProcess(config.python, processorsDir, [
-        "augment.py",
-        "--input_path=" + processingDir + "/buy_train.csv",
-        "--output_path=" + processingDir + "/buy_train_aug.csv",
-        "--factor=" + augmentFactor
-    ]);
-
-    await runProcess(config.python, processorsDir, [
-        "augment.py",
-        "--input_path=" + processingDir + "/no_buy_train.csv",
-        "--output_path=" + processingDir + "/no_buy_train_aug.csv",
-        "--factor=" + augmentFactor
-    ]);
-
-    await runProcess(config.python, processorsDir, [
-        "augment.py",
-        "--input_path=" + processingDir + "/sell_train.csv",
-        "--output_path=" + processingDir + "/sell_train_aug.csv",
-        "--factor=" + augmentFactor
-    ]);
-
-    await runProcess(config.python, processorsDir, [
-        "augment.py",
-        "--input_path=" + processingDir + "/no_sell_train.csv",
-        "--output_path=" + processingDir + "/no_sell_train_aug.csv",
-        "--factor=" + augmentFactor
-    ]);
-
-    await runProcess(config.python, processorsDir, [
-        "merge.py",
-        "--input_path_1=" + processingDir + "/buy_test_aug.csv",
-        "--input_path_2=" + processingDir + "/no_buy_test_aug.csv",
-        "--output_path=" + processingDir + "/buying_test_aug.csv"
-    ]);
-
-    await runProcess(config.python, processorsDir, [
-        "merge.py",
-        "--input_path_1=" + processingDir + "/sell_test_aug.csv",
-        "--input_path_2=" + processingDir + "/no_sell_test_aug.csv",
-        "--output_path=" + processingDir + "/selling_test_aug.csv"
-    ]);
-
-    await runProcess(config.python, processorsDir, [
-        "merge.py",
-        "--input_path_1=" + processingDir + "/buy_train_aug.csv",
-        "--input_path_2=" + processingDir + "/no_buy_train_aug.csv",
-        "--output_path=" + processingDir + "/buying_train_aug.csv"
-    ]);
-
-    await runProcess(config.python, processorsDir, [
-        "merge.py",
-        "--input_path_1=" + processingDir + "/sell_train_aug.csv",
-        "--input_path_2=" + processingDir + "/no_sell_train_aug.csv",
-        "--output_path=" + processingDir + "/selling_train_aug.csv"
-    ]);
-
-    await runProcess(config.python, processorsDir, [
-        "normalize.py",
-        "--input_path=" + processingDir + "/buying_test_aug.csv",
-        "--output_path=" + processingDir + "/buying_test_aug_norm.csv"
-    ]);
-
-    await writeMeta(
-        processingDir + "/buying_test_aug_norm.csv.meta",
-        now,
-        days,
-        maxMissingDays,
-        testDataRatio,
-        preserveTestIds,
-        augmentFactor);
-
-    await runProcess(config.python, processorsDir, [
-        "normalize.py",
-        "--input_path=" + processingDir + "/buying_train_aug.csv",
-        "--output_path=" + processingDir + "/buying_train_aug_norm.csv"
-    ]);
-
-    await writeMeta(
-        processingDir + "/buying_train_aug_norm.csv.meta",
-        now,
-        days,
-        maxMissingDays,
-        testDataRatio,
-        preserveTestIds,
-        augmentFactor);
-
-    await runProcess(config.python, processorsDir, [
-        "normalize.py",
-        "--input_path=" + processingDir + "/selling_train_aug.csv",
-        "--output_path=" + processingDir + "/selling_train_aug_norm.csv"
-    ]);
-
-    await writeMeta(
-        processingDir + "/selling_train_aug_norm.csv.meta",
-        now,
-        days,
-        maxMissingDays,
-        testDataRatio,
-        preserveTestIds,
-        augmentFactor);
-
-    await runProcess(config.python, processorsDir, [
-        "normalize.py",
-        "--input_path=" + processingDir + "/selling_test_aug.csv",
-        "--output_path=" + processingDir + "/selling_test_aug_norm.csv"
-    ]);
-
-    await writeMeta(
-        processingDir + "/selling_test_aug_norm.csv.meta",
-        now,
-        days,
-        maxMissingDays,
-        testDataRatio,
-        preserveTestIds,
-        augmentFactor);
+    await Promise.all([processAction("buy"), processAction("sell")]);
 
     logVerbose("done processing " + user);
 }
