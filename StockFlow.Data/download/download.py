@@ -51,13 +51,13 @@ def main(proxy_url, proxy_user, proxy_password, stockflow_url, stockflow_user, s
     out_path = output_dir + '\\' + now.strftime('%Y%m%d%H%M%S') + '.json'
     max_date_str = max_date.strftime('%Y-%m-%d %H:%M:%S')
 
-    print_flush('Logging in at StockFlow')
+    print('Logging in at StockFlow')
     stockflow = StockFlow(proxy_url, proxy_user, proxy_password, stockflow_url)
     stockflow.login(stockflow_user, stockflow_password)
 
     killfile_monitor.maybe_check_killfile()
 
-    print_flush('Counting snapshots from %s' % (max_date_str))
+    print('Counting snapshots from %s' % (max_date_str))
     count = stockflow.count_snapshots(max_date)
 
     killfile_monitor.maybe_check_killfile()
@@ -68,7 +68,7 @@ def main(proxy_url, proxy_user, proxy_password, stockflow_url, stockflow_user, s
         progress.maybe_print()
         killfile_monitor.maybe_check_killfile()
 
-    print_flush('Downloading %d snapshots from %s to %s' % (count, max_date_str, out_path))
+    print('Downloading %d snapshots from %s to %s' % (count, max_date_str, out_path))
     out_path_temp = out_path + '.incomplete'
     try:
         stockflow.export_snapshots(max_date, out_path_temp, report_progress)
@@ -84,16 +84,16 @@ def main(proxy_url, proxy_user, proxy_password, stockflow_url, stockflow_user, s
                 is_empty = True
 
         if is_empty:
-            print_flush('No new snapshots available.')
+            print('No new snapshots available.')
             os.remove(out_path)
 
-        print_flush('Done.')
+        print('Done.')
 
     except KilledException:
         killfile_monitor.delete_killfile()
         if os.path.exists(out_path_temp):
             os.remove(out_path_temp)
-        print_flush('Killed.')
+        print('Killed.')
 
 
 if __name__ == '__main__':
