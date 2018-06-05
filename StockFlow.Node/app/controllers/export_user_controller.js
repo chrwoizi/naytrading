@@ -19,11 +19,11 @@ function return500(res, e) {
     res.json({ error: e.message });
 }
 
-function parseDate(str) {
+function parseDateUTC(str) {
     return new Date(Date.UTC(str.substr(0, 4), parseInt(str.substr(4, 2)) - 1, str.substr(6, 2)));
 }
 
-function parseTime(str) {
+function parseTimeUTC(str) {
     return new Date(Date.UTC(str.substr(0, 4), parseInt(str.substr(4, 2)) - 1, str.substr(6, 2), str.substr(8, 2), parseInt(str.substr(10, 2)), str.substr(12, 2)));
 }
 
@@ -41,7 +41,7 @@ exports.exportUserInstruments = async function (req, res) {
                 cancel = true;
             });
 
-            var ids = await sql.query('SELECT instrument.ID FROM instruments AS instrument WHERE instrument.User = @userName ORDER BY instrument.ID',
+            var ids = await sql.query('SELECT i.ID FROM instruments AS i INNER JOIN userinstruments as u ON u.Instrument_ID = i.ID WHERE u.User = @userName ORDER BY i.ID',
                 {
                     "@userName": req.user.email
                 });
@@ -99,10 +99,10 @@ exports.exportUserSnapshots = async function (req, res) {
 
             var fromDate = new Date(Date.UTC(1970, 0, 1));
             if (req.params.fromDate.length == 8) {
-                fromDate = parseDate(req.params.fromDate);
+                fromDate = parseDateUTC(req.params.fromDate);
             }
             else if (req.params.fromDate.length == 14) {
-                fromDate = parseTime(req.params.fromDate);
+                fromDate = parseTimeUTC(req.params.fromDate);
             }
 
             var cancel = false;
@@ -120,7 +120,7 @@ exports.exportUserSnapshots = async function (req, res) {
             res.header('Content-disposition', 'attachment; filename=usersnapshots.json');
             res.header('Content-type', 'application/json');
 
-            await exports.exportUserSnapshotsGeneric(fromDate, user, res, () => cancel);
+            await exports.exportUserSnapshotsGeneric(fromDate, user, res, () => cancel, x => {});
         }
         else {
             res.status(401);
@@ -132,13 +132,13 @@ exports.exportUserSnapshots = async function (req, res) {
     }
 }
 
-exports.exportUserSnapshotsGeneric = async function (fromDate, user, stream, cancel, reportProgress) {
+exports.exportUserSnapshotsGeneric = async function (fromTimeUTC, user, stream, cancel, reportProgress) {
     reportProgress(0);
 
-    var ids = await sql.query('SELECT userSnapshot.ID FROM usersnapshots AS userSnapshot WHERE userSnapshot.User = @userName AND userSnapshot.ModifiedTime >= @fromDate ORDER BY userSnapshot.ModifiedTime',
+    var ids = await sql.query('SELECT userSnapshot.ID FROM usersnapshots AS userSnapshot WHERE userSnapshot.User = @userName AND userSnapshot.ModifiedTime >= @fromTime ORDER BY userSnapshot.ModifiedTime',
         {
             "@userName": user,
-            "@fromDate": fromDate
+            "@fromTime": fromTimeUTC
         });
 
     stream.write('[');
@@ -217,10 +217,10 @@ exports.exportUserTrades = async function (req, res) {
 
             var fromDate = new Date(Date.UTC(1970, 0, 1));
             if (req.params.fromDate.length == 8) {
-                fromDate = parseDate(req.params.fromDate);
+                fromDate = parseDateUTC(req.params.fromDate);
             }
             else if (req.params.fromDate.length == 14) {
-                fromDate = parseTime(req.params.fromDate);
+                fromDate = parseTimeUTC(req.params.fromDate);
             }
 
             var cancel = false;

@@ -88,13 +88,13 @@ exports.exportSnapshots = async function (req, res) {
                 return;
             }
 
-            var fromDate = new Date(Date.UTC(1970, 0, 1));
+            var fromDate = new Date(1970, 0, 1);
             if (req.params.fromDate.length == 8) {
-                fromDate = new Date(Date.UTC(req.params.fromDate.substr(0, 4), parseInt(req.params.fromDate.substr(4, 2)) - 1, req.params.fromDate.substr(6, 2)));
+                fromDate = new Date(req.params.fromDate.substr(0, 4), parseInt(req.params.fromDate.substr(4, 2)) - 1, req.params.fromDate.substr(6, 2));
             }
             else if (req.params.fromDate.length == 14) {
-                fromDate = new Date(Date.UTC(req.params.fromDate.substr(0, 4), parseInt(req.params.fromDate.substr(4, 2)) - 1, req.params.fromDate.substr(6, 2),
-                    req.params.fromDate.substr(8, 2), parseInt(req.params.fromDate.substr(10, 2)), req.params.fromDate.substr(12, 2)));
+                fromDate = new Date(req.params.fromDate.substr(0, 4), parseInt(req.params.fromDate.substr(4, 2)) - 1, req.params.fromDate.substr(6, 2),
+                    req.params.fromDate.substr(8, 2), parseInt(req.params.fromDate.substr(10, 2)), req.params.fromDate.substr(12, 2));
             }
 
             var cancel = false;
