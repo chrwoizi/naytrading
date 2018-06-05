@@ -127,8 +127,4 @@ var sql = require('./app/sql/sql');
         new Promise(function (resolve, reject) { processJob.run(); });
     }, 12000);
     
-    setTimeout(function () {
-        new Promise(function (resolve, reject) { pytestJob.run(); });
-    }, 1000);
-    
 })();
