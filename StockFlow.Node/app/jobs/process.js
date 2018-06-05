@@ -78,19 +78,24 @@ async function download(user, fromDate, filePath, cancel) {
 function runProcess(executable, cwd, args) {
     return new Promise((resolve, reject) => {
         try {
-            var process = spawn(executable, args, { cwd: cwd });
+            var env = Object.create(process.env);
+            env.PYTHONIOENCODING = 'utf-8';
+            var proc = spawn(executable, args, { cwd: cwd, env: env });
+            
+            proc.stdout.setEncoding("utf8");
+            proc.stderr.setEncoding("utf8");
 
-            process.stdout.on('data', (data) => {
+            proc.stdout.on('data', (data) => {
                 var message = "" + data;
                 logVerbose(message.substr(0, data.length - 2));
             });
 
-            process.stderr.on('data', (data) => {
+            proc.stderr.on('data', (data) => {
                 var message = "" + data;
                 logError(message.substr(0, data.length - 2));
             });
 
-            process.on('close', (code) => {
+            proc.on('close', (code) => {
                 if (code == 0) {
                     resolve();
                 }
@@ -99,7 +104,7 @@ function runProcess(executable, cwd, args) {
                 }
             });
 
-            process.on('error', function (e) {
+            proc.on('error', function (e) {
                 reject("child process crashed with " + e);
             });
         }
