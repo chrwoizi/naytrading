@@ -35,7 +35,7 @@ exports.contact = function (req, res) {
 
 function formatTime(obj) {
     var str = obj.time;
-    var date = new Date(Date.UTC(str.substr(0, 4), parseInt(str.substr(4, 2)) - 1, str.substr(6, 2), str.substr(8, 2), parseInt(str.substr(10, 2)), str.substr(12, 2)));
+    var date = new Date(str.substr(0, 4), parseInt(str.substr(4, 2)) - 1, str.substr(6, 2), str.substr(8, 2), parseInt(str.substr(10, 2)), str.substr(12, 2));
     obj.timeStr = dateFormat(date, 'dd.mm.yyyy HH:mm:ss');
 }
 
