@@ -108,7 +108,7 @@ def main(checkpoint_dir, data_file, batch_size, first_day, last_day, buy_label):
         def __get_line_count(file):
 
             count = 0
-            with open(file) as f:
+            with open(file, 'r', encoding='utf8') as f:
                 i = 0
                 while True:
                     line = f.readline()

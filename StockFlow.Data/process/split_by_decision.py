@@ -31,7 +31,7 @@ def distinct(sequence, get_key):
 def get_metadata(input_path, report_progress):
     metas = []
 
-    with open(input_path, 'r') as in_file:
+    with open(input_path, 'r', encoding='utf8') as in_file:
         line_index = 0
         while True:
             report_progress()
@@ -118,11 +118,11 @@ def main(input_path, output_path_buy, output_path_no_buy, output_path_sell, outp
     try:
         metas = get_metadata(input_path, lambda: killfile_monitor.maybe_check_killfile())
 
-        with open(input_path, 'r') as in_file:
-            with open(output_path_buy_temp, 'w') if output_path_buy_temp else None as out_file_buy:
-                with open(output_path_no_buy_temp, 'w') if output_path_no_buy_temp else None as out_file_no_buy:
-                    with open(output_path_sell_temp, 'w') if output_path_sell_temp else None as out_file_sell:
-                        with open(output_path_no_sell_temp, 'w') if output_path_no_sell_temp else None as out_file_no_sell:
+        with open(input_path, 'r', encoding='utf8') as in_file:
+            with open(output_path_buy_temp, 'w', encoding='utf8') if output_path_buy_temp else None as out_file_buy:
+                with open(output_path_no_buy_temp, 'w', encoding='utf8') if output_path_no_buy_temp else None as out_file_no_buy:
+                    with open(output_path_sell_temp, 'w', encoding='utf8') if output_path_sell_temp else None as out_file_sell:
+                        with open(output_path_no_sell_temp, 'w', encoding='utf8') if output_path_no_sell_temp else None as out_file_no_sell:
 
                             header = "index;" + in_file.readline()
 

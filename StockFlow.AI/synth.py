@@ -249,7 +249,7 @@ if __name__ == '__main__':
     }
 
     def generate_file(filename, count):
-        with open(filename, 'w') as text_file:
+        with open(filename, 'w', encoding='utf8') as text_file:
             text_file.write('id;instrument;decision;time;')
             text_file.write(';'.join(str(i) for i in range(0, 1024)))
             text_file.write('\n')

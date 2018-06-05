@@ -78,7 +78,7 @@ def main(proxy_url, proxy_user, proxy_password, stockflow_url, stockflow_user, s
         os.rename(out_path_temp, out_path)
 
         is_empty = False
-        with open(out_path) as f:
+        with open(out_path, 'r', encoding='utf8') as f:
             chars = f.read(2)
             if chars == "[]":
                 is_empty = True
