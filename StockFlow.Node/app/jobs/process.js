@@ -510,7 +510,7 @@ exports.run = async function () {
 
         var users = await sql.query("SELECT DISTINCT(User) FROM usersnapshots");
         for (var i = 0; i < users.length; ++i) {
-            processUser(users[i].User);
+            await processUser(users[i].User);
         }
     }
     catch (error) {

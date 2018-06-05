@@ -6,6 +6,7 @@ import numpy as np
 import datetime
 from noise import pnoise1
 import matplotlib.pyplot as plt
+from Common import *
 
 
 parser = argparse.ArgumentParser()
