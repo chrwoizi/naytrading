@@ -12,7 +12,6 @@ var preloadJob = require('./app/jobs/preload');
 var strikesJob = require('./app/jobs/strikes');
 var portfoliosJob = require('./app/jobs/portfolios');
 var processJob = require('./app/jobs/process');
-var pytestJob = require('./app/jobs/pytest');
 var config = require('./app/config/envconfig');
 var sql = require('./app/sql/sql');
 
