@@ -68,7 +68,7 @@ stockflow@host:~/stockflow/StockFlow.Node/app/config$ vi config.json
 [set production.import_token to a secret value of your choice]
 [set production.admin_user to your email address]
 [set production.proxy if you access the web through a proxy]
-[set python to your python executable, e.g. /usr/bin/python3.4]
+[set python to your python executable, e.g. python3]
 :wq
 stockflow@host:~/stockflow/StockFlow.Node/app/config$ cd ../..
 stockflow@host:~/stockflow/StockFlow.Node$ chmod +x dbmigrate.sh
