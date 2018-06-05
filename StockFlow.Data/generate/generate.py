@@ -6,7 +6,6 @@ import numpy as np
 import datetime
 from noise import pnoise1
 import matplotlib.pyplot as plt
-from Common import *
 
 
 parser = argparse.ArgumentParser()
@@ -290,7 +289,7 @@ if __name__ == '__main__':
                             durations.pop(0)
                     seconds_per_row = np.mean(durations) if len(durations) > 0 else 1
                     remaining = seconds_per_row * (count - i)
-                    print_flush("%s %d/%d # %.2f rows/s # %s remaining" % (
+                    print("%s %d/%d # %.2f rows/s # %s remaining" % (
                         filename, i + 1, count, 1 / seconds_per_row, datetime.timedelta(seconds=int(remaining))))
 
                 if random.randint(0, 2) == 0:
