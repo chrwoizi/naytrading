@@ -21,33 +21,18 @@ def get_line_positions(file_path, report_progress):
 
     progress = FileBinaryProgress('index: ', 1, file_path, os.path.getsize(file_path))
 
-    line_ending_length = 0
-    with open(file_path, 'rb', 0) as file:
-        line = file.readline()
-        if line.endswith(b'\r\n'):
-            line_ending_length = 2
-        else:
-            line_ending_length = 1
-
-    with open(file_path, 'r', encoding='utf8') as file:
-        for line in iter(file.readline, ''):
+    with open(file_path, 'rb') as file:
+        for line in iter(file.readline, b''):
             report_progress()
 
             if len(line) > 2:
-
-                if line[-1] == '\n':
-                    if line[-2] == '\r':
-                        line = line[0:len(line)-2]
-                    else:
-                        line = line[0:len(line)-1]
-
                 if line_index > 0:
-                    first = line.index(';')
+                    first = line.index(b';')
                     skipped_index = line[first + 1:]
-                    second = skipped_index.index(';')
-                    line_positions += [dict(Position = position, Id = skipped_index[0:second])]
+                    second = skipped_index.index(b';')
+                    line_positions += [dict(Position = position, Id = skipped_index[0:second].decode('utf8'))]
 
-            position += len(line.encode("utf-8")) + 2
+            position += len(line)
 
             progress.set_items(position)
             progress.maybe_print()

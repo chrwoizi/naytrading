@@ -43,6 +43,8 @@ database.timezone = moment.tz.guess();
 
 config.database = database;
 
+config.env = env;
+
 copyProperties(database, config.session);
 
 module.exports = config;
