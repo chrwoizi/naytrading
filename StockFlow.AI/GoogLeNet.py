@@ -4,16 +4,16 @@ from NetworkBase import NetworkBase
 
 class GoogLeNet(NetworkBase):
 
-    def __init__(self, summary_level, train_iter, test_iter):
-        super().__init__(summary_level, train_iter, test_iter)
+    def __init__(self, summary_level, features, labels, options):
+        super().__init__(summary_level, features, labels, options)
 
         # https://hacktilldawn.com/2016/09/25/inception-modules-explained-and-implemented/
         # https://www.cc.gatech.edu/~hic/CS7616/Papers/Szegedy-et-al-2014.pdf
 
-        self.aux_fc_dropout_keep = tf.placeholder(tf.float32)
-        self.aux_exit_4a_weight = tf.placeholder(tf.float32, shape=())
-        self.aux_exit_4e_weight = tf.placeholder(tf.float32, shape=())
-        self.exit_weight = tf.placeholder(tf.float32, shape=())
+        self.aux_fc_dropout_keep = tf.constant(options["aux_fc_dropout_keep"], dtype=tf.float32)
+        self.aux_exit_4a_weight = tf.constant(options["aux_exit_4a_weight"], dtype=tf.float32, shape=())
+        self.aux_exit_4e_weight = tf.constant(options["aux_exit_4e_weight"], dtype=tf.float32, shape=())
+        self.exit_weight = tf.constant(options["exit_weight"], dtype=tf.float32, shape=())
 
         conv1 = self.conv_layer('conv1', self.x, 7, 2, 64, True, False)
         conv1_pool = self.max_pool_layer('conv1_pool', conv1, 3, 2)
@@ -99,6 +99,7 @@ class GoogLeNet(NetworkBase):
                 self.accuracy = tf.reduce_mean(tf.cast(self.correct_prediction, tf.float32))
                 if self.summary_level >= 1:
                     tf.summary.scalar('value', self.accuracy)
+                self.accuracy_metric = tf.metrics.accuracy(self.y, exit)
 
             with tf.variable_scope('combined'):
                 accuracy_combined = tf.divide(

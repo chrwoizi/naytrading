@@ -4,19 +4,12 @@ import tensorflow as tf
 
 class NetworkBase:
 
-    def __init__(self, summary_level, train_iter, test_iter):
+    def __init__(self, summary_level, features, labels, options):
         self.summary_level = summary_level
-        self.fc_dropout_keep = tf.placeholder(tf.float32)
-        self.is_train = tf.placeholder(tf.bool)
-
-        with tf.name_scope('input_switch'):
-            def get_train_data():
-                return train_iter.get_next()
-
-            def get_test_data():
-                return test_iter.get_next()
-
-            self.x, self.y = tf.cond(tf.equal(self.is_train, True), lambda: get_train_data(), lambda: get_test_data())
+        self.fc_dropout_keep = tf.constant(options["fc_dropout_keep"], dtype=tf.float32)
+        self.is_train = tf.constant(options["is_train"], dtype=tf.bool)
+        self.x = features
+        self.y = labels
 
         # days = tf.shape(x)[1]
         # o = tf.one_hot(indices=tf.cast(tf.multiply(tf.reshape(x,[tf.shape(x)[0],days]),100), tf.int32), depth=100, on_value=1.0, off_value=0.0, axis=-1)

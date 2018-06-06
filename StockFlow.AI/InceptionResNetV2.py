@@ -4,10 +4,10 @@ from NetworkBase import NetworkBase
 
 class InceptionResNetV2(NetworkBase):
 
-    def __init__(self, summary_level, train_iter, test_iter):
-        super().__init__(summary_level, train_iter, test_iter)
+    def __init__(self, summary_level, features, labels, options):
+        super().__init__(summary_level, features, labels, options)
 
-        self.residual_scale = tf.placeholder(tf.float32, shape=())
+        self.residual_scale = tf.constant(options["residual_scale"], dtype=tf.float32, shape=())
 
         stem = self.__inception_resnet_stem(self.x)
 
@@ -59,6 +59,7 @@ class InceptionResNetV2(NetworkBase):
             self.accuracy = tf.reduce_mean(tf.cast(self.correct_prediction, tf.float32))
             if self.summary_level >= 1:
                 tf.summary.scalar('value', self.accuracy)
+            self.accuracy_metric = tf.metrics.accuracy(self.y, exit)
 
         with tf.name_scope('pred'):
             self.pred = tf.argmax(exit, 1)

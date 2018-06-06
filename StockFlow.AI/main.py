@@ -1,106 +1,90 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import os
-import glob
 import argparse
 import sys
 import time
-import re
 import shutil
 import datetime
 from shutil import copyfile
-from subprocess import Popen, CREATE_NEW_CONSOLE
 
 #os.environ["CUDA_VISIBLE_DEVICES"]="-1"
-adam_keep = 100
+model_name = 'GoogLeNet'
+save_summary_steps = 100
+save_checkpoints_secs = 60
+keep_checkpoint_max = 10
+keep_checkpoint_every_n_hours = 1
+log_step_count_steps = 100,
 adam_reset = False
 adam_learning_rate = 0.0005
 adam_epsilon = 0.5
 gln_aux_exit_4a_weight = 0.005
 gln_aux_exit_4e_weight = 0.01
 
-import numpy as np
 import tensorflow as tf
 
 from GoogLeNet import GoogLeNet
-#from InceptionResNetV2 import InceptionResNetV2
+from InceptionResNetV2 import InceptionResNetV2
 
 parser = argparse.ArgumentParser()
 
 parser.add_argument(
-    '--model_dir', type=str, default='model',
-    help='Base directory for the model.')
+    '--model_dir', type = str, default = 'model',
+    help = 'Base directory for the model.')
 
 parser.add_argument(
-    '--load', type=bool, default=False, help='Whether to load an existing model.')
+    '--load', type = bool, default = False, help = 'Whether to load an existing model.')
 
 parser.add_argument(
-    '--epochs', type=int, default=1000, help='Number of cycles over the whole data.')
+    '--epochs', type = int, default = 1000, help = 'Number of cycles over the whole data.')
 
 parser.add_argument(
-    '--start_epoch', type=int, default=0, help='Start index in epochs.')
+    '--start_epoch', type = int, default = 0, help = 'Start index in epochs.')
 
 parser.add_argument(
-    '--batch_size', type=int, default=48, help='Number of examples per batch.')
+    '--batch_size', type = int, default = 48, help = 'Number of examples per batch.')
 
 parser.add_argument(
-    '--test_file', type=str, default='..\\StockFlow.Data\\generate\\data\\test_buying.csv',
-    help='Path to the test data.')
+    '--test_file', type = str, default = 'buying_test_aug_norm.csv',
+    help = 'Path to the test data.')
 
 parser.add_argument(
-    '--train_file', type=str, default='..\\StockFlow.Data\\generate\\data\\train_buying.csv',
-    help='Path to the train data.')
+    '--train_file', type = str, default = 'buying_train_aug_norm.csv',
+    help = 'Path to the train data.')
 
 parser.add_argument(
-    '--first_day', type=int, default=0,
-    help='The first day column name e.g. -1814.')
+    '--first_day', type = int, default = 0,
+    help = 'The first day column name e.g. -1814.')
 
 parser.add_argument(
-    '--last_day', type=int, default=1023,
-    help='The last day column name e.g. 0.')
+    '--last_day', type = int, default = 1023,
+    help = 'The last day column name e.g. 0.')
 
 parser.add_argument(
-    '--buy_label', type=str, default='buy',
-    help='The label used if the user decided on an action for this dataset, e.g. buy')
+    '--buy_label', type = str, default = 'buy',
+    help = 'The label used if the user decided on an action for this dataset, e.g. buy')
 
 
-class Snapshots(object):
-    def __init__(self, test_file, train_file, batch_size, column_defaults, buy_label):
+class Data(object):
+    def __init__(self, file, batch_size, buy_label, first_day, last_day):
         self.batch_size = batch_size
+
+        column_defaults = [['0'], ['0'], ['0'], ['ignore'], ['19700101']] + [[0.00] for i in range(first_day, last_day + 1)]
 
         with tf.name_scope('data'):
 
-            self.epochs_tensor = tf.placeholder(tf.int64, name='epochs')
-            self.batch_size_tensor = tf.placeholder(tf.int64, name='batch_size')
-            self.test_count_tensor = tf.placeholder(tf.int64, name='test_count')
-            self.train_count_tensor = tf.placeholder(tf.int64, name='train_count')
+            assert tf.gfile.Exists(file), ('%s not found.' % file)
 
-            assert tf.gfile.Exists(test_file), ('%s not found.' % test_file)
-            assert tf.gfile.Exists(train_file), ('%s not found.' % train_file)
+            file_count = self.__get_line_count(file)
 
-            test_file_count = self.__get_line_count(test_file)
-            train_file_count = self.__get_line_count(train_file)
+            if file_count < self.batch_size:
+                print('WARNING: batch_size is greater than available datasets. Reducing batch size to %d' % file_count)
+                self.batch_size = file_count
 
-            if test_file_count > 0 and test_file_count < self.batch_size:
-                print(
-                    'WARNING: batch_size is greater than available test datasets. Reducing batch size to %d' % test_file_count)
-                self.batch_size = test_file_count
+            self.batches = int(file_count / self.batch_size)
 
-            if train_file_count < self.batch_size:
-                print(
-                    'WARNING: batch_size is greater than available train datasets. Reducing batch size to %d' % train_file_count)
-                self.batch_size = train_file_count
-
-            self.test_batches = int(test_file_count / self.batch_size)
-            self.train_batches = int(train_file_count / self.batch_size)
-
-            self.test_count = self.test_batches * self.batch_size
-            self.train_count = self.train_batches * self.batch_size
+            self.count = self.batches * self.batch_size
 
             def parse_csv(value):
-                columns = tf.decode_csv(value, record_defaults=column_defaults, field_delim=";")
+                columns = tf.decode_csv(value, record_defaults = column_defaults, field_delim = ";")
 
                 features = columns[5:len(columns)]
                 labels = columns[3]
@@ -108,29 +92,24 @@ class Snapshots(object):
                 features = tf.stack(features)
                 features = tf.reshape(features, [features.get_shape()[0], 1, 1])
 
-                labels = tf.cast(tf.equal(labels, buy_label), dtype=tf.int32)
-                labels = tf.one_hot(indices=labels, depth=2, on_value=1.0, off_value=0.0, axis=-1)
+                labels = tf.cast(tf.equal(labels, buy_label), dtype = tf.int32)
+                labels = tf.one_hot(indices = labels, depth = 2, on_value = 1.0, off_value = 0.0, axis = -1)
 
                 return features, labels
 
-            print('TextLineDataset')
-            test_dataset = tf.data.TextLineDataset(test_file).skip(1).take(self.test_count_tensor)
-            train_dataset = tf.data.TextLineDataset(train_file).skip(1).take(self.train_count_tensor)
+            print('Preparing data: TextLineDataset')
+            dataset = tf.data.TextLineDataset(file).skip(1)
 
-            print('map')
-            self.test = test_dataset.map(parse_csv, num_parallel_calls=5)
-            self.train = train_dataset.map(parse_csv, num_parallel_calls=5)
+            print('Preparing data: map')
+            dataset = dataset.map(parse_csv, num_parallel_calls = 5)
 
-            print('batch/prefetch/cache/repeat/iter')
-            self.test = self.test.batch(self.batch_size_tensor).prefetch(tf.maximum(self.test_count_tensor, tf.constant(1, tf.int64))).cache().repeat(tf.add(self.epochs_tensor, tf.constant(1, tf.int64)))
-            self.train = self.train.batch(self.batch_size_tensor).prefetch(tf.maximum(self.train_count_tensor, tf.constant(1, tf.int64))).cache().repeat(self.epochs_tensor)
-            self.test_iter = self.test.make_initializable_iterator()
-            self.train_iter = self.train.make_initializable_iterator()
+            print('Preparing data: batch/prefetch/cache')
+            self.dataset = dataset.batch(batch_size).prefetch(self.count).cache()
 
     def __get_line_count(self, file):
 
         count = 0
-        with open(file, 'r', encoding='utf8') as f:
+        with open(file, 'r', encoding = 'utf8') as f:
             i = 0
             while True:
                 line = f.readline()
@@ -143,88 +122,8 @@ class Snapshots(object):
         return count
 
 
-def dump_step_data(name, x, y, epoch, i):
-    print(np.shape(x))
-    print(np.shape(y))
-    x = np.reshape(x, [np.shape(x)[0], np.shape(x)[1]])
-    with open('%s_%i_%i.csv' % (name, epoch, i), 'w') as text_file:
-        text_file.write('decision;')
-        text_file.write(';'.join(str(i) for i in range(-1814, 1)))
-        text_file.write('\n')
-        for row_index, row in enumerate(x):
-            text_file.write('buy' if y[row_index][1] == 1 else 'ignore')
-            text_file.write(';')
-            text_file.write(';'.join(str(i) for i in row))
-            text_file.write('\n')
-
-
-def run(name, sess, model, data, epoch, optimizer, batches, feed_dict, summary, summary_writer):
-    accuracies = []
-    durations = []
-    last_log = datetime.datetime.now()
-    last_step = datetime.datetime.now()
-
-    for i in range(batches):
-
-        if i == 0 or i == batches - 1 or (datetime.datetime.now() - last_log).total_seconds() > 1:
-            last_log = datetime.datetime.now()
-            seconds_per_batch = np.mean(durations) if len(durations) > 0 else 0
-            seconds_per_row = seconds_per_batch / data.batch_size
-            rows_per_second = (1 / seconds_per_row) if seconds_per_row > 0 else 0
-            remaining_epoch = seconds_per_batch * (batches - i)
-            accuracy = accuracies[len(accuracies)-1] if len(accuracies) > 0 else 0
-            print("%s %d/%d # %.2f rows/s # %s remaining # previous accuracy %.4f" % (
-                name, i + 1, batches, rows_per_second, datetime.timedelta(seconds=int(remaining_epoch)), accuracy))
-
-        with tf.name_scope(name):
-
-            # x, y = sess.run(data.train_iter)
-            # dump_step_data(name, x, y, epoch, i, data.train_batches)
-
-            if optimizer is not None:
-                _, acc, sum = sess.run([optimizer, model.accuracy, summary], feed_dict=feed_dict)
-            else:
-                acc, sum = sess.run([model.accuracy, summary], feed_dict=feed_dict)
-
-            summary_writer.add_summary(sum, 0 if epoch == -1 else (epoch * batches + i + 1))
-            summary_writer.flush()
-            accuracies.append(acc)
-
-        durations.append((datetime.datetime.now() - last_step).total_seconds())
-        last_step = datetime.datetime.now()
-
-        if len(durations) > 10:
-            durations.pop(0)
-
-    accuracy = np.mean(accuracies)
-    return accuracy
-
-
-def train(data, sess, model, optimizer, summary, summary_writer, epoch):
-    #feed_dict = { model.is_train: True, model.fc_dropout_keep: 0.8, model.residual_scale: 0.1 } # InceptionResNetV2
-    feed_dict = { model.is_train: True, model.fc_dropout_keep: 0.4, model.aux_fc_dropout_keep: 0.3, model.aux_exit_4a_weight: gln_aux_exit_4a_weight, model.aux_exit_4e_weight: gln_aux_exit_4e_weight, model.exit_weight: 1.0 } # GoogLeNet
-    return run('Train', sess, model, data, epoch, optimizer, data.train_batches, feed_dict, summary, summary_writer)
-
-
-def measure_accuracy(data, sess, model, summary, summary_writer, epoch):
-    #feed_dict = { model.is_train: False, model.fc_dropout_keep: 1.0, model.residual_scale: 0.1 } # InceptionResNetV2
-    feed_dict = { model.is_train: False, model.fc_dropout_keep: 1.0, model.aux_fc_dropout_keep: 1, model.aux_exit_4a_weight: gln_aux_exit_4a_weight, model.aux_exit_4e_weight: gln_aux_exit_4e_weight, model.exit_weight: 1.0 } #GoogLeNet
-    return run('Test', sess, model, data, epoch, None, data.test_batches, feed_dict, summary, summary_writer)
-
-
 def main(model_dir, load_ckpt, epochs, start_epoch, batch_size, test_file, train_file, first_day, last_day, buy_label):
-    """
-    :param str model_dir: Base directory for the model
-    :param int load_ckpt: Whether to load an existing model
-    :param int epochs: Number of cycles over the whole data
-    :param int start_epoch: Start index in epochs
-    :param int batch_size: Number of examples per batch
-    :param str test_file: Path to the test data
-    :param str train_file: Path to the train data
-    :param int first_day: The first day column name e.g. -1814
-    :param int last_day: The last day column name e.g. 0
-    :param str buy_label: The label used if the user decided on an action for this dataset, e.g. 'buy'
-    """
+    print('Preparing model directory')
 
     if load_ckpt:
         if not os.path.exists(model_dir):
@@ -233,35 +132,27 @@ def main(model_dir, load_ckpt, epochs, start_epoch, batch_size, test_file, train
     if not load_ckpt:
         model_dir = model_dir + datetime.datetime.now().strftime("%Y%m%d%H%M%S")
         if os.path.exists(model_dir):
-            shutil.rmtree(model_dir, ignore_errors=True)
+            shutil.rmtree(model_dir, ignore_errors = True)
         if not os.path.exists(model_dir):
             os.makedirs(model_dir)
 
     ckpt_file = model_dir + '\\checkpoint\\'
-    output_file = model_dir + '\\prediction.txt'
-    log_dir = model_dir + '\\checkpoint\\logs\\'
 
     if not os.path.exists(ckpt_file):
         os.makedirs(ckpt_file)
-    if not os.path.exists(log_dir):
-        os.makedirs(log_dir)
-
-    i = 0
-    while os.path.exists(log_dir + str(i)):
-        i += 1
-    log_dir = log_dir + str(i)
 
     def write_resume_bat(next_epoch):
         with open(model_dir + '\\resume.bat', 'w') as text_file:
             text_file.write(
-                'python main.py --load=True --model_dir=. --test_file=test.csv --train_file=train.csv --start_epoch=%s --epochs=%d --batch_size=%d --first_day=%d --last_day=%d --buy_label=%s\npause' % (next_epoch, epochs, batch_size, first_day, last_day, buy_label))
+                'python main.py --load=True --model_dir=. --test_file=test.csv --train_file=train.csv --start_epoch=%s --epochs=%d --batch_size=%d --first_day=%d --last_day=%d --buy_label=%s\npause' % (
+                    next_epoch, epochs, batch_size, first_day, last_day, buy_label))
         with open(model_dir + '\\resume_infinitely.bat', 'w') as text_file:
             text_file.write(
-                'python main.py --load=True --model_dir=. --test_file=test.csv --train_file=train.csv --start_epoch=%s --epochs=1000000 --batch_size=%d --first_day=%d --last_day=%d --buy_label=%s\npause' % (next_epoch, batch_size, first_day, last_day, buy_label))
+                'python main.py --load=True --model_dir=. --test_file=test.csv --train_file=train.csv --start_epoch=%s --epochs=1000000 --batch_size=%d --first_day=%d --last_day=%d --buy_label=%s\npause' % (
+                    next_epoch, batch_size, first_day, last_day, buy_label))
 
     if not load_ckpt:
-        print('Copying data to model dir')
-        copyfile('main.py', model_dir + '\\main.py')
+        copyfile(os.path.basename(__file__), model_dir + '\\main.py')
         copyfile('NetworkBase.py', model_dir + '\\NetworkBase.py')
         copyfile('GoogLeNet.py', model_dir + '\\GoogLeNet.py')
         copyfile('InceptionResNetV2.py', model_dir + '\\InceptionResNetV2.py')
@@ -273,107 +164,121 @@ def main(model_dir, load_ckpt, epochs, start_epoch, batch_size, test_file, train
         test_file = model_dir + '\\test.csv'
         train_file = model_dir + '\\train.csv'
 
-    if load_ckpt:
-        last_checkpoint_index = -1
-        for filename in glob.iglob(ckpt_file + "*.meta", recursive=False):
-            search = re.search('[^\d]+(\d+).meta$', filename, re.IGNORECASE)
-            if search:
-                last_checkpoint_index = max(last_checkpoint_index, int(search.group(1)))
-        if last_checkpoint_index >= 0:
-            load_ckpt_file = ckpt_file + str(last_checkpoint_index)
-        else:
-            if os.path.exists(ckpt_file + "initial.meta"):
-                load_ckpt_file = ckpt_file + 'initial'
-            else:
-                raise Exception('checkpoint not found')
-
-    column_defaults = [['0'], ['0'], ['0'], ['ignore'], ['19700101']] + [[0.00] for i in range(first_day, last_day + 1)]
+    def input_fn(data_file):
+        print('Loading data from %s' % data_file)
+        data = Data(data_file, batch_size, buy_label, first_day, last_day)
+        return data.dataset
 
     tf.logging.set_verbosity(tf.logging.INFO)
 
-    print('Loading data')
-    data = Snapshots(test_file, train_file, batch_size, column_defaults, buy_label)
+    def model_fn(features, labels, mode, params):
 
-    print('Model')
-    model = GoogLeNet(1, data.train_iter, data.test_iter)
-    #model = InceptionResNetV2(1, data.train_iter, data.test_iter)
+        print('Creating model')
 
-    print('Optimizer')
-    with tf.name_scope('adam'):  
-        update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-        with tf.control_dependencies(update_ops):
-            optimizer = tf.train.AdamOptimizer(learning_rate=adam_learning_rate, epsilon=adam_epsilon).minimize(model.loss)
+        if model_name == 'GoogLeNet':
 
-    #Popen('tensorboard.exe --logdir=%s' % model_dir, creationflags=CREATE_NEW_CONSOLE)
+            if mode == tf.estimator.ModeKeys.TRAIN:
+                options = {
+                    "is_train": True,
+                    "fc_dropout_keep": 0.4,
+                    "aux_fc_dropout_keep": 0.3,
+                    "aux_exit_4a_weight": gln_aux_exit_4a_weight,
+                    "aux_exit_4e_weight": gln_aux_exit_4e_weight,
+                    "exit_weight": 1.0
+                }
+            else:
+                options = {
+                    "is_train": False,
+                    "fc_dropout_keep": 1.0,
+                    "aux_fc_dropout_keep": 1,
+                    "aux_exit_4a_weight": gln_aux_exit_4a_weight,
+                    "aux_exit_4e_weight": gln_aux_exit_4e_weight,
+                    "exit_weight": 1.0
+                }
 
-    config = tf.ConfigProto()
-    config.gpu_options.allow_growth = True
-    config.gpu_options.per_process_gpu_memory_fraction = 0.9
-    with tf.Session(config=config) as sess:
+            model = GoogLeNet(1, features, labels, options)
 
-        print('Init')
-        tf.global_variables_initializer().run()
+        elif model_name == 'InceptionResNetV2':
 
-        if load_ckpt:
-            print('Restoring parameters from %s' % (load_ckpt_file))
-            var_list = None
-            if adam_reset:
-                var_list = tf.trainable_variables()
-            saver = tf.train.Saver(var_list=var_list, max_to_keep=adam_keep)
-            saver.restore(sess, load_ckpt_file)
+            if mode == tf.estimator.ModeKeys.TRAIN:
+                options = {
+                    "is_train": True,
+                    "fc_dropout_keep": 0.8,
+                    "residual_scale": 0.1
+                }
+            else:
+                options = {
+                    "is_train": False,
+                    "fc_dropout_keep": 1.0,
+                    "residual_scale": 0.1
+                }
 
-        print('Saver')
-        saver = tf.train.Saver(var_list=tf.trainable_variables(), max_to_keep=adam_keep)
+            model = InceptionResNetV2(1, features, labels, options)
 
-        print('Initialize variables')
-        sess.run([data.test_iter.initializer, data.train_iter.initializer], feed_dict={
-            data.epochs_tensor: epochs, data.batch_size_tensor: data.batch_size,
-            data.test_count_tensor: data.test_count, data.train_count_tensor: data.train_count})
+        else:
+            raise Exception('Unknown model name: ' + model_name)
 
-        if epochs > 0:
+        with tf.name_scope('adam'):
+            update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+            with tf.control_dependencies(update_ops):
+                optimizer = tf.train.AdamOptimizer(learning_rate = adam_learning_rate, epsilon = adam_epsilon).minimize(
+                    model.loss, global_step = tf.train.get_global_step())
 
-            print('Summary writer')
-            merged = tf.summary.merge_all()
+        predictions = {
+            buy_label: model.pred
+        }
 
-            if not load_ckpt:
-                print('Save model')
-                saver.save(sess, ckpt_file + "initial")
+        eval_metric_ops = {
+            "accuracy": model.accuracy_metric
+        }
 
-            graph_writer = tf.summary.FileWriter(log_dir + '/graph', sess.graph)
-            graph_writer.flush()
+        return tf.estimator.EstimatorSpec(mode = mode, predictions = predictions, loss = model.loss, train_op = optimizer, eval_metric_ops = eval_metric_ops)
 
-            for epoch in range(start_epoch, epochs):
-                begin = time.time()
+    warm_start_from = ckpt_file if load_ckpt else None
 
-                train_writer = tf.summary.FileWriter(log_dir + '/train')
-                test_writer = tf.summary.FileWriter(log_dir + '/test')
+    session_config = tf.ConfigProto()
+    session_config.gpu_options.allow_growth = True
+    session_config.gpu_options.per_process_gpu_memory_fraction = 0.9
 
-                train_acc_mean = train(data, sess, model, optimizer, merged, train_writer, epoch)
+    config = tf.estimator.RunConfig(
+        model_dir = ckpt_file,
+        save_summary_steps = save_summary_steps,
+        save_checkpoints_secs = save_checkpoints_secs,
+        keep_checkpoint_max = keep_checkpoint_max,
+        keep_checkpoint_every_n_hours = keep_checkpoint_every_n_hours,
+        log_step_count_steps = log_step_count_steps,
+        session_config = session_config
+    )
 
-                val_acc_mean = measure_accuracy(data, sess, model, merged, test_writer, epoch)
+    nn = tf.estimator.Estimator(model_fn = model_fn, warm_start_from = warm_start_from, config = config, params = {})
 
-                print("Epoch %d/%d, time = %ds, train accuracy = %.4f, validation accuracy = %.4f" % (
-                    epoch + 1, epochs, time.time() - begin, train_acc_mean, val_acc_mean))
+    if epochs > 0:
 
-                print('Save model')
-                saver.save(sess, ckpt_file + str(epoch))
+        for epoch in range(start_epoch, epochs):
+            begin = time.time()
 
-                sys.stdout.flush()
+            nn.train(input_fn = lambda: input_fn(train_file))
 
-                write_resume_bat(epoch + 1)
+            ev = nn.evaluate(input_fn = lambda: input_fn(test_file))
 
+            print("Epoch %d/%d, time = %ds, accuracy = %.4f" % (
+                epoch + 1, epochs, time.time() - begin, ev['accuracy']))
+
+            sys.stdout.flush()
+
+            write_resume_bat(epoch + 1)
+
+    print("done")
 
 if __name__ == '__main__':
-    tf.logging.set_verbosity(tf.logging.INFO)
     FLAGS, unparsed = parser.parse_known_args()
-
-    main(model_dir=FLAGS.model_dir,
-         load_ckpt=FLAGS.load,
-         epochs=FLAGS.epochs,
-         start_epoch=FLAGS.start_epoch,
-         batch_size=FLAGS.batch_size,
-         test_file=FLAGS.test_file,
-         train_file=FLAGS.train_file,
-         first_day=FLAGS.first_day,
-         last_day=FLAGS.last_day,
-         buy_label=FLAGS.buy_label)
+    main(model_dir = FLAGS.model_dir,
+         load_ckpt = FLAGS.load,
+         epochs = FLAGS.epochs,
+         start_epoch = FLAGS.start_epoch,
+         batch_size = FLAGS.batch_size,
+         test_file = FLAGS.test_file,
+         train_file = FLAGS.train_file,
+         first_day = FLAGS.first_day,
+         last_day = FLAGS.last_day,
+         buy_label = FLAGS.buy_label)
