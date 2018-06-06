@@ -80,8 +80,8 @@ class Snapshots(object):
             assert tf.gfile.Exists(test_file), ('%s not found.' % test_file)
             assert tf.gfile.Exists(train_file), ('%s not found.' % train_file)
 
-            test_file_count = Snapshots.__get_line_count(test_file)
-            train_file_count = Snapshots.__get_line_count(train_file)
+            test_file_count = self.__get_line_count(test_file)
+            train_file_count = self.__get_line_count(train_file)
 
             if test_file_count > 0 and test_file_count < self.batch_size:
                 print(
@@ -102,8 +102,8 @@ class Snapshots(object):
             def parse_csv(value):
                 columns = tf.decode_csv(value, record_defaults=column_defaults, field_delim=";")
 
-                features = columns[4:len(columns)]
-                labels = columns[2]
+                features = columns[5:len(columns)]
+                labels = columns[3]
 
                 features = tf.stack(features)
                 features = tf.reshape(features, [features.get_shape()[0], 1, 1])
@@ -127,7 +127,7 @@ class Snapshots(object):
             self.test_iter = self.test.make_initializable_iterator()
             self.train_iter = self.train.make_initializable_iterator()
 
-    def __get_line_count(file):
+    def __get_line_count(self, file):
 
         count = 0
         with open(file, 'r', encoding='utf8') as f:
@@ -287,7 +287,7 @@ def main(model_dir, load_ckpt, epochs, start_epoch, batch_size, test_file, train
             else:
                 raise Exception('checkpoint not found')
 
-    column_defaults = [['0'], ['0'], ['ignore'], ['19700101']] + [[0.00] for i in range(first_day, last_day + 1)]
+    column_defaults = [['0'], ['0'], ['0'], ['ignore'], ['19700101']] + [[0.00] for i in range(first_day, last_day + 1)]
 
     tf.logging.set_verbosity(tf.logging.INFO)
 
@@ -302,7 +302,7 @@ def main(model_dir, load_ckpt, epochs, start_epoch, batch_size, test_file, train
     with tf.name_scope('adam'):  
         update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
         with tf.control_dependencies(update_ops):
-            optimizer = tf.train.AdamOptimizer(learning_rate=adam_learning_rate, adam_epsilon=0.5).minimize(model.loss)
+            optimizer = tf.train.AdamOptimizer(learning_rate=adam_learning_rate, epsilon=adam_epsilon).minimize(model.loss)
 
     #Popen('tensorboard.exe --logdir=%s' % model_dir, creationflags=CREATE_NEW_CONSOLE)
 
