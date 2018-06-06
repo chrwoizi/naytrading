@@ -11,6 +11,8 @@ The website [StockFlow.Node](StockFlow.Node) presents a stock price chart to the
 <details>
 <summary>How to install</summary>
 
+StockFlow.Node needs a stock data provider to work as expected. This repository includes an example plugin in [StockFlow.Node.Providers](StockFlow.Node.Providers) that can be used to quick start the development of such a provider.
+
 ```sh
 # install tools
 root@host:~$ apt-get install sudo
@@ -69,6 +71,7 @@ stockflow@host:~/stockflow/StockFlow.Node/app/config$ vi config.json
 [set production.admin_user to your email address]
 [set production.proxy if you access the web through a proxy]
 [set python to your python executable, e.g. python3]
+[add your custom stock data provider envconfig to the include array, e.g. "../../../StockFlow.Node.Providers/config/envconfig"]
 :wq
 stockflow@host:~/stockflow/StockFlow.Node/app/config$ cd ../..
 stockflow@host:~/stockflow/StockFlow.Node$ chmod +x dbmigrate.sh
