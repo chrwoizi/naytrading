@@ -1,7 +1,7 @@
 var exports = module.exports = {}
 var model = require('../models/index');
 var sql = require('../sql/sql');
-var***REMOVED***= require('../providers***REMOVED***);
+var ratesProvider = require('../providers/rates_provider');
 var snapshotController = require('./snapshot_controller');
 var sequelize = require('sequelize');
 var dateFormat = require('dateformat');
@@ -131,7 +131,7 @@ exports.createNewSnapshotFromRandomInstrument = async function (instrumentIds) {
         var instrument = await model.instrument.findOne({ where: { ID: instrumentIds[index].ID } });
 
         try {
-            var ratesResponse = await***REMOVED***getRates(instrument.InstrumentId, instrument.MarketId, startTime, endTime);
+            var ratesResponse = await ratesProvider.getRates(instrument.InstrumentId, instrument.MarketId, startTime, endTime);
             
             if (ratesResponse.marketId != instrument.MarketId) {
                 // change preferred market id for instrument
@@ -238,7 +238,7 @@ exports.createNewSnapshotFromRandomInstrument = async function (instrumentIds) {
             }
         }
         catch (error) {
-            if (error ==***REMOVED***market_not_found) {
+            if (error == ratesProvider.market_not_found) {
                 var strikes = config.max_strikes + 12;
                 console.log("Setting " + strikes + " strikes on instrument " + instrument.InstrumentName + " because the market id does not exist");
                 await instrument.updateAttributes({
@@ -246,7 +246,7 @@ exports.createNewSnapshotFromRandomInstrument = async function (instrumentIds) {
                     LastStrikeTime: new Date()
                 });
             }
-            else if (error ==***REMOVED***invalid_response) {
+            else if (error == ratesProvider.invalid_response) {
                 console.log("Adding 5 strikes to instrument " + instrument.InstrumentName + " because the server returned an unexpected response");
                 await instrument.updateAttributes({
                     Strikes: instrument.Strikes + 5,

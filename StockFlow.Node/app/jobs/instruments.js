@@ -2,17 +2,17 @@ var exports = module.exports = {}
 var model = require('../models/index');
 var sequelize = require('sequelize');
 var sql = require('../sql/sql');
-var***REMOVED***= require('../providers***REMOVED***);
+var instrumentsProvider = require('../providers/instruments_provider');
 var config = require('../config/envconfig');
 var settings = require('../config/settings');
 
 
 async function updateGlobalInstruments() {
-    var allInstruments = await***REMOVED***getAllInstruments(config.job_instruments_min_capitalization);
+    var allInstruments = await instrumentsProvider.getAllInstruments(config.job_instruments_min_capitalization);
 
     var knownInstruments = await model.instrument.findAll({});
 
-    var knownIds = knownInstruments.filter(x => x.Source ==***REMOVED***source).map(x => x.InstrumentId);
+    var knownIds = knownInstruments.filter(x => x.Source == instrumentsProvider.source).map(x => x.InstrumentId);
 
     var newInstruments = allInstruments.filter(x => knownIds.indexOf(x.InstrumentId) == -1);
 

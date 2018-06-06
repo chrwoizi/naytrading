@@ -2,7 +2,7 @@ var exports = module.exports = {}
 var model = require('../models/index');
 var sequelize = require('sequelize');
 var dateFormat = require('dateformat');
-var***REMOVED***= require('../providers***REMOVED***);
+var instrumentsProvider = require('../providers/instruments_provider');
 var sql = require('../sql/sql');
 var fs = require('fs');
 var config = require('../config/envconfig');
@@ -49,12 +49,12 @@ exports.addUrl = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
 
-            var instrument = await***REMOVED***getInstrumentByUrl(req.params.url);
+            var instrument = await instrumentsProvider.getInstrumentByUrl(req.params.url);
 
             if (instrument.InstrumentId > 0) {
                 var knownInstrument = await model.instrument.find({
                     where: {
-                        Source:***REMOVED***source,
+                        Source: instrumentsProvider.source,
                         InstrumentId: instrument.InstrumentId
                     }
                 });

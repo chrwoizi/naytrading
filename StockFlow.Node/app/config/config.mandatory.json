@@ -3,12 +3,14 @@
     "export_secret": "enter secret token here",
     "import_secret": "enter secret token here",
     "admin_user": "enter admin user email here",
-    "python": "C:\\Program Files\\Python\\Python36\\python.exe"
+    "python": "C:\\Program Files\\Python\\Python36\\python.exe",
+    "include":["enter instruments and rates provider envconfig path here, e.g. ../../..//StockFlow.Node.Providers/config/envconfig"]
   },
   "production": {
     "export_secret": "enter secret token here",
     "import_secret": "enter secret token here",
     "admin_user": "enter admin user email here",
-    "python": "C:\\Program Files\\Python\\Python36\\python.exe"
+    "python": "C:\\Program Files\\Python\\Python36\\python.exe",
+    "include":["enter instruments and rates provider envconfig path here, e.g. ../../..//StockFlow.Node.Providers/config/envconfig"]
   }
 }

@@ -101,7 +101,7 @@ var sql = require('./app/sql/sql');
             console.log(err);
 
     });
-    
+
     setTimeout(function () {
         new Promise(function (resolve, reject) { instrumentsJob.run(); });
     }, 2000);
@@ -109,11 +109,11 @@ var sql = require('./app/sql/sql');
     setTimeout(function () {
         new Promise(function (resolve, reject) { cleanupJob.run(); });
     }, 4000);
-    
+
     setTimeout(function () {
         new Promise(function (resolve, reject) { strikesJob.run(); });
     }, 6000);
-    
+
     setTimeout(function () {
         new Promise(function (resolve, reject) { portfoliosJob.run(); });
     }, 8000);
@@ -121,9 +121,9 @@ var sql = require('./app/sql/sql');
     setTimeout(function () {
         new Promise(function (resolve, reject) { preloadJob.run(); });
     }, 10000);
-    
+
     setTimeout(function () {
         new Promise(function (resolve, reject) { processJob.run(); });
     }, 12000);
-    
+
 })();
