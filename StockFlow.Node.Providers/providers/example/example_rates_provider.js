@@ -107,7 +107,7 @@ exports.getRates = async function (instrumentId, preferredMarketId, startTime, e
     var marketIds = config.example_markets;
     if (preferredMarketId != null && typeof (preferredMarketId) === 'string' && preferredMarketId.length > 0) {
 
-        var index = config.***REMOVED***markets.indexOf(preferredMarketId);
+        var index = config.example_markets.indexOf(preferredMarketId);
         if (index > -1) {
             // remove known market from list
             marketIds.splice(index, 1);
