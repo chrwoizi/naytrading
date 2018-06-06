@@ -166,8 +166,10 @@ def main(input_path, output_path_buy, output_path_no_buy, output_path_sell, outp
                                             if out_file_buy:
 
                                                 if meta['PreviousBuyRate'] > 0 and meta['PreviousBuyRate'] < meta['CurrentPrice'] * Decimal(1.01):
-                                                    first_semicolon = line.index(';')
-                                                    line_as_buy = line[0 : first_semicolon + 1] + 'buy' + line[line.index(';', first_semicolon + 1):]
+                                                    first = line.index(';')
+                                                    second = line.index(';', first + 1)
+                                                    third = line.index(';', second + 1)
+                                                    line_as_buy = line[0 : second + 1] + 'buy' + line[third:]
                                                     out_file_buy.writelines([str(lines_read) + ';' + line_as_buy])
 
                                             if out_file_no_sell:
