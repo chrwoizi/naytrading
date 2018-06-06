@@ -41,7 +41,7 @@ function logError(message) {
 }
 
 
-async function download(user, fromDate, filePath, cancel) {
+async function download(user, fromDateUTC, filePath, cancel) {
     var stream = fs.createWriteStream(filePath + ".incomplete");
 
     var intervalCall = new IntervalCall(1);
@@ -51,7 +51,7 @@ async function download(user, fromDate, filePath, cancel) {
         });
     }
 
-    var count = await exportUserController.exportUserSnapshotsGeneric(fromDate, user, stream, cancel, reportProgress);
+    var count = await exportUserController.exportUserSnapshotsGeneric(fromDateUTC, user, stream, cancel, reportProgress);
 
     if (count > 0) {
         return new Promise((resolve, reject) => {
@@ -83,7 +83,7 @@ function runProcess(executable, cwd, args) {
             var env = Object.create(process.env);
             env.PYTHONIOENCODING = 'utf-8';
             var proc = spawn(executable, args, { cwd: cwd, env: env });
-            
+
             proc.stdout.setEncoding("utf8");
             proc.stderr.setEncoding("utf8");
 
@@ -155,14 +155,15 @@ function removeFile(filePath) {
 }
 
 
-async function writeMeta(filePath, now, days, maxMissingDays, testDataRatio, preserveTestIds, augmentFactor) {
+async function writeMeta(filePath, now, days, maxMissingDays, testDataRatio, preserveTestIds, augmentFactor, lines) {
     var meta = {
         time: dateFormat(now, "yyyymmddHHMMss"),
         days: days,
         max_missing_days: maxMissingDays,
         test_data_ratio: testDataRatio,
         preserve_test_ids: preserveTestIds ? "True" : "False",
-        augment_factor: augmentFactor
+        augment_factor: augmentFactor,
+        lines: lines
     };
 
     await writeFile(filePath, JSON.stringify(meta));
@@ -197,7 +198,7 @@ function getFiles(mask, regex) {
 }
 
 
-function parseDate(str) {
+function parseDateUTC(str) {
     return new Date(Date.UTC(str.substr(0, 4), parseInt(str.substr(4, 2)) - 1, str.substr(6, 2),
         str.substr(8, 2), parseInt(str.substr(10, 2)), str.substr(12, 2)));
 }
@@ -206,14 +207,13 @@ function parseDate(str) {
 function getMaxDate(files) {
     var regex = /[^\d]+(\d+).json$/;
 
-    var maxDate = new Date(1970, 0, 1);
+    var maxDate = "19700101000000";
     for (var i = 0; i < files.length; ++i) {
         var file = files[i];
         var match = regex.exec(file);
         if (match) {
-            var str = match[1];
-            var date = parseDate(str);
-            if (date.getTime() > maxDate.getTime()) {
+            var date = match[1];
+            if (date > maxDate) {
                 maxDate = date;
             }
         }
@@ -237,12 +237,32 @@ function sleep(milliseconds) {
 function isUpToDate(filePath, latestSnapshotDate) {
     if (fs.existsSync(filePath) && fs.existsSync(filePath + ".meta")) {
         var lastMeta = JSON.parse(fs.readFileSync(filePath + ".meta", 'utf8'));
-        var lastMetaTime = parseDate(lastMeta.time);
-        if (lastMetaTime >= latestSnapshotDate) {
+        if (lastMeta.time >= latestSnapshotDate) {
             return true;
         }
     }
     return false;
+}
+
+
+function countLines(filePath) {
+    return new Promise((resolve, reject) => {
+        try {
+            var i;
+            var count = 0;
+            fs.createReadStream(filePath)
+                .on('data', function (chunk) {
+                    for (i = 0; i < chunk.length; ++i)
+                        if (chunk[i] == 10) count++;
+                })
+                .on('end', function () {
+                    resolve(count - 1);
+                });
+        }
+        catch (e) {
+            reject(e);
+        }
+    });
 }
 
 
@@ -271,7 +291,7 @@ async function processUser(user) {
     var now = new Date();
     var filePath = processingDir + "/" + dateFormat(now, "yyyymmddHHMMss") + ".json";
 
-    var newCount = await download(user, fromDate, filePath, cancel);
+    var newCount = await download(user, parseDateUTC(fromDate), filePath, cancel);
 
     files = await getFiles(processingDir + "/*.json", /[^\d]+(\d+).json$/);
 
@@ -339,7 +359,7 @@ async function processUser(user) {
         await Promise.all([split(action), split("no_" + action)]);
 
         async function processDataset(dataset) {
-            
+
             async function augment(file) {
                 await runProcess(config.python, processorsDir, [
                     "augment.py",
@@ -358,11 +378,14 @@ async function processUser(user) {
                 "--output_path=" + processingDir + "/" + action + "ing_" + dataset + "_aug.csv"
             ]);
 
+            var outputPath = processingDir + "/" + action + "ing_" + dataset + "_aug_norm.csv";
             await runProcess(config.python, processorsDir, [
                 "normalize.py",
                 "--input_path=" + processingDir + "/" + action + "ing_" + dataset + "_aug.csv",
-                "--output_path=" + processingDir + "/" + action + "ing_" + dataset + "_aug_norm.csv"
+                "--output_path=" + outputPath
             ]);
+
+            var lines = await countLines(outputPath);
 
             await writeMeta(
                 processingDir + "/" + action + "ing_" + dataset + "_aug_norm.csv.meta",
@@ -371,7 +394,8 @@ async function processUser(user) {
                 maxMissingDays,
                 testDataRatio,
                 preserveTestIds,
-                augmentFactor);
+                augmentFactor,
+                lines);
         }
 
         await Promise.all([processDataset("train"), processDataset("test")]);
