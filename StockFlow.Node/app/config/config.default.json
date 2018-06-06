@@ -36,7 +36,7 @@
     "whitelist": true,
     "max_unused_snapshot_age_hours": 48,
     "processing_dir": "processing",
-    "processors_dir": "../StockFlow.Data/process",
+    "processors_dir": "../../../StockFlow.Data/process",
     "python": "C:\\Program Files\\Python\\Python36\\python.exe",
     "include": []
   },
@@ -77,7 +77,7 @@
     "whitelist": true,
     "max_unused_snapshot_age_hours": 48,
     "processing_dir": "processing",
-    "processors_dir": "../StockFlow.Data/process",
+    "processors_dir": "../../../StockFlow.Data/process",
     "python": "C:\\Program Files\\Python\\Python36\\python.exe",
     "include": []
   }
