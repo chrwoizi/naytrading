@@ -55,7 +55,7 @@ def main(input_dir, input_exp, output_path):
 
                             split = line.split(';')
 
-                            id = split[1]
+                            id = split[0]
 
                             if id in known_ids:
                                 continue
