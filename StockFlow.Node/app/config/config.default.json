@@ -13,10 +13,6 @@
     "snapshot_count_order_weight": 0.05,
     "random_order_weight": 0.2,
     "static_weight" : 1,
-    "***REMOVED***throttle_requests": 10,
-    "***REMOVED***throttle_seconds": 10,
-    "***REMOVED***timeout_milliseconds": 120000,
-    "***REMOVED***markets": ["21", "22", "1", "2", "8", "4", "6", "5", "7", "86", "3", "174"],
     "job_cleanup_interval_seconds": 600,
     "job_preload_interval_seconds": 10,
     "job_preload_max_open_snapshots": 100,
@@ -41,7 +37,8 @@
     "max_unused_snapshot_age_hours": 48,
     "processing_dir": "processing",
     "processors_dir": "../StockFlow.Data/process",
-    "python": "C:\\Program Files\\Python\\Python36\\python.exe"
+    "python": "C:\\Program Files\\Python\\Python36\\python.exe",
+    "include": []
   },
   "production": {
     "port": 5000,
@@ -57,10 +54,6 @@
     "snapshot_count_order_weight": 0.05,
     "random_order_weight": 0.2,
     "static_weight" : 1,
-    "***REMOVED***throttle_requests": 10,
-    "***REMOVED***throttle_seconds": 10,
-    "***REMOVED***timeout_milliseconds": 120000,
-    "***REMOVED***markets": ["21", "22", "1", "2", "8", "4", "6", "5", "7", "86", "3", "174"],
     "job_cleanup_interval_seconds": 600,
     "job_preload_interval_seconds": 10,
     "job_preload_max_open_snapshots": 100,
@@ -85,6 +78,7 @@
     "max_unused_snapshot_age_hours": 48,
     "processing_dir": "processing",
     "processors_dir": "../StockFlow.Data/process",
-    "python": "C:\\Program Files\\Python\\Python36\\python.exe"
+    "python": "C:\\Program Files\\Python\\Python36\\python.exe",
+    "include": []
   }
 }
