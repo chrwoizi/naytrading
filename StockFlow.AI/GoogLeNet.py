@@ -95,11 +95,12 @@ class GoogLeNet(NetworkBase):
                     tf.summary.scalar('value', accuracy_inception4e_exit)
 
             with tf.variable_scope('exit'):
-                self.correct_prediction = tf.equal(tf.argmax(exit, 1), tf.argmax(self.y, 1))
+                self.exit_argmax = tf.argmax(exit, 1)
+                self.y_argmax = tf.argmax(self.y, 1)
+                self.correct_prediction = tf.equal(self.exit_argmax, self.y_argmax)
                 self.accuracy = tf.reduce_mean(tf.cast(self.correct_prediction, tf.float32))
                 if self.summary_level >= 1:
                     tf.summary.scalar('value', self.accuracy)
-                self.accuracy_metric = tf.metrics.accuracy(self.y, exit)
 
             with tf.variable_scope('combined'):
                 accuracy_combined = tf.divide(

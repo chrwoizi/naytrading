@@ -1,6 +1,8 @@
 
 import numpy as np
 import tensorflow as tf
+from tensorflow.contrib.layers import xavier_initializer
+from tensorflow.contrib.layers import batch_norm
 
 class NetworkBase:
 
@@ -14,11 +16,6 @@ class NetworkBase:
         # days = tf.shape(x)[1]
         # o = tf.one_hot(indices=tf.cast(tf.multiply(tf.reshape(x,[tf.shape(x)[0],days]),100), tf.int32), depth=100, on_value=1.0, off_value=0.0, axis=-1)
         # self.__image_summary('x', o, days, 100, 1)
-
-    def resnet_sum(self, x, residual):
-        residual_scaled = tf.divide(residual, self.residual_scale, 'scale')
-        sum1 = tf.add(residual_scaled, x, 'addition')
-        return sum1
 
     def exit_layer(self, name, x, dropout_keep):
         with tf.name_scope(name):
@@ -36,7 +33,7 @@ class NetworkBase:
         with tf.name_scope(name):
             in_layer_shape = int(in_layer.get_shape()[3])
 
-            initializer = tf.contrib.layers.xavier_initializer(uniform=False)
+            initializer = xavier_initializer(uniform=False)
             W = tf.Variable(initializer([width, 1, in_layer_shape, out_dim]))
             self.variable_summaries('W', W)
             # image_summary('W', W, 5, 1 out_dim)
@@ -52,7 +49,7 @@ class NetworkBase:
             result = r
 
             if batch_norm:
-                result = tf.contrib.layers.batch_norm(result, center=True, scale=True, is_training=self.is_train, decay=0.9, updates_collections=None, scope=tf.get_default_graph().get_name_scope())
+                result = batch_norm(result, center=True, scale=True, is_training=self.is_train, decay=0.9, updates_collections=None, scope=tf.get_default_graph().get_name_scope())
 
             if relu:
                 result = tf.nn.leaky_relu(result)
@@ -65,7 +62,7 @@ class NetworkBase:
         with tf.name_scope(name):
             in_layer_shape = int(np.prod(in_layer.get_shape()[1:]))
 
-            initializer = tf.contrib.layers.xavier_initializer(uniform=False)
+            initializer = xavier_initializer(uniform=False)
             W = tf.Variable(initializer([in_layer_shape, out_dim]))
             self.variable_summaries('W', W)
 
