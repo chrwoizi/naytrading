@@ -12,12 +12,12 @@ save_summary_steps = 100
 save_checkpoints_secs = 60
 keep_checkpoint_max = 10
 keep_checkpoint_every_n_hours = 1
-log_step_count_steps = 100,
+log_step_count_steps = 100
 adam_reset = False
-adam_learning_rate = 0.0005
+adam_learning_rate = 0.001
 adam_epsilon = 0.5
-gln_aux_exit_4a_weight = 0.005
-gln_aux_exit_4e_weight = 0.01
+gln_aux_exit_4a_weight = 0.3
+gln_aux_exit_4e_weight = 0.3
 
 import tensorflow as tf
 
