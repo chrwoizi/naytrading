@@ -55,14 +55,20 @@ class InceptionResNetV2(NetworkBase):
                 tf.summary.scalar('value', self.loss)
 
         with tf.variable_scope('accuracy'):
-            self.correct_prediction = tf.equal(tf.argmax(exit, 1), tf.argmax(self.y, 1))
+            self.exit_argmax = tf.argmax(exit, 1)
+            self.y_argmax = tf.argmax(self.y, 1)
+            self.correct_prediction = tf.equal(self.exit_argmax, self.y_argmax)
             self.accuracy = tf.reduce_mean(tf.cast(self.correct_prediction, tf.float32))
             if self.summary_level >= 1:
                 tf.summary.scalar('value', self.accuracy)
-            self.accuracy_metric = tf.metrics.accuracy(self.y, exit)
 
         with tf.name_scope('pred'):
             self.pred = tf.argmax(exit, 1)
+
+    def resnet_sum(self, x, residual):
+        residual_scaled = tf.divide(residual, self.residual_scale, 'scale')
+        sum1 = tf.add(residual_scaled, x, 'addition')
+        return sum1
 
     def __inception_resnet_stem(self, x):
 
