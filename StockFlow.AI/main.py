@@ -111,7 +111,7 @@ if __name__ == '__main__':
         copyfile(train_file, FLAGS.model_dir + '/train.csv')
         write_resume_bat(0)
         with open(FLAGS.model_dir + '/tensorboard.bat', 'w') as text_file:
-            text_file.write('tensorboard.exe --logdir=.')
+            text_file.write('tensorboard.exe --logdir=checkpoint')
         test_file = FLAGS.model_dir + '/test.csv'
         train_file = FLAGS.model_dir + '/train.csv'
 
