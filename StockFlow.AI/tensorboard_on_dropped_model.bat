@@ -1,1 +1,1 @@
-tensorboard.exe --logdir=%1
+tensorboard.exe --logdir=%1\checkpoint
