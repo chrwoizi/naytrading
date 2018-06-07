@@ -49,7 +49,14 @@ class GoogLeNet(NetworkBase):
 
         self.exit = self.exit_layer('exit', inception5p, self.fc_dropout_keep)
 
-        if mode == tf.estimator.ModeKeys.TRAIN:
+        if mode == tf.estimator.ModeKeys.PREDICT:
+            with tf.variable_scope('predict'):
+
+                self.exit_argmax = tf.argmax(self.exit, 1)
+                if self.summary_level >= 1:
+                    tf.summary.scalar('value', self.exit_argmax)
+        
+        else:
             with tf.variable_scope('loss'):
 
                 y_sg = tf.stop_gradient(self.y)
@@ -81,7 +88,6 @@ class GoogLeNet(NetworkBase):
                     if self.summary_level >= 1:
                         tf.summary.scalar('value', self.loss)
 
-        if mode == tf.estimator.ModeKeys.EVAL:
             with tf.variable_scope('accuracy'):
 
                 with tf.variable_scope('inception4a_exit'):
@@ -112,13 +118,6 @@ class GoogLeNet(NetworkBase):
                         tf.add(tf.add(self.aux_exit_4a_weight, self.aux_exit_4e_weight), self.exit_weight))
                     if self.summary_level >= 1:
                         tf.summary.scalar('value', accuracy_combined)
-
-        if mode == tf.estimator.ModeKeys.PREDICT:
-            with tf.variable_scope('predict'):
-
-                self.exit_argmax = tf.argmax(self.exit, 1)
-                if self.summary_level >= 1:
-                    tf.summary.scalar('value', self.exit_argmax)
 
     def __inception_module(self, name, x, out_1x1, reduce3, out_3x1, reduce5, out_5x1, out_pool):
         with tf.variable_scope(name):

@@ -47,7 +47,13 @@ class InceptionResNetV2(NetworkBase):
 
         self.exit = self.full_layer('exit', dropout, 2, False)
 
-        if mode == tf.estimator.ModeKeys.TRAIN:
+        if mode == tf.estimator.ModeKeys.PREDICT:
+            with tf.variable_scope('predict'):
+                self.exit_argmax = tf.argmax(self.exit, 1)
+                if self.summary_level >= 1:
+                    tf.summary.scalar('value', self.exit_argmax)
+
+        else:
             with tf.variable_scope('loss'):
                 y_sg = tf.stop_gradient(self.y)
                 softmax_exit = tf.nn.softmax_cross_entropy_with_logits_v2(labels=y_sg, logits=self.exit)
@@ -55,7 +61,6 @@ class InceptionResNetV2(NetworkBase):
                 if self.summary_level >= 1:
                     tf.summary.scalar('value', self.loss)
 
-        if mode == tf.estimator.ModeKeys.EVAL:
             with tf.variable_scope('accuracy'):
                 self.exit_argmax = tf.argmax(self.exit, 1)
                 self.y_argmax = tf.argmax(self.y, 1)
@@ -63,12 +68,6 @@ class InceptionResNetV2(NetworkBase):
                 self.accuracy = tf.reduce_mean(tf.cast(self.correct_prediction, tf.float32))
                 if self.summary_level >= 1:
                     tf.summary.scalar('value', self.accuracy)
-
-        if mode == tf.estimator.ModeKeys.PREDICT:
-            with tf.variable_scope('predict'):
-                self.exit_argmax = tf.argmax(self.exit, 1)
-                if self.summary_level >= 1:
-                    tf.summary.scalar('value', self.exit_argmax)
 
     def resnet_sum(self, x, residual):
         residual_scaled = tf.divide(residual, self.residual_scale, 'scale')
