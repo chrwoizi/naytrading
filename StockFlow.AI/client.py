@@ -1,40 +1,38 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import os
-import glob
 import argparse
 import sys
 import time
-import re
-import shutil
-import requests
 import getpass
 import datetime
+import numpy as np
+import tensorflow as tf
 import matplotlib.pyplot as plt
+import glob
+import shutil
+import re
 
 os.environ["CUDA_VISIBLE_DEVICES"]="-1"
 
-import numpy as np
-import tensorflow as tf
-
 from GoogLeNet import GoogLeNet
-#from InceptionResNetV2 import InceptionResNetV2
+from InceptionResNetV2 import InceptionResNetV2
 
 sys.path.append('../StockFlow.Common')
 from StockFlow import StockFlow
 
-
 parser = argparse.ArgumentParser()
 
-parser.add_argument('--checkpoint_dir', type=str, default='checkpoint', help='Base directory for the model checkpoint.')
+parser.add_argument('--checkpoint_dir', type=str, default='model20180607082346/checkpoint', help='Model checkpoint directory.')
 parser.add_argument('--proxy_url', type=str, default='', help='Proxy URL.')
 parser.add_argument('--proxy_user', type=str, default='', help='Proxy user.')
 parser.add_argument('--proxy_password', type=str, default='', help='Proxy password.')
-parser.add_argument('--stockflow_url', type=str, default='http://localhost:5000', help='StockFlow base url.')
+parser.add_argument('--stockflow_url', type=str, default='http://stockflow.net', help='StockFlow base url.')
 parser.add_argument('--stockflow_user', type=str, default='', help='StockFlow user.')
 parser.add_argument('--stockflow_password', type=str, default='', help='StockFlow password.')
+parser.add_argument('--model_name', type = str, default = 'GoogLeNet', help = 'The model name, e.g. GoogLeNet')
+parser.add_argument('--buy_label', type=str, default='buy', help='The label used if the user decided on an action for this dataset, e.g. buy')
+parser.add_argument('--tf_log', type=str, default='ERROR', help='The tensorflow log level: DEBUG, INFO, WARN, ERROR, FATAL')
+parser.add_argument('--sleep', type=int, default='300', help='The number of seconds to wait between snapshots')
+parser.add_argument('--checkpoint_copy', type=bool, default=True, help='Whether to create a local copy of the checkpoint')
 
 
 def sample(chart, x):
@@ -118,16 +116,22 @@ def get_chart(snapshot):
     return chart
 
 
-def main(checkpoint_dir, proxy_url, proxy_user, proxy_password, stockflow_url, stockflow_user, stockflow_password):
-    """
-    :param str checkpoint_dir: Base directory for the model checkpoint
-    :param int proxy_url: Proxy URL
-    :param int proxy_user: Proxy user
-    :param int proxy_password: Proxy password
-    :param int stockflow_url: StockFlow base url
-    :param str stockflow_user: StockFlow user
-    :param str stockflow_password: StockFlow password
-    """
+if __name__ == '__main__':
+    FLAGS, unparsed = parser.parse_known_args()
+
+    tf.logging.set_verbosity(getattr(tf.logging, FLAGS.tf_log))
+
+    if not os.path.exists(FLAGS.checkpoint_dir):
+        raise Exception('Could not find %s' % FLAGS.checkpoint_dir)
+
+    checkpoint_dir = FLAGS.checkpoint_dir + "/client"
+    if not os.path.exists(checkpoint_dir):
+        os.makedirs(checkpoint_dir)
+
+    proxy_user = FLAGS.proxy_user
+    proxy_password = FLAGS.proxy_password
+    stockflow_user = FLAGS.stockflow_user
+    stockflow_password = FLAGS.stockflow_password
 
     if len(proxy_user) > 0 and len(proxy_password) == 0:
         proxy_password = getpass.getpass(prompt = 'Proxy Password: ')
@@ -138,95 +142,114 @@ def main(checkpoint_dir, proxy_url, proxy_user, proxy_password, stockflow_url, s
     if len(stockflow_password) == 0:
         stockflow_password = getpass.getpass(prompt = 'StockFlow Password: ')
 
-    ckpt_file = checkpoint_dir + '\\'
+    def model_fn(features, labels, mode, params):
 
-    i = -1
-    for filename in glob.iglob(ckpt_file + "*.meta", recursive=True):
-        search = re.search('[^\d]+(\d+).meta$', filename, re.IGNORECASE)
-        if search:
-            i = max(i, int(search.group(1)))
+        if FLAGS.model_name == 'GoogLeNet':
 
-    if i >= 0:
-        print('Restoring parameters from %s' % (ckpt_file + str(i)))
-        ckpt_file = ckpt_file + str(i)
-    else:
-        if os.path.exists(ckpt_file + "initial.meta"):
-            print('Restoring parameters from %s' % (ckpt_file + 'initial'))
-            ckpt_file = ckpt_file + 'initial'
+            options = {
+                "is_train": False,
+                "fc_dropout_keep": 1.0,
+                "aux_fc_dropout_keep": 1,
+                "aux_exit_4a_weight": 0,
+                "aux_exit_4e_weight": 0,
+                "exit_weight": 1.0
+            }
+
+            model = GoogLeNet(0, features, labels, mode, options)
+
+        elif FLAGS.model_name == 'InceptionResNetV2':
+
+            options = {
+                "is_train": False,
+                "fc_dropout_keep": 1.0,
+                "residual_scale": 0.1
+            }
+
+            model = InceptionResNetV2(0, features, labels, mode, options)
+
         else:
-            raise Exception('checkpoint not found')
+            raise Exception('Unknown model name: ' + FLAGS.model_name)
 
-    tf.logging.set_verbosity(tf.logging.INFO)
+        predictions = {
+            FLAGS.buy_label: model.exit_argmax,
+            'probabilities': tf.nn.softmax(model.exit),
+            'logits': model.exit,
+        }
 
-    features = tf.placeholder(tf.float32, shape=[1, 1024, 1, 1])
-    labels = tf.constant([[0.0,0.0]], tf.float32)
-    dataset = tf.data.Dataset.from_tensor_slices((features, labels))
-    dataset = dataset.batch(1).prefetch(1).cache().repeat()
-    iter = dataset.make_initializable_iterator()
+        return tf.estimator.EstimatorSpec(
+            mode = mode,
+            predictions = predictions
+        )
 
-    print('Model')
-    model = GoogLeNet(1, iter, iter)
-    #model = InceptionResNetV2(1, iter, iter)
+    config = tf.estimator.RunConfig(
+        model_dir = checkpoint_dir
+    )
 
-    print('Saver')
-    saver = tf.train.Saver(tf.trainable_variables())
+    estimator = tf.estimator.Estimator(
+        model_fn = model_fn,
+        config = config,
+        params = {}
+    )
 
-    config = tf.ConfigProto()
-    config.gpu_options.allow_growth = True
-    config.gpu_options.per_process_gpu_memory_fraction = 0.9
-    with tf.Session(config=config) as sess:
+    stockflow = StockFlow(FLAGS.proxy_url, proxy_user, proxy_password, FLAGS.stockflow_url)
+    stockflow.login(stockflow_user, stockflow_password)
 
-        print('Init')
-        tf.global_variables_initializer().run()
+    known_checkpoint_file = ''
 
-        saver.restore(sess, ckpt_file)
+    while True:
+        try:
+            checkpoint_file = tf.train.latest_checkpoint(FLAGS.checkpoint_dir)
+            if checkpoint_file:
+                checkpoint_files = glob.glob(checkpoint_file + "*")
+                if checkpoint_file == known_checkpoint_file or len(checkpoint_files) > 2:
 
-        stockflow = StockFlow(proxy_url, proxy_user, proxy_password, stockflow_url)
-        stockflow.login(stockflow_user, stockflow_password)
+                    snapshot = stockflow.new_snapshot()
+                    chart = get_chart(snapshot)
+                    # plot(chart)
 
-        while True:
-            try:
-                snapshot = stockflow.new_snapshot()
-                chart = get_chart(snapshot)
-                # plot(chart)
+                    if 'PreviousDecision' not in snapshot or snapshot['PreviousDecision'] != 'buy':
 
-                if 'PreviousDecision' not in snapshot or snapshot['PreviousDecision'] != 'buy':
-                    sess.run([iter.initializer], feed_dict={ features: np.reshape(chart, [1,1024,1,1]) })
+                        if checkpoint_file != known_checkpoint_file:
+                            for file in glob.glob(checkpoint_dir + "/*"):
+                                os.unlink(file)
 
-                    #feed_dict = { model.is_train: False, model.fc_dropout_keep: 1.0, model.residual_scale: 0.1 } #InceptionResNetV2
-                    feed_dict = { model.is_train: False, model.fc_dropout_keep: 1.0, model.aux_fc_dropout_keep: 1, model.aux_exit_4a_weight: 0, model.aux_exit_4e_weight: 0, model.exit_weight: 1.0 } #GoogLeNet
+                            for file in checkpoint_files:
+                                shutil.copy(file, checkpoint_dir)
 
-                    pred = sess.run([model.pred], feed_dict = feed_dict)
-                    if pred[0] == 1:
-                        decision = 'buy'
+                            with open(checkpoint_dir + '/checkpoint', 'w') as text_file:
+                                text_file.write('model_checkpoint_path: \"%s\"' % os.path.basename(checkpoint_file))
+
+                            known_checkpoint_file = checkpoint_file
+
+                        def input_fn():
+                            features = tf.constant(np.reshape(chart, [1, 1024, 1, 1]), dtype=tf.float32, shape=[1, 1024, 1, 1])
+                            labels = tf.constant([[0.0, 0.0]], dtype=tf.float32)
+                            dataset = tf.data.Dataset.from_tensor_slices((features, labels))
+                            dataset = dataset.batch(1)
+                            return dataset
+
+                        predictions = list(estimator.predict(input_fn=input_fn))
+
+                        classes = [p[FLAGS.buy_label] for p in predictions]
+                        probabilities = [p['probabilities'] for p in predictions]
+
+                        if classes[0] == 1:
+                            decision = 'buy'
+                        else:
+                            decision = 'ignore'
+
+                        reason = ' (ignore=%d %s=%d)' % (round(100 * probabilities[0][0]), FLAGS.buy_label, round(100 * probabilities[0][1]))
+
                     else:
                         decision = 'ignore'
+                        reason = ' because it was already bought'
 
-                    reason = ''
-                else:
-                    decision = 'ignore'
-                    reason = ' because it was already bought'
+                    print('%s %s on %s (snapshot %d)%s' % (
+                        decision, snapshot['Instrument']['InstrumentName'], snapshot['Date'], snapshot['ID'], reason))
 
-                print('%s %s on %s (snapshot %d)%s' % (
-                    decision, snapshot['Instrument']['InstrumentName'], snapshot['Date'], snapshot['ID'], reason))
+                    stockflow.set_decision(snapshot['ID'], decision)
 
-                stockflow.set_decision(stockflow_url, snapshot['ID'], decision)
+        except Exception as e:
+            print("Unexpected error:", str(e))
 
-            except Exception as e:
-                print("Unexpected error:", str(e))
-
-            time.sleep(300)
-
-
-
-if __name__ == '__main__':
-    tf.logging.set_verbosity(tf.logging.INFO)
-    FLAGS, unparsed = parser.parse_known_args()
-
-    main(checkpoint_dir=FLAGS.checkpoint_dir,
-         proxy_url=FLAGS.proxy_url,
-         proxy_user=FLAGS.proxy_user,
-         proxy_password=FLAGS.proxy_password,
-         stockflow_url=FLAGS.stockflow_url,
-         stockflow_user=FLAGS.stockflow_user,
-         stockflow_password=FLAGS.stockflow_password)
+        time.sleep(FLAGS.sleep)

@@ -4,8 +4,8 @@ from NetworkBase import NetworkBase
 
 class InceptionResNetV2(NetworkBase):
 
-    def __init__(self, summary_level, features, labels, options):
-        super().__init__(summary_level, features, labels, options)
+    def __init__(self, summary_level, features, labels, mode, options):
+        super().__init__(summary_level, features, labels, mode, options)
 
         self.residual_scale = tf.constant(options["residual_scale"], dtype=tf.float32, shape=())
 
@@ -45,25 +45,30 @@ class InceptionResNetV2(NetworkBase):
 
         dropout = tf.nn.dropout(average_pooling, self.fc_dropout_keep, name='dropout')
 
-        exit = self.full_layer('exit', dropout, 2, False)
+        self.exit = self.full_layer('exit', dropout, 2, False)
 
-        with tf.variable_scope('loss'):
-            y_sg = tf.stop_gradient(self.y)
-            softmax_exit = tf.nn.softmax_cross_entropy_with_logits_v2(labels=y_sg, logits=exit)
-            self.loss = tf.reduce_mean(softmax_exit)
-            if self.summary_level >= 1:
-                tf.summary.scalar('value', self.loss)
+        if mode == tf.estimator.ModeKeys.TRAIN:
+            with tf.variable_scope('loss'):
+                y_sg = tf.stop_gradient(self.y)
+                softmax_exit = tf.nn.softmax_cross_entropy_with_logits_v2(labels=y_sg, logits=self.exit)
+                self.loss = tf.reduce_mean(softmax_exit)
+                if self.summary_level >= 1:
+                    tf.summary.scalar('value', self.loss)
 
-        with tf.variable_scope('accuracy'):
-            self.exit_argmax = tf.argmax(exit, 1)
-            self.y_argmax = tf.argmax(self.y, 1)
-            self.correct_prediction = tf.equal(self.exit_argmax, self.y_argmax)
-            self.accuracy = tf.reduce_mean(tf.cast(self.correct_prediction, tf.float32))
-            if self.summary_level >= 1:
-                tf.summary.scalar('value', self.accuracy)
+        if mode == tf.estimator.ModeKeys.EVAL:
+            with tf.variable_scope('accuracy'):
+                self.exit_argmax = tf.argmax(self.exit, 1)
+                self.y_argmax = tf.argmax(self.y, 1)
+                self.correct_prediction = tf.equal(self.exit_argmax, self.y_argmax)
+                self.accuracy = tf.reduce_mean(tf.cast(self.correct_prediction, tf.float32))
+                if self.summary_level >= 1:
+                    tf.summary.scalar('value', self.accuracy)
 
-        with tf.name_scope('pred'):
-            self.pred = tf.argmax(exit, 1)
+        if mode == tf.estimator.ModeKeys.PREDICT:
+            with tf.variable_scope('predict'):
+                self.exit_argmax = tf.argmax(self.exit, 1)
+                if self.summary_level >= 1:
+                    tf.summary.scalar('value', self.exit_argmax)
 
     def resnet_sum(self, x, residual):
         residual_scaled = tf.divide(residual, self.residual_scale, 'scale')

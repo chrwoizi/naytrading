@@ -15,153 +15,34 @@ from tensorflow.python.estimator.estimator import _get_default_warm_start_settin
 
 #os.environ["CUDA_VISIBLE_DEVICES"]="-1"
 
+from Data import Data
 from GoogLeNet import GoogLeNet
 from InceptionResNetV2 import InceptionResNetV2
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument(
-    '--model_dir', type = str, default = 'model',
-    help = 'Base directory for the model.')
-
-parser.add_argument(
-    '--load', type = bool, default = False, help = 'Whether to load an existing model.')
-
-parser.add_argument(
-    '--epochs', type = int, default = 1000, help = 'Number of cycles over the whole data.')
-
-parser.add_argument(
-    '--start_epoch', type = int, default = 0, help = 'Start index in epochs.')
-
-parser.add_argument(
-    '--batch_size', type = int, default = 48, help = 'Number of examples per batch.')
-
-parser.add_argument(
-    '--test_file', type = str, default = 'buying_test_aug_norm.csv',
-    help = 'Path to the test data.')
-
-parser.add_argument(
-    '--train_file', type = str, default = 'buying_train_aug_norm.csv',
-    help = 'Path to the train data.')
-
-parser.add_argument(
-    '--first_day', type = int, default = 0,
-    help = 'The first day column name e.g. -1814.')
-
-parser.add_argument(
-    '--last_day', type = int, default = 1023,
-    help = 'The last day column name e.g. 0.')
-
-parser.add_argument(
-    '--buy_label', type = str, default = 'buy',
-    help = 'The label used if the user decided on an action for this dataset, e.g. buy')
-
-parser.add_argument(
-    '--use_tpu', type = bool, default = True,
-    help = 'Whether to use the TPU for training')
-
-parser.add_argument(
-    '--model_name', type = str, default = 'GoogLeNet',
-    help = 'The model name, e.g. GoogLeNet')
-
-parser.add_argument(
-    '--save_summary_steps', type = int, default = 100,
-    help = 'The steps between summary saves')
-
-parser.add_argument(
-    '--save_checkpoints_steps', type = int, default = 100,
-    help = 'The steps between checkpoint saves')
-
-parser.add_argument(
-    '--keep_checkpoint_max', type = int, default = 10,
-    help = 'The number of checkpoints to keep')
-
-parser.add_argument(
-    '--keep_checkpoint_every_n_hours', type = int, default = 1,
-    help = 'The hours between archiving a snapshot')
-
-parser.add_argument(
-    '--log_step_count_steps', type = int, default = 100,
-    help = 'The steps between logging')
-
-parser.add_argument(
-    '--adam_reset', type = bool, default = False,
-    help = 'Whether the optimizer parameters should be reset')
-
-parser.add_argument(
-    '--adam_learning_rate', type = float, default = 0.001,
-    help = 'The learning rate')
-
-parser.add_argument(
-    '--adam_epsilon', type = float, default = 0.5,
-    help = 'The AdamOptimizer epsilon')
-
-parser.add_argument(
-    '--gln_aux_exit_4a_weight', type = float, default = 0.3,
-    help = 'The GoogLeNet auxiliary exit weight at 4a')
-
-parser.add_argument(
-    '--gln_aux_exit_4e_weight', type = float, default = 0.3,
-    help = 'The GoogLeNet auxiliary exit weight at 4e')
-
-
-class Data(object):
-    def __init__(self, file, batch_size, buy_label, first_day, last_day):
-        self.batch_size = batch_size
-
-        column_defaults = [['0'], ['0'], ['0'], ['ignore'], ['19700101']] + [[0.00] for i in range(first_day, last_day + 1)]
-
-        with tf.name_scope('data'):
-
-            assert tf.gfile.Exists(file), ('%s not found.' % file)
-
-            file_count = self.__get_line_count(file)
-
-            if file_count < self.batch_size:
-                print('WARNING: batch_size is greater than available datasets. Reducing batch size to %d' % file_count)
-                self.batch_size = file_count
-
-            self.batches = int(file_count / self.batch_size)
-
-            self.count = self.batches * self.batch_size
-
-            def parse_csv(value):
-                columns = tf.decode_csv(value, record_defaults = column_defaults, field_delim = ";")
-
-                features = columns[5:len(columns)]
-                labels = columns[3]
-
-                features = tf.stack(features)
-                features = tf.reshape(features, [features.get_shape()[0], 1, 1])
-
-                labels = tf.cast(tf.equal(labels, buy_label), dtype = tf.int32)
-                labels = tf.one_hot(indices = labels, depth = 2, on_value = 1.0, off_value = 0.0, axis = -1)
-
-                return features, labels
-
-            print('Preparing data: TextLineDataset')
-            dataset = tf.data.TextLineDataset(file).skip(1)
-
-            print('Preparing data: map')
-            dataset = dataset.map(parse_csv, num_parallel_calls = 5)
-
-            print('Preparing data: batch/prefetch/cache')
-            self.dataset = dataset.batch(batch_size).prefetch(self.count).cache()
-
-    def __get_line_count(self, file):
-
-        count = 0
-        with open(file, 'r', encoding = 'utf8') as f:
-            i = 0
-            while True:
-                line = f.readline()
-                if not line:
-                    break
-                if i > 0 and len(line) > 0:
-                    count = count + 1
-                i = i + 1
-
-        return count
+parser.add_argument('--model_dir', type = str, default = 'model', help = 'Base directory for the model.')
+parser.add_argument('--load', type = bool, default = False, help = 'Whether to load an existing model.')
+parser.add_argument('--epochs', type = int, default = 1000, help = 'Number of cycles over the whole data.')
+parser.add_argument('--start_epoch', type = int, default = 0, help = 'Start index in epochs.')
+parser.add_argument('--batch_size', type = int, default = 48, help = 'Number of examples per batch.')
+parser.add_argument('--test_file', type = str, default = 'buying_test_aug_norm.csv', help = 'Path to the test data.')
+parser.add_argument('--train_file', type = str, default = 'buying_train_aug_norm.csv', help = 'Path to the train data.')
+parser.add_argument('--first_day', type = int, default = 0, help = 'The first day column name e.g. -1814.')
+parser.add_argument('--last_day', type = int, default = 1023, help = 'The last day column name e.g. 0.')
+parser.add_argument('--buy_label', type = str, default = 'buy', help = 'The label used if the user decided on an action for this dataset, e.g. buy')
+parser.add_argument('--use_tpu', type = bool, default = False, help = 'Whether to use the TPU for training')
+parser.add_argument('--model_name', type = str, default = 'GoogLeNet', help = 'The model name, e.g. GoogLeNet')
+parser.add_argument('--save_summary_steps', type = int, default = 100, help = 'The steps between summary saves')
+parser.add_argument('--save_checkpoints_steps', type = int, default = 100, help = 'The steps between checkpoint saves')
+parser.add_argument('--keep_checkpoint_max', type = int, default = 10, help = 'The number of checkpoints to keep')
+parser.add_argument('--keep_checkpoint_every_n_hours', type = int, default = 1, help = 'The hours between archiving a snapshot')
+parser.add_argument('--log_step_count_steps', type = int, default = 100, help = 'The steps between logging')
+parser.add_argument('--adam_reset', type = bool, default = False, help = 'Whether the optimizer parameters should be reset')
+parser.add_argument('--adam_learning_rate', type = float, default = 0.001, help = 'The learning rate')
+parser.add_argument('--adam_epsilon', type = float, default = 0.5, help = 'The AdamOptimizer epsilon')
+parser.add_argument('--gln_aux_exit_4a_weight', type = float, default = 0.3, help = 'The GoogLeNet auxiliary exit weight at 4a')
+parser.add_argument('--gln_aux_exit_4e_weight', type = float, default = 0.3, help = 'The GoogLeNet auxiliary exit weight at 4e')
 
 
 if __name__ == '__main__':
@@ -184,7 +65,7 @@ if __name__ == '__main__':
         if not os.path.exists(FLAGS.model_dir):
             os.makedirs(FLAGS.model_dir)
 
-    ckpt_file = FLAGS.model_dir + '\\checkpoint\\'
+    ckpt_file = FLAGS.model_dir + '/checkpoint'
 
     if not os.path.exists(ckpt_file):
         os.makedirs(ckpt_file)
@@ -212,26 +93,27 @@ if __name__ == '__main__':
 
         flags = [a for a in dir(FLAGS) if not a.startswith('_')]
 
-        with open(FLAGS.model_dir + '\\resume.bat', 'w') as text_file:
+        with open(FLAGS.model_dir + '/resume.bat', 'w') as text_file:
             arg_str = ' '.join(['--%s=%s' % (flag, str(get_flag(flag))) for flag in flags])
             text_file.write('python main.py %s\npause' % arg_str)
 
-        with open(FLAGS.model_dir + '\\resume_infinitely.bat', 'w') as text_file:
+        with open(FLAGS.model_dir + '/resume_infinitely.bat', 'w') as text_file:
             arg_str = ' '.join(['--%s=%s' % (flag, str(get_flag_infinity(flag))) for flag in flags])
             text_file.write('python main.py %s\npause' % arg_str)
 
     if not FLAGS.load:
-        copyfile(os.path.basename(__file__), FLAGS.model_dir + '\\main.py')
-        copyfile('NetworkBase.py', FLAGS.model_dir + '\\NetworkBase.py')
-        copyfile('GoogLeNet.py', FLAGS.model_dir + '\\GoogLeNet.py')
-        copyfile('InceptionResNetV2.py', FLAGS.model_dir + '\\InceptionResNetV2.py')
-        copyfile(test_file, FLAGS.model_dir + '\\test.csv')
-        copyfile(train_file, FLAGS.model_dir + '\\train.csv')
+        copyfile(os.path.basename(__file__), FLAGS.model_dir + '/main.py')
+        copyfile('Data.py', FLAGS.model_dir + '/Data.py')
+        copyfile('NetworkBase.py', FLAGS.model_dir + '/NetworkBase.py')
+        copyfile('GoogLeNet.py', FLAGS.model_dir + '/GoogLeNet.py')
+        copyfile('InceptionResNetV2.py', FLAGS.model_dir + '/InceptionResNetV2.py')
+        copyfile(test_file, FLAGS.model_dir + '/test.csv')
+        copyfile(train_file, FLAGS.model_dir + '/train.csv')
         write_resume_bat(0)
-        with open(FLAGS.model_dir + '\\tensorboard.bat', 'w') as text_file:
+        with open(FLAGS.model_dir + '/tensorboard.bat', 'w') as text_file:
             text_file.write('tensorboard.exe --logdir=.')
-        test_file = FLAGS.model_dir + '\\test.csv'
-        train_file = FLAGS.model_dir + '\\train.csv'
+        test_file = FLAGS.model_dir + '/test.csv'
+        train_file = FLAGS.model_dir + '/train.csv'
 
     def input_fn(data_file, params):
 
@@ -274,7 +156,7 @@ if __name__ == '__main__':
                     "exit_weight": 1.0
                 }
 
-            model = GoogLeNet(1, features, labels, options)
+            model = GoogLeNet(1, features, labels, mode, options)
 
         elif FLAGS.model_name == 'InceptionResNetV2':
 
@@ -291,53 +173,65 @@ if __name__ == '__main__':
                     "residual_scale": 0.1
                 }
 
-            model = InceptionResNetV2(1, features, labels, options)
+            model = InceptionResNetV2(1, features, labels, mode, options)
 
         else:
             raise Exception('Unknown model name: ' + FLAGS.model_name)
 
-        with tf.name_scope('adam'):
-            update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-            with tf.control_dependencies(update_ops):
-                optimizer = tf.train.AdamOptimizer(learning_rate = FLAGS.adam_learning_rate, epsilon = FLAGS.adam_epsilon)
+        if mode == tf.estimator.ModeKeys.TRAIN:
+            with tf.name_scope('adam'):
+                update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+                with tf.control_dependencies(update_ops):
 
-        predictions = {
-            FLAGS.buy_label: model.pred
-        }
+                    optimizer = tf.train.AdamOptimizer(learning_rate=FLAGS.adam_learning_rate, epsilon=FLAGS.adam_epsilon)
+
+                    if FLAGS.use_tpu:
+                        if platform.system() != 'Windows':
+                            print('using CrossShardOptimizer')
+                            optimizer = tpu_optimizer.CrossShardOptimizer(optimizer)
+                        else:
+                            print('skipping CrossShardOptimizer')
+
+                    train_op = optimizer.minimize(model.loss, tf.train.get_global_step())
+
+        else:
+            train_op = None
+
+        def metric_fn(y_argmax, exit_argmax):
+            return {
+                'accuracy': tf.metrics.accuracy(exit_argmax, y_argmax),
+                'precision': tf.metrics.precision(exit_argmax, y_argmax)
+            }
 
         if FLAGS.use_tpu:
 
-            if platform.system() != 'Windows':
-                print('using CrossShardOptimizer')
-                optimizer = tpu_optimizer.CrossShardOptimizer(optimizer)
-            else:
-                print('skipping CrossShardOptimizer')
-
-            def metric_fn(y_argmax, exit_argmax):
-                return {
-                  'accuracy': tf.metrics.accuracy(exit_argmax, y_argmax),
-                  'precision': tf.metrics.precision(exit_argmax, y_argmax)
-                }
-            return tpu_estimator.TPUEstimatorSpec(
-                mode = mode,
-                predictions = predictions,
-                loss = model.loss,
-                train_op = optimizer.minimize(model.loss, tf.train.get_global_step()),
+            if mode == tf.estimator.ModeKeys.EVAL:
                 eval_metrics = (metric_fn, {
                     'y_argmax': model.y_argmax,
                     'exit_argmax': model.exit_argmax,
                 })
+            else:
+                eval_metrics = None
+
+            return tpu_estimator.TPUEstimatorSpec(
+                mode = mode,
+                loss = model.loss,
+                train_op = train_op,
+                eval_metrics = eval_metrics
             )
+
         else:
+
+            if mode == tf.estimator.ModeKeys.EVAL:
+                eval_metric_ops = metric_fn(model.y_argmax, model.exit_argmax)
+            else:
+                eval_metric_ops = None
+
             return tf.estimator.EstimatorSpec(
                 mode = mode,
-                predictions = predictions,
                 loss = model.loss,
-                train_op = optimizer.minimize(model.loss, tf.train.get_global_step()),
-                eval_metric_ops = {
-                    'accuracy': tf.metrics.accuracy(model.exit_argmax, model.y_argmax),
-                    'prevision': tf.metrics.precision(model.exit_argmax, model.y_argmax)
-                }
+                train_op = train_op,
+                eval_metric_ops = eval_metric_ops
             )
 
     warm_start_from = ckpt_file if FLAGS.load else None
@@ -369,7 +263,7 @@ if __name__ == '__main__':
             model_fn = model_fn,
             config = config,
             params = {},
-            use_tpu = False, #FLAGS.use_tpu,
+            use_tpu = FLAGS.use_tpu,
             train_batch_size = FLAGS.batch_size,
             eval_batch_size = FLAGS.batch_size,
             predict_batch_size = FLAGS.batch_size)
