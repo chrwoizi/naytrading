@@ -4,8 +4,8 @@ from NetworkBase import NetworkBase
 
 class GoogLeNet(NetworkBase):
 
-    def __init__(self, summary_level, features, labels, options):
-        super().__init__(summary_level, features, labels, options)
+    def __init__(self, summary_level, features, labels, mode, options):
+        super().__init__(summary_level, features, labels, mode, options)
 
         # https://hacktilldawn.com/2016/09/25/inception-modules-explained-and-implemented/
         # https://www.cc.gatech.edu/~hic/CS7616/Papers/Szegedy-et-al-2014.pdf
@@ -47,76 +47,78 @@ class GoogLeNet(NetworkBase):
         inception5b = self.__inception_module('inception5b', inception5a, 384, 192, 384, 48, 128, 128)
         inception5p = self.avg_pool_layer('inception5_pool', inception5b, 7, 1)
 
-        exit = self.exit_layer('exit', inception5p, self.fc_dropout_keep)
+        self.exit = self.exit_layer('exit', inception5p, self.fc_dropout_keep)
 
-        with tf.variable_scope('loss'):
+        if mode == tf.estimator.ModeKeys.TRAIN:
+            with tf.variable_scope('loss'):
 
-            y_sg = tf.stop_gradient(self.y)
+                y_sg = tf.stop_gradient(self.y)
 
-            with tf.variable_scope('inception4a_exit'):
-                softmax_inception4a_exit = tf.nn.softmax_cross_entropy_with_logits_v2(labels=y_sg,
-                                                                                      logits=inception4a_exit)
-                loss_inception4a_exit = tf.reduce_mean(softmax_inception4a_exit)
+                with tf.variable_scope('inception4a_exit'):
+                    softmax_inception4a_exit = tf.nn.softmax_cross_entropy_with_logits_v2(labels=y_sg,
+                                                                                          logits=inception4a_exit)
+                    loss_inception4a_exit = tf.reduce_mean(softmax_inception4a_exit)
+                    if self.summary_level >= 1:
+                        tf.summary.scalar('value', loss_inception4a_exit)
+
+                with tf.variable_scope('inception4e_exit'):
+                    softmax_inception4a_exit = tf.nn.softmax_cross_entropy_with_logits_v2(labels=y_sg,
+                                                                                          logits=inception4e_exit)
+                    loss_inception4e_exit = tf.reduce_mean(softmax_inception4a_exit)
+                    if self.summary_level >= 1:
+                        tf.summary.scalar('value', loss_inception4e_exit)
+
+                with tf.variable_scope('exit'):
+                    softmax_exit = tf.nn.softmax_cross_entropy_with_logits_v2(labels=y_sg, logits=self.exit)
+                    loss_exit = tf.reduce_mean(softmax_exit)
+                    if self.summary_level >= 1:
+                        tf.summary.scalar('value', loss_exit)
+
+                with tf.variable_scope('combined'):
+                    self.loss = tf.add(tf.add(tf.scalar_mul(self.aux_exit_4a_weight, loss_inception4a_exit),
+                                              tf.scalar_mul(self.aux_exit_4e_weight, loss_inception4e_exit)),
+                                       tf.scalar_mul(self.exit_weight, loss_exit))
+                    if self.summary_level >= 1:
+                        tf.summary.scalar('value', self.loss)
+
+        if mode == tf.estimator.ModeKeys.EVAL:
+            with tf.variable_scope('accuracy'):
+
+                with tf.variable_scope('inception4a_exit'):
+                    correct_prediction_inception4a_exit = tf.equal(tf.argmax(inception4a_exit, 1), tf.argmax(self.y, 1))
+                    accuracy_inception4a_exit = tf.reduce_mean(tf.cast(correct_prediction_inception4a_exit, tf.float32))
+                    if self.summary_level >= 1:
+                        tf.summary.scalar('value', accuracy_inception4a_exit)
+
+                with tf.variable_scope('inception4e_exit'):
+                    correct_prediction_inception4e_exit = tf.equal(tf.argmax(inception4e_exit, 1), tf.argmax(self.y, 1))
+                    accuracy_inception4e_exit = tf.reduce_mean(tf.cast(correct_prediction_inception4e_exit, tf.float32))
+                    if self.summary_level >= 1:
+                        tf.summary.scalar('value', accuracy_inception4e_exit)
+
+                with tf.variable_scope('exit'):
+                    self.exit_argmax = tf.argmax(self.exit, 1)
+                    self.y_argmax = tf.argmax(self.y, 1)
+                    self.correct_prediction = tf.equal(self.exit_argmax, self.y_argmax)
+                    self.accuracy = tf.reduce_mean(tf.cast(self.correct_prediction, tf.float32))
+                    if self.summary_level >= 1:
+                        tf.summary.scalar('value', self.accuracy)
+
+                with tf.variable_scope('combined'):
+                    accuracy_combined = tf.divide(
+                        tf.add(tf.add(tf.scalar_mul(self.aux_exit_4a_weight, accuracy_inception4a_exit),
+                                      tf.scalar_mul(self.aux_exit_4e_weight, accuracy_inception4e_exit)),
+                               tf.scalar_mul(self.exit_weight, self.accuracy)),
+                        tf.add(tf.add(self.aux_exit_4a_weight, self.aux_exit_4e_weight), self.exit_weight))
+                    if self.summary_level >= 1:
+                        tf.summary.scalar('value', accuracy_combined)
+
+        if mode == tf.estimator.ModeKeys.PREDICT:
+            with tf.variable_scope('predict'):
+
+                self.exit_argmax = tf.argmax(self.exit, 1)
                 if self.summary_level >= 1:
-                    tf.summary.scalar('value', loss_inception4a_exit)
-
-            with tf.variable_scope('inception4e_exit'):
-                softmax_inception4a_exit = tf.nn.softmax_cross_entropy_with_logits_v2(labels=y_sg,
-                                                                                      logits=inception4e_exit)
-                loss_inception4e_exit = tf.reduce_mean(softmax_inception4a_exit)
-                if self.summary_level >= 1:
-                    tf.summary.scalar('value', loss_inception4e_exit)
-
-            with tf.variable_scope('exit'):
-                softmax_exit = tf.nn.softmax_cross_entropy_with_logits_v2(labels=y_sg, logits=exit)
-                loss_exit = tf.reduce_mean(softmax_exit)
-                if self.summary_level >= 1:
-                    tf.summary.scalar('value', loss_exit)
-
-            with tf.variable_scope('combined'):
-                self.loss = tf.add(tf.add(tf.scalar_mul(self.aux_exit_4a_weight, loss_inception4a_exit),
-                                          tf.scalar_mul(self.aux_exit_4e_weight, loss_inception4e_exit)),
-                                   tf.scalar_mul(self.exit_weight, loss_exit))
-                if self.summary_level >= 1:
-                    tf.summary.scalar('value', self.loss)
-
-        with tf.variable_scope('accuracy'):
-
-            with tf.variable_scope('inception4a_exit'):
-                correct_prediction_inception4a_exit = tf.equal(tf.argmax(inception4a_exit, 1), tf.argmax(self.y, 1))
-                accuracy_inception4a_exit = tf.reduce_mean(tf.cast(correct_prediction_inception4a_exit, tf.float32))
-                if self.summary_level >= 1:
-                    tf.summary.scalar('value', accuracy_inception4a_exit)
-
-            with tf.variable_scope('inception4e_exit'):
-                correct_prediction_inception4e_exit = tf.equal(tf.argmax(inception4e_exit, 1), tf.argmax(self.y, 1))
-                accuracy_inception4e_exit = tf.reduce_mean(tf.cast(correct_prediction_inception4e_exit, tf.float32))
-                if self.summary_level >= 1:
-                    tf.summary.scalar('value', accuracy_inception4e_exit)
-
-            with tf.variable_scope('exit'):
-                self.exit_argmax = tf.argmax(exit, 1)
-                self.y_argmax = tf.argmax(self.y, 1)
-                self.correct_prediction = tf.equal(self.exit_argmax, self.y_argmax)
-                self.accuracy = tf.reduce_mean(tf.cast(self.correct_prediction, tf.float32))
-                if self.summary_level >= 1:
-                    tf.summary.scalar('value', self.accuracy)
-
-            with tf.variable_scope('combined'):
-                accuracy_combined = tf.divide(
-                    tf.add(tf.add(tf.scalar_mul(self.aux_exit_4a_weight, accuracy_inception4a_exit),
-                                  tf.scalar_mul(self.aux_exit_4e_weight, accuracy_inception4e_exit)),
-                           tf.scalar_mul(self.exit_weight, self.accuracy)),
-                    tf.add(tf.add(self.aux_exit_4a_weight, self.aux_exit_4e_weight), self.exit_weight))
-                if self.summary_level >= 1:
-                    tf.summary.scalar('value', accuracy_combined)
-
-        with tf.name_scope('pred_combined'):
-            logits = tf.add(tf.add(tf.scalar_mul(self.aux_exit_4a_weight, inception4a_exit),
-                                   tf.scalar_mul(self.aux_exit_4e_weight, inception4e_exit)),
-                            tf.scalar_mul(self.exit_weight, exit))
-
-            self.pred = tf.argmax(logits, 1)
+                    tf.summary.scalar('value', self.exit_argmax)
 
     def __inception_module(self, name, x, out_1x1, reduce3, out_3x1, reduce5, out_5x1, out_pool):
         with tf.variable_scope(name):

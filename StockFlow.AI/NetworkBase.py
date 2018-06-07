@@ -6,12 +6,13 @@ from tensorflow.contrib.layers import batch_norm
 
 class NetworkBase:
 
-    def __init__(self, summary_level, features, labels, options):
+    def __init__(self, summary_level, features, labels, mode, options):
         self.summary_level = summary_level
         self.fc_dropout_keep = tf.constant(options["fc_dropout_keep"], dtype=tf.float32)
         self.is_train = tf.constant(options["is_train"], dtype=tf.bool)
         self.x = features
         self.y = labels
+        self.mode = mode
 
         # days = tf.shape(x)[1]
         # o = tf.one_hot(indices=tf.cast(tf.multiply(tf.reshape(x,[tf.shape(x)[0],days]),100), tf.int32), depth=100, on_value=1.0, off_value=0.0, axis=-1)

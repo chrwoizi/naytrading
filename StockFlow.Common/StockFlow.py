@@ -15,7 +15,7 @@ class StockFlow:
         else:
             self.proxies = None
 
-        self.stockflow_url = stockflow_url;
+        self.stockflow_url = stockflow_url
 
         self.session = requests.Session()
 
