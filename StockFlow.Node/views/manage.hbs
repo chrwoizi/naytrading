@@ -16,7 +16,7 @@
                     </tr>
                     <tr>
                         <th>Datasets: </th>
-                        <td>{{buyingTrain.lines}}</td>
+                        <td>{{buyingTrain.lines}} ({{buyingTrain.dataRatioPercent}}%)</td>
                     </tr>
                     <tr>
                         <th>Days: </th>
@@ -27,11 +27,7 @@
                         <td>{{buyingTrain.max_missing_days}}</td>
                     </tr>
                     <tr>
-                        <th>Datasets used for validation: </th>
-                        <td>{{buyingTrain.testDataRatioPercent}}%</td>
-                    </tr>
-                    <tr>
-                        <th>Keep validation data: </th>
+                        <th>Keep evaluation datasets: </th>
                         <td>{{buyingTrain.preserve_test_ids}}</td>
                     </tr>
                     <tr>
@@ -52,7 +48,7 @@
                     </tr>
                     <tr>
                         <th>Datasets: </th>
-                        <td>{{buyingTest.lines}}</td>
+                        <td>{{buyingTest.lines}} ({{buyingTest.dataRatioPercent}}%)</td>
                     </tr>
                     <tr>
                         <th>Days: </th>
@@ -63,11 +59,7 @@
                         <td>{{buyingTest.max_missing_days}}</td>
                     </tr>
                     <tr>
-                        <th>Datasets used for validation: </th>
-                        <td>{{buyingTest.testDataRatioPercent}}%</td>
-                    </tr>
-                    <tr>
-                        <th>Keep validation data: </th>
+                        <th>Keep evaluation datasets: </th>
                         <td>{{buyingTest.preserve_test_ids}}</td>
                     </tr>
                     <tr>
@@ -88,7 +80,7 @@
                     </tr>
                     <tr>
                         <th>Datasets: </th>
-                        <td>{{sellingTrain.lines}}</td>
+                        <td>{{sellingTrain.lines}} ({{sellingTrain.dataRatioPercent}}%)</td>
                     </tr>
                     <tr>
                         <th>Days: </th>
@@ -99,11 +91,7 @@
                         <td>{{sellingTrain.max_missing_days}}</td>
                     </tr>
                     <tr>
-                        <th>Datasets used for validation: </th>
-                        <td>{{sellingTrain.testDataRatioPercent}}%</td>
-                    </tr>
-                    <tr>
-                        <th>Keep validation data: </th>
+                        <th>Keep evaluation datasets: </th>
                         <td>{{sellingTrain.preserve_test_ids}}</td>
                     </tr>
                     <tr>
@@ -124,7 +112,7 @@
                     </tr>
                     <tr>
                         <th>Datasets: </th>
-                        <td>{{sellingTest.lines}}</td>
+                        <td>{{sellingTest.lines}} ({{sellingTest.dataRatioPercent}}%)</td>
                     </tr>
                     <tr>
                         <th>Days: </th>
@@ -135,11 +123,7 @@
                         <td>{{sellingTest.max_missing_days}}</td>
                     </tr>
                     <tr>
-                        <th>Datasets used for validation: </th>
-                        <td>{{sellingTest.testDataRatioPercent}}%</td>
-                    </tr>
-                    <tr>
-                        <th>Keep validation data: </th>
+                        <th>Keep evaluation datasets: </th>
                         <td>{{sellingTest.preserve_test_ids}}</td>
                     </tr>
                     <tr>
