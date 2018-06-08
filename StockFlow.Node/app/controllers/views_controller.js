@@ -39,8 +39,12 @@ function formatTime(obj) {
     obj.timeStr = dateFormat(date, 'dd.mm.yyyy HH:mm:ss');
 }
 
+function formatTrainDataRatio(obj) {
+    obj.dataRatioPercent = ((1 - obj.test_data_ratio) * 100).toFixed(2);
+}
+
 function formatTestDataRatio(obj) {
-    obj.testDataRatioPercent = (obj.test_data_ratio * 100).toFixed(2);
+    obj.dataRatioPercent = (obj.test_data_ratio * 100).toFixed(2);
 }
 
 exports.manage = function (req, res) {
@@ -51,7 +55,7 @@ exports.manage = function (req, res) {
     if (fs.existsSync(filePath) && fs.existsSync(filePath + ".meta")) {
         args.buyingTrain = JSON.parse(fs.readFileSync(filePath + ".meta", 'utf8'));
         formatTime(args.buyingTrain);
-        formatTestDataRatio(args.buyingTrain);
+        formatTrainDataRatio(args.buyingTrain);
     }
     else {
         args.buyingTrain = null;
@@ -71,7 +75,7 @@ exports.manage = function (req, res) {
     if (fs.existsSync(filePath) && fs.existsSync(filePath + ".meta")) {
         args.sellingTrain = JSON.parse(fs.readFileSync(filePath + ".meta", 'utf8'));
         formatTime(args.sellingTrain);
-        formatTestDataRatio(args.sellingTrain);
+        formatTrainDataRatio(args.sellingTrain);
     }
     else {
         args.sellingTrain = null;
