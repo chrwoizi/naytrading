@@ -2,7 +2,7 @@ import tensorflow as tf
 
 
 class Data(object):
-    def __init__(self, file, batch_size, buy_label, first_day, last_day):
+    def __init__(self, file, batch_size, buy_label, first_day, last_day, repeat):
         self.batch_size = batch_size
 
         column_defaults = [['0'], ['0'], ['0'], ['ignore'], ['19700101']] + [[0.00] for i in range(first_day, last_day + 1)]
@@ -42,7 +42,7 @@ class Data(object):
             dataset = dataset.map(parse_csv, num_parallel_calls = 5)
 
             print('Preparing data: batch/prefetch/cache')
-            self.dataset = dataset.batch(batch_size).prefetch(self.count).cache()
+            self.dataset = dataset.batch(batch_size).prefetch(self.count).cache().repeat(repeat)
 
     def __get_line_count(self, file):
 
