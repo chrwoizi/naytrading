@@ -23,8 +23,9 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument('--model_dir', type = str, default = 'model', help = 'Base directory for the model.')
 parser.add_argument('--load', type = bool, default = False, help = 'Whether to load an existing model.')
-parser.add_argument('--epochs', type = int, default = 1000, help = 'Number of cycles over the whole data.')
+parser.add_argument('--epochs', type = int, default = 1000, help = 'Number of training and evaluation on all datasets.')
 parser.add_argument('--start_epoch', type = int, default = 0, help = 'Start index in epochs.')
+parser.add_argument('--repeat_train_data', type = int, default = 10, help = 'Number of training data epochs between evaluations.')
 parser.add_argument('--batch_size', type = int, default = 48, help = 'Number of examples per batch.')
 parser.add_argument('--test_file', type = str, default = 'buying_test_aug_norm.csv', help = 'Path to the test data.')
 parser.add_argument('--train_file', type = str, default = 'buying_train_aug_norm.csv', help = 'Path to the train data.')
@@ -38,7 +39,6 @@ parser.add_argument('--save_checkpoints_steps', type = int, default = 1000, help
 parser.add_argument('--keep_checkpoint_max', type = int, default = 10, help = 'The number of checkpoints to keep')
 parser.add_argument('--keep_checkpoint_every_n_hours', type = int, default = 1, help = 'The hours between archiving a snapshot')
 parser.add_argument('--log_step_count_steps', type = int, default = 100, help = 'The steps between logging')
-parser.add_argument('--adam_reset', type = bool, default = False, help = 'Whether the optimizer parameters should be reset')
 parser.add_argument('--adam_learning_rate', type = float, default = 0.001, help = 'The learning rate')
 parser.add_argument('--adam_epsilon', type = float, default = 0.5, help = 'The AdamOptimizer epsilon')
 parser.add_argument('--gln_aux_exit_4a_weight', type = float, default = 0.3, help = 'The GoogLeNet auxiliary exit weight at 4a')
@@ -93,6 +93,8 @@ if __name__ == '__main__':
 
         flags = [a for a in dir(FLAGS) if not a.startswith('_') and ((not isinstance(getattr(FLAGS, a), bool)) or getattr(FLAGS, a))]
 
+        flags += ['load']
+
         with open(FLAGS.model_dir + '/resume.bat', 'w') as text_file:
             arg_str = ' '.join(['--%s=%s' % (flag, str(get_flag(flag))) for flag in flags])
             text_file.write('python main.py %s\npause' % arg_str)
@@ -115,21 +117,21 @@ if __name__ == '__main__':
         test_file = FLAGS.model_dir + '/test.csv'
         train_file = FLAGS.model_dir + '/train.csv'
 
-    def input_fn(data_file, params):
+    def input_fn(data_file, repeat, params):
 
         batch_size = FLAGS.batch_size
         if params:
             batch_size = params['batch_size']
 
         print('Loading data from %s' % data_file)
-        data = Data(data_file, batch_size, FLAGS.buy_label, FLAGS.first_day, FLAGS.last_day)
+        data = Data(data_file, batch_size, FLAGS.buy_label, FLAGS.first_day, FLAGS.last_day, repeat)
         return data.dataset
 
     def train_input_fn(params = None):
-        return input_fn(train_file, params)
+        return input_fn(train_file, FLAGS.repeat_train_data, params)
 
     def test_input_fn(params = None):
-        return input_fn(test_file, params)
+        return input_fn(test_file, 1, params)
 
     def model_fn(features, labels, mode, params):
 
@@ -267,7 +269,7 @@ if __name__ == '__main__':
             train_batch_size = FLAGS.batch_size,
             eval_batch_size = FLAGS.batch_size,
             predict_batch_size = FLAGS.batch_size)
-        estimator._warm_start_settings = _get_default_warm_start_settings(warm_start_from)
+        #estimator._warm_start_settings = _get_default_warm_start_settings(warm_start_from)
 
     else:
         config = tf.estimator.RunConfig(
@@ -282,7 +284,7 @@ if __name__ == '__main__':
 
         estimator = tf.estimator.Estimator(
             model_fn = model_fn,
-            warm_start_from = warm_start_from,
+            #warm_start_from = warm_start_from,
             config = config,
             params = {}
         )
