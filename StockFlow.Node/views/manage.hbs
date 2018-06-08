@@ -36,10 +36,13 @@
                     </tr>
                 </tbody>
             </table>
-            <br/>
+            {{else}}
+            <button class="btn btn-secondary" disabled>Download Buy-Training</button>
+            <div>Not available yet.</div>
             {{/if}}
+            <br/>
             {{#if buyingTest}}
-            <a href="/api/export/user/test/buying/{{buyingTest.time}}" class="btn btn-secondary" role="button">Download Buy-Validation</a>
+            <a href="/api/export/user/test/buying/{{buyingTest.time}}" class="btn btn-secondary" role="button">Download Buy-Evaluation</a>
             <table>
                 <tbody>
                     <tr>
@@ -68,8 +71,11 @@
                     </tr>
                 </tbody>
             </table>
-            <br/>
+            {{else}}
+            <button class="btn btn-secondary" disabled>Download Buy-Evaluation</button>
+            <div>Not available yet.</div>
             {{/if}}
+            <br/>
             {{#if sellingTrain}}
             <a href="/api/export/user/train/selling/{{sellingTrain.time}}" class="btn btn-secondary" role="button">Download Sell-Training</a>
             <table>
@@ -100,10 +106,13 @@
                     </tr>
                 </tbody>
             </table>
-            <br/>
+            {{else}}
+            <button class="btn btn-secondary" disabled>Download Sell-Training</button>
+            <div>Not available yet.</div>
             {{/if}}
+            <br/>
             {{#if sellingTest}}
-            <a href="/api/export/user/test/selling/{{sellingTest.time}}" class="btn btn-secondary" role="button">Download Sell-Validation</a>
+            <a href="/api/export/user/test/selling/{{sellingTest.time}}" class="btn btn-secondary" role="button">Download Sell-Evaluation</a>
             <table>
                 <tbody>
                     <tr>
@@ -132,6 +141,9 @@
                     </tr>
                 </tbody>
             </table>
+            {{else}}
+            <button class="btn btn-secondary" disabled>Download Sell-Evaluation</button>
+            <div>Not available yet.</div>
             {{/if}}
             {{else}}
             <span>The processing job runs periodically. Please wait until the data becomes available.</span>
