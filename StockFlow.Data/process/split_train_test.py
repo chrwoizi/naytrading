@@ -11,9 +11,9 @@ from KillFileMonitor import *
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument('--input_path', type=str, default='data\\no_buy.csv', help='Input file path.')
-parser.add_argument('--output_path_train', type=str, default='data\\no_buy_train.csv', help='Output file path for the training set.')
-parser.add_argument('--output_path_test', type=str, default='data\\no_buy_test.csv', help='Output file path for the validation set.')
+parser.add_argument('--input_path', type=str, default='data\\buy.csv', help='Input file path.')
+parser.add_argument('--output_path_train', type=str, default='data\\buy_train.csv', help='Output file path for the training set.')
+parser.add_argument('--output_path_test', type=str, default='data\\buy_test.csv', help='Output file path for the validation set.')
 parser.add_argument('--factor', type=float, default=0.2, help='Output file path for the validation set.')
 parser.add_argument('--samples', type=int, default=None, help='Output file path for the validation set.')
 parser.add_argument('--preserve_test_ids', type=bool, default=True, help='Output file path for the validation set.')
@@ -37,15 +37,17 @@ def main(input_path, output_path_train, output_path_test, factor, samples, prese
     try:
         test_ids = set()
         if preserve_test_ids and os.path.exists(output_path_test):
-            with open(input_path, 'r') as in_file:
+            with open(output_path_test, 'r') as in_file:
                 in_file.readline()
                 while True:
                     killfile_monitor.maybe_check_killfile()
                     line = in_file.readline()
                     if not line or len(line) <= 2:
                         break
-                    id_start = line.index(';') + 1
-                    id = line[id_start:line.index(';', id_start)]
+                    first = line.index(';')
+                    skipped_index = line[first + 1:]
+                    second = skipped_index.index(';')
+                    id = skipped_index[0:second]
                     test_ids.add(id)
 
         random_line_positions = get_line_positions(input_path, lambda: killfile_monitor.maybe_check_killfile())

@@ -346,14 +346,17 @@ async function processUser(user) {
     async function processAction(action) {
 
         async function split(file) {
-            await runProcess(config.python, processorsDir, [
+            var args = [
                 "split_train_test.py",
                 "--input_path=" + processingDir + "/" + file + ".csv",
                 "--output_path_train=" + processingDir + "/" + file + "_train.csv",
                 "--output_path_test=" + processingDir + "/" + file + "_test.csv",
-                "--factor=" + testDataRatio,
-                "--preserve_test_ids=" + (preserveTestIds ? "True" : "False")
-            ]);
+                "--factor=" + testDataRatio
+            ];
+            if(preserveTestIds) {
+                args.push("--preserve_test_ids=True");
+            }
+            await runProcess(config.python, processorsDir, args);
         }
 
         await Promise.all([split(action), split("no_" + action)]);
