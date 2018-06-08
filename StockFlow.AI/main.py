@@ -34,7 +34,7 @@ parser.add_argument('--buy_label', type = str, default = 'buy', help = 'The labe
 parser.add_argument('--use_tpu', type = bool, default = False, help = 'Whether to use the TPU for training')
 parser.add_argument('--model_name', type = str, default = 'GoogLeNet', help = 'The model name, e.g. GoogLeNet')
 parser.add_argument('--save_summary_steps', type = int, default = 100, help = 'The steps between summary saves')
-parser.add_argument('--save_checkpoints_steps', type = int, default = 100, help = 'The steps between checkpoint saves')
+parser.add_argument('--save_checkpoints_steps', type = int, default = 1000, help = 'The steps between checkpoint saves')
 parser.add_argument('--keep_checkpoint_max', type = int, default = 10, help = 'The number of checkpoints to keep')
 parser.add_argument('--keep_checkpoint_every_n_hours', type = int, default = 1, help = 'The hours between archiving a snapshot')
 parser.add_argument('--log_step_count_steps', type = int, default = 100, help = 'The steps between logging')
@@ -91,7 +91,7 @@ if __name__ == '__main__':
             else:
                 return get_flag(flag)
 
-        flags = [a for a in dir(FLAGS) if not a.startswith('_')]
+        flags = [a for a in dir(FLAGS) if not a.startswith('_') and ((not isinstance(getattr(FLAGS, a), bool)) or getattr(FLAGS, a))]
 
         with open(FLAGS.model_dir + '/resume.bat', 'w') as text_file:
             arg_str = ' '.join(['--%s=%s' % (flag, str(get_flag(flag))) for flag in flags])
