@@ -250,15 +250,11 @@ exports.clearDecisions = async function (req, res) {
 
             if (req.user.email.endsWith('.ai')) {
 
-                await model.usersnapshot.update({
-                    Decision: null,
-                    ModifiedTime: new Date()
-                }, {
-                        where: {
-                            User: req.user.email
-                        }
+                await model.usersnapshot.destroy({
+                    where: {
+                        User: req.user.email
                     }
-                );
+                });
 
                 await model.portfolio.destroy({
                     where: {
