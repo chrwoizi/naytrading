@@ -1,8 +1,12 @@
 {
   "development": {
     "stockflow": "../../../stockflow/StockFlow.Node",
-    "instruments_provider": "../providers/example/example_instruments_provider",
-    "rates_provider": "../providers/example/example_rates_provider",
+    "instruments_providers": {
+      "e": "../providers/example/example_instruments_provider"
+    },
+    "rates_providers": {
+      "e": "../providers/example/example_rates_provider"
+    },
     "downloader_throttle_requests": 10,
     "downloader_throttle_seconds": 10,
     "downloader_timeout_milliseconds": 120000,
@@ -10,8 +14,12 @@
   },
   "production": {
     "stockflow": "../../../stockflow/StockFlow.Node",
-    "instruments_provider": "../providers/example/example_instruments_provider",
-    "rates_provider": "../providers/example/example_rates_provider",
+    "instruments_providers": {
+      "e": "../providers/example/example_instruments_provider"
+    },
+    "rates_providers": {
+      "e": "../providers/example/example_rates_provider"
+    },
     "downloader_throttle_requests": 10,
     "downloader_throttle_seconds": 10,
     "downloader_timeout_milliseconds": 120000,

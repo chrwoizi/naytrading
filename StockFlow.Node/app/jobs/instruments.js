@@ -8,19 +8,33 @@ var settings = require('../config/settings');
 
 
 async function updateGlobalInstruments() {
-    var allInstruments = await instrumentsProvider.getAllInstruments(config.job_instruments_min_capitalization);
+    var allInstruments = await instrumentsProvider.getAllInstruments(null, config.job_instruments_min_capitalization);
 
     var knownInstruments = await model.instrument.findAll({});
 
-    var knownIds = knownInstruments.filter(x => x.Source == instrumentsProvider.source).map(x => x.InstrumentId);
+    function getKey(source) {
+        return source.SourceType + "/" + source.SourceId;
+    }
 
-    var newInstruments = allInstruments.filter(x => knownIds.indexOf(x.InstrumentId) == -1);
+    function containsAny(refList, itemList) {
+        for (var i = 0; i < itemList.length; ++i) {
+            if (refList.indexOf(itemList[i]) >= 0) {
+                return true;
+            }
+        }
+    }
+
+    var knownKeys = knownInstruments.map(i => i.sources.map(getKey));
+
+    var newInstruments = allInstruments.filter(i => !containsAny(knownKeys, i.sources.map(getKey)));
 
     for (var i = 0; i < newInstruments.length; ++i) {
         var instrument = newInstruments[i];
-        instrument.Strikes = 0;
-        instrument.LastStrikeTime = new Date();
-        await model.instrument.create(instrument);
+        await model.instrument.create(instrument, {
+            include: [{
+                model: model.source
+            }]
+        });
     }
 }
 
@@ -31,7 +45,7 @@ exports.run = async function () {
             await settings.set("update_instruments", "false");
             await updateGlobalInstruments();
         }
-                
+
     }
     catch (error) {
         console.log("error in instruments job: " + error);

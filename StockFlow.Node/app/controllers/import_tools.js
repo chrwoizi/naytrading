@@ -9,7 +9,7 @@ var fs = require('fs');
 var config = require('../config/envconfig');
 
 
-exports.importFromFormSubmit = async function(req, res, getExistingEntities, getEntityKey, createEntity, updateEntity, destroyEntity, prepareEntity) {
+exports.importFromFormSubmit = async function (req, res, getExistingEntities, getEntityKeys, createEntity, updateEntity, destroyEntity, prepareEntity) {
     var filePath = undefined;
 
     try {
@@ -26,6 +26,12 @@ exports.importFromFormSubmit = async function(req, res, getExistingEntities, get
 
             var existing = await getExistingEntities();
             var remaining = Object.assign({}, existing);
+            var remainingById = {};
+            for (var key in remaining) {
+                if (remaining.hasOwnProperty(key)) {
+                    remainingById[remaining[key].ID] = remaining[key];
+                }
+            }
 
             var addedCount = 0;
             var removedCount = 0;
@@ -37,12 +43,20 @@ exports.importFromFormSubmit = async function(req, res, getExistingEntities, get
                     if (prepareEntity) {
                         prepareEntity(data);
                     }
-                    var key = getEntityKey(data);
-                    console.log("importing " + key);
-                    var value = existing[key];
+                    var keys = getEntityKeys(data);
+                    console.log("importing " + ", ".join(keys));
+                    var value = null;
+                    for (var k = 0; k < keys.length; ++k) {
+                        value = existing[keys[k]];
+                        if (value) {
+                            break;
+                        }
+                    }
                     if (value) {
                         updateEntity(data, value).then(() => {
-                            delete remaining[key];
+                            for (var k = 0; k < keys.length; ++k) {
+                                delete remaining[keys[k]];
+                            }
                             onDone();
                         });
                     }
@@ -70,10 +84,10 @@ exports.importFromFormSubmit = async function(req, res, getExistingEntities, get
                     try {
                         if (errors.length == 0) {
                             if (fields.delete && fields.delete.length == 1 && fields.delete[0] == "on") {
-                                for (var key in remaining) {
-                                    if (remaining.hasOwnProperty(key)) {
-                                        console.log("deleting " + key);
-                                        removedCount += await destroyEntity(remaining[key]);
+                                for (var id in remainingById) {
+                                    if (remaining.hasOwnProperty(id)) {
+                                        console.log("deleting " + id);
+                                        removedCount += await destroyEntity(remainingById[id]);
                                     }
                                 }
                             }
@@ -112,7 +126,7 @@ exports.importFromFormSubmit = async function(req, res, getExistingEntities, get
     }
 };
 
-exports.toDictionary = function(existing, getKey) {
+exports.toDictionary = function (existing, getKey) {
     var dict = {};
     for (var i = 0; i < existing.length; ++i) {
         var item = existing[i];

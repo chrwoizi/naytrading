@@ -6,6 +6,7 @@ var MySQLStore = require('express-mysql-session')(session);
 var bodyParser = require('body-parser');
 var env = require('dotenv').load();
 var exphbs = require('express-handlebars');
+var splitJob = require('./app/jobs/split');
 var instrumentsJob = require('./app/jobs/instruments');
 var cleanupJob = require('./app/jobs/cleanup');
 var preloadJob = require('./app/jobs/preload');
@@ -103,6 +104,10 @@ var sql = require('./app/sql/sql');
     });
 
     setTimeout(function () {
+        new Promise(function (resolve, reject) { splitJob.run(); });
+    }, 1000);
+
+    setTimeout(function () {
         new Promise(function (resolve, reject) { instrumentsJob.run(); });
     }, 2000);
 
@@ -125,5 +130,12 @@ var sql = require('./app/sql/sql');
     setTimeout(function () {
         new Promise(function (resolve, reject) { processJob.run(); });
     }, 12000);
+
+    
+    //var instrumentsProvider = require('./app/providers/instruments_provider');
+    //var ratesProvider = require('./app/providers/rates_provider');
+    //var i = await instrumentsProvider.getInstrumentId("f", "TH0646010Z18", null);
+    //var r = await ratesProvider.getRates("f", i, null, new Date(2018, 3, 1), new Date(2018, 3, 30));
+    //console.log("TH0646010Z18: " + JSON.stringify(r));
 
 })();

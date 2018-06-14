@@ -128,139 +128,164 @@ exports.createNewSnapshotFromRandomInstrument = async function (instrumentIds) {
     for (var i = 0; i < Math.min(instrumentIds.length, 10); ++i) {
         var index = getRandomIndex(instrumentIds.length, config.random_order_weight);
 
-        var instrument = await model.instrument.findOne({ where: { ID: instrumentIds[index].ID } });
+        var instrument = await model.instrument.findOne({
+            where: {
+                ID: instrumentIds[index].ID,
+            },
+            include: [{
+                model: model.source
+            }]
+        });
 
         try {
-            var ratesResponse = await ratesProvider.getRates(instrument.InstrumentId, instrument.MarketId, startTime, endTime);
-            
-            if (ratesResponse.marketId != instrument.MarketId) {
-                // change preferred market id for instrument
-                instrument.MarketId = ratesResponse.marketId;
-                await model.instrument.update(
-                    {
-                        MarketId: ratesResponse.marketId
-                    },
-                    {
-                        where: {
-                            ID: instrument.ID
-                        }
-                    });
+            var ratesResponse = null;
+            for (var s = 0; s < instrument.sources.length; ++s) {
+                var source = instrument.sources[s];
+                try {
+                    ratesResponse = await ratesProvider.getRates(source.SourceType, source.SourceId, source.MarketId, startTime, endTime);
+                    if (ratesResponse && ratesResponse.Rates && ratesResponse.Rates.length > 0) {
+                        break;
+                    }
+                }
+                catch (error) {
+                    if (error == ratesProvider.market_not_found) {
+                        var strikes = config.max_strikes + 12;
+                        console.log("Setting " + strikes + " strikes on instrument " + instrument.InstrumentName + " because the market id does not exist");
+                        await source.updateAttributes({
+                            Strikes: strikes,
+                            LastStrikeTime: new Date()
+                        });
+                    }
+                    else if (error == ratesProvider.invalid_response) {
+                        console.log("Adding 5 strikes to instrument " + instrument.InstrumentName + " because the server returned an unexpected response");
+                        await source.updateAttributes({
+                            Strikes: source.Strikes + 5,
+                            LastStrikeTime: new Date()
+                        });
+                    }
+                    else {
+                        console.log(error);
+                        console.log("Adding 1 strike to instrument " + instrument.InstrumentName + " because it caused an exception: " + error);
+                        await source.updateAttributes({
+                            Strikes: source.Strikes + 1,
+                            LastStrikeTime: new Date()
+                        });
+                    }
+                }
             }
 
-            var rates = ratesResponse.rates;
-            var isin = ratesResponse.isin;
-            var wkn = ratesResponse.wkn;
+            if (ratesResponse) {
 
-            var updated = false;
-            var fields = {};
-            if (isEmpty(instrument.Isin) && !isEmpty(isin)) {
-                fields.Isin = isin;
-                updated = true;
-            }
-            if (isEmpty(instrument.Wkn) && !isEmpty(wkn)) {
-                fields.Wkn = wkn;
-                updated = true;
-            }
-            if (updated) {
-                await instrument.updateAttributes(fields);
-                instrument = await model.instrument.findOne({ where: { ID: instrumentIds[index].ID } });
-            }
+                var source = instrument.sources.filter(x => x.SourceType = ratesResponse.Source)[0];
 
-            var minRateTime = new Date(startTime.getTime() + 1000 * config.discard_threshold_seconds);
-            var maxRateTime = new Date(endTime.getTime() - 1000 * config.discard_threshold_seconds);
-
-            var strikes = instrument.Strikes;
-            var reason = null;
-            if (rates == null || rates.length == 0) {
-                strikes = instrument.Strikes + 5;
-                reason = "there are no rates";
-            }
-            else if (rates[0].Time > minRateTime || rates[rates.length - 1].Time < maxRateTime) {
-                strikes = config.max_strikes + 6;
-                reason = "the rates are not available for the full time span";
-            }
-            else if (rates.length < exports.minDays) {
-                strikes = config.max_strikes + 6;
-                reason = "too many rates are missing within time span";
-            }
-
-            if (reason == null) {
-                var similar = await model.snapshot.findAll({
-                    include: [{
-                        model: model.instrument
-                    }, {
-                        model: model.snapshotrate
-                    }],
-                    where: {
-                        Instrument_ID: instrument.ID,
-                        StartTime: startTime,
-                        Time: {
-                            [sequelize.Op.$gte]: endDate
-                        }
-                    },
-                    order: [
-                        ['Time'],
-                        ['ID'],
-                        [model.snapshotrate, "Time", "ASC"]
-                    ],
-                    limit: 1
-                })
-
-                if (similar != null && similar.length > 0) {
-                    return similar[0];
+                if (ratesResponse.MarketId != instrument.MarketId) {
+                    // change preferred market id for instrument
+                    instrument.MarketId = ratesResponse.MarketId;
+                    await model.source.update(
+                        {
+                            MarketId: ratesResponse.MarketId
+                        },
+                        {
+                            where: {
+                                Instrument_ID: instrument.ID,
+                                SourceType: ratesResponse.Source
+                            }
+                        });
                 }
 
-                var snapshot = await model.snapshot.create({
-                    StartTime: startTime,
-                    Time: endTime,
-                    snapshotrates: rates,
-                    Price: rates[rates.length - 1].Close,
-                    PriceTime: rates[rates.length - 1].Time,
-                    FirstPriceTime: rates[0].Time,
-                    Instrument_ID: instrument.ID
-                }, {
+                var rates = ratesResponse.Rates;
+                var isin = ratesResponse.Isin;
+                var wkn = ratesResponse.Wkn;
+
+                var updated = false;
+                var fields = {};
+                if (isEmpty(instrument.Isin) && !isEmpty(isin)) {
+                    fields.Isin = isin;
+                    updated = true;
+                }
+                if (isEmpty(instrument.Wkn) && !isEmpty(wkn)) {
+                    fields.Wkn = wkn;
+                    updated = true;
+                }
+                if (updated) {
+                    await instrument.updateAttributes(fields);
+                    instrument = await model.instrument.findOne({ where: { ID: instrumentIds[index].ID } });
+                }
+
+                var minRateTime = new Date(startTime.getTime() + 1000 * config.discard_threshold_seconds);
+                var maxRateTime = new Date(endTime.getTime() - 1000 * config.discard_threshold_seconds);
+
+                var strikes = source.Strikes;
+                var reason = null;
+                if (rates == null || rates.length == 0) {
+                    strikes = source.Strikes + 5;
+                    reason = "there are no rates";
+                }
+                else if (rates[0].Time > minRateTime || rates[rates.length - 1].Time < maxRateTime) {
+                    strikes = config.max_strikes + 6;
+                    reason = "the rates are not available for the full time span";
+                }
+                else if (rates.length < exports.minDays) {
+                    strikes = config.max_strikes + 6;
+                    reason = "too many rates are missing within time span";
+                }
+
+                if (reason == null) {
+                    var similar = await model.snapshot.findAll({
                         include: [{
                             model: model.instrument
                         }, {
                             model: model.snapshotrate
-                        }]
-                    });
+                        }],
+                        where: {
+                            Instrument_ID: instrument.ID,
+                            StartTime: startTime,
+                            Time: {
+                                [sequelize.Op.$gte]: endDate
+                            }
+                        },
+                        order: [
+                            ['Time'],
+                            ['ID'],
+                            [model.snapshotrate, "Time", "ASC"]
+                        ],
+                        limit: 1
+                    })
 
-                snapshot.instrument = instrument;
-                return snapshot;
-            }
-            else {
-                console.log("Changing strikes on instrument " + instrument.InstrumentName + " from " + instrument.Strikes + " to " + strikes + " because " + reason);
-                await instrument.updateAttributes({
-                    Strikes: strikes,
-                    LastStrikeTime: new Date()
-                });
+                    if (similar != null && similar.length > 0) {
+                        return similar[0];
+                    }
+
+                    var snapshot = await model.snapshot.create({
+                        StartTime: startTime,
+                        Time: endTime,
+                        snapshotrates: rates,
+                        Price: rates[rates.length - 1].Close,
+                        PriceTime: rates[rates.length - 1].Time,
+                        FirstPriceTime: rates[0].Time,
+                        Instrument_ID: instrument.ID
+                    }, {
+                            include: [{
+                                model: model.instrument
+                            }, {
+                                model: model.snapshotrate
+                            }]
+                        });
+
+                    snapshot.instrument = instrument;
+                    return snapshot;
+                }
+                else {
+                    console.log("Changing strikes on instrument " + instrument.InstrumentName + " from " + source.Strikes + " to " + strikes + " because " + reason);
+                    await source.updateAttributes({
+                        Strikes: strikes,
+                        LastStrikeTime: new Date()
+                    });
+                }
             }
         }
         catch (error) {
-            if (error == ratesProvider.market_not_found) {
-                var strikes = config.max_strikes + 12;
-                console.log("Setting " + strikes + " strikes on instrument " + instrument.InstrumentName + " because the market id does not exist");
-                await instrument.updateAttributes({
-                    Strikes: strikes,
-                    LastStrikeTime: new Date()
-                });
-            }
-            else if (error == ratesProvider.invalid_response) {
-                console.log("Adding 5 strikes to instrument " + instrument.InstrumentName + " because the server returned an unexpected response");
-                await instrument.updateAttributes({
-                    Strikes: instrument.Strikes + 5,
-                    LastStrikeTime: new Date()
-                });
-            }
-            else {
-                console.log(error);
-                console.log("Adding 1 strike to instrument " + instrument.InstrumentName + " because it caused an exception: " + error);
-                await instrument.updateAttributes({
-                    Strikes: instrument.Strikes + 1,
-                    LastStrikeTime: new Date()
-                });
-            }
+            console.log(error);
         }
 
         if (lockFlag > 0) {

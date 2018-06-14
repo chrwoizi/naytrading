@@ -10,16 +10,20 @@ var config = require('../config/envconfig');
 var tools = require('./import_tools');
 
 
-function getInstrumentKey(data) {
-    return data.Source + '/' + data.InstrumentId;
+function getInstrumentKeys(data) {
+    return data.sources.map(x => x.SourceType + '/' + x.SourceId);
+}
+
+function getSnapshotKeys(data) {
+    return data.instrument.sources.map(x => x.SourceType + '/' + x.SourceId + '/' + new Date(data.Time).getTime());
+}
+
+function getExistingInstrumentKey(data) {
+    return data.SourceType + '/' + data.SourceId;
 }
 
 function getExistingSnapshotKey(data) {
-    return data.Source + '/' + data.InstrumentId + '/' + new Date(data.Time).getTime();
-}
-
-function getSnapshotKey(data) {
-    return data.instrument.Source + '/' + data.instrument.InstrumentId + '/' + new Date(data.Time).getTime();
+    return data.SourceType + '/' + data.SourceId + '/' + new Date(data.Time).getTime();
 }
 
 function prepareSnapshot(data) {
@@ -34,13 +38,13 @@ function prepareSnapshot(data) {
 function addUserSnapshot(data, instrumentsDict, user) {
     return new Promise(async (resolve, reject) => {
         try {
-            var instrumentKey = getInstrumentKey(data.instrument);
-            var instrument = instrumentsDict[instrumentKey];
-            if (instrument) {
+            var instrumentKeys = getInstrumentKeys(data.instrument);
+            var instruments = instrumentKeys.map(x => instrumentsDict[x]).filter(x => x);
+            if (instruments.length > 0) {
 
                 var existingSnapshot = await model.snapshot.find({
                     where: {
-                        Instrument_ID: instrument.ID,
+                        Instrument_ID: instruments[0].ID,
                         Time: data.Time
                     }
                 });
@@ -106,21 +110,22 @@ async function removeUserSnapshot(dictValue) {
 function addUserInstrument(data, user) {
     return new Promise(async (resolve, reject) => {
         try {
-            delete data.ID;
-            delete data.createdAt;
-            delete data.updatedAt;
-            var existingI = await model.instrument.find({
-                where: {
-                    Source: data.Source,
-                    InstrumentId: data.InstrumentId
-                }
-            });
 
-            if (existingI) {
-                await model.userinstrument.create({
-                    User: user,
-                    Instrument_ID: existingI.ID
+            for (var i = 0; i < data.sources.length; ++i) {
+                var existingSource = await model.source.find({
+                    where: {
+                        SourceType: data.sources[i].SourceType,
+                        SourceId: data.sources[i].SourceId
+                    }
                 });
+
+                if (existingSource) {
+                    await model.userinstrument.create({
+                        User: user,
+                        Instrument_ID: existingSource.Instrument_ID
+                    });
+                    break;
+                }
             }
 
             resolve();
@@ -151,18 +156,18 @@ exports.importUserInstruments = async function (req, res) {
     if (req.isAuthenticated()) {
 
         async function getExistingInstruments() {
-            var existing = await sql.query('SELECT u.User, i.ID, i.Source, i.InstrumentId FROM instruments AS i INNER JOIN userinstruments AS u ON u.Instrument_ID = i.ID WHERE u.User = @userName',
+            var existing = await sql.query('SELECT u.User, i.ID, c.SourceType, c.SourceId FROM instruments AS i INNER JOIN userinstruments AS u ON u.Instrument_ID = i.ID INNER JOIN sources AS c ON c.Instrument_ID = i.ID WHERE u.User = @userName',
                 {
                     "@userName": req.user.email
                 });
-            return tools.toDictionary(existing, getInstrumentKey);
+            return tools.toDictionary(existing, getExistingInstrumentKey);
         }
 
         tools.importFromFormSubmit(
             req,
             res,
             getExistingInstruments,
-            getInstrumentKey,
+            getInstrumentKeys,
             instrument => {
                 return addUserInstrument(instrument, req.user.email);
             },
@@ -181,15 +186,15 @@ exports.importUserSnapshots = async function (req, res) {
     if (req.isAuthenticated()) {
 
         async function getExistingInstruments() {
-            var existing = await sql.query('SELECT u.User, i.ID, i.Source, i.InstrumentId FROM instruments AS i INNER JOIN userinstruments AS u ON u.Instrument_ID = i.ID WHERE u.User = @userName',
+            var existing = await sql.query('SELECT u.User, i.ID, c.SourceType, c.SourceId FROM instruments AS i INNER JOIN userinstruments AS u ON u.Instrument_ID = i.ID INNER JOIN sources AS c ON c.Instrument_ID = i.ID WHERE u.User = @userName',
                 {
                     "@userName": req.user.email
                 });
-            return tools.toDictionary(existing, getInstrumentKey);
+            return tools.toDictionary(existing, getExistingInstrumentKey);
         }
 
         async function getExistingSnapshots() {
-            var existing = await sql.query('SELECT u.User, s.ID, i.Source, i.InstrumentId, s.Time FROM snapshots AS s INNER JOIN usersnapshots AS u ON u.Snapshot_ID = s.ID INNER JOIN instruments AS i ON i.ID = s.Instrument_ID WHERE u.User = @userName',
+            var existing = await sql.query('SELECT u.User, s.ID, c.SourceType, i.SourceId, s.Time FROM snapshots AS s INNER JOIN usersnapshots AS u ON u.Snapshot_ID = s.ID INNER JOIN instruments AS i ON i.ID = s.Instrument_ID INNER JOIN sources AS c ON c.Instrument_ID = i.ID WHERE u.User = @userName',
                 {
                     "@userName": req.user.email
                 });
@@ -202,7 +207,7 @@ exports.importUserSnapshots = async function (req, res) {
             req,
             res,
             getExistingSnapshots,
-            getSnapshotKey,
+            getSnapshotKeys,
             snapshot => {
                 return addUserSnapshot(snapshot, instrumentsDict, req.user.email);
             },

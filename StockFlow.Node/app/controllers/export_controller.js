@@ -13,8 +13,14 @@ try {
 
 
 function return500(res, e) {
-    res.status(500);
-    res.json({ error: e.message });
+    try {
+        res.status(500);
+        res.json({ error: e.message });
+    }
+    catch (e2) {
+        res.write(JSON.stringify({ error: e.message }));
+        res.end();
+    }
 }
 
 exports.exportInstruments = async function (req, res) {
@@ -23,11 +29,11 @@ exports.exportInstruments = async function (req, res) {
 
             var cancel = false;
 
-            req.on("close", function() {
+            req.on("close", function () {
                 cancel = true;
             });
 
-            req.on("end", function() {
+            req.on("end", function () {
                 cancel = true;
             });
 
@@ -42,7 +48,9 @@ exports.exportInstruments = async function (req, res) {
 
                 var instrument = await model.instrument.find({
                     include: [{
-                        model: model.userinstruments
+                        model: model.userinstrument
+                    }, {
+                        model: model.source
                     }],
                     where: {
                         ID: ids[i].ID
@@ -56,7 +64,17 @@ exports.exportInstruments = async function (req, res) {
 
                 delete instrument.createdAt;
                 delete instrument.updatedAt;
-                
+
+                for (var i = 0; i < instrument.userinstruments; ++i) {
+                    delete instrument.userinstruments[i].createdAt;
+                    delete instrument.userinstruments[i].updatedAt;
+                }
+
+                for (var i = 0; i < instrument.sources; ++i) {
+                    delete instrument.sources[i].createdAt;
+                    delete instrument.sources[i].updatedAt;
+                }
+
                 res.write(JSON.stringify(instrument));
             }
 
@@ -99,11 +117,11 @@ exports.exportSnapshots = async function (req, res) {
 
             var cancel = false;
 
-            req.on("close", function() {
+            req.on("close", function () {
                 cancel = true;
             });
 
-            req.on("end", function() {
+            req.on("end", function () {
                 cancel = true;
             });
 
@@ -121,7 +139,12 @@ exports.exportSnapshots = async function (req, res) {
 
                 var snapshot = await model.snapshot.find({
                     include: [{
-                        model: model.instrument
+                        model: model.instrument,
+                        include: [{
+                            model: model.userinstrument
+                        }, {
+                            model: model.source
+                        }]
                     }, {
                         model: model.snapshotrate
                     }, {
@@ -147,10 +170,23 @@ exports.exportSnapshots = async function (req, res) {
 
                 for (var r = 0; r < snapshot.usersnapshots.length; ++r) {
                     var u = snapshot.usersnapshots[r];
-                    delete u.ID;
                     delete u.createdAt;
                     delete u.updatedAt;
                     delete u.Snapshot_ID;
+                }
+
+                for (var r = 0; r < snapshot.instrument.userinstruments.length; ++r) {
+                    var u = snapshot.instrument.userinstruments[r];
+                    delete u.createdAt;
+                    delete u.updatedAt;
+                    delete u.Instrument_ID;
+                }
+
+                for (var r = 0; r < snapshot.instrument.sources.length; ++r) {
+                    var u = snapshot.instrument.sources[r];
+                    delete u.createdAt;
+                    delete u.updatedAt;
+                    delete u.Instrument_ID;
                 }
 
                 delete snapshot.instrument.createdAt;
@@ -158,7 +194,7 @@ exports.exportSnapshots = async function (req, res) {
 
                 delete snapshot.createdAt;
                 delete snapshot.updatedAt;
-                
+
                 if (i > 0) {
                     res.write(',');
                 }

@@ -2,6 +2,9 @@
 	"folders": [
 		{
 			"path": "StockFlow.Node"
+		},
+		{
+			"path": "StockFlow.Node.Providers"
 		}
 	],
 	"settings": {}

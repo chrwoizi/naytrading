@@ -8,7 +8,7 @@ var config = require('../config/envconfig');
 exports.run = async function () {
     try {
 
-        await sql.query("UPDATE instruments AS i SET i.Strikes = i.Strikes - 1, i.LastStrikeTime = NOW() WHERE i.Strikes > 0 AND i.LastStrikeTime <= @lastStrikeTime", {
+        await sql.query("UPDATE sources AS c SET c.Strikes = c.Strikes - 1, c.LastStrikeTime = NOW() WHERE c.Strikes > 0 AND c.LastStrikeTime <= @lastStrikeTime", {
             "@lastStrikeTime": new Date(new Date().getTime() - config.job_strikes_cooldown_seconds)
         });
                 

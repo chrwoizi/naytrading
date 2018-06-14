@@ -188,37 +188,6 @@ angular.
                         }
                     }
 
-                    function getSplitFactor(previousRate, rate) {
-                        var factor = previousRate / rate;
-                        var round = Math.round(factor);
-                        if (round >= 2 && round < 100) {
-                            var frac = factor - round;
-                            if (Math.abs(frac) < 0.1) {
-                                return round;
-                            }
-                        }
-
-                        factor = rate / previousRate;
-                        round = Math.round(factor);
-                        if (round >= 2 && round < 100) {
-                            var frac = factor - round;
-                            if (Math.abs(frac) < 0.1) {
-                                return 1 / round;
-                            }
-                        }
-
-                        return 1;
-                    }
-
-                    var previousRate = snapshot.Rates[0].C;
-                    var splitFactor = 1;
-                    for (var i = 0; i < snapshot.Rates.length; ++i) {
-                        var currentRate = snapshot.Rates[i].C;
-                        splitFactor *= getSplitFactor(previousRate, currentRate);
-                        snapshot.Rates[i].C = splitFactor * currentRate;
-                        previousRate = currentRate;
-                    }
-
                     $scope.labels5 = snapshot.Rates.map(function (v) {
                         return v.T.substr(4, 2) + "." + v.T.substr(2, 2) + "." + v.T.substr(0, 2);
                     });
