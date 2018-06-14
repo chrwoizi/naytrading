@@ -81,7 +81,6 @@
     <Reference Include="System.Runtime" />
     <Reference Include="System.Security" />
     <Reference Include="System.Transactions" />
-    <Reference Include="System.Web.Http, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -123,9 +122,9 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\StockFlow.Common\StockFlow.Common.csproj">
+    <ProjectReference Include="..\StockFlow.Common.Net\StockFlow.Common.Net.csproj">
       <Project>{3718c246-a6fc-49c9-bcec-303e37f95197}</Project>
-      <Name>StockFlow.Common</Name>
+      <Name>StockFlow.Common.Net</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
