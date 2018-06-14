@@ -2,7 +2,7 @@
 using System.IO;
 using System.Net.Http;
 
-namespace StockFlow.Common
+namespace StockFlow.Common.Net
 {
     public class WebStream : Stream
     {

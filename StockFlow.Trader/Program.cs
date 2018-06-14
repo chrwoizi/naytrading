@@ -1,10 +1,5 @@
-﻿using Newtonsoft.Json;
-using OpenQA.Selenium;
-using OpenQA.Selenium.Chrome;
-using OpenQA.Selenium.Remote;
-using PublicHoliday;
+﻿using PublicHoliday;
 using StockFlow.Trader.Models;
-using StockFlow.Web.Models;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -12,9 +7,7 @@ using System.Data.Entity;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace StockFlow.Trader
 {

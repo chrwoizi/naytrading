@@ -1,13 +1,12 @@
 ﻿using Newtonsoft.Json;
-using StockFlow.Common;
+using StockFlow.Common.Net;
 using StockFlow.Trader.Models;
-using StockFlow.Web.Models;
+using StockFlow.Common.Net.Models;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Globalization;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace StockFlow.Trader

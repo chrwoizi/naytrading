@@ -3,9 +3,10 @@ __pycache__
 /packages
 /.idea/workspace.xml
 /StockFlow.AI/model*
-/StockFlow.Common/bin
-/StockFlow.Common/obj
-/StockFlow.Common/.vs
+/StockFlow.Common.Net/bin
+/StockFlow.Common.Net/obj
+/StockFlow.Common.Net/.vs
+/StockFlow.Common.Net/*.user
 /StockFlow.Data/download/data
 /StockFlow.Data/generate/data
 /StockFlow.Data/process/data

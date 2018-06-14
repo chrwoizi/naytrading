@@ -343,7 +343,7 @@ namespace StockFlow.Trader
                 priceElement = WaitForElementByXPath(chrome, xpath, 1, element =>
                 {
                     var text = element.GetAttribute("innerText");
-                    return !string.IsNullOrWhiteSpace(text);
+                    return !string.IsNullOrWhiteSpace(text) && text != "0,000" && text != "0.000";
                 });
 
                 if (priceElement != null)
@@ -462,6 +462,8 @@ namespace StockFlow.Trader
 
             SendKeys(chrome, tanField, tan);
 
+            Thread.Sleep(5000);
+
             var getQuoteButton = WaitForElementById(chrome, "paperOrderSubmissionForm_quoteButton", 5, x => true);
 
             Click(chrome, getQuoteButton);
@@ -510,8 +512,7 @@ namespace StockFlow.Trader
                         }
                     }
                 }
-
-                SaveScreenshot(chrome);
+                
                 throw new CancelOrderException(Status.TemporaryError, "Could not get offer or error message");
             }
 
@@ -632,7 +633,7 @@ namespace StockFlow.Trader
                         return elements[0];
                     }
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     continue;
                 }
@@ -660,7 +661,7 @@ namespace StockFlow.Trader
                         return elements[0];
                     }
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     continue;
                 }
