@@ -4,31 +4,45 @@ var config = require('../../config/envconfig');
 var downloader = require('../downloader');
 
 exports.source = "e";
+exports.market_not_found = "market not found";
+exports.invalid_response = "invalid response";
 
-exports.getAllInstruments = async function (minCapitalization) {
+exports.getAllInstruments = async function (source, minCapitalization) {
+    if (source != exports.source)
+        throw "invalid source";
 
     // TODO load instruments
 
     return [{
-        Source: exports.source,
+        sources: [{
+            SourceType: exports.source,
+            SourceId: "example_1",
+            MarketId: null,
+            Status: "ACTIVE"
+        }],
         InstrumentName: "example",
-        InstrumentId: "example_1",
         Capitalization: 42,
         Isin: "example",
         Wkn: "example"
     }];
 };
 
-exports.getInstrumentByUrl = async function (url) {
+exports.getInstrumentByUrl = async function (source, url) {
+    if (source != exports.source)
+        throw "invalid source";
 
     var doc = await downloader.downloadHtml(url);
 
     // TODO extract values from doc
 
     var instrument = {
-        Source: exports.source,
+        sources: [{
+            SourceType: exports.source,
+            SourceId: "example_1",
+            MarketId: null,
+            Status: "ACTIVE"
+        }],
         InstrumentName: "example",
-        InstrumentId: "example_1",
         Capitalization: 42,
         Isin: "example",
         Wkn: "example"
@@ -37,7 +51,9 @@ exports.getInstrumentByUrl = async function (url) {
     return instrument;
 };
 
-exports.getIsinWknByInstrumentId = async function (instrumentId) {
+exports.getIsinWkn = async function (source, instrumentId) {
+    if (source != exports.source)
+        throw "invalid source";
 
     // TODO load values
 
@@ -45,4 +61,13 @@ exports.getIsinWknByInstrumentId = async function (instrumentId) {
         Isin: "example",
         Wkn: "example"
     };
+};
+
+exports.getInstrumentId = async function (source, isin, wkn) {
+    if (source != exports.source)
+        throw "invalid source";
+
+    // TODO load value
+
+    return "example";
 };

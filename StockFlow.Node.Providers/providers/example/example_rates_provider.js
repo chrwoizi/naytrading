@@ -3,6 +3,7 @@ var exports = module.exports = {}
 var config = require('../../config/envconfig');
 var downloader = require('../downloader');
 
+exports.source = "e";
 exports.market_not_found = "market not found";
 exports.invalid_response = "invalid response";
 
@@ -80,17 +81,17 @@ async function getRates(instrumentId, marketId, startTime, endTime) {
             }
 
             return {
-                isin: isin,
-                wkn: wkn,
-                rates: distinctDays
+                Isin: isin,
+                Wkn: wkn,
+                Rates: distinctDays
             };
         }
         else if (Object.keys(response.markets)) {
             return {
-                isin: null,
-                wkn: null,
-                rates: null,
-                marketIds: Object.keys(response.markets)
+                Isin: null,
+                Wkn: null,
+                Rates: null,
+                MarketIds: Object.keys(response.markets)
             };
         }
         else {
@@ -102,7 +103,9 @@ async function getRates(instrumentId, marketId, startTime, endTime) {
     }
 }
 
-exports.getRates = async function (instrumentId, preferredMarketId, startTime, endTime) {
+exports.getRates = async function (source, instrumentId, preferredMarketId, startTime, endTime) {
+    if (source != exports.source)
+        throw "invalid source";
 
     var marketIds = config.example_markets;
     if (preferredMarketId != null && typeof (preferredMarketId) === 'string' && preferredMarketId.length > 0) {
@@ -122,10 +125,10 @@ exports.getRates = async function (instrumentId, preferredMarketId, startTime, e
 
         ratesResponse = await getRates(instrumentId, marketId, startTime, endTime);
 
-        if (ratesResponse.rates == null) {
-            if (ratesResponse.marketIds) {
+        if (ratesResponse.Rates == null) {
+            if (ratesResponse.MarketIds) {
                 // remove markets that dont exist
-                marketIds = marketIds.filter(x => ratesResponse.marketIds.indexOf(x) > -1);
+                marketIds = marketIds.filter(x => ratesResponse.MarketIds.indexOf(x) > -1);
                 m = marketIds.indexOf(marketId);
             }
 
@@ -138,10 +141,10 @@ exports.getRates = async function (instrumentId, preferredMarketId, startTime, e
             }
         }
 
-        ratesResponse.marketId = marketId;
+        ratesResponse.MarketId = marketId;
 
         break;
     }
 
     return ratesResponse;
-}
+};

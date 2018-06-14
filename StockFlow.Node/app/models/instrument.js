@@ -9,22 +9,7 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.INTEGER
         },
 
-        Source: {
-            type: DataTypes.STRING,
-            allowNull: true
-        },
-
         InstrumentName: {
-            type: DataTypes.STRING,
-            allowNull: true
-        },
-
-        InstrumentId: {
-            type: DataTypes.STRING,
-            allowNull: true
-        },
-
-        MarketId: {
             type: DataTypes.STRING,
             allowNull: true
         },
@@ -32,11 +17,6 @@ module.exports = (sequelize, DataTypes) => {
         Capitalization: {
             type: DataTypes.DECIMAL(18, 2),
             allowNull: true
-        },
-
-        Strikes: {
-            type: DataTypes.INTEGER,
-            allowNull: false
         },
 
         Isin: {
@@ -47,11 +27,6 @@ module.exports = (sequelize, DataTypes) => {
         Wkn: {
             type: DataTypes.STRING(6),
             allowNull: true
-        },
-
-        LastStrikeTime: {
-            type: DataTypes.DATE,
-            allowNull: false
         },
 
         createdAt: {
@@ -67,20 +42,15 @@ module.exports = (sequelize, DataTypes) => {
     },
     {
         indexes: [
-            { fields: ['Strikes'] },
-            { fields: ['Capitalization'] },            
-            { fields: ['InstrumentId'] },
-            { fields: ['Source'] },
+            { fields: ['Capitalization'] },
             { fields: ['Isin'] },
-            { fields: ['Wkn'] },
-            { fields: ['LastStrikeTime'] },
-            { fields: ['Source', 'InstrumentId'] },
-            { fields: ['Strikes', 'LastStrikeTime'] }
+            { fields: ['Wkn'] }
         ]
     });
     instrument.associate = function (models) {
         instrument.hasMany(models.snapshot, { foreignKey: 'Instrument_ID', onDelete: 'CASCADE', hooks: true });
         instrument.hasMany(models.userinstrument, { foreignKey: 'Instrument_ID', onDelete: 'CASCADE', hooks: true });
+        instrument.hasMany(models.source, { foreignKey: 'Instrument_ID', onDelete: 'CASCADE', hooks: true });
     };
     return instrument;
 };

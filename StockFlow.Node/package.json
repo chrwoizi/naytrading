@@ -38,6 +38,7 @@
     "parse5": "^4.0.0",
     "passport": "^0.4.0",
     "passport-local": "^1.0.0",
+    "querystring": "^0.2.0",
     "sequelize": "^4.37.6",
     "xmldom": "^0.1.27",
     "xmlserializer": "^0.6.1",

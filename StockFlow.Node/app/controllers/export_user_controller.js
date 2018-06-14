@@ -15,8 +15,14 @@ try {
 
 
 function return500(res, e) {
-    res.status(500);
-    res.json({ error: e.message });
+    try {
+        res.status(500);
+        res.json({ error: e.message });
+    }
+    catch (e2) {
+        res.write(JSON.stringify({ error: e.message }));
+        res.end();
+    }
 }
 
 function parseDateUTC(str) {

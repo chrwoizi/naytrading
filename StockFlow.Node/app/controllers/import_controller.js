@@ -10,16 +10,20 @@ var config = require('../config/envconfig');
 var tools = require('./import_tools');
 
 
-function getInstrumentKey(data) {
-    return data.Source + '/' + data.InstrumentId;
+function getInstrumentKeys(data) {
+    return data.sources.map(x => x.SourceType + '/' + x.SourceId);
+}
+
+function getSnapshotKeys(data) {
+    return data.instrument.sources.map(x => x.SourceType + '/' + x.SourceId + '/' + new Date(data.Time).getTime());
+}
+
+function getExistingInstrumentKey(data) {
+    return data.SourceType + '/' + data.SourceId;
 }
 
 function getExistingSnapshotKey(data) {
-    return data.Source + '/' + data.InstrumentId + '/' + new Date(data.Time).getTime();
-}
-
-function getSnapshotKey(data) {
-    return data.instrument.Source + '/' + data.instrument.InstrumentId + '/' + new Date(data.Time).getTime();
+    return data.SourceType + '/' + data.SourceId + '/' + new Date(data.Time).getTime();
 }
 
 function prepareSnapshot(data) {
@@ -34,10 +38,10 @@ function prepareSnapshot(data) {
 function addSnapshot(data, instrumentsDict) {
     return new Promise(async (resolve, reject) => {
         try {
-            var instrumentKey = getInstrumentKey(data.instrument);
-            var instrument = instrumentsDict[instrumentKey];
-            if (instrument) {
-                data.Instrument_ID = instrument.ID;
+            var instrumentKeys = getInstrumentKeys(data.instrument);
+            var instruments = instrumentKeys.map(x => instrumentsDict[x]).filter(x => x);
+            if (instruments.length > 0) {
+                data.Instrument_ID = instruments[0].ID;
             }
             else {
 
@@ -45,8 +49,29 @@ function addSnapshot(data, instrumentsDict) {
                 delete data.instrument.createdAt;
                 delete data.instrument.updatedAt;
 
-                instrument = await model.instrument.create(data.instrument);
-                instrumentsDict[instrumentKey] = instrument;
+                for (var i = 0; i < data.instrument.userinstruments.length; ++i) {
+                    delete data.instrument.userinstruments[i].ID;
+                    delete data.instrument.userinstruments[i].createdAt;
+                    delete data.instrument.userinstruments[i].updatedAt;
+                }
+
+                for (var i = 0; i < data.instrument.sources.length; ++i) {
+                    delete data.instrument.sources[i].ID;
+                    delete data.instrument.sources[i].createdAt;
+                    delete data.instrument.sources[i].updatedAt;
+                }
+
+                instrument = await model.instrument.create(data.instrument, {
+                    include: [{
+                        model: model.userinstrument
+                    }, {
+                        model: model.source
+                    }]
+                });
+
+                for(var i = 0; i < instrumentKeys.length; ++i) {
+                    instrumentsDict[instrumentKeys[i]] = instrument;
+                }
 
                 data.Instrument_ID = instrument.ID;
             }
@@ -155,7 +180,26 @@ function addInstrument(data) {
             delete data.ID;
             delete data.createdAt;
             delete data.updatedAt;
-            await model.instrument.create(data);
+
+            for (var i = 0; i < data.sources.length; ++i) {
+                delete data.sources[i].ID;
+                delete data.sources[i].createdAt;
+                delete data.sources[i].updatedAt;
+            }
+
+            for (var i = 0; i < data.userinstruments.length; ++i) {
+                delete data.userinstruments[i].ID;
+                delete data.userinstruments[i].createdAt;
+                delete data.userinstruments[i].updatedAt;
+            }
+
+            await model.instrument.create(data, {
+                include: [{
+                    model: model.userinstrument
+                },{
+                    model: model.source
+                }]
+            });
             resolve();
         }
         catch (e) {
@@ -194,7 +238,7 @@ function updateInstrument(data, existing) {
                             Decision: u.Decision,
                             ModifiedTime: u.ModifiedTime,
                             Instrument_ID: existing.ID
-                        })
+                        });
                     }
                 }
 
@@ -241,15 +285,15 @@ exports.importInstruments = async function (req, res) {
     if (req.params.importSecret == config.import_secret) {
 
         async function getExistingInstruments() {
-            var existing = await sql.query('SELECT i.ID, i.Source, i.InstrumentId FROM instruments AS i');
-            return tools.toDictionary(existing, getInstrumentKey);
+            var existing = await sql.query('SELECT i.ID, c.SourceType, c.SourceId FROM instruments AS i INNER JOIN sources AS c ON c.Instrument_ID = i.ID');
+            return tools.toDictionary(existing, getExistingInstrumentKey);
         }
 
         tools.importFromFormSubmit(
             req,
             res,
             getExistingInstruments,
-            getInstrumentKey,
+            getInstrumentKeys,
             addInstrument,
             updateInstrument,
             removeInstrument);
@@ -265,12 +309,12 @@ exports.importSnapshots = async function (req, res) {
     if (req.params.importSecret == config.import_secret) {
 
         async function getExistingInstruments() {
-            var existing = await sql.query('SELECT i.ID, i.Source, i.InstrumentId FROM instruments AS i');
-            return tools.toDictionary(existing, getInstrumentKey);
+            var existing = await sql.query('SELECT i.ID, c.SourceType, c.SourceId FROM instruments AS i INNER JOIN sources AS c ON c.Instrument_ID = i.ID');
+            return tools.toDictionary(existing, getExistingInstrumentKey);
         }
 
         async function getExistingSnapshots() {
-            var existing = await sql.query('SELECT s.ID, i.Source, i.InstrumentId, s.Time FROM snapshots AS s INNER JOIN instruments AS i ON i.ID = s.Instrument_ID');
+            var existing = await sql.query('SELECT s.ID, c.SourceType, c.SourceId, s.Time FROM snapshots AS s INNER JOIN instruments AS i ON i.ID = s.Instrument_ID INNER JOIN sources AS c ON c.Instrument_ID = i.ID');
             return tools.toDictionary(existing, getExistingSnapshotKey);
         }
 
@@ -280,7 +324,7 @@ exports.importSnapshots = async function (req, res) {
             req,
             res,
             getExistingSnapshots,
-            getSnapshotKey,
+            getSnapshotKeys,
             snapshot => {
                 return addSnapshot(snapshot, instrumentsDict);
             },

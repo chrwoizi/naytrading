@@ -49,20 +49,27 @@ exports.addUrl = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
 
-            var instrument = await instrumentsProvider.getInstrumentByUrl(req.params.url);
+            var instrument = await instrumentsProvider.getInstrumentByUrl(null, req.params.url);
 
-            if (instrument.InstrumentId > 0) {
-                var knownInstrument = await model.instrument.find({
-                    where: {
-                        Source: instrumentsProvider.source,
-                        InstrumentId: instrument.InstrumentId
+            if (instrument && instrument.sources && instrument.sources.length > 0) {
+
+                var knownSource = null;
+                for (var i = 0; i < instrument.sources.length; ++i) {
+                    knownSource = await model.source.find({
+                        where: {
+                            SourceType: instrument.sources[i].SourceType,
+                            SourceId: instrument.sources[i].SourceId
+                        }
+                    });
+                    if (knownSource) {
+                        break;
                     }
-                });
+                }
 
-                if (knownInstrument) {
+                if (knownSource) {
                     var existing = await model.userinstrument.find({
                         where: {
-                            Instrument_ID: knownInstrument.ID,
+                            Instrument_ID: knownSource.Instrument_ID,
                             User: req.user.email
                         }
                     });
@@ -71,16 +78,18 @@ exports.addUrl = async function (req, res) {
                     }
                     else {
                         await model.userinstrument.create({
-                            Instrument_ID: knownInstrument.ID,
+                            Instrument_ID: knownSource.Instrument_ID,
                             User: req.user.email
                         });
                         res.json({ added: 1 });
                     }
                 }
                 else {
-                    instrument.Strikes = 0;
-                    instrument.LastStrikeTime = new Date();
-                    var instrument = await model.instrument.create(instrument);
+                    var instrument = await model.instrument.create(instrument, {
+                        include: [{
+                            model: model.source
+                        }]
+                    });
                     await model.userinstrument.create({
                         Instrument_ID: instrument.ID,
                         User: req.user.email

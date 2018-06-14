@@ -1,18 +1,76 @@
 var exports = module.exports = {}
 
 var config = require('../config/envconfig');
-var instrumentsProvider = require(config.instruments_provider);
 
-exports.source = instrumentsProvider.source;
+var sources = Object.keys(config.instruments_providers);
+var providers = {};
+for (var i = 0; i < sources.length; ++i) {
+    var source = sources[i];
+    var provider = require(config.instruments_providers[source]);
+    if (provider) {
+        providers[source] = provider;
+    }
+}
 
-exports.getAllInstruments = async function (minCapitalization) {
-    return await instrumentsProvider.getAllInstruments(minCapitalization);
+exports.market_not_found = "market not found";
+exports.invalid_response = "invalid response";
+
+exports.getAllInstruments = async function (source, minCapitalization) {
+    if (source) {
+        if (providers[source]) {
+            return await providers[source].getAllInstruments(source, minCapitalization);
+        }
+        else {
+            return [];
+        }
+    }
+    else {
+        var result = [];
+        for (var i = 0; i < sources.length; ++i) {
+            var instruments = await providers[source[i]].getInstrumentByUrl(url);
+            if (instruments && instruments.length > 0) {
+                for (var k = 0; k < sources.length; ++k) {
+                    result.push(instruments[k]);
+                }
+            }
+        }
+        return result;
+    }
 };
 
-exports.getInstrumentByUrl = async function (url) {    
-    return await instrumentsProvider.getInstrumentByUrl(url);
+exports.getInstrumentByUrl = async function (source, url) {
+    if (source) {
+        if (providers[source]) {
+            return await providers[source].getInstrumentByUrl(source, url);
+        }
+        else {
+            return null;
+        }
+    }
+    else {
+        for (var i = 0; i < sources.length; ++i) {
+            var instrument = await providers[source[i]].getInstrumentByUrl(url);
+            if (instrument) {
+                return instrument;
+            }
+        }
+    }
 };
 
-exports.getIsinWknByInstrumentId = async function (instrumentId) {    
-    return await instrumentsProvider.getIsinWknByInstrumentId(instrumentId);
+exports.getIsinWkn = async function (source, instrumentId) {
+    if (providers[source]) {
+        return await providers[source].getIsinWkn(source, instrumentId);
+    }
+    else {
+        return null;
+    }
+};
+
+exports.getInstrumentId = async function (source, isin, wkn) {
+    if (providers[source]) {
+        return await providers[source].getInstrumentId(source, isin, wkn);
+    }
+    else {
+        return null;
+    }
 };
