@@ -34,6 +34,16 @@ module.exports = (sequelize, DataTypes) => {
             allowNull: false
         },
 
+        SourceType: {
+            allowNull: false,
+            type: DataTypes.STRING(10)
+        },
+
+        MarketId: {
+            allowNull: true,
+            type: DataTypes.STRING(100)
+        }, 
+
         createdAt: {
             allowNull: false,
             type: DataTypes.DATE
@@ -52,7 +62,8 @@ module.exports = (sequelize, DataTypes) => {
             { fields: ['Time', 'Instrument_ID'] },
             { fields: ['PriceTime'] },
             { fields: ['PriceTime', 'FirstPriceTime'] },
-            { fields: ['FirstPriceTime'] }
+            { fields: ['FirstPriceTime'] },
+            { fields: ['SourceType'] }
         ]
     });
     snapshot.associate = function (models) {
