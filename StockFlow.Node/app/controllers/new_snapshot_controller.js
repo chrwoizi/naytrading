@@ -286,7 +286,9 @@ exports.createNewSnapshotFromRandomInstrument = async function (instrumentIds) {
                                 Price: rates[rates.length - 1].Close,
                                 PriceTime: rates[rates.length - 1].Time,
                                 FirstPriceTime: rates[0].Time,
-                                Instrument_ID: instrument.ID
+                                Instrument_ID: instrument.ID,
+                                SourceType: source.SourceType,
+                                MarketId: ratesResponse.MarketId
                             },
                             {
                                 include: [{
