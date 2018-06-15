@@ -4,9 +4,10 @@ var config = require('../config/envconfig');
 var request = config.require('request');
 var parse5 = config.require('parse5');
 var xmlser = config.require('xmlserializer');
+var querystring = config.require('querystring');
 var dom = config.require('xmldom').DOMParser;
 
-var requestTimes = [];
+var requestTimes = {};
 
 function sleep(millis) {
     return new Promise(function (resolve, reject) {
@@ -14,20 +15,23 @@ function sleep(millis) {
     });
 }
 
-async function getLock() {
+async function getLock(sourceType) {
     var interval = 1000 * config.downloader_throttle_seconds;
+    if(!(sourceType in requestTimes)) {
+        requestTimes[sourceType] = [];
+    }
 
     var now = new Date().getTime();
 
     var intervalStart = now - interval;
-    while (requestTimes.length > 0 && requestTimes[0] < intervalStart) {
-        requestTimes = requestTimes.slice(1);
+    while (requestTimes[sourceType].length > 0 && requestTimes[sourceType][0] < intervalStart) {
+        requestTimes[sourceType] = requestTimes[sourceType].slice(1);
     }
 
-    var count = requestTimes.length;
+    var count = requestTimes[sourceType].length;
 
     if (count < config.downloader_throttle_requests) {
-        requestTimes.push(now);
+        requestTimes[sourceType].push(now);
         if (count > 0) {
             await sleep(interval / config.downloader_throttle_requests);
         }
@@ -38,11 +42,11 @@ async function getLock() {
     }
 }
 
-exports.download = async function(url, isJson) {
+exports.download = async function (sourceType, url, isJson, customRequest, form) {
 
     var start = new Date().getTime();
     while (true) {
-        var lock = await getLock();
+        var lock = await getLock(sourceType);
         if (lock)
             break;
 
@@ -61,14 +65,30 @@ exports.download = async function(url, isJson) {
 
     var doc = await new Promise(function (resolve, reject) {
 
-        request.get(options, function (err, resp, body) {
-            if (err || resp.statusCode != 200) {
-                console.log(err);
-                reject(err);
-            } else {
-                resolve(body);
-            }
-        });
+        var usingRequest = customRequest || request;
+
+        if (form) {
+            options.form = form;
+
+            usingRequest.post(options, function (err, resp, body) {
+                if (err || resp.statusCode != 200) {
+                    console.log(err);
+                    reject(err);
+                } else {
+                    resolve(body);
+                }
+            });
+        }
+        else {
+            usingRequest.get(options, function (err, resp, body) {
+                if (err || resp.statusCode != 200) {
+                    console.log(err);
+                    reject(err);
+                } else {
+                    resolve(body);
+                }
+            });
+        }
 
     });
 
@@ -87,7 +107,7 @@ function parseDoc(html) {
     return doc;
 }
 
-exports.downloadHtml = async function(url, isJson) {
-    var body = await exports.download(url, isJson);
+exports.downloadHtml = async function (sourceType, url, isJson, customRequest, form) {
+    var body = await exports.download(sourceType, url, isJson, customRequest, form);
     return parseDoc(body);
 }

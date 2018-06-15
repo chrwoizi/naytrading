@@ -31,7 +31,7 @@ exports.getInstrumentByUrl = async function (source, url) {
     if (source != exports.source)
         throw "invalid source";
 
-    var doc = await downloader.downloadHtml(url);
+    var doc = await downloader.downloadHtml(source, url);
 
     // TODO extract values from doc
 

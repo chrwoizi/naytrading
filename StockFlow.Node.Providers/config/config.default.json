@@ -7,7 +7,7 @@
     "rates_providers": {
       "e": "../providers/example/example_rates_provider"
     },
-    "downloader_throttle_requests": 10,
+    "downloader_throttle_requests": 3,
     "downloader_throttle_seconds": 10,
     "downloader_timeout_milliseconds": 120000,
     "example_markets": ["1", "2", "3"]
@@ -20,7 +20,7 @@
     "rates_providers": {
       "e": "../providers/example/example_rates_provider"
     },
-    "downloader_throttle_requests": 10,
+    "downloader_throttle_requests": 3,
     "downloader_throttle_seconds": 10,
     "downloader_timeout_milliseconds": 120000,
     "example_markets": ["1", "2", "3"]

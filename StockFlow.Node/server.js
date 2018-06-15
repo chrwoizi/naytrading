@@ -13,6 +13,7 @@ var preloadJob = require('./app/jobs/preload');
 var strikesJob = require('./app/jobs/strikes');
 var portfoliosJob = require('./app/jobs/portfolios');
 var processJob = require('./app/jobs/process');
+var sourcesJob = require('./app/jobs/sources');
 var config = require('./app/config/envconfig');
 var sql = require('./app/sql/sql');
 
@@ -110,6 +111,10 @@ var sql = require('./app/sql/sql');
     setTimeout(function () {
         new Promise(function (resolve, reject) { instrumentsJob.run(); });
     }, 2000);
+
+    setTimeout(function () {
+        new Promise(function (resolve, reject) { sourcesJob.run(); });
+    }, 3000);
 
     setTimeout(function () {
         new Promise(function (resolve, reject) { cleanupJob.run(); });
