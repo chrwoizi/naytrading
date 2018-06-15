@@ -242,8 +242,16 @@ exports.createNewSnapshotFromRandomInstrument = async function (instrumentIds) {
         });
 
         try {
-            var sortedSources = instrument.sources.slice();
-            sortedSources.sort((a, b) => a.Strikes - b.Strikes);
+            var sortedSources = instrument.sources
+                .filter(x => x.Status == "ACTIVE")
+                .filter(x => x.Strikes < config.max_strikes)
+                .filter(x => ratesProvider.sources.indexOf(x.SourceType) >= 0);
+            sortedSources.sort(function (a, b) {
+                var aIndex = ratesProvider.sources.indexOf(a.SourceType);
+                var bIndex = ratesProvider.sources.indexOf(b.SourceType);
+                return aIndex - bIndex;
+            });
+
             for (var s = 0; s < sortedSources.length; ++s) {
                 var source = sortedSources[s];
                 try {
