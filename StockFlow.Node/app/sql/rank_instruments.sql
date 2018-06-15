@@ -41,6 +41,7 @@ FROM
 				s.Instrument_ID = i.ID
 				AND s.Time > @validFromDateTime
 		)
+		AND EXISTS (SELECT 1 FROM sources AS c WHERE c.Instrument_ID = i.ID AND c.Status = "ACTIVE")
 ) AS i
 WHERE
 	i.MaxStrikes <= @maxStrikes;
