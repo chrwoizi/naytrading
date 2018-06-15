@@ -4,7 +4,6 @@ var config = require('../config/envconfig');
 var request = config.require('request');
 var parse5 = config.require('parse5');
 var xmlser = config.require('xmlserializer');
-var querystring = config.require('querystring');
 var dom = config.require('xmldom').DOMParser;
 
 var requestTimes = {};

@@ -4,10 +4,13 @@ var config = require('../../config/envconfig');
 var downloader = require('../downloader');
 
 exports.source = "e";
+exports.markets = config.example_markets;
 exports.market_not_found = "market not found";
 exports.invalid_response = "invalid response";
 
-async function getRates(instrumentId, marketId, startTime, endTime) {
+exports.getRates = async function (source, instrumentId, marketId, startTime, endTime) {
+    if (source != exports.source)
+        throw "invalid source";
 
     var response = {
         "markets": {
@@ -101,50 +104,4 @@ async function getRates(instrumentId, marketId, startTime, endTime) {
     else {
         throw exports.invalid_response;
     }
-}
-
-exports.getRates = async function (source, instrumentId, preferredMarketId, startTime, endTime) {
-    if (source != exports.source)
-        throw "invalid source";
-
-    var marketIds = config.example_markets;
-    if (preferredMarketId != null && typeof (preferredMarketId) === 'string' && preferredMarketId.length > 0) {
-
-        var index = config.example_markets.indexOf(preferredMarketId);
-        if (index > -1) {
-            // remove known market from list
-            marketIds.splice(index, 1);
-        }
-
-        // push known market to front of list
-        marketIds.unshift(preferredMarketId);
-    }
-
-    for (var m = 0; m < marketIds.length; ++m) {
-        var marketId = marketIds[m];
-
-        ratesResponse = await getRates(instrumentId, marketId, startTime, endTime);
-
-        if (ratesResponse.Rates == null) {
-            if (ratesResponse.MarketIds) {
-                // remove markets that dont exist
-                marketIds = marketIds.filter(x => ratesResponse.MarketIds.indexOf(x) > -1);
-                m = marketIds.indexOf(marketId);
-            }
-
-            // try next market or abort if none left
-            if (m < marketIds.length - 1) {
-                continue;
-            }
-            else {
-                throw exports.market_not_found;
-            }
-        }
-
-        ratesResponse.MarketId = marketId;
-
-        break;
-    }
-
-    return ratesResponse;
 };
