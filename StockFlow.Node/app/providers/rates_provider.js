@@ -12,6 +12,8 @@ for (var i = 0; i < sources.length; ++i) {
     }
 }
 
+exports.sources = sources;
+exports.providers = providers;
 exports.market_not_found = "market not found";
 exports.invalid_response = "invalid response";
 
