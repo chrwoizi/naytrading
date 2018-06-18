@@ -109,6 +109,7 @@ async function getHunch(snapshotId) {
     var detections = getDistinctFindings(findings, 5);
     if (detections.length > 0) {
         status = "HUNCH";
+        //console.log("split job HUNCH at " + snapshotId + ": " + JSON.stringify(detections));
     }
 
     await sql.query("UPDATE snapshots AS s SET s.Split = @status WHERE s.ID = @snapshotId", {
@@ -166,6 +167,7 @@ async function detectByFraction(snapshotId) {
 
     var detections = getDistinctFindings(findings, 5);
     if (detections.length > 0) {
+        //console.log("split job PROBABLY at " + snapshotId + ": " + JSON.stringify(detections));
         await sql.query("UPDATE snapshots AS s SET s.Split = 'PROBABLY' WHERE s.ID = @snapshotId", {
             "@snapshotId": snapshotId
         });
@@ -333,7 +335,7 @@ async function fixWithDifferentSource(snapshotId, knownSource, instrumentId, sta
                 if (n < newRates.length) {
                     var newRate = newRates[n];
                     var diff = (newRate.Close - knownRate.Close) / knownRate.Close;
-                    if (diff > config.job_split_min_diff_ratio) {
+                    if (Math.abs(diff) > config.job_split_min_diff_ratio) {
                         diffs.push(diff);
                     }
                 }
@@ -359,7 +361,10 @@ async function fixWithDifferentSources() {
                 { Split: "HUNCH" },
                 { Split: "PROBABLY" }
             ]
-        }
+        },
+        orderBy: [
+            ["Time", "DESC"]
+        ]
     });
 
     for (var i = 0; i < items.length; ++i) {

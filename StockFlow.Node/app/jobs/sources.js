@@ -13,7 +13,8 @@ exports.run = async function () {
             var sourceType = instrumentsProvider.sources[s];
             var instruments = await sql.query("SELECT i.ID, i.Isin, i.Wkn FROM instruments AS i \
                 WHERE (i.Isin IS NOT NULL OR i.Wkn IS NOT NULL) \
-                AND NOT EXISTS (SELECT 1 FROM sources AS s WHERE s.SourceType = @sourceType AND s.Instrument_ID = i.ID)", {
+                AND NOT EXISTS (SELECT 1 FROM sources AS s WHERE s.SourceType = @sourceType AND s.Instrument_ID = i.ID) \
+                ORDER BY (SELECT MAX(s.Time) FROM snapshots AS s where s.Instrument_ID = i.ID) DESC", {
                     "@sourceType": sourceType
                 });
 
