@@ -355,7 +355,10 @@ async function fixWithDifferentSource(snapshotId, knownSource, instrumentId, sta
 async function fixWithDifferentSources() {
     var items = await model.snapshot.findAll({
         where: {
-            Split: "HUNCH"
+            [sequelize.Op.or]: [
+                { Split: "HUNCH" },
+                { Split: "PROBABLY" }
+            ]
         }
     });
 
