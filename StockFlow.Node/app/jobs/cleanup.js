@@ -46,10 +46,10 @@ async function cleanupDuplicates() {
     var groups = groupBy(rows, x => {
         return {
             Instrument_ID: x.Instrument_ID,
-            Time: x.Time.getTime()
+            Time: x.Time
         };
     }, (a, b) => {
-        return a.Instrument_ID == b.Instrument_ID && a.Time == b.Time;
+        return a.Instrument_ID == b.Instrument_ID && a.Time.substr(0, 10) == b.Time.substr(0, 10);
     });
 
     for (var i = 0; i < groups.length; ++i) {

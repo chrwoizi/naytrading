@@ -98,7 +98,6 @@ exports.isGlobalAutoIgnore = async function (rates) {
     endTime.setHours(0, 0, 0, 0);
     var startTime = new Date(endTime.getTime() - config.chart_period_seconds * 1000);
 
-    var timeDiff = endTime - startTime;
     var firstRatesUntil = new Date(startTime.getTime() + 1000 * (config.chart_period_seconds * 0.2));
     var lastRatesFrom = new Date(endTime.getTime() - 1000 * (config.chart_period_seconds * 0.2));
 
@@ -160,7 +159,7 @@ async function updateIsinWkn(instrument, isin, wkn) {
     }
 }
 
-function checkRates(rates, startTime, endTime, instrument, source) {
+exports.checkRates = function(rates, startTime, endTime, source) {
 
     var minRateTime = new Date(startTime.getTime() + 1000 * config.discard_threshold_seconds);
     var maxRateTime = new Date(endTime.getTime() - 1000 * config.discard_threshold_seconds);
@@ -185,7 +184,7 @@ function checkRates(rates, startTime, endTime, instrument, source) {
     }
 
     return null;
-}
+};
 
 async function updateMarket(source, marketId) {
     if (marketId != source.MarketId) {
@@ -258,7 +257,7 @@ exports.createNewSnapshotFromRandomInstrument = async function (instrumentIds) {
 
                     var problem = null;
                     async function checkRatesCallback(rates) {
-                        problem = checkRates(rates, startTime, endTime, instrument, source);
+                        problem = exports.checkRates(rates, startTime, endTime, source);
                         return problem == null;
                     }
 
