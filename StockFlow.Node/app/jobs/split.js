@@ -271,9 +271,20 @@ async function fixWithDifferentSource(snapshotId, knownSource, instrumentId, sta
     });
 
     var newSources = ratesProvider.sources.slice();
+
+    // ignore old source
     var knownSourceIndex = newSources.indexOf(knownSource);
     if (knownSourceIndex >= 0) {
         newSources.splice(knownSourceIndex, 1);
+    }
+
+    // keep only configured sources
+    for (var i = 0; i < newSources.length; ++i) {
+        var newSource = newSources[i];
+        if (config.job_split_sources.indexOf(newSource) == -1) {
+            newSources.splice(i, 1);
+            --i;
+        }
     }
 
     var sources = await model.source.findAll({
@@ -282,6 +293,7 @@ async function fixWithDifferentSource(snapshotId, knownSource, instrumentId, sta
         }
     });
 
+    // keep only available sources
     var availableSources = sources.map(x => x.SourceType);
     for (var i = 0; i < newSources.length; ++i) {
         var newSource = newSources[i];
@@ -321,13 +333,13 @@ async function fixWithDifferentSource(snapshotId, knownSource, instrumentId, sta
                 if (n < newRates.length) {
                     var newRate = newRates[n];
                     var diff = (newRate.Close - knownRate.Close) / knownRate.Close;
-                    if (diff > 0.1) {
+                    if (diff > config.job_split_min_diff_ratio) {
                         diffs.push(diff);
                     }
                 }
             }
 
-            if (diffs.length > 10) {
+            if (diffs.length > config.job_split_min_diff_days) {
                 status = "FIXABLE-" + newSource;
                 //await refreshRates(snapshotId, ratesResponse.Source, ratesResponse.MarketId, newRates);
                 break;
