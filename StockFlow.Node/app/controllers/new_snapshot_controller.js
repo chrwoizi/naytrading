@@ -84,7 +84,7 @@ exports.isUserAutoIgnore = async function (newSnapshot) {
     if (newSnapshot.PreviousDecision == "buy") {
         if (newSnapshot.Rates && newSnapshot.Rates.length > 0 && newSnapshot.PreviousBuyRate != null) {
             var lastRate = newSnapshot.Rates[newSnapshot.Rates.length - 1];
-            if (lastRate.C < newSnapshot.PreviousBuyRate) {
+            if (lastRate.C < newSnapshot.PreviousBuyRate && lastRate.C > 0.9 * newSnapshot.PreviousBuyRate) {
                 return true;
             }
         }
