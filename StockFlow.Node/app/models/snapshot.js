@@ -34,6 +34,11 @@ module.exports = (sequelize, DataTypes) => {
             allowNull: false
         },
 
+        Split: {
+            allowNull: true,
+            type: DataTypes.STRING(30)
+        },
+
         SourceType: {
             allowNull: false,
             type: DataTypes.STRING(10)
@@ -63,7 +68,8 @@ module.exports = (sequelize, DataTypes) => {
             { fields: ['PriceTime'] },
             { fields: ['PriceTime', 'FirstPriceTime'] },
             { fields: ['FirstPriceTime'] },
-            { fields: ['SourceType'] }
+            { fields: ['SourceType'] },
+            { fields: ['Split'] }
         ]
     });
     snapshot.associate = function (models) {

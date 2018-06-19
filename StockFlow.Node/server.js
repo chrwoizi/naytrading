@@ -136,11 +136,4 @@ var sql = require('./app/sql/sql');
         new Promise(function (resolve, reject) { processJob.run(); });
     }, 12000);
 
-    
-    //var instrumentsProvider = require('./app/providers/instruments_provider');
-    //var ratesProvider = require('./app/providers/rates_provider');
-    //var i = await instrumentsProvider.getInstrumentId("f", "TH0646010Z18", null);
-    //var r = await ratesProvider.getRates("f", i, null, new Date(2018, 3, 1), new Date(2018, 3, 30));
-    //console.log("TH0646010Z18: " + JSON.stringify(r));
-
 })();
