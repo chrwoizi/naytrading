@@ -1,10 +1,18 @@
 var exports = module.exports = {}
+var fs = require('fs');
 var model = require('../models/index');
 var sequelize = require('sequelize');
 var sql = require('../sql/sql');
 var config = require('../config/envconfig');
 var ratesProvider = require('../providers/rates_provider');
 var newSnapshotController = require('../controllers/new_snapshot_controller');
+
+var split_adjust_sql = "";
+try {
+    split_adjust_sql = fs.readFileSync(__dirname + '/../sql/split_adjust.sql', 'utf8');
+} catch (e) {
+    console.log('Error:', e.stack);
+}
 
 
 var previousTime = new Date();
@@ -192,7 +200,7 @@ function getDay(date) {
     return day;
 }
 
-async function resetStats(snapshotId) {
+async function resetStats(snapshotId, endTime) {
     var users = await sql.query("SELECT u.User FROM usersnapshots AS u WHERE u.Snapshot_ID = @snapshotId", {
         "@snapshotId": snapshotId
     });
@@ -233,33 +241,56 @@ async function resetStats(snapshotId) {
     }
 }
 
-async function refreshRates(snapshotId, source, marketId, rates) {
+async function refreshRates(snapshotId, source, marketId, rates, endTime) {
 
-    await model.snapshotrate.destroy({
-        where: {
-            Snapshot_ID: snapshotId
-        }
-    });
+    let transaction;
 
-    await model.snapshot.update(
-        {
-            snapshotrates: rates,
-            SourceType: source,
-            Price: rates[rates.length - 1].Close,
-            PriceTime: rates[rates.length - 1].Time,
-            FirstPriceTime: rates[0].Time,
-            MarketId: marketId
-        },
-        {
+    try {
+        transaction = await model.sequelize.transaction();
+
+        await model.snapshotrate.destroy({
             where: {
-                ID: snapshotId
+                Snapshot_ID: snapshotId
             },
-            include: [{
-                model: model.snapshotrate
-            }]
+            transaction: transaction
         });
 
-    await resetStats(snapshotId);
+        await model.snapshotrate.bulkCreate(
+            rates.map(function(r) {
+                return {
+                    Snapshot_ID: snapshotId,
+                    Open: r.Open,
+                    Close: r.Close,
+                    High: r.High,
+                    Low: r.Low,
+                    Time: r.Time
+                };
+            }), {
+                transaction: transaction
+            });
+
+        await model.snapshot.update(
+            {
+                SourceType: source,
+                Price: rates[rates.length - 1].Close,
+                PriceTime: rates[rates.length - 1].Time,
+                FirstPriceTime: rates[0].Time,
+                MarketId: marketId
+            },
+            {
+                where: {
+                    ID: snapshotId
+                },
+                transaction: transaction
+            });
+
+        await transaction.commit();
+
+    } catch (err) {
+        await transaction.rollback();
+    }
+
+    await resetStats(snapshotId, endTime);
 }
 
 async function fixWithDifferentSource(snapshotId, knownSource, instrumentId, startTime, endTime) {
@@ -322,50 +353,54 @@ async function fixWithDifferentSource(snapshotId, knownSource, instrumentId, sta
         }
 
         var sourceInfo = sources.filter(x => x.SourceType == newSource)[0];
-        var ratesResponse = await ratesProvider.getRates(sourceInfo.SourceType, sourceInfo.SourceId, sourceInfo.MarketId, startTime, endTime, checkRatesCallback);
-        if (ratesResponse && ratesResponse.Rates) {
-            var newRates = ratesResponse.Rates;
+        try {
+            var ratesResponse = await ratesProvider.getRates(sourceInfo.SourceType, sourceInfo.SourceId, sourceInfo.MarketId, startTime, endTime, checkRatesCallback);
+            if (ratesResponse && ratesResponse.Rates) {
+                var newRates = ratesResponse.Rates;
 
-            status = "NODIFF-" + newSource;
+                status = "NODIFF";
 
-            var diffs = [];
-            for (var k = 0, n = 0; k < knownRates.length && n < newRates.length; ++k) {
-                var knownRate = knownRates[k];
-                while (n < newRates.length && getDay(newRates[n].Time) < getDay(parseDate(knownRate.Time)))++n;
-                if (n < newRates.length) {
-                    var newRate = newRates[n];
-                    var diff = (newRate.Close - knownRate.Close) / knownRate.Close;
-                    if (Math.abs(diff) > config.job_split_min_diff_ratio) {
-                        diffs.push(diff);
+                var diffs = [];
+                for (var k = 0, n = 0; k < knownRates.length && n < newRates.length; ++k) {
+                    var knownRate = knownRates[k];
+                    while (n < newRates.length && getDay(newRates[n].Time) < getDay(parseDate(knownRate.Time)))++n;
+                    if (n < newRates.length) {
+                        var newRate = newRates[n];
+                        var diff = (newRate.Close - knownRate.Close) / knownRate.Close;
+                        if (Math.abs(diff) > config.job_split_min_diff_ratio) {
+                            diffs.push(diff);
+                        }
                     }
                 }
-            }
 
-            if (diffs.length > config.job_split_min_diff_days) {
-                status = "FIXABLE-" + newSource;
-                //await refreshRates(snapshotId, ratesResponse.Source, ratesResponse.MarketId, newRates);
-                break;
+                if (diffs.length > config.job_split_min_diff_days) {
+                    status = "FIXED";
+                    await refreshRates(snapshotId, ratesResponse.Source, ratesResponse.MarketId, newRates, endTime);
+                    break;
+                }
+            }
+        }
+        catch (e) {
+            if (e == ratesProvider.market_not_found) {
+                // expected
+            }
+            else if (e == ratesProvider.invalid_response) {
+                // expected
+            }
+            else {
+                throw e;
             }
         }
     }
 
-    await sql.query("UPDATE snapshots AS s SET s.Split = '" + status + "' WHERE s.ID = @snapshotId", {
+    await sql.query("UPDATE snapshots AS s SET s.Split = @status WHERE s.ID = @snapshotId", {
+        "@status": status,
         "@snapshotId": snapshotId
     });
 }
 
 async function fixWithDifferentSources() {
-    var items = await model.snapshot.findAll({
-        where: {
-            [sequelize.Op.or]: [
-                { Split: "HUNCH" },
-                { Split: "PROBABLY" }
-            ]
-        },
-        orderBy: [
-            ["Time", "DESC"]
-        ]
-    });
+    var items = await sql.query("SELECT s.ID, s.SourceType, s.Instrument_ID, s.StartTime, s.Time FROM snapshots AS s WHERE s.Split = 'HUNCH' or s.Split = 'PROBABLY' ORDER BY s.Time DESC");
 
     for (var i = 0; i < items.length; ++i) {
         await fixWithDifferentSource(items[i].ID, items[i].SourceType, items[i].Instrument_ID, parseDate(items[i].StartTime), parseDate(items[i].Time));
@@ -374,17 +409,12 @@ async function fixWithDifferentSources() {
     }
 }
 
-async function changePreviousSource(snapshotId, newSource, instrumentId, startTime, endTime) {
+async function changeSource(snapshotId, newSource, newMarketId, instrumentId, startTime, endTime) {
 
     async function checkRatesCallback(rates) {
         problem = newSnapshotController.checkRates(rates, startTime, endTime, newSource);
         return problem == null;
     }
-
-    var marketIds = await sql.query("SELECT s.MarketId FROM snapshots AS s WHERE s.Time > @endTime AND s.SourceType = @newSource ORDER BY s.Time ASC", {
-        "@endTime": endTime,
-        "@newSource": newSource
-    });
 
     var sources = await model.source.findAll({
         where: {
@@ -395,55 +425,62 @@ async function changePreviousSource(snapshotId, newSource, instrumentId, startTi
 
     var sourceInfo = sources[0];
 
-    var marketId = sourceInfo.MarketId;
-    if (marketIds.length > 0) {
-        marketId = marketIds[0];
-    }
-
     var status = "NOSOURCE";
 
-    var ratesResponse = await ratesProvider.getRates(sourceInfo.SourceType, sourceInfo.SourceId, marketId, startTime, endTime, checkRatesCallback);
-    if (ratesResponse && ratesResponse.Rates) {
-        var newRates = ratesResponse.Rates;
+    try {
+        var ratesResponse = await ratesProvider.getRates(newSource, sourceInfo.SourceId, newMarketId, startTime, endTime, checkRatesCallback);
+        if (ratesResponse && ratesResponse.Rates) {
+            var newRates = ratesResponse.Rates;
 
-        status = "FIXABLE-" + newSource;
-        //await refreshRates(snapshotId, ratesResponse.Source, ratesResponse.MarketId, newRates);
+            status = "FIXED";
+            await refreshRates(snapshotId, ratesResponse.Source, ratesResponse.MarketId, newRates, endTime);
+        }
+    }
+    catch (e) {
+        if (e == ratesProvider.market_not_found) {
+            // expected
+        }
+        else if (e == ratesProvider.invalid_response) {
+            // expected
+        }
+        else {
+            throw e;
+        }
     }
 
-    await sql.query("UPDATE snapshots AS s SET s.Split = '" + status + "' WHERE s.ID = @snapshotId", {
+    await sql.query("UPDATE snapshots AS s SET s.Split = @status WHERE s.ID = @snapshotId", {
+        "@status": status,
         "@snapshotId": snapshotId
     });
 }
 
-async function changePreviousSources() {
-    for (var c = 0; c < ratesProvider.sources; ++c) {
-        var newSource = ratesProvider.sources[c];
+async function changeSources() {
+    var items = await sql.query(split_adjust_sql, {
+        "@minDiffRatio": config.job_split_min_diff_ratio
+    });
 
-        var items = await sql.query("SELECT s.ID FROM snapshots AS s \
-            WHERE s.SourceType <> '" + newSource + "' AND s.Split <> 'FIXED-" + newSource + "' AND EXISTS (\
-            SELECT 1 FROM snapshots AS n WHERE n.Instrument_ID = s.Instrument_ID and n.Split = 'FIXED-" + newSource + "' AND n.Time < s.Time)");
+    for (var i = 0; i < items.length; ++i) {
 
-        for (var i = 0; i < items.length; ++i) {
-            var snapshot = await model.snapshot.findOne({
-                where: {
-                    ID: items[i].ID
-                }
-            });
+        var snapshots = await sql.query("SELECT s.ID, s.StartTime, s.Time FROM snapshots AS s WHERE s.Instrument_ID = @instrumentId", {
+            "@instrumentId": items[i].Instrument_ID
+        });
 
-            await changePreviousSource(snapshot.ID, newSource, snapshot.Instrument_ID, parseDate(snapshot.StartTime), parseDate(snapshot.Time));
-
-            logVerbose("split job changePreviousSources " + newSource + ": " + (100 * i / items.length).toFixed(2) + "%");
+        for(var s = 0; s < snapshots.length; ++s) {
+            await changeSource(snapshots[s].ID, items[i].NewSourceType, items[i].NewMarketId, items[i].Instrument_ID, parseDate(snapshots[s].StartTime), parseDate(snapshots[s].Time));
+            logVerbose("split job changeSources: " + (100 * (i + s/snapshots.length) / items.length).toFixed(2) + "%");
         }
+
+        logVerbose("split job changeSources: " + (100 * i / items.length).toFixed(2) + "%");
     }
 }
 
 exports.run = async function () {
     try {
 
-        await getHunches();
-        await detectByFractions();
+        //await getHunches();
+        //await detectByFractions();
         await fixWithDifferentSources();
-        await changePreviousSources();
+        //await changeSources();
 
     }
     catch (error) {
