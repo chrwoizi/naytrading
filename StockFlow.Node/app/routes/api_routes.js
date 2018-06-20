@@ -67,4 +67,6 @@ module.exports = function (app, passport) {
 
     app.post('/api/import/user/snapshots', importUserController.importUserSnapshots);
 
+    app.post('/api/snapshot/refresh', snapshotController.refreshSnapshotRates);
+
 }

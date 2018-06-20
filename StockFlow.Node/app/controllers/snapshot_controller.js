@@ -3,8 +3,21 @@ var model = require('../models/index');
 var sequelize = require('sequelize');
 var sql = require('../sql/sql');
 var dateFormat = require('dateformat');
-var viewsController = require('./views_controller.js');
+var config = require('../config/envconfig');
+var newSnapshotController = require('./new_snapshot_controller');
+var ratesProvider = require('../providers/rates_provider');
 
+
+function parseDate(dateString) {
+    return new Date(Date.UTC(
+        dateString.substr(0, 4),
+        dateString.substr(5, 2) - 1,
+        dateString.substr(8, 2),
+        dateString.substr(11, 2),
+        dateString.substr(14, 2),
+        dateString.substr(17, 2)
+    ));
+}
 
 exports.getSnapshotViewModel = function (snapshot, previous, user) {
 
@@ -298,6 +311,214 @@ exports.setDecision = async function (req, res) {
             }
 
             res.json({ status: "ok" });
+        }
+        else {
+            res.status(401);
+            res.json({ error: "unauthorized" });
+        }
+    }
+    catch (error) {
+        res.status(500);
+        res.json({ error: error.message });
+    }
+}
+
+exports.resetStats = async function (snapshotId, endTime) {
+    var users = await sql.query("SELECT u.User FROM usersnapshots AS u WHERE u.Snapshot_ID = @snapshotId", {
+        "@snapshotId": snapshotId
+    });
+
+    for (var u = 0; u < users.length; ++u) {
+
+        var fromTime = new Date(endTime);
+
+        await model.portfolio.destroy({
+            where: {
+                User: users[u].User,
+                Time: {
+                    [sequelize.Op.gte]: fromTime
+                }
+            }
+        });
+
+        var latest = await model.portfolio.find({
+            where: {
+                User: users[u].User
+            },
+            order: [["Time", "DESC"]],
+            limit: 1
+        });
+
+        if (latest) {
+            fromTime = new Date(latest.Time);
+        }
+
+        await model.trade.destroy({
+            where: {
+                User: users[u].User,
+                Time: {
+                    [sequelize.Op.gte]: fromTime
+                }
+            }
+        });
+    }
+}
+
+exports.setRates = async function (snapshotId, source, marketId, rates, endTime) {
+
+    let transaction;
+
+    try {
+        transaction = await model.sequelize.transaction();
+
+        await model.snapshotrate.destroy({
+            where: {
+                Snapshot_ID: snapshotId
+            },
+            transaction: transaction
+        });
+
+        await model.snapshotrate.bulkCreate(
+            rates.map(function (r) {
+                return {
+                    Snapshot_ID: snapshotId,
+                    Open: r.Open,
+                    Close: r.Close,
+                    High: r.High,
+                    Low: r.Low,
+                    Time: r.Time
+                };
+            }), {
+                transaction: transaction
+            });
+
+        await model.snapshot.update(
+            {
+                SourceType: source,
+                Price: rates[rates.length - 1].Close,
+                PriceTime: rates[rates.length - 1].Time,
+                FirstPriceTime: rates[0].Time,
+                MarketId: marketId
+            },
+            {
+                where: {
+                    ID: snapshotId
+                },
+                transaction: transaction
+            });
+
+        await model.usersnapshot.update(
+            {
+                ModifiedTime: new Date()
+            },
+            {
+                where: {
+                    Snapshot_ID: snapshotId
+                },
+                transaction: transaction
+            });
+    
+        await transaction.commit();
+
+    } catch (err) {
+        await transaction.rollback();
+    }
+
+    await exports.resetStats(snapshotId, endTime);
+}
+
+exports.refreshSnapshotRates = async function (req, res) {
+    try {
+        if (req.isAuthenticated() && req.user.email == config.admin_user) {
+
+            var snapshotId = req.body.id;
+            var newSource = req.body.source;
+            var newMarketId = req.body.market;
+
+            var snapshots = await sql.query("SELECT s.StartTime, s.Time, s.Instrument_ID, s.SourceType, s.MarketId FROM snapshots AS s WHERE s.ID = @id", {
+                "@id": snapshotId
+            });
+
+            if (snapshots.length == 0) {
+                res.json({ error: "snapshot not found" });
+                return;
+            }
+
+            var startTime = parseDate(snapshots[0].StartTime);
+            var endTime = parseDate(snapshots[0].Time);
+            var instrumentId = snapshots[0].Instrument_ID;
+
+            if (!newSource) {
+                newSource = snapshots[0].SourceType;
+                if (!newMarketId) {
+                    newMarketId = snapshots[0].MarketId;
+                }
+            }
+
+            if (!newSource) {
+                res.json({ error: "source not found" });
+                return;
+            }
+
+            var sources = await model.source.findAll({
+                where: {
+                    Instrument_ID: instrumentId,
+                    SourceType: newSource
+                }
+            });
+
+            if (sources.length == 0) {
+
+                sources = await model.source.findAll({
+                    where: {
+                        Instrument_ID: instrumentId
+                    }
+                });
+
+                sources = sources.filter(x => ratesProvider.sources.indexOf(x.SourceType) >= 0);
+                sources.sort(x => ratesProvider.sources.indexOf(x.SourceType));
+
+                if (sources.length == 0) {
+                    res.json({ error: "source not found" });
+                    return;
+                }
+            }
+
+            var sourceInfo = sources[0];
+
+            if (!newMarketId) {
+                newMarketId = sourceInfo.MarketId;
+            }
+
+            async function checkRatesCallback(rates) {
+                problem = newSnapshotController.checkRates(rates, startTime, endTime, newSource);
+                return problem == null;
+            }
+
+            try {
+                var ratesResponse = await ratesProvider.getRates(newSource, sourceInfo.SourceId, newMarketId, startTime, endTime, checkRatesCallback);
+                if (ratesResponse && ratesResponse.Rates) {
+                    var newRates = ratesResponse.Rates;
+
+                    await exports.setRates(snapshotId, ratesResponse.Source, ratesResponse.MarketId, newRates, endTime);
+
+                    res.json({ status: "ok" });
+                }
+                else {
+                    res.json({ error: "no rates" });
+                }
+            }
+            catch (e) {
+                if (e == ratesProvider.market_not_found) {
+                    res.json({ error: "market not found" });
+                }
+                else if (e == ratesProvider.invalid_response) {
+                    res.json({ error: "invalid provider response" });
+                }
+                else {
+                    res.json({ error: e.message });
+                }
+            }
         }
         else {
             res.status(401);
