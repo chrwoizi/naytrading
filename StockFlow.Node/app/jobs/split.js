@@ -129,7 +129,7 @@ async function getHunch(snapshotId) {
 
 async function getHunches() {
     var ids = await sql.query("SELECT s.ID FROM snapshots AS s WHERE s.Split IS NULL OR (s.Split IN ('NODIFF', 'NOSOURCE', 'FIXED') AND s.updatedAt < NOW() - INTERVAL @minDaysSinceRefresh DAY)", {
-        "@minDaysSinceRefresh": config.job_split_min_days_since_refresh
+        "@minDaysSinceRefresh": config.job_split_hunch_min_days_since_refresh
     });
 
     for (var i = 0; i < ids.length; ++i) {
@@ -311,7 +311,7 @@ async function refreshRates(snapshotId, newSource, newMarketId, instrumentId, st
 async function fixPriceDifferences() {
     var items = await sql.query(split_adjust_sql, {
         "@minDiffRatio": config.job_split_min_diff_ratio,
-        "@minDaysSinceRefresh": config.job_split_min_days_since_refresh
+        "@minDaysSinceRefresh": config.job_split_diff_min_days_since_refresh
     });
 
     for (var i = 0; i < items.length; ++i) {
