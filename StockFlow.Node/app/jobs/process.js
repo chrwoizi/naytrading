@@ -178,7 +178,6 @@ function getFiles(mask, regex) {
                     var result = []
                     for (var i = 0; i < files.length; ++i) {
                         var file = files[i];
-                        var regex = /[^\d]+(\d+).json$/;
                         var match = regex.exec(file);
                         if (match) {
                             result.push(file);
@@ -205,7 +204,7 @@ function parseDateUTC(str) {
 
 
 function getMaxDate(files) {
-    var regex = /[^\d]+(\d+).json$/;
+    var regex = /[^\d]+(\d+).json(\.csv)?$/;
 
     var maxDate = "19700101000000";
     for (var i = 0; i < files.length; ++i) {
@@ -279,13 +278,23 @@ async function processUser(user) {
         if (fs.existsSync(killfile)) {
             await removeFile(killfile);
         }
+
+        var incompletes = await getFiles(processingDir + "/*.incomplete", /\.incomplete$/);
+        for (var i = 0; i < incompletes.length; ++i) {
+            try {
+                await removeFile(incompletes[i]);
+            }
+            catch (e) {
+                console.log("Error while deleting " + incompletes[i] + ": " + e.message);
+            }
+        }
     }
 
     function cancel() {
         return false;
     }
 
-    var files = await getFiles(processingDir + "/*.json", /[^\d]+(\d+).json$/);
+    var files = await getFiles(processingDir + "/*.*", /[^\d]+(\d+)\.json(\.csv)?$/);
     var fromDate = getMaxDate(files);
 
     var now = new Date();
@@ -293,7 +302,7 @@ async function processUser(user) {
 
     var newCount = await download(user, parseDateUTC(fromDate), filePath, cancel);
 
-    files = await getFiles(processingDir + "/*.json", /[^\d]+(\d+).json$/);
+    files = await getFiles(processingDir + "/*.*", /[^\d]+(\d+)\.json(\.csv)?$/);
 
     if (files.length == 0) {
         return;
@@ -315,15 +324,19 @@ async function processUser(user) {
     var preserveTestIds = true;
     var augmentFactor = 10;
 
-    for (var i = 0; i < files.length; ++i) {
-        if (!fs.existsSync(files[i] + ".csv")) {
+    var jsonFiles = files.filter(x => x.endsWith(".json"));
+    for (var i = 0; i < jsonFiles.length; ++i) {
+        if (!fs.existsSync(jsonFiles[i] + ".csv")) {
             await runProcess(config.python, processorsDir, [
                 "flatten.py",
-                "--input_path=" + files[i],
-                "--output_path=" + files[i] + ".csv",
+                "--input_path=" + jsonFiles[i],
+                "--output_path=" + jsonFiles[i] + ".csv",
                 "--days=" + days,
                 "--max_missing_days=" + maxMissingDays
             ]);
+        }
+        if (fs.existsSync(jsonFiles[i] + ".csv")) {
+            await removeFile(jsonFiles[i]);
         }
     }
 
@@ -353,7 +366,7 @@ async function processUser(user) {
                 "--output_path_test=" + processingDir + "/" + file + "_test.csv",
                 "--factor=" + testDataRatio
             ];
-            if(preserveTestIds) {
+            if (preserveTestIds) {
                 args.push("--preserve_test_ids=True");
             }
             await runProcess(config.python, processorsDir, args);

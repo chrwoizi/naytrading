@@ -3,6 +3,7 @@ var fs = require('fs');
 var path = require('path');
 var dateFormat = require('dateformat');
 var config = require('../config/envconfig');
+var ratesProvider = require('../providers/rates_provider');
 
 function get_default_args(req) {
     return {
@@ -103,6 +104,12 @@ exports.admin = function (req, res) {
     if (args.isAdmin) {
         args.export_secret = config.export_secret;
         args.import_secret = config.import_secret;
+        args.sources = ratesProvider.sources.map(function (x) { return { source: x } });
+        args.markets = [];
+        for (var i = 0; i < ratesProvider.sources.length; ++i) {
+            var markets = ratesProvider.providers[ratesProvider.sources[i]].markets.map(function (x) { return { market: x } });
+            args.markets = args.markets.concat(markets);
+        }
     }
     res.render('admin', args);
 

@@ -1,17 +1,12 @@
-SELECT
+SELECT DISTINCT
 	b.Instrument_ID,
-	MAX(b.NewSourceType) AS NewSourceType,
-	MAX(b.NewMarketId) AS NewMarketId
+	b.NewSourceType,
+	b.NewMarketId
 FROM
 (
 	SELECT
-		b.ID,
 		n.Instrument_ID,
-		b.StartTime,
-		b.Time,
 		b.Price,
-		b.SourceType,
-		b.MarketId,
 		n.SourceType as NewSourceType,
 		n.MarketId as NewMarketId,
 		(
@@ -25,14 +20,9 @@ FROM
 	FROM
 	(
 		SELECT
-			o.ID,
-			o.StartTime,
-			o.Time,
 			o.Split,
 			o.Price,
 			o.PriceTime,
-			o.SourceType,
-			o.MarketId,
 			(
 				SELECT n.ID 
                 FROM snapshots n 
@@ -46,5 +36,4 @@ FROM
 	INNER JOIN snapshots n ON n.ID = b.NewId
 	WHERE (b.Split not in ('FIXED', 'NOSOURCE') OR n.Split not in ('FIXED', 'NOSOURCE'))
 ) AS b
-WHERE ABS((b.NewPrice - b.Price) / b.Price) > @minDiffRatio
-GROUP BY b.Instrument_ID;
+WHERE ABS((b.NewPrice - b.Price) / b.Price) > @minDiffRatio;

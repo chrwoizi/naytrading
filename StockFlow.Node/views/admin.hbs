@@ -49,5 +49,33 @@
                 <button type="submit" class="btn btn-danger">Refresh Default Instruments</button>
             </form>
         </dd>
+        <dt>Refresh Rates:</dt>
+        <dd>
+            <form action="/api/snapshot/refresh" method="post">
+                <div class="form-group">
+                    <label for="id">Snapshot ID</label>
+                    <input type="number" class="form-control" id="id" name="id">
+                </div>
+                <div class="form-group">
+                    <label for="source">Source</label>
+                    <select class="form-control" id="source" name="source">
+                        <option></option>
+                    {{#each sources}}
+                        <option>{{source}}</option>
+                    {{/each}}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="market">Market</label>
+                    <select class="form-control" id="market" name="market">
+                        <option></option>
+                    {{#each markets}}
+                        <option>{{market}}</option>
+                    {{/each}}
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-danger">Refresh Rates</button>
+            </form>
+        </dd>
     </dl>
 </div>

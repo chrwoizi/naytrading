@@ -6,10 +6,11 @@ var sql = require('../sql/sql');
 var config = require('../config/envconfig');
 var ratesProvider = require('../providers/rates_provider');
 var newSnapshotController = require('../controllers/new_snapshot_controller');
+var snapshotController = require('../controllers/snapshot_controller');
 
 var split_adjust_sql = "";
 try {
-    split_adjust_sql = fs.readFileSync(__dirname + '/../sql/split_adjust.sql', 'utf8');
+    split_adjust_sql = fs.readFileSync(__dirname + '/../sql/split_adjust_newest.sql', 'utf8');
 } catch (e) {
     console.log('Error:', e.stack);
 }
@@ -120,14 +121,16 @@ async function getHunch(snapshotId) {
         //console.log("split job HUNCH at " + snapshotId + ": " + JSON.stringify(detections));
     }
 
-    await sql.query("UPDATE snapshots AS s SET s.Split = @status WHERE s.ID = @snapshotId", {
+    await sql.query("UPDATE snapshots AS s SET s.Split = @status, s.updatedAt = NOW() WHERE s.ID = @snapshotId", {
         "@snapshotId": snapshotId,
         "@status": status
     });
 }
 
 async function getHunches() {
-    var ids = await sql.query("SELECT s.ID FROM snapshots AS s WHERE s.Split IS NULL");
+    var ids = await sql.query("SELECT s.ID FROM snapshots AS s WHERE s.Split IS NULL OR (s.Split IN ('NODIFF', 'NOSOURCE', 'FIXED') AND s.updatedAt < NOW() - INTERVAL @minDaysSinceRefresh DAY)", {
+        "@minDaysSinceRefresh": config.job_split_min_days_since_refresh
+    });
 
     for (var i = 0; i < ids.length; ++i) {
         var id = ids[i].ID;
@@ -138,162 +141,13 @@ async function getHunches() {
     }
 }
 
-function getNearInteger(ratio) {
-    var round = Math.round(ratio);
-    if (round >= 2 && round < 100) {
-        var frac = ratio - round;
-        if (Math.abs(frac) < 0.1) {
-            return round;
-        }
-    }
-    return 1;
-}
-
-async function detectByFraction(snapshotId) {
-    var rates = await sql.query("SELECT r.Time, r.Open, r.Close FROM snapshotrates AS r WHERE r.Snapshot_ID = @snapshotId", {
-        "@snapshotId": snapshotId
-    });
-
-    var findings = [];
-
-    var prePre = rates[0];
-    var pre = rates[0];
-    for (var r = 0; r < rates.length; ++r) {
-        var rate = rates[r];
-
-        var candidates = getCandidates(prePre, pre, rate);
-        for (var c = 0; c < candidates.length; ++c) {
-            var candidate = candidates[c];
-            if (getNearInteger(candidate.ratio) != 1 || getNearInteger(1 / candidate.ratio) != 1) {
-                findings.push(candidate);
-            }
-        }
-
-        var prePre = pre;
-        var pre = rate;
-    }
-
-    var detections = getDistinctFindings(findings, 5);
-    if (detections.length > 0) {
-        //console.log("split job PROBABLY at " + snapshotId + ": " + JSON.stringify(detections));
-        await sql.query("UPDATE snapshots AS s SET s.Split = 'PROBABLY' WHERE s.ID = @snapshotId", {
-            "@snapshotId": snapshotId
-        });
-    }
-}
-
-async function detectByFractions() {
-    var ids = await sql.query("SELECT s.ID FROM snapshots AS s WHERE s.Split = 'HUNCH'");
-
-    for (var i = 0; i < ids.length; ++i) {
-        var id = ids[i].ID;
-
-        await detectByFraction(id);
-
-        logVerbose("split job detectByFractions: " + (100 * i / ids.length).toFixed(2) + "%");
-    }
-}
-
 function getDay(date) {
     var day = new Date(date.getTime());
     day.setHours(0, 0, 0, 0);
     return day;
 }
 
-async function resetStats(snapshotId, endTime) {
-    var users = await sql.query("SELECT u.User FROM usersnapshots AS u WHERE u.Snapshot_ID = @snapshotId", {
-        "@snapshotId": snapshotId
-    });
-
-    for (var u = 0; u < users.length; ++u) {
-
-        var fromTime = new Date(endTime);
-
-        await model.portfolio.destroy({
-            where: {
-                User: users[u].User,
-                Time: {
-                    [sequelize.Op.gte]: fromTime
-                }
-            }
-        });
-
-        var latest = await model.portfolio.find({
-            where: {
-                User: users[u].User
-            },
-            order: [["Time", "DESC"]],
-            limit: 1
-        });
-
-        if (latest) {
-            fromTime = new Date(latest.Time);
-        }
-
-        await model.trade.destroy({
-            where: {
-                User: users[u].User,
-                Time: {
-                    [sequelize.Op.gte]: fromTime
-                }
-            }
-        });
-    }
-}
-
-async function refreshRates(snapshotId, source, marketId, rates, endTime) {
-
-    let transaction;
-
-    try {
-        transaction = await model.sequelize.transaction();
-
-        await model.snapshotrate.destroy({
-            where: {
-                Snapshot_ID: snapshotId
-            },
-            transaction: transaction
-        });
-
-        await model.snapshotrate.bulkCreate(
-            rates.map(function(r) {
-                return {
-                    Snapshot_ID: snapshotId,
-                    Open: r.Open,
-                    Close: r.Close,
-                    High: r.High,
-                    Low: r.Low,
-                    Time: r.Time
-                };
-            }), {
-                transaction: transaction
-            });
-
-        await model.snapshot.update(
-            {
-                SourceType: source,
-                Price: rates[rates.length - 1].Close,
-                PriceTime: rates[rates.length - 1].Time,
-                FirstPriceTime: rates[0].Time,
-                MarketId: marketId
-            },
-            {
-                where: {
-                    ID: snapshotId
-                },
-                transaction: transaction
-            });
-
-        await transaction.commit();
-
-    } catch (err) {
-        await transaction.rollback();
-    }
-
-    await resetStats(snapshotId, endTime);
-}
-
-async function fixWithDifferentSource(snapshotId, knownSource, instrumentId, startTime, endTime) {
+async function fixHunch(snapshotId, knownSource, instrumentId, startTime, endTime) {
     var knownRates = await model.snapshotrate.findAll({
         where: {
             Snapshot_ID: snapshotId
@@ -337,7 +191,7 @@ async function fixWithDifferentSource(snapshotId, knownSource, instrumentId, sta
     }
 
     if (newSources.length == 0) {
-        await sql.query("UPDATE snapshots AS s SET s.Split = 'NOSOURCE' WHERE s.ID = @snapshotId", {
+        await sql.query("UPDATE snapshots AS s SET s.Split = 'NOSOURCE', s.updatedAt = NOW() WHERE s.ID = @snapshotId", {
             "@snapshotId": snapshotId
         });
         return;
@@ -375,7 +229,7 @@ async function fixWithDifferentSource(snapshotId, knownSource, instrumentId, sta
 
                 if (diffs.length > config.job_split_min_diff_days) {
                     status = "FIXED";
-                    await refreshRates(snapshotId, ratesResponse.Source, ratesResponse.MarketId, newRates, endTime);
+                    await snapshotController.setRates(snapshotId, ratesResponse.Source, ratesResponse.MarketId, newRates, endTime);
                     break;
                 }
             }
@@ -393,23 +247,23 @@ async function fixWithDifferentSource(snapshotId, knownSource, instrumentId, sta
         }
     }
 
-    await sql.query("UPDATE snapshots AS s SET s.Split = @status WHERE s.ID = @snapshotId", {
+    await sql.query("UPDATE snapshots AS s SET s.Split = @status, s.updatedAt = NOW() WHERE s.ID = @snapshotId", {
         "@status": status,
         "@snapshotId": snapshotId
     });
 }
 
-async function fixWithDifferentSources() {
-    var items = await sql.query("SELECT s.ID, s.SourceType, s.Instrument_ID, s.StartTime, s.Time FROM snapshots AS s WHERE s.Split = 'HUNCH' or s.Split = 'PROBABLY' ORDER BY s.Time DESC");
+async function fixHunches() {
+    var items = await sql.query("SELECT s.ID, s.SourceType, s.Instrument_ID, s.StartTime, s.Time FROM snapshots AS s WHERE s.Split = 'HUNCH' ORDER BY s.Time DESC");
 
     for (var i = 0; i < items.length; ++i) {
-        await fixWithDifferentSource(items[i].ID, items[i].SourceType, items[i].Instrument_ID, parseDate(items[i].StartTime), parseDate(items[i].Time));
+        await fixHunch(items[i].ID, items[i].SourceType, items[i].Instrument_ID, parseDate(items[i].StartTime), parseDate(items[i].Time));
 
-        logVerbose("split job fixWithDifferentSources: " + (100 * i / items.length).toFixed(2) + "%");
+        logVerbose("split job fixHunches: " + (100 * i / items.length).toFixed(2) + "%");
     }
 }
 
-async function changeSource(snapshotId, newSource, newMarketId, instrumentId, startTime, endTime) {
+async function refreshRates(snapshotId, newSource, newMarketId, instrumentId, startTime, endTime) {
 
     async function checkRatesCallback(rates) {
         problem = newSnapshotController.checkRates(rates, startTime, endTime, newSource);
@@ -433,7 +287,7 @@ async function changeSource(snapshotId, newSource, newMarketId, instrumentId, st
             var newRates = ratesResponse.Rates;
 
             status = "FIXED";
-            await refreshRates(snapshotId, ratesResponse.Source, ratesResponse.MarketId, newRates, endTime);
+            await snapshotController.setRates(snapshotId, ratesResponse.Source, ratesResponse.MarketId, newRates, endTime);
         }
     }
     catch (e) {
@@ -448,39 +302,41 @@ async function changeSource(snapshotId, newSource, newMarketId, instrumentId, st
         }
     }
 
-    await sql.query("UPDATE snapshots AS s SET s.Split = @status WHERE s.ID = @snapshotId", {
+    await sql.query("UPDATE snapshots AS s SET s.Split = @status, s.updatedAt = NOW() WHERE s.ID = @snapshotId", {
         "@status": status,
         "@snapshotId": snapshotId
     });
 }
 
-async function changeSources() {
+async function fixPriceDifferences() {
     var items = await sql.query(split_adjust_sql, {
-        "@minDiffRatio": config.job_split_min_diff_ratio
+        "@minDiffRatio": config.job_split_min_diff_ratio,
+        "@minDaysSinceRefresh": config.job_split_min_days_since_refresh
     });
 
     for (var i = 0; i < items.length; ++i) {
 
+        var item = items[i];
+
         var snapshots = await sql.query("SELECT s.ID, s.StartTime, s.Time FROM snapshots AS s WHERE s.Instrument_ID = @instrumentId", {
-            "@instrumentId": items[i].Instrument_ID
+            "@instrumentId": item.Instrument_ID
         });
 
-        for(var s = 0; s < snapshots.length; ++s) {
-            await changeSource(snapshots[s].ID, items[i].NewSourceType, items[i].NewMarketId, items[i].Instrument_ID, parseDate(snapshots[s].StartTime), parseDate(snapshots[s].Time));
-            logVerbose("split job changeSources: " + (100 * (i + s/snapshots.length) / items.length).toFixed(2) + "%");
+        for (var s = 0; s < snapshots.length; ++s) {
+            await refreshRates(snapshots[s].ID, item.NewSourceType, item.NewMarketId, item.Instrument_ID, parseDate(snapshots[s].StartTime), parseDate(snapshots[s].Time));
+            logVerbose("split job fixPriceDifferences: " + (100 * (i + s / snapshots.length) / items.length).toFixed(2) + "%");
         }
 
-        logVerbose("split job changeSources: " + (100 * i / items.length).toFixed(2) + "%");
+        logVerbose("split job fixPriceDifferences: " + (100 * i / items.length).toFixed(2) + "%");
     }
 }
 
 exports.run = async function () {
     try {
 
-        //await getHunches();
-        //await detectByFractions();
-        await fixWithDifferentSources();
-        //await changeSources();
+        await getHunches();
+        await fixHunches();
+        await fixPriceDifferences();
 
     }
     catch (error) {
