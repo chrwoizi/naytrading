@@ -26,23 +26,6 @@ def lastOrDefault(sequence, default=None):
         lastItem = s
     return lastItem
 
-def get_split_factor(previousRate, rate):
-    factor = previousRate / rate
-    rounded = round(factor)
-    if rounded >= 2 and rounded < 100:
-        fraction = factor - rounded
-        if abs(fraction) < 0.1:
-            return rounded
-
-    factor = rate / previousRate
-    rounded = round(factor)
-    if rounded >= 2 and rounded < 100:
-        fraction = factor - rounded
-        if abs(fraction) < 0.1:
-            return 1 / rounded
-
-    return 1
-
 class Rate():
     def __init__(self, date, close):
         self.Date = date
@@ -113,8 +96,6 @@ def main(input_path, output_path, days, max_missing_days):
                                     out_file.write(snapshot_date.strftime('%Y%m%d'))
                                     out_file.write(';')
 
-                                    split_factor = 1
-
                                     snapshot_days = (snapshot_date - first_date).days + 1
                                     for day in range(snapshot_days):
 
@@ -130,9 +111,7 @@ def main(input_path, output_path, days, max_missing_days):
                                             # else: #encountered future rate. use previous rate.
                                         # else: #no remaining rates. use previous rate.
 
-                                        split_factor *= get_split_factor(previous_rate.Close, rate.Close)
-
-                                        value = '%.2f' % (split_factor * rate.Close)
+                                        value = '%.2f' % (rate.Close)
                                         out_file.write(value)
 
                                         if day < snapshot_days - 1:

@@ -45,24 +45,6 @@ def linear_sample(chart, x):
     return x1 + (x2 - x1) * (x - int(x))
 
 
-def get_split_factor(previousRate, rate):
-    factor = previousRate / rate
-    rounded = round(factor)
-    if rounded >= 2 and rounded < 100:
-        fraction = factor - rounded
-        if abs(fraction) < 0.1:
-            return rounded
-
-    factor = rate / previousRate
-    rounded = round(factor)
-    if rounded >= 2 and rounded < 100:
-        fraction = factor - rounded
-        if abs(fraction) < 0.1:
-            return 1 / rounded
-
-    return 1
-
-
 def normalize(chart):
     chart_min = min(chart)
     chart_max = max(chart)
@@ -100,11 +82,6 @@ def get_chart(snapshot):
         i += 1
 
     daily_rates = list(map(lambda x: x[1], daily_rates))
-
-    split_factor = 1
-    for i in range(1, len(daily_rates)):
-        split_factor *= get_split_factor(daily_rates[i - 1], daily_rates[i])
-        daily_rates[i] = split_factor * daily_rates[i]
 
     downsampled = [0] * 1024
     for x in range(0, 1024):
