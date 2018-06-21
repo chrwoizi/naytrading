@@ -1,4 +1,123 @@
-<h2>About</h2>
-<p>StockFlow archives manual stock trading decisions and feeds them to a neural network pattern recognition to make automated investment decisions.</p>
-Browse the source code on <a href="https://www.github.com/chrwoizi/stockflow" class="github-logo"><img src="/static/images/GitHub_Logo.png" class="github-logo"/></a>
-
+<h3>What is StockFlow?</h3>
+<p>
+    StockFlow is a machine learning project that detects patterns in the stock market trading behaviour of a person.
+    <br/>
+    This website collects user data which can be used to train a neural network.
+    The trained network can then be used to do automatic trading on the stock exchange.
+    <br/>
+    For convenience, the user's trading decisions can be exported in JSON file format and used to actually trade the stocks with a broker (advanced computer skills required).
+</p>
+<br/>
+<a id="trade"><h3>Does StockFlow actually buy and sell stocks?</h3></a>
+<p>
+    No. StockFlow is like a demo portfolio. Users simulate buying and selling. No actual money is spent.
+    <br/>
+    However, if you like to use StockFlow to find interesting stocks to actually buy,
+    you can export your trade decisions along with the ISIN/WKN and the current price from <a href="http://stockflow.net/manage">your account page</a>.
+    An automatic tool that downloads the decisions 
+    and sends them to a broker is available on github at <a href="https://github.com/chrwoizi/stockflow/tree/master/StockFlow.Trader">StockFlow.Trader</a>. 
+    Programming skills are recommended. This reference implementation works with a specific german online broker only.
+</p>
+<br/>
+<h3>Is StockFlow free?</h3>
+<p>
+    Recording your trading decisions on stockflow.net is free. 
+    <br/>
+    You can export all your data on <a href="http://stockflow.net/manage">your account page</a>.
+    <br/>
+    The machine learning component of StockFlow is currently available as source only and therefore only suitable for people with advanced computer skills.
+    In the future, this website may integrate it at the user's cost.
+    See <a href="#train"><i>How can I train the neural network?</i></a> for more info.
+    <br/>
+    StockFlow is an open source project.
+    You can download the source code from <a href="http//www.github.com/chrwoizi/stockflow">github</a>.
+    If you are a nodejs programmer, you can run it on your own machine completely independent from this website.
+    You'd have to implement your own stock price provider, through. See <a href="#where"><i>Where can I use stockflow</i></a> for more info.
+</p>
+<br/>
+<h3>How can I record my trading decisions?</h3>
+<p>
+    <a href="http://stockflow.net/signup">Sign up</a> for your free personal account.
+    <br/>
+    Go to the <a href="http://stockflow.net/app/#!/instruments">Instruments</a> page and click the 'Add all instruments' button.
+    The page should now show more than 10000 stocks.
+    <br/>
+    Click the <a href="http://stockflow.net/app/#!/snapshot/new/random">New Snapshot</a> menu item.
+    A snapshot of the current price history for a random stock is shown.
+    The top chart shows the daily closing prices of the past five years.
+    The bottom chart shows the past year magnified (which is also included in the top chart).
+    <br/>
+    Decide whether to buy the stock at the current price or wait another week to look at it again.
+    Click the according button.
+    <br/>
+    The next random snapshot will be shown. Repeat.
+</p>
+<br/>
+<h3>How can I see which stock I am looking at?</h3>
+<p>
+    The short answer: You better don't.
+    <br/>
+    The long answer: The machine learning workflow feeds your decisions to a neural network, together with the according stock price history.
+    The network learns to match the price history to your decision.
+    If you base your decision on more than just the price history, the neural network can't learn properly.
+    <br/>
+    Therefore, the 'New Snapshot' page hides the stock name deliberately.
+    You simply aren't supposed to associate the shown stock to any external information (such as news and analyst ratings).
+    If you really, absolutely must see the stock name, click on the 'HISTORY' button to show your previous decisions along with the stock's name.
+</p>
+<br/>
+<a id="where"><h3>Where can I use stockflow</h3></a>
+<p>
+    The stock prices are shown in Euros (€). Preferably from the <a href="https://www.tradegate.de">Tradegate exchange</a>. 
+    Other exchanges from Germany may be used if Tradegate is not available.
+    <br/>
+    You can still use stockflow.net if your country uses a different currency.
+    The machine learning process is currency agnostic. 
+    It learns the intrinsic patterns of the historic stock prices and the trained neural network will perform just as well on charts of a different currency.
+    <br/>
+    However, if you like to export your buy/sell decisions and forward them to a broker to actually buy and sell stocks, 
+    it is recommended to at least check that your broker shows the same price as exported from stockflow.
+    <br/>
+    If you absolutely need StockFlow to show other currencies or exchanges, you'll have to host it on your own machine with your own data provider. 
+    The source code is available on <a href="http//www.github.com/chrwoizi/stockflow">github</a>.
+    See <a href="https://github.com/chrwoizi/stockflow/tree/master/StockFlow.Node.Providers">StockFlow.Node.Providers</a> for a reference implementation. Nodejs programming skills are required.
+</p>
+<br/>
+<a id="train"><h3>How does the machine learning work?</h3></a>
+<p>
+    Machine learning depends on input and reference data.
+    In the case of StockFlow, the input data is the stock price history of the past five years.
+    The reference data is your decision (buy, wait, sell) for that stock at that point of time. 
+    This is also called the 'expected' output.
+    <br/>
+    The price history is given to a neural network which computes its own decision.
+    If, by chance, the network's decision and your decision are equal, the network is fine.
+    It probably won't be, because an untrained network acts randomly. That's where an optimization algorithm kicks in.
+    It runs backwards through the neural network and makes slight corrections towards the expected output.
+    Over time (meaning several days and tens of thousands of users decisions), the network is driven to match your decisions.
+    <br/>
+    Neural networks are good at pattern recognition. 
+    That's why it (usually) also performs well on new and unseen data.
+    Meaning that a well-trained neural network can mimic the user with nearly 100% accuracy.
+</p>
+<br/>
+<h3>How many decisions do I need for training?</h3>
+<p>
+    The training process needs approximately 10000 user decisions to mimic the user with 90% accuracy on new and unseen stock price charts.
+    Optimal accuracy is expected at 30000+ decisions. 
+    <br/>
+    These may take a while to produce, even if you are using StockFlow daily.
+    That's why, in the meantime, it is recommended to actually send your <a href="http://stockflow.net/manage">recorded trades</a> to a broker and trade these stocks for real (at your own investment risk).
+    See <a href="#trade"><i>Does StockFlow actually buy and sell stocks?</i></a> on how to do that automatically. Advanced computer skills are required.
+</p>
+<br/>
+<h3>How can I train the neural network?</h3>
+<p>
+    Your data is processed daily and available for download on <a href="http://stockflow.net/manage">your account page</a>.
+    The python source code of the neural network is publicly available on github at <a href="https://github.com/chrwoizi/stockflow/tree/master/StockFlow.AI">StockFlow.AI</a>.
+    Advanced computer skills are required.
+    <br/>
+    In the future, this website may integrate the neural network training.
+    Training a network requires lots of computing power which costs some money.
+    Therefore, the training service problably won't be free of charge.
+</p>
