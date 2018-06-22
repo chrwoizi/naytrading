@@ -296,7 +296,7 @@ if __name__ == '__main__':
                     decision = 'buy'
                     chart = generate_well_formed(BuyConfig())
                 else:
-                    decision = 'ignore'
+                    decision = 'wait'
                     chart = sell_generators[random.randint(0, len(sell_generators) - 1)]()
 
                 text_file.write('%d;%d;%s;19700101' % (i, i, decision))

@@ -80,7 +80,7 @@ function getRandomIndex(count, randomRange) {
 
 exports.minDays = 5 * (config.chart_period_seconds / 60 / 60 / 24 / 7) - config.discard_threshold_missing_workdays;
 
-exports.isUserAutoIgnore = async function (newSnapshot) {
+exports.isAutoWait = async function (newSnapshot) {
     if (newSnapshot.PreviousDecision == "buy") {
         if (newSnapshot.Rates && newSnapshot.Rates.length > 0 && newSnapshot.PreviousBuyRate != null) {
             var lastRate = newSnapshot.Rates[newSnapshot.Rates.length - 1];
@@ -91,28 +91,27 @@ exports.isUserAutoIgnore = async function (newSnapshot) {
 
         return false;
     }
-}
-
-exports.isGlobalAutoIgnore = async function (rates) {
-    var endTime = new Date();
-    endTime.setHours(0, 0, 0, 0);
-    var startTime = new Date(endTime.getTime() - config.chart_period_seconds * 1000);
-
-    var firstRatesUntil = new Date(startTime.getTime() + 1000 * (config.chart_period_seconds * 0.2));
-    var lastRatesFrom = new Date(endTime.getTime() - 1000 * (config.chart_period_seconds * 0.2));
-
-    var firstRates = rates.filter(x => x.Time < firstRatesUntil);
-    var lastRates = rates.filter(x => x.Time > lastRatesFrom);
-
-    if (firstRates.length == 0 || lastRates.length == 0) {
-        return false;
+    else {
+        var endTime = new Date();
+        endTime.setHours(0, 0, 0, 0);
+        var startTime = new Date(endTime.getTime() - config.chart_period_seconds * 1000);
+    
+        var firstRatesUntil = new Date(startTime.getTime() + 1000 * (config.chart_period_seconds * 0.2));
+        var lastRatesFrom = new Date(endTime.getTime() - 1000 * (config.chart_period_seconds * 0.2));
+    
+        var firstRates = viewModel.Rates.filter(x => x.Time < firstRatesUntil);
+        var lastRates = viewModel.Rates.filter(x => x.Time > lastRatesFrom);
+    
+        if (firstRates.length == 0 || lastRates.length == 0) {
+            return false;
+        }
+    
+        var firstAverage = firstRates.map(x => x.Close).reduce((a, b) => a + b) / firstRates.length;
+        var lastAverage = lastRates.map(x => x.Close).reduce((a, b) => a + b) / lastRates.length;
+    
+        // overall bearish trend
+        return lastAverage < firstAverage;
     }
-
-    var firstAverage = firstRates.map(x => x.Close).reduce((a, b) => a + b) / firstRates.length;
-    var lastAverage = lastRates.map(x => x.Close).reduce((a, b) => a + b) / lastRates.length;
-
-    // overall bearish trend
-    return lastAverage < firstAverage;
 }
 
 async function handleRateProviderError(instrument, source, error) {
@@ -347,7 +346,7 @@ exports.createNewRandomSnapshot = async function (req, res) {
             var instrumentIds = await exports.getNewSnapshotInstruments(endTime);
 
             var newSnapshot = null;
-            for (var i = 0; i <= config.automatic_ignores; ++i) {
+            for (var i = 0; i <= config.max_autowait_count; ++i) {
                 newSnapshot = await exports.createNewSnapshotFromRandomInstrument(instrumentIds);
                 if (newSnapshot != null) {
 
@@ -357,11 +356,11 @@ exports.createNewRandomSnapshot = async function (req, res) {
                     var previous = await snapshotController.getPreviousDecision(newSnapshot, req.user.email);
                     var viewModel = snapshotController.getSnapshotViewModel(newSnapshot, previous, req.user.email);
 
-                    if (i < config.automatic_ignores && (exports.isUserAutoIgnore(viewModel) || exports.isGlobalAutoIgnore(viewModel.Rates))) {
+                    if (i < config.max_autowait_count && exports.isAutoWait(viewModel)) {
                         await model.usersnapshot.create({
                             User: req.user.email,
                             Snapshot_ID: newSnapshot.ID,
-                            Decision: "ignore",
+                            Decision: "autowait",
                             ModifiedTime: new Date()
                         });
                     }

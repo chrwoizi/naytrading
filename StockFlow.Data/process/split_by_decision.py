@@ -161,7 +161,7 @@ def main(input_path, output_path_buy, output_path_no_buy, output_path_sell, outp
                                             if out_file_sell:
                                                 out_file_sell.writelines([str(lines_read) + ';' + line])
 
-                                        elif meta['Decision'] == 'ignore':
+                                        elif meta['Decision'] == 'wait' or meta['Decision'] == 'autowait':
 
                                             if out_file_buy:
 
@@ -180,7 +180,7 @@ def main(input_path, output_path_buy, output_path_no_buy, output_path_sell, outp
 
                                             if out_file_buy:
                                                 out_file_buy.writelines([str(lines_read) + ';' + line])
-                                        elif meta['Decision'] == 'ignore':
+                                        elif meta['Decision'] == 'wait' or meta['Decision'] == 'autowait':
 
                                             if out_file_no_buy:
                                                 out_file_no_buy.writelines([str(lines_read) + ';' + line])

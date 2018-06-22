@@ -213,12 +213,12 @@ if __name__ == '__main__':
                         if classes[0] == 1:
                             decision = 'buy'
                         else:
-                            decision = 'ignore'
+                            decision = 'wait'
 
-                        reason = ' (ignore=%d %s=%d)' % (round(100 * probabilities[0][0]), FLAGS.buy_label, round(100 * probabilities[0][1]))
+                        reason = ' (wait=%d %s=%d)' % (round(100 * probabilities[0][0]), FLAGS.buy_label, round(100 * probabilities[0][1]))
 
                     else:
-                        decision = 'ignore'
+                        decision = 'wait'
                         reason = ' because it was already bought'
 
                     print('%s %s on %s (snapshot %d)%s' % (
