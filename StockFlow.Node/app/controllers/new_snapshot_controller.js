@@ -99,8 +99,8 @@ exports.isAutoWait = async function (newSnapshot) {
         var firstRatesUntil = new Date(startTime.getTime() + 1000 * (config.chart_period_seconds * 0.2));
         var lastRatesFrom = new Date(endTime.getTime() - 1000 * (config.chart_period_seconds * 0.2));
     
-        var firstRates = viewModel.Rates.filter(x => x.Time < firstRatesUntil);
-        var lastRates = viewModel.Rates.filter(x => x.Time > lastRatesFrom);
+        var firstRates = newSnapshot.Rates.filter(x => x.Time < firstRatesUntil);
+        var lastRates = newSnapshot.Rates.filter(x => x.Time > lastRatesFrom);
     
         if (firstRates.length == 0 || lastRates.length == 0) {
             return false;
