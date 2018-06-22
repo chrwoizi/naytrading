@@ -5,7 +5,7 @@ class Data(object):
     def __init__(self, file, batch_size, buy_label, first_day, last_day, repeat):
         self.batch_size = batch_size
 
-        column_defaults = [['0'], ['0'], ['0'], ['ignore'], ['19700101']] + [[0.00] for i in range(first_day, last_day + 1)]
+        column_defaults = [['0'], ['0'], ['0'], ['wait'], ['19700101']] + [[0.00] for i in range(first_day, last_day + 1)]
 
         with tf.name_scope('data'):
 

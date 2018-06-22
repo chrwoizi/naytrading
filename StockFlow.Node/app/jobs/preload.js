@@ -34,30 +34,21 @@ exports.run = async function () {
             var newSnapshot = await newSnapshotController.createNewSnapshotFromRandomInstrument(instrumentIds);
             if (newSnapshot != null) {
 
-                if (await newSnapshotController.isGlobalAutoIgnore(newSnapshot.snapshotrates)) {
-                    await sql.query("INSERT INTO usersnapshots (Snapshot_ID, User, Decision, ModifiedTime, createdAt, updatedAt) SELECT @snapshotId, u.User, 'ignore', NOW(), NOW(), NOW() FROM userinstruments AS u WHERE u.Instrument_ID = @instrumentId",
-                        {
-                            "@snapshotId": newSnapshot.ID,
-                            "@instrumentId": newSnapshot.Instrument_ID
-                        });
-                }
-                else {
-                    var users = await sql.query("SELECT DISTINCT(u.User) FROM snapshots AS s INNER JOIN usersnapshots AS u ON u.Snapshot_ID = s.ID WHERE s.Instrument_ID = @instrumentId",
-                        {
-                            "@instrumentId": newSnapshot.Instrument_ID
-                        });
-                    for (var i = 0; i < users.length; ++i) {
-                        var previous = await snapshotController.getPreviousDecision(newSnapshot, users[i].User);
-                        var viewModel = snapshotController.getSnapshotViewModel(newSnapshot, previous);
+                var users = await sql.query("SELECT DISTINCT(u.User) FROM snapshots AS s INNER JOIN usersnapshots AS u ON u.Snapshot_ID = s.ID WHERE s.Instrument_ID = @instrumentId",
+                    {
+                        "@instrumentId": newSnapshot.Instrument_ID
+                    });
+                for (var i = 0; i < users.length; ++i) {
+                    var previous = await snapshotController.getPreviousDecision(newSnapshot, users[i].User);
+                    var viewModel = snapshotController.getSnapshotViewModel(newSnapshot, previous);
 
-                        if (await newSnapshotController.isUserAutoIgnore(viewModel)) {
-                            await model.usersnapshot.create({
-                                Snapshot_ID: newSnapshot.ID,
-                                User: users[i].User,
-                                Decision: "ignore",
-                                ModifiedTime: new Date()
-                            });
-                        }
+                    if (await newSnapshotController.isAutoWait(viewModel)) {
+                        await model.usersnapshot.create({
+                            Snapshot_ID: newSnapshot.ID,
+                            User: users[i].User,
+                            Decision: "autowait",
+                            ModifiedTime: new Date()
+                        });
                     }
                 }
             }

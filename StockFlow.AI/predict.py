@@ -91,17 +91,17 @@ if __name__ == '__main__':
 
     k = 0
     buy = 0
-    ignore = 0
+    wait = 0
     for pred in classes:
         if pred == 1:
-            print('%d: %s (ignore=%d %s=%d)' % (k, FLAGS.buy_label, round(100 * probabilities[k][0]), FLAGS.buy_label, round(100 * probabilities[k][1])))
+            print('%d: %s (wait=%d %s=%d)' % (k, FLAGS.buy_label, round(100 * probabilities[k][0]), FLAGS.buy_label, round(100 * probabilities[k][1])))
             buy += 1
         else:
-            print('%d: ignore (ignore=%d %s=%d)' % (k, round(100 * probabilities[k][0]), FLAGS.buy_label, round(100 * probabilities[k][1])))
-            ignore += 1
+            print('%d: wait (wait=%d %s=%d)' % (k, round(100 * probabilities[k][0]), FLAGS.buy_label, round(100 * probabilities[k][1])))
+            wait += 1
         k += 1
 
-    print('%d %s, %d ignore' % (buy, FLAGS.buy_label, ignore))
+    print('%d %s, %d wait' % (buy, FLAGS.buy_label, wait))
 
     sys.stdout.flush()
 
