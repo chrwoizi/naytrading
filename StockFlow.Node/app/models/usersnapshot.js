@@ -20,7 +20,7 @@ module.exports = (sequelize, DataTypes) => {
         },
 
         Decision: {
-            type: DataTypes.STRING(6),
+            type: DataTypes.STRING(8),
             allowNull: true
         },
 
