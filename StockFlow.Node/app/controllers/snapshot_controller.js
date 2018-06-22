@@ -62,6 +62,19 @@ exports.getSnapshotViewModel = function (snapshot, previous, user) {
     };
 };
 
+exports.getSnapshotListViewModel = function (snapshot) {
+    return {
+        ID: snapshot.ID,
+        Instrument: {
+            InstrumentName: snapshot.InstrumentName
+        },
+        Date: dateFormat(snapshot.Time, 'dd.mm.yy'),
+        DateSortable: dateFormat(snapshot.Time, 'yymmdd'),
+        ModifiedDateSortable: dateFormat(snapshot.ModifiedTime, 'yymmddHHMMss'),
+        Decision: snapshot.Decision
+    };
+};
+
 exports.countSnapshots = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
@@ -108,19 +121,12 @@ exports.snapshots = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
 
-            var snapshots = await model.snapshot.findAll({
-                include: [{
-                    model: model.instrument
-                }, {
-                    model: model.usersnapshot,
-                    where: {
-                        User: req.user.email
-                    },
-                    required: true
-                }]
+            var snapshots = await sql.query("SELECT s.ID, s.Time, i.InstrumentName, u.Decision, u.ModifiedTime FROM snapshots AS s \
+            INNER JOIN instruments AS i ON i.ID = s.Instrument_ID INNER JOIN usersnapshots AS u ON u.Snapshot_ID = s.ID WHERE u.User = @user", {
+                "@user": req.user.email
             });
 
-            var viewModels = snapshots.map(snapshot => exports.getSnapshotViewModel(snapshot, undefined, req.user.email));
+            var viewModels = snapshots.map(snapshot => exports.getSnapshotListViewModel(snapshot));
             res.json(viewModels);
 
         }
