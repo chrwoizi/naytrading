@@ -19,25 +19,7 @@ function parseDate(dateString) {
     ));
 }
 
-exports.getSnapshotViewModel = function (snapshot, previous, user) {
-
-    var decision = null;
-    var modifiedTime = new Date();
-
-    if (snapshot.usersnapshots) {
-        var usersnapshot = snapshot.usersnapshots.filter(x => x.User = user);
-        if (usersnapshot.length > 0) {
-            decision = usersnapshot[0].Decision;
-            modifiedTime = usersnapshot[0].ModifiedTime;
-        }
-    }
-
-    function getInstrumentViewModel(instrument) {
-        return {
-            ID: instrument.ID,
-            InstrumentName: instrument.InstrumentName
-        };
-    }
+exports.getSnapshotViewModel = function (snapshot, previous) {
 
     function getSnapshotRateViewModel(snapshotRate) {
         return {
@@ -48,14 +30,12 @@ exports.getSnapshotViewModel = function (snapshot, previous, user) {
 
     return {
         ID: snapshot.ID,
-        Instrument: getInstrumentViewModel(snapshot.instrument),
-        StartTime: dateFormat(snapshot.StartTime, 'dd.mm.yy'),
+        Instrument: {
+            InstrumentName: snapshot.InstrumentName
+        },
         Date: dateFormat(snapshot.Time, 'dd.mm.yy'),
         DateSortable: dateFormat(snapshot.Time, 'yymmdd'),
-        ModifiedDateSortable: dateFormat(modifiedTime, 'yymmddHHMMss'),
-        ModifiedDate: dateFormat(modifiedTime, 'dd.mm.yy'),
         Rates: snapshot.snapshotrates ? snapshot.snapshotrates.map(getSnapshotRateViewModel) : undefined,
-        Decision: decision,
         PreviousDecision: previous ? previous.PreviousDecision : undefined,
         PreviousBuyRate: previous ? previous.PreviousBuyRate : undefined,
         PreviousTime: previous ? previous.PreviousTime : undefined
@@ -143,27 +123,20 @@ exports.snapshots = async function (req, res) {
 
 exports.getSnapshot = async function (id, user) {
 
-    var snapshot = await model.snapshot.find({
-        include: [{
-            model: model.instrument
-        }, {
-            model: model.snapshotrate
-        }, {
-            model: model.usersnapshot,
-            where: {
-                User: user
-            },
-            required: false
-        }],
-        where: {
-            ID: id
-        },
-        order: [
-            [model.snapshotrate, "Time", "ASC"]
-        ]
+    var snapshots = await sql.query("SELECT s.ID, s.Time, s.Instrument_ID, i.InstrumentName FROM snapshots AS s INNER JOIN instruments AS i ON i.ID = s.Instrument_ID WHERE s.ID = @id", {
+        "@id": id,
+        "@user": user
     });
-
-    if (snapshot) {
+    
+    if (snapshots && snapshots.length == 1) {
+        var snapshot = snapshots[0];
+        snapshot.instrument = {
+            InstrumentName: snapshot.InstrumentName
+        };
+        snapshot.snapshotrates = await sql.query("SELECT r.Time, r.Close FROM snapshotrates AS r WHERE r.Snapshot_ID = @id ORDER BY r.Time ASC", {
+            "@id": id
+        });
+        
         var previous = await exports.getPreviousDecision(snapshot, user);
         var viewModel = exports.getSnapshotViewModel(snapshot, previous, user);
         return viewModel;
