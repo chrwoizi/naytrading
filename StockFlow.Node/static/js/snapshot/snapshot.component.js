@@ -46,7 +46,7 @@ angular.
                 self.setRates = function setRates(snapshot) {
 
                     if (snapshot.PreviousTime == null) {
-                        $scope.series = [snapshot.Name];
+                        $scope.series = ["snapshot"];
                         $scope.datasetOverride = [
                             {
                                 yAxisID: 'y-axis-2'
@@ -54,7 +54,7 @@ angular.
                         ];
                     }
                     else {
-                        $scope.series = [snapshot.Name, "loss", "gain", "loss/gain", "buy"];
+                        $scope.series = ["snapshot", "loss", "gain", "loss/gain", "buy"];
                         $scope.datasetOverride = [
                             {
                                 yAxisID: 'y-axis-2'
