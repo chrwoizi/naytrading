@@ -201,5 +201,27 @@
         <dd>
             <a href="/password" class="btn btn-secondary" role="button">Change</a>
         </dd>
+        <dt>Delete my account:</dt>
+        <dd>
+            <form action="/deleteme" method="post">
+                <div class="form-group">
+                    <p>
+                        Type your email address into this field and click the button to permanently delete your account. 
+                        This action is final and cannot be undone. All your data will be lost forever.
+                    </p>
+                </div>
+                <div class="form-group">
+                    <label class="col-md-2 control-label" for="token">Account to delete:</label>
+                    <div class="col-md-10">
+                        <input class="form-control" id="token" name="token" type="text" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-offset-2 col-md-10">
+                        <input type="submit" value="Delete my account" class="btn btn-danger" />
+                    </div>
+                </div>
+            </form>
+        </dd>
     </dl>
 </div>

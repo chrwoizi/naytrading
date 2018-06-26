@@ -278,7 +278,7 @@ module.exports = function (passport, user) {
     // deserialize user 
     passport.deserializeUser(function (id, done) {
 
-        User.findById(id).then(function (user) {
+        User.findById(id).then(function (user, error) {
 
             if (user) {
 
@@ -286,7 +286,7 @@ module.exports = function (passport, user) {
 
             } else {
 
-                done(user.errors, null);
+                done(error, null);
 
             }
 

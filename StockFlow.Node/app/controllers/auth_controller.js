@@ -2,6 +2,7 @@ var exports = module.exports = {}
 
 var config = require('../config/envconfig');
 var model = require('../models/index');
+var sql = require('../sql/sql');
 
 function getDefaultArgs(req) {
     return {
@@ -64,7 +65,7 @@ exports.whitelist = async function (req, res) {
         }
         else {
             res.status(401);
-			res.json({ error: "unauthorized" });
+            res.json({ error: "unauthorized" });
         }
     }
     catch (error) {
@@ -86,7 +87,7 @@ exports.addWhitelist = async function (req, res) {
         }
         else {
             res.status(401);
-			res.json({ error: "unauthorized" });
+            res.json({ error: "unauthorized" });
         }
     }
     catch (error) {
@@ -104,13 +105,41 @@ exports.removeWhitelist = async function (req, res) {
                     email: req.body.email
                 }
             });
-            
+
             res.redirect('/whitelist');
 
         }
         else {
             res.status(401);
-			res.json({ error: "unauthorized" });
+            res.json({ error: "unauthorized" });
+        }
+    }
+    catch (error) {
+        res.status(500);
+        res.json({ error: error.message });
+    }
+}
+
+exports.deleteAccount = async function (req, res) {
+    try {
+        if (req.isAuthenticated() && req.user.email) {
+            if (req.body.token && req.user.email == req.body.token) {
+                await sql.query("DELETE FROM users where email = @user", { "@user": req.user.email });
+                await sql.query("DELETE FROM userinstruments where User = @user", { "@user": req.user.email });
+                await sql.query("DELETE FROM usersnapshots where User = @user", { "@user": req.user.email });
+                await sql.query("DELETE FROM portfolios where User = @user", { "@user": req.user.email });
+                await sql.query("DELETE FROM trades where User = @user", { "@user": req.user.email });
+                await sql.query("DELETE FROM weights where User = @user", { "@user": req.user.email });
+                res.redirect("/signup");
+            }
+            else {
+                res.status(500);
+                res.json({ error: "unexpected user input" });
+            }
+        }
+        else {
+            res.status(401);
+            res.json({ error: "unauthorized" });
         }
     }
     catch (error) {
