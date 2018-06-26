@@ -79,6 +79,8 @@ module.exports = function (app, passport) {
     app.get('/whitelist', authController.whitelist);
     app.post('/whitelist/add', authController.addWhitelist);
     app.post('/whitelist/remove', authController.removeWhitelist);
+    
+    app.post('/deleteme', authController.deleteAccount);
 
     function isLoggedIn(req, res, next) {
 

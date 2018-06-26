@@ -95,7 +95,6 @@ exports.manage = function (req, res) {
     args.hasProcessedData = args.buyingTrain != null || args.buyingTest != null || args.sellingTrain != null || args.sellingTest != null;
 
     res.render('manage', args);
-
 }
 
 exports.admin = function (req, res) {

@@ -41,7 +41,7 @@
     "session": {
       "expiration": 2592000000
     },
-    "whitelist": true,
+    "whitelist": false,
     "max_unused_snapshot_age_hours": 48,
     "processing_dir": "processing",
     "processors_dir": "../../../StockFlow.Data/process",
