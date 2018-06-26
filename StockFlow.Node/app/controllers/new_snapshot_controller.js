@@ -29,7 +29,7 @@ function isEmpty(str) {
     return typeof (str) === 'undefined' || str == null || !str.length;
 }
 
-exports.getNewSnapshotInstruments = async function (endTime) {
+exports.getNewSnapshotInstruments = async function (endTime, user) {
 
     var upToDateFrom = new Date(endTime.getTime() - config.snapshot_valid_seconds * 1000);
 
@@ -48,7 +48,8 @@ exports.getNewSnapshotInstruments = async function (endTime) {
         "@boughtOrderWeight": config.bought_order_weight,
         "@capitalizationOrderWeight": config.capitalization_order_weight,
         "@snapshotCountOrderWeight": config.snapshot_count_order_weight,
-        "@staticWeight": config.static_weight
+        "@staticWeight": config.static_weight,
+        "@user": user ? user : null
     };
 
     var rows = await sql.query(rank_instruments, args);
@@ -343,7 +344,7 @@ exports.createNewRandomSnapshot = async function (req, res) {
                 return;
             }
 
-            var instrumentIds = await exports.getNewSnapshotInstruments(endTime);
+            var instrumentIds = await exports.getNewSnapshotInstruments(endTime, req.user.email);
 
             var newSnapshot = null;
             for (var i = 0; i <= config.max_autowait_count; ++i) {

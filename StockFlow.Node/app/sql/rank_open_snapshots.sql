@@ -11,6 +11,13 @@ WHERE NOT EXISTS
 	WHERE u.Snapshot_ID = s.ID 
 	AND u.User = @userName
 ) 
+AND EXISTS 
+(
+	SELECT 1 
+	FROM userinstruments AS u 
+	WHERE u.Instrument_ID = s.Instrument_ID 
+	AND u.User = @userName
+) 
 AND s.Time >= NOW() - INTERVAL @hours HOUR
 UNION ALL
 SELECT 
@@ -24,6 +31,13 @@ WHERE NOT EXISTS
 	SELECT 1 
 	FROM usersnapshots AS u 
 	WHERE u.Snapshot_ID = s.ID 
+	AND u.User = @userName
+) 
+AND EXISTS 
+(
+	SELECT 1 
+	FROM userinstruments AS u 
+	WHERE u.Instrument_ID = s.Instrument_ID 
 	AND u.User = @userName
 ) 
 AND s.Time < NOW() - INTERVAL @hours HOUR 
