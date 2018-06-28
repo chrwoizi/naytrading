@@ -20,9 +20,9 @@ class Data(object):
             self.batches = int(file_count / self.batch_size)
             self.count = self.batches * self.batch_size
 
-            def get_invested_diff(rates, other, rates_len, buy_rate_index, buy_day_index):
-                buy_rate = other[buy_rate_index:buy_rate_index + 1]
-                buy_day = other[buy_day_index:buy_day_index + 1]
+            def get_invested_diff(rates, other, rates_len, buy_day_index):
+                buy_day = tf.cast(other[buy_day_index:buy_day_index + 1], tf.int32)
+                buy_rate = tf.gather(rates, buy_day)
 
                 invested = tf.cast(tf.greater(tf.range(0, rates_len), tf.cast(buy_day, tf.int32)), tf.float32)
                 buy_rate_repeated = tf.tile(buy_rate, [rates_len])
@@ -45,8 +45,8 @@ class Data(object):
 
                 dimensions = [rates]
 
-                if other_features == 2:
-                    invested_diff = get_invested_diff(rates, other, rates_len, 0, 1)
+                if other_features == 1:
+                    invested_diff = get_invested_diff(rates, other, rates_len, 0)
                     dimensions += [invested_diff]
 
                 features = tf.stack(dimensions, 1)
