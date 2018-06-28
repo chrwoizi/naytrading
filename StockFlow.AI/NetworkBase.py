@@ -10,15 +10,29 @@ class NetworkBase:
         self.summary_level = summary_level
         self.fc_dropout_keep = tf.constant(options["fc_dropout_keep"], dtype=tf.float32)
         self.is_train = tf.constant(options["is_train"], dtype=tf.bool)
-        self.x = features
         self.y = labels
         self.mode = mode
 
-        # days = tf.shape(x)[1]
-        # o = tf.one_hot(indices=tf.cast(tf.multiply(tf.reshape(x,[tf.shape(x)[0],days]),100), tf.int32), depth=100, on_value=1.0, off_value=0.0, axis=-1)
+        features_len = int(features.get_shape()[1])
+        self.x_rates_len = options['days']
+        self.x_other_len = features_len - self.x_rates_len
+
+        features_flat = tf.reshape(features, [-1, features_len])
+
+        if self.x_other_len > 0:
+            x_rates_flat = features_flat[:, 0:-self.x_other_len]
+            x_other_flat = features_flat[:, self.x_rates_len:]
+        else:
+            x_rates_flat = features_flat
+            x_other_flat = features_flat[:, :0]
+
+        self.x_rates = tf.reshape(x_rates_flat, [-1, self.x_rates_len, 1, 1])
+        self.x_other = x_other_flat
+
+        # o = tf.one_hot(indices=tf.cast(tf.multiply(tf.reshape(self.x_rates,[tf.shape(self.x_rates)[0],days]),100), tf.int32), depth=100, on_value=1.0, off_value=0.0, axis=-1)
         # self.__image_summary('x', o, days, 100, 1)
 
-    def exit_layer(self, name, x, dropout_keep):
+    def exit_layer(self, name, x, x_other, dropout_keep):
         with tf.name_scope(name):
             fc1 = self.full_layer('fc1', x, 1024, True)
 
@@ -26,11 +40,13 @@ class NetworkBase:
             if self.summary_level >= 2:
                 tf.summary.histogram('fc1_drop', fc1_drop)
 
-            fc2 = self.full_layer('fc2', fc1_drop, 2, False)
+            merged = tf.concat([fc1_drop, x_other], 1)
+
+            fc2 = self.full_layer('fc2', merged, 2, False)
 
             return fc2
 
-    def conv_layer(self, name, in_layer, width, stride, out_dim, relu, batch_norm, padding='SAME'):
+    def conv_layer(self, name, in_layer, width, stride, out_dim, relu, use_batch_norm, padding='SAME'):
         with tf.name_scope(name):
             in_layer_shape = int(in_layer.get_shape()[3])
 
@@ -49,7 +65,7 @@ class NetworkBase:
 
             result = r
 
-            if batch_norm:
+            if use_batch_norm:
                 result = batch_norm(result, center=True, scale=True, is_training=self.is_train, decay=0.9, updates_collections=None, scope=tf.get_default_graph().get_name_scope())
 
             if relu:

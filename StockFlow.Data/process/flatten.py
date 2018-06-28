@@ -80,8 +80,7 @@ def main(input_path, output_path, days, max_missing_days):
                                 previous_rate = lastOrDefault((r for r in rates if r.Date < first_date), rates[0])
                                 remaining_rates = list(itertools.dropwhile(lambda r: r.Date < first_date, rates))
 
-                                if previous_rate.Date <= first_date and len(
-                                        remaining_rates) >= weekdays - max_missing_days:
+                                if len(remaining_rates) >= (weekdays - max_missing_days):
                                     out_file.write('\n')
 
                                     out_file.write(str(id))
@@ -120,8 +119,8 @@ def main(input_path, output_path, days, max_missing_days):
                                         previous_rate = rate
 
                                 else:
-                                    print_flush("%s has insufficient rates: %d" % (
-                                    snapshot.instrument.InstrumentName, len(remaining_rates)))
+                                    print_flush("%s has insufficient rates: %d < %d - %d" % (
+                                    snapshot.instrument.InstrumentName, len(remaining_rates), weekdays, max_missing_days))
 
                         progress.add_item()
                         progress.maybe_print()

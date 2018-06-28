@@ -2,10 +2,10 @@ import tensorflow as tf
 
 
 class Data(object):
-    def __init__(self, file, batch_size, buy_label, first_day, last_day, repeat):
+    def __init__(self, file, batch_size, buy_label, first_day, last_day, repeat, other_features):
         self.batch_size = batch_size
 
-        column_defaults = [['0'], ['0'], ['0'], ['wait'], ['19700101']] + [[0.00] for i in range(first_day, last_day + 1)]
+        column_defaults = [['0'], ['0'], ['0'], ['wait'], ['19700101']] + [[0.00] for i in range(first_day, last_day + 1)] + [[0.00] for i in range(0, other_features)]
 
         with tf.name_scope('data'):
 
@@ -18,7 +18,6 @@ class Data(object):
                 self.batch_size = file_count
 
             self.batches = int(file_count / self.batch_size)
-
             self.count = self.batches * self.batch_size
 
             def parse_csv(value):

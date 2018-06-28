@@ -15,7 +15,7 @@ class GoogLeNet(NetworkBase):
         self.aux_exit_4e_weight = tf.constant(options["aux_exit_4e_weight"], dtype=tf.float32, shape=())
         self.exit_weight = tf.constant(options["exit_weight"], dtype=tf.float32, shape=())
 
-        conv1 = self.conv_layer('conv1', self.x, 7, 2, 64, True, False)
+        conv1 = self.conv_layer('conv1', self.x_rates, 7, 2, 64, True, False)
         conv1_pool = self.max_pool_layer('conv1_pool', conv1, 3, 2)
         conv1_norm = tf.nn.local_response_normalization(conv1_pool, name='conv1_norm')
 
@@ -37,17 +37,17 @@ class GoogLeNet(NetworkBase):
 
         inception4a_avg = self.avg_pool_layer('inception4a_avg', inception4a, 5, 3)
         inception4a_reduce = self.conv_layer('inception4a_reduce', inception4a_avg, 1, 1, 128, True, False)
-        inception4a_exit = self.exit_layer('exit_4a', inception4a_reduce, self.aux_fc_dropout_keep)
+        inception4a_exit = self.exit_layer('exit_4a', inception4a_reduce, self.x_other, self.aux_fc_dropout_keep)
 
         inception4e_avg = self.avg_pool_layer('inception4a_avg', inception4e, 5, 3)
         inception4e_reduce = self.conv_layer('inception4e_reduce', inception4e_avg, 1, 1, 128, True, False)
-        inception4e_exit = self.exit_layer('exit_4e', inception4e_reduce, self.aux_fc_dropout_keep)
+        inception4e_exit = self.exit_layer('exit_4e', inception4e_reduce, self.x_other, self.aux_fc_dropout_keep)
 
         inception5a = self.__inception_module('inception5a', inception4p, 256, 160, 320, 32, 128, 128)
         inception5b = self.__inception_module('inception5b', inception5a, 384, 192, 384, 48, 128, 128)
         inception5p = self.avg_pool_layer('inception5_pool', inception5b, 7, 1)
 
-        self.exit = self.exit_layer('exit', inception5p, self.fc_dropout_keep)
+        self.exit = self.exit_layer('exit', inception5p, self.x_other, self.fc_dropout_keep)
 
         if mode == tf.estimator.ModeKeys.PREDICT:
             with tf.variable_scope('predict'):
