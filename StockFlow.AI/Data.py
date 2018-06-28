@@ -20,6 +20,17 @@ class Data(object):
             self.batches = int(file_count / self.batch_size)
             self.count = self.batches * self.batch_size
 
+            def get_invested_diff(rates, other, rates_len, buy_rate_index, buy_day_index):
+                buy_rate = other[buy_rate_index:buy_rate_index + 1]
+                buy_day = other[buy_day_index:buy_day_index + 1]
+
+                invested = tf.cast(tf.greater(tf.range(0, rates_len), tf.cast(buy_day, tf.int32)), tf.float32)
+                buy_rate_repeated = tf.tile(buy_rate, [rates_len])
+                diff = tf.subtract(rates, buy_rate_repeated)
+                invested_diff = tf.multiply(invested, diff)
+
+                return invested_diff
+
             def parse_csv(value):
                 columns = tf.decode_csv(value, record_defaults = column_defaults, field_delim = ";")
 
@@ -27,7 +38,20 @@ class Data(object):
                 labels = columns[3]
 
                 features = tf.stack(features)
-                features = tf.reshape(features, [features.get_shape()[0], 1, 1])
+
+                rates_len = features.get_shape()[0] - other_features
+                rates = features[:rates_len]
+                other = features[rates_len:rates_len+other_features]
+
+                dimensions = [rates]
+
+                if other_features == 2:
+                    invested_diff = get_invested_diff(rates, other, rates_len, 0, 1)
+                    dimensions += [invested_diff]
+
+                features = tf.stack(dimensions, 1)
+
+                features = tf.reshape(features, [rates_len, 1, len(dimensions)])
 
                 labels = tf.cast(tf.equal(labels, buy_label), dtype = tf.int32)
                 labels = tf.one_hot(indices = labels, depth = 2, on_value = 1.0, off_value = 0.0, axis = -1)

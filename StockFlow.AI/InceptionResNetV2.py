@@ -10,7 +10,7 @@ class InceptionResNetV2(NetworkBase):
 
         self.residual_scale = tf.constant(options["residual_scale"], dtype=tf.float32, shape=())
 
-        stem = self.__inception_resnet_stem(self.x_rates)
+        stem = self.__inception_resnet_stem(self.x)
 
         with tf.name_scope('inception_resnet_a'):
             inception_resnet_a_1 = self.__inception_resnet_a(stem, 1)
@@ -46,11 +46,7 @@ class InceptionResNetV2(NetworkBase):
 
         dropout = tf.nn.dropout(average_pooling, self.fc_dropout_keep, name='dropout')
 
-        dropout_shape = int(np.prod(dropout.get_shape()[1:]))
-        dropout_flat = tf.reshape(dropout, [-1, dropout_shape])
-        bottleneck = tf.concat([dropout_flat, self.x_other], 1)
-
-        self.exit = self.full_layer('exit', bottleneck, 2, False)
+        self.exit = self.full_layer('exit', dropout, 2, False)
 
         if mode == tf.estimator.ModeKeys.PREDICT:
             with tf.variable_scope('predict'):
