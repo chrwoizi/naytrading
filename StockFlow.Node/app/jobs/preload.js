@@ -34,9 +34,10 @@ exports.run = async function () {
             var newSnapshot = await newSnapshotController.createNewSnapshotFromRandomInstrument(instrumentIds);
             if (newSnapshot != null) {
 
-                var users = await sql.query("SELECT DISTINCT(u.User) FROM snapshots AS s INNER JOIN usersnapshots AS u ON u.Snapshot_ID = s.ID WHERE s.Instrument_ID = @instrumentId",
+                var users = await sql.query("SELECT DISTINCT(u.User) FROM userinstruments AS u WHERE u.Instrument_ID = @instrumentId AND EXISTS (SELECT 1 FROM usersnapshots AS us WHERE us.Decision <> 'autowait' AND us.ModifiedTime > NOW() - INTERVAL @days DAY)",
                     {
-                        "@instrumentId": newSnapshot.Instrument_ID
+                        "@instrumentId": newSnapshot.Instrument_ID,
+                        "@days": config.job_preload_autowait_active_user_days
                     });
                 for (var i = 0; i < users.length; ++i) {
                     var previous = await snapshotController.getPreviousDecision(newSnapshot, users[i].User);
