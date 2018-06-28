@@ -137,10 +137,10 @@ def main(input_path, output_path_buy, output_path_no_buy, output_path_sell, outp
                                 out_file_no_buy.writelines([header])
 
                             if out_file_sell:
-                                out_file_sell.writelines([header[0:-1] + ";buy_rate\n"])
+                                out_file_sell.writelines([header[0:-1] + ";buy_rate;buy_day\n"])
 
                             if out_file_no_sell:
-                                out_file_no_sell.writelines([header[0:-1] + ";buy_rate\n"])
+                                out_file_no_sell.writelines([header[0:-1] + ";buy_rate;buy_day\n"])
 
                             progress = Progress('split decision: ', 1)
                             progress.set_count(len(metas))
