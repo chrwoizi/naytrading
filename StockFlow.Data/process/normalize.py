@@ -78,8 +78,10 @@ def main(input_path, output_path):
 
                     rates = [sample(rates, Decimal(x) / 1024 * len(rates)) for x in range(0, 1024)]
                     for i in range(additionals_index, len(split_header)):
-                        if split_header[i].endswith('rate'):
+                        if split_header[i].endswith('_rate'):
                             additionals[i-additionals_index] = ('%.2f' % ((Decimal(additionals[i-additionals_index]) - min_rate) / height))
+                        if split_header[i].endswith('_day'):
+                            additionals[i-additionals_index] = str(1023 - int(round(-Decimal(additionals[i-additionals_index]) * 1024 / len(rates))))
 
                     out_file.writelines([serialize(index, id, instrumentId, time, decision, rates, additionals) + '\n'])
 
