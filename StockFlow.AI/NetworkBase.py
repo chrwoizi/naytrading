@@ -10,29 +10,22 @@ class NetworkBase:
         self.summary_level = summary_level
         self.fc_dropout_keep = tf.constant(options["fc_dropout_keep"], dtype=tf.float32)
         self.is_train = tf.constant(options["is_train"], dtype=tf.bool)
+        self.x = features
         self.y = labels
         self.mode = mode
 
-        features_len = int(features.get_shape()[1])
-        self.x_rates_len = options['days']
-        self.x_other_len = features_len - self.x_rates_len
+        # days = int(features.get_shape()[1])
 
-        features_flat = tf.reshape(features, [-1, features_len])
+        # rates = tf.reshape(self.x[:,:,:,0:1],[-1,days])
+        # o1 = tf.one_hot(indices=tf.cast(tf.multiply(tf.subtract(float(1), rates), 100), tf.int32), depth=100, on_value=1.0, off_value=0.0, axis=-1)
+        # self.image_summary('x1', o1, days, 100, 1)
 
-        if self.x_other_len > 0:
-            x_rates_flat = features_flat[:, 0:-self.x_other_len]
-            x_other_flat = features_flat[:, self.x_rates_len:]
-        else:
-            x_rates_flat = features_flat
-            x_other_flat = features_flat[:, :0]
+        # if features.get_shape()[3] > 1:
+        #     diffs = tf.reshape(self.x[:,:,:,1:2],[-1,days])
+        #     o2 = tf.one_hot(indices=tf.cast(tf.add(float(50), tf.multiply(diffs, float(-100))), tf.int32), depth=100, on_value=1.0, off_value=0.0, axis=-1)
+        #     self.image_summary('x2', o2, days, 100, 1)
 
-        self.x_rates = tf.reshape(x_rates_flat, [-1, self.x_rates_len, 1, 1])
-        self.x_other = x_other_flat
-
-        # o = tf.one_hot(indices=tf.cast(tf.multiply(tf.reshape(self.x_rates,[tf.shape(self.x_rates)[0],days]),100), tf.int32), depth=100, on_value=1.0, off_value=0.0, axis=-1)
-        # self.__image_summary('x', o, days, 100, 1)
-
-    def exit_layer(self, name, x, x_other, dropout_keep):
+    def exit_layer(self, name, x, dropout_keep):
         with tf.name_scope(name):
             fc1 = self.full_layer('fc1', x, 1024, True)
 
@@ -40,9 +33,7 @@ class NetworkBase:
             if self.summary_level >= 2:
                 tf.summary.histogram('fc1_drop', fc1_drop)
 
-            merged = tf.concat([fc1_drop, x_other], 1)
-
-            fc2 = self.full_layer('fc2', merged, 2, False)
+            fc2 = self.full_layer('fc2', fc1_drop, 2, False)
 
             return fc2
 
@@ -129,4 +120,4 @@ class NetworkBase:
     def image_summary(self, name, V, width, height, dimensions):
         V = tf.reshape(V, (tf.shape(V)[0], width, height, dimensions))
         V = tf.transpose(V, (0, 2, 1, 3))
-        tf.summary.image(name, V, max_outputs=tf.shape(V)[0])
+        tf.summary.image(name, V, max_outputs=10)
