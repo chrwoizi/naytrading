@@ -133,10 +133,10 @@ def main(input_path, output_path_buy, output_path_no_buy, output_path_sell, outp
                                 out_file_no_buy.writelines([header])
 
                             if out_file_sell:
-                                out_file_sell.writelines([header])
+                                out_file_sell.writelines([header[0:-1] + ";buy_rate\n"])
 
                             if out_file_no_sell:
-                                out_file_no_sell.writelines([header])
+                                out_file_no_sell.writelines([header[0:-1] + ";buy_rate\n"])
 
                             progress = Progress('split decision: ', 1)
                             progress.set_count(len(metas))
@@ -159,7 +159,7 @@ def main(input_path, output_path_buy, output_path_no_buy, output_path_sell, outp
                                         if meta['Decision'] == 'sell':
 
                                             if out_file_sell:
-                                                out_file_sell.writelines([str(lines_read) + ';' + line])
+                                                out_file_sell.writelines([str(lines_read) + ';' + line[0:-1] + ';' + ('%.2f' % meta['PreviousBuyRate']) + '\n'])
 
                                         elif meta['Decision'] == 'wait' or meta['Decision'] == 'autowait':
 
@@ -173,7 +173,7 @@ def main(input_path, output_path_buy, output_path_no_buy, output_path_sell, outp
                                                     out_file_buy.writelines([str(lines_read) + ';' + line_as_buy])
 
                                             if out_file_no_sell:
-                                                out_file_no_sell.writelines([str(lines_read) + ';' + line])
+                                                out_file_no_sell.writelines([str(lines_read) + ';' + line[0:-1] + ';' + ('%.2f' % meta['PreviousBuyRate']) + '\n'])
                                     else:
 
                                         if meta['Decision'] == 'buy':

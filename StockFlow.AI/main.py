@@ -43,6 +43,7 @@ parser.add_argument('--adam_learning_rate', type = float, default = 0.001, help 
 parser.add_argument('--adam_epsilon', type = float, default = 0.5, help = 'The AdamOptimizer epsilon')
 parser.add_argument('--gln_aux_exit_4a_weight', type = float, default = 0.3, help = 'The GoogLeNet auxiliary exit weight at 4a')
 parser.add_argument('--gln_aux_exit_4e_weight', type = float, default = 0.3, help = 'The GoogLeNet auxiliary exit weight at 4e')
+parser.add_argument('--additional_columns', type = int, default = 0, help = 'Number of additional columns after the rate columns')
 
 
 if __name__ == '__main__':
@@ -120,11 +121,11 @@ if __name__ == '__main__':
     def input_fn(data_file, repeat, params):
 
         batch_size = FLAGS.batch_size
-        if params:
+        if params and 'batch_size' in params:
             batch_size = params['batch_size']
 
         print('Loading data from %s' % data_file)
-        data = Data(data_file, batch_size, FLAGS.buy_label, FLAGS.first_day, FLAGS.last_day, repeat)
+        data = Data(data_file, batch_size, FLAGS.buy_label, FLAGS.first_day, FLAGS.last_day, repeat, FLAGS.additional_columns)
         return data.dataset
 
     def train_input_fn(params = None):
@@ -146,7 +147,8 @@ if __name__ == '__main__':
                     "aux_fc_dropout_keep": 0.3,
                     "aux_exit_4a_weight": FLAGS.gln_aux_exit_4a_weight,
                     "aux_exit_4e_weight": FLAGS.gln_aux_exit_4e_weight,
-                    "exit_weight": 1.0
+                    "exit_weight": 1.0,
+                    "days": params['days']
                 }
             else:
                 options = {
@@ -155,7 +157,8 @@ if __name__ == '__main__':
                     "aux_fc_dropout_keep": 1,
                     "aux_exit_4a_weight": FLAGS.gln_aux_exit_4a_weight,
                     "aux_exit_4e_weight": FLAGS.gln_aux_exit_4e_weight,
-                    "exit_weight": 1.0
+                    "exit_weight": 1.0,
+                    "days": params['days']
                 }
 
             model = GoogLeNet(1, features, labels, mode, options)
@@ -166,13 +169,15 @@ if __name__ == '__main__':
                 options = {
                     "is_train": True,
                     "fc_dropout_keep": 0.8,
-                    "residual_scale": 0.1
+                    "residual_scale": 0.1,
+                    "days": params['days']
                 }
             else:
                 options = {
                     "is_train": False,
                     "fc_dropout_keep": 1.0,
-                    "residual_scale": 0.1
+                    "residual_scale": 0.1,
+                    "days": params['days']
                 }
 
             model = InceptionResNetV2(1, features, labels, mode, options)
@@ -242,6 +247,8 @@ if __name__ == '__main__':
     session_config.gpu_options.allow_growth = True
     session_config.gpu_options.per_process_gpu_memory_fraction = 0.9
 
+    model_params = {'days': FLAGS.last_day - FLAGS.first_day + 1}
+
     if FLAGS.use_tpu:
         if 'TPU_NAME' in os.environ:
             tpu_grpc_url = TPUClusterResolver(
@@ -264,7 +271,7 @@ if __name__ == '__main__':
         estimator = tpu_estimator.TPUEstimator(
             model_fn = model_fn,
             config = config,
-            params = {},
+            params = model_params,
             use_tpu = FLAGS.use_tpu,
             train_batch_size = FLAGS.batch_size,
             eval_batch_size = FLAGS.batch_size,
@@ -286,7 +293,7 @@ if __name__ == '__main__':
             model_fn = model_fn,
             #warm_start_from = warm_start_from,
             config = config,
-            params = {}
+            params = model_params
         )
 
     if FLAGS.epochs > 0:

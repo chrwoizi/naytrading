@@ -88,6 +88,9 @@ def get_chart(snapshot):
         downsampled[x] = linear_sample(daily_rates, x / 1024 * len(daily_rates))
     chart = downsampled
 
+    if 'PreviousDecision' in snapshot and snapshot['PreviousDecision'] == 'buy' and 'PreviousBuyRate' in snapshot and snapshot['PreviousBuyRate'] > 0:
+        chart += [snapshot['PreviousBuyRate']]
+
     normalize(chart)
 
     return chart
@@ -199,7 +202,7 @@ if __name__ == '__main__':
                             known_checkpoint_file = checkpoint_file
 
                         def input_fn():
-                            features = tf.constant(np.reshape(chart, [1, 1024, 1, 1]), dtype=tf.float32, shape=[1, 1024, 1, 1])
+                            features = tf.constant(np.reshape(chart, [1, len(chart), 1, 1]), dtype=tf.float32, shape=[1, len(chart), 1, 1])
                             labels = tf.constant([[0.0, 0.0]], dtype=tf.float32)
                             dataset = tf.data.Dataset.from_tensor_slices((features, labels))
                             dataset = dataset.batch(1)

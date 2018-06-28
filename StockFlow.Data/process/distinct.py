@@ -44,8 +44,12 @@ def main(input_dir, input_exp, output_path):
                         progress.set_file(file_path, in_file)
 
                         header = in_file.readline()
+                        if not header.endswith('\n'):
+                            header = header + '\n'
+
                         if line_index == 0:
                             out_file.writelines([header])
+                            line_index += 1
 
                         while True:
                             killfile_monitor.maybe_check_killfile()

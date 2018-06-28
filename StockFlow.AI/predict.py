@@ -18,6 +18,7 @@ parser.add_argument('--first_day', type=int, default=0, help='The first day colu
 parser.add_argument('--last_day', type=int, default=1023, help='The last day column name e.g. 0.')
 parser.add_argument('--buy_label', type=str, default='buy', help='The label used if the user decided on an action for this dataset, e.g. buy')
 parser.add_argument('--model_name', type = str, default = 'GoogLeNet', help = 'The model name, e.g. GoogLeNet')
+parser.add_argument('--additional_columns', type = int, default = 0, help = 'Number of additional columns after the rate columns')
 
 
 if __name__ == '__main__':
@@ -30,7 +31,7 @@ if __name__ == '__main__':
 
     def input_fn():
         print('Loading data from %s' % FLAGS.data_file)
-        data = Data(FLAGS.data_file, FLAGS.batch_size, FLAGS.buy_label, FLAGS.first_day, FLAGS.last_day)
+        data = Data(FLAGS.data_file, FLAGS.batch_size, FLAGS.buy_label, FLAGS.first_day, FLAGS.last_day, FLAGS.additional_columns)
         return data.dataset
 
     def model_fn(features, labels, mode, params):

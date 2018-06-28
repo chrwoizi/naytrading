@@ -300,11 +300,12 @@ async function processUser(user) {
     var now = new Date();
     var filePath = processingDir + "/" + dateFormat(now, "yyyymmddHHMMss") + ".json";
 
-    var newCount = await download(user, parseDateUTC(fromDate), filePath, cancel);
+    await download(user, parseDateUTC(fromDate), filePath, cancel);
 
     files = await getFiles(processingDir + "/*.*", /[^\d]+(\d+)\.json(\.csv)?$/);
 
     if (files.length == 0) {
+        logVerbose("done processing " + user);
         return;
     }
 
@@ -313,6 +314,7 @@ async function processUser(user) {
         && isUpToDate(processingDir + "/buying_test_aug_norm.csv", latestSnapshotDate)
         && isUpToDate(processingDir + "/selling_train_aug_norm.csv", latestSnapshotDate)
         && isUpToDate(processingDir + "/selling_test_aug_norm.csv", latestSnapshotDate)) {
+        logVerbose("done processing " + user);
         return;
     }
 

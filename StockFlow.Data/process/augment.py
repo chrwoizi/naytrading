@@ -58,9 +58,14 @@ def main(input_path, output_path, factor):
                 progress = FileItemProgress('augment: ', 1, input_path, in_file)
 
                 header = in_file.readline()
+                out_file.writelines([header])
+
                 split_header = header.split(';')
-                normalized_header = ';'.join(split_header[0:5] + [str(x) for x in range(0, 1024)]) + '\n'
-                out_file.writelines([normalized_header])
+                additionals_index = len(split_header)
+                for i in range(5, len(split_header)):
+                    if split_header[i] == '0':
+                        additionals_index = i + 1
+                        break
 
                 line_index = 1
 
@@ -78,15 +83,16 @@ def main(input_path, output_path, factor):
                     instrumentId = split[2]
                     time = split[3]
                     decision = split[4]
-                    rates = [Decimal(x) for x in split[5:]]
+                    rates = [Decimal(x) for x in split[5:additionals_index]]
+                    additionals = split[additionals_index:]
 
-                    out_file.writelines([serialize(index + "-0", id, instrumentId, time, decision, rates) + '\n'])
+                    out_file.writelines([serialize(index + "-0", id, instrumentId, time, decision, rates, additionals) + '\n'])
                     line_index += 1
 
                     for i in range(1, factor):
                         killfile_monitor.maybe_check_killfile()
                         augmented_rates = augment(rates, 0.2, 20, 0.05)
-                        out_file.writelines([serialize(index + "-" + str(i), id, instrumentId, time, decision, augmented_rates) + '\n'])
+                        out_file.writelines([serialize(index + "-" + str(i), id, instrumentId, time, decision, augmented_rates, additionals) + '\n'])
                         line_index += 1
 
                     progress.maybe_print()

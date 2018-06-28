@@ -28,8 +28,12 @@ def get_line_positions(file_path, report_progress):
             if len(line) > 2:
                 if line_index > 0:
                     first = line.index(b';')
+                    if first == -1:
+                        raise Exception("Could not find ; in " + line.decode('utf8'))
                     skipped_index = line[first + 1:]
                     second = skipped_index.index(b';')
+                    if second == -1:
+                        raise Exception("Could not find ; in " + skipped_index.decode('utf8'))
                     line_positions += [dict(Position = position, Id = skipped_index[0:second].decode('utf8'))]
 
             position += len(line)
@@ -41,8 +45,8 @@ def get_line_positions(file_path, report_progress):
 
     return line_positions
 
-def serialize(index, id, instrumentId, time, decision, rates):
-    return ';'.join([index, id, instrumentId, time, decision] + [('%.2f' % x) for x in rates])
+def serialize(index, id, instrumentId, time, decision, rates, additionals):
+    return ';'.join([index, id, instrumentId, time, decision] + [('%.2f' % x) for x in rates] + additionals)
 
 def sample(rates, x):
     low = int(math.floor(x))
