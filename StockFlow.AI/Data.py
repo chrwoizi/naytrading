@@ -27,7 +27,7 @@ class Data(object):
                 invested = tf.cast(tf.greater(tf.range(0, rates_len), tf.cast(buy_day, tf.int32)), tf.float32)
                 buy_rate_repeated = tf.tile(buy_rate, [rates_len])
                 diff = tf.subtract(rates, buy_rate_repeated)
-                invested_diff = tf.multiply(invested, diff)
+                invested_diff = tf.add(float(0.5), tf.divide(tf.multiply(invested, diff), float(2)))
 
                 return invested_diff
 
