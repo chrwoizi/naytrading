@@ -2,7 +2,7 @@ import tensorflow as tf
 
 
 class Data(object):
-    def __init__(self, file, batch_size, buy_label, first_day, last_day, repeat, other_features):
+    def __init__(self, file, batch_size, buy_label, first_day, last_day, repeat, other_features, shuffle):
         self.batch_size = batch_size
 
         column_defaults = [['0'], ['0'], ['0'], ['wait'], ['19700101']] + [[0.00] for i in range(first_day, last_day + 1)] + [[0.00] for i in range(0, other_features)]
@@ -65,7 +65,10 @@ class Data(object):
             dataset = dataset.map(parse_csv, num_parallel_calls = 5)
 
             print('Preparing data: batch/prefetch/cache')
-            self.dataset = dataset.batch(batch_size).prefetch(self.count).cache().repeat(repeat)
+            self.dataset = dataset.batch(batch_size).prefetch(self.count)
+            if shuffle:
+                self.dataset = self.dataset.shuffle(self.count)
+            self.dataset = self.dataset.cache().repeat(repeat)
 
     def __get_line_count(self, file):
 

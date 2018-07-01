@@ -33,6 +33,7 @@ parser.add_argument('--buy_label', type=str, default='buy', help='The label used
 parser.add_argument('--tf_log', type=str, default='ERROR', help='The tensorflow log level: DEBUG, INFO, WARN, ERROR, FATAL')
 parser.add_argument('--sleep', type=int, default='300', help='The number of seconds to wait between snapshots')
 parser.add_argument('--checkpoint_copy', type=bool, default=True, help='Whether to create a local copy of the checkpoint')
+parser.add_argument('--min_buy_probability', type=float, default=0.99, help='Minimum predicted probability to decide for buy')
 
 
 def sample(chart, x):
@@ -213,7 +214,7 @@ if __name__ == '__main__':
                         classes = [p[FLAGS.buy_label] for p in predictions]
                         probabilities = [p['probabilities'] for p in predictions]
 
-                        if classes[0] == 1:
+                        if classes[0] == 1 and probabilities[0][1] >= FLAGS.min_buy_probability:
                             decision = 'buy'
                         else:
                             decision = 'wait'
