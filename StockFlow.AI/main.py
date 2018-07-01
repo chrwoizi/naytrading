@@ -23,19 +23,19 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument('--model_dir', type = str, default = 'model', help = 'Base directory for the model.')
 parser.add_argument('--load', type = bool, default = False, help = 'Whether to load an existing model.')
-parser.add_argument('--epochs', type = int, default = 1000, help = 'Number of training and evaluation on all datasets.')
+parser.add_argument('--epochs', type = int, default = 12, help = 'Number of trainings and evaluations.')
 parser.add_argument('--start_epoch', type = int, default = 0, help = 'Start index in epochs.')
-parser.add_argument('--repeat_train_data', type = int, default = 10, help = 'Number of training data epochs between evaluations.')
+parser.add_argument('--repeat_train_data', type = int, default = 5, help = 'Number of training data repetitions per epoch (between evaluations).')
 parser.add_argument('--batch_size', type = int, default = 48, help = 'Number of examples per batch.')
-parser.add_argument('--test_file', type = str, default = 'buying_test_aug_norm.csv', help = 'Path to the test data.')
-parser.add_argument('--train_file', type = str, default = 'buying_train_aug_norm.csv', help = 'Path to the train data.')
+parser.add_argument('--test_file', type = str, default = 'buying_test_norm.csv', help = 'Path to the test data.')
+parser.add_argument('--train_file', type = str, default = 'buying_train_norm.csv', help = 'Path to the train data.')
 parser.add_argument('--first_day', type = int, default = 0, help = 'The first day column name e.g. -1814.')
 parser.add_argument('--last_day', type = int, default = 1023, help = 'The last day column name e.g. 0.')
 parser.add_argument('--buy_label', type = str, default = 'buy', help = 'The label used if the user decided on an action for this dataset, e.g. buy')
 parser.add_argument('--use_tpu', type = bool, default = False, help = 'Whether to use the TPU for training')
 parser.add_argument('--model_name', type = str, default = 'GoogLeNet', help = 'The model name, e.g. GoogLeNet')
 parser.add_argument('--save_summary_steps', type = int, default = 100, help = 'The steps between summary saves')
-parser.add_argument('--save_checkpoints_steps', type = int, default = 1000, help = 'The steps between checkpoint saves')
+parser.add_argument('--save_checkpoints_steps', type = int, default = 10000, help = 'The steps between checkpoint saves')
 parser.add_argument('--keep_checkpoint_max', type = int, default = 10, help = 'The number of checkpoints to keep')
 parser.add_argument('--keep_checkpoint_every_n_hours', type = int, default = 1, help = 'The hours between archiving a snapshot')
 parser.add_argument('--log_step_count_steps', type = int, default = 100, help = 'The steps between logging')
@@ -43,6 +43,10 @@ parser.add_argument('--adam_learning_rate', type = float, default = 0.001, help 
 parser.add_argument('--adam_epsilon', type = float, default = 0.5, help = 'The AdamOptimizer epsilon')
 parser.add_argument('--gln_aux_exit_4a_weight', type = float, default = 0.3, help = 'The GoogLeNet auxiliary exit weight at 4a')
 parser.add_argument('--gln_aux_exit_4e_weight', type = float, default = 0.3, help = 'The GoogLeNet auxiliary exit weight at 4e')
+parser.add_argument('--gln_aux_exit_4a_weight_epochs', type = int, default = 30, help = 'Number of epochs until the GoogLeNet auxiliary exit weight at 4a is decreased to zero')
+parser.add_argument('--gln_aux_exit_4e_weight_epochs', type = int, default = 30, help = 'Number of epochs until the GoogLeNet auxiliary exit weight at 4e is decreased to zero')
+parser.add_argument('--gln_aux_exit_4a_weight_power', type = float, default = 2, help = 'The power by which the GoogLeNet auxiliary exit weight at 4a is decreased to zero')
+parser.add_argument('--gln_aux_exit_4e_weight_power', type = float, default = 2, help = 'The power by which the GoogLeNet auxiliary exit weight at 4e is decreased to zero')
 parser.add_argument('--additional_columns', type = int, default = 0, help = 'Number of additional columns after the rate columns')
 
 
@@ -134,31 +138,39 @@ if __name__ == '__main__':
     def test_input_fn(params = None):
         return input_fn(test_file, 1, params)
 
+    gln_aux_exit_4a_weight_falloff = 0
+    gln_aux_exit_4e_weight_falloff = 0
+
     def model_fn(features, labels, mode, params):
 
         print('Creating model')
 
         if FLAGS.model_name == 'GoogLeNet':
 
+            weight_4a = pow(1 - max(0, min(gln_aux_exit_4a_weight_falloff, 1)), 2)
+            weight_4e = pow(1 - max(0, min(gln_aux_exit_4e_weight_falloff, 1)), 2)
+
             if mode == tf.estimator.ModeKeys.TRAIN:
                 options = {
                     "is_train": True,
                     "fc_dropout_keep": 0.4,
                     "aux_fc_dropout_keep": 0.3,
-                    "aux_exit_4a_weight": FLAGS.gln_aux_exit_4a_weight,
-                    "aux_exit_4e_weight": FLAGS.gln_aux_exit_4e_weight,
+                    "aux_exit_4a_weight": FLAGS.gln_aux_exit_4a_weight * weight_4a,
+                    "aux_exit_4e_weight": FLAGS.gln_aux_exit_4e_weight * weight_4e,
                     "exit_weight": 1.0,
-                    "days": params['days']
+                    "days": params['days'],
+                    "action": FLAGS.buy_label
                 }
             else:
                 options = {
                     "is_train": False,
                     "fc_dropout_keep": 1.0,
                     "aux_fc_dropout_keep": 1,
-                    "aux_exit_4a_weight": FLAGS.gln_aux_exit_4a_weight,
-                    "aux_exit_4e_weight": FLAGS.gln_aux_exit_4e_weight,
+                    "aux_exit_4a_weight": FLAGS.gln_aux_exit_4a_weight * weight_4a,
+                    "aux_exit_4e_weight": FLAGS.gln_aux_exit_4e_weight * weight_4e,
                     "exit_weight": 1.0,
-                    "days": params['days']
+                    "days": params['days'],
+                    "action": FLAGS.buy_label
                 }
 
             model = GoogLeNet(1, features, labels, mode, options)
@@ -170,14 +182,16 @@ if __name__ == '__main__':
                     "is_train": True,
                     "fc_dropout_keep": 0.8,
                     "residual_scale": 0.1,
-                    "days": params['days']
+                    "days": params['days'],
+                    "action": FLAGS.buy_label
                 }
             else:
                 options = {
                     "is_train": False,
                     "fc_dropout_keep": 1.0,
                     "residual_scale": 0.1,
-                    "days": params['days']
+                    "days": params['days'],
+                    "action": FLAGS.buy_label
                 }
 
             model = InceptionResNetV2(1, features, labels, mode, options)
@@ -204,10 +218,14 @@ if __name__ == '__main__':
         else:
             train_op = None
 
-        def metric_fn(y_argmax, exit_argmax):
+        def metric_fn(y_argmax, exit_argmax, positives_detected, negatives_detected, positives_correct, negatives_correct):
             return {
-                'accuracy': tf.metrics.accuracy(exit_argmax, y_argmax),
-                'precision': tf.metrics.precision(exit_argmax, y_argmax)
+                'accuracy': tf.metrics.accuracy(y_argmax, exit_argmax),
+                'precision': tf.metrics.precision(y_argmax, exit_argmax),
+                FLAGS.buy_label + 's_detected': tf.metrics.mean(positives_detected),
+                'waits_detected': tf.metrics.mean(negatives_detected),
+                FLAGS.buy_label + 's_correct': tf.metrics.mean(positives_correct),
+                'waits_correct': tf.metrics.mean(negatives_correct)
             }
 
         if FLAGS.use_tpu:
@@ -216,6 +234,10 @@ if __name__ == '__main__':
                 eval_metrics = (metric_fn, {
                     'y_argmax': model.y_argmax,
                     'exit_argmax': model.exit_argmax,
+                    'positives_detected': model.positives_detected,
+                    'negatives_detected': model.negatives_detected,
+                    'positives_correct': model.positives_correct,
+                    'negatives_correct': model.negatives_correct
                 })
             else:
                 eval_metrics = None
@@ -230,7 +252,7 @@ if __name__ == '__main__':
         else:
 
             if mode == tf.estimator.ModeKeys.EVAL:
-                eval_metric_ops = metric_fn(model.y_argmax, model.exit_argmax)
+                eval_metric_ops = metric_fn(model.y_argmax, model.exit_argmax, model.positives_detected, model.negatives_detected, model.positives_correct, model.negatives_correct)
             else:
                 eval_metric_ops = None
 
@@ -300,6 +322,9 @@ if __name__ == '__main__':
 
         for epoch in range(FLAGS.start_epoch, FLAGS.epochs):
             begin = time.time()
+
+            gln_aux_exit_4a_weight_falloff = epoch / FLAGS.gln_aux_exit_4a_weight_epochs
+            gln_aux_exit_4e_weight_falloff = epoch / FLAGS.gln_aux_exit_4e_weight_epochs
 
             estimator.train(input_fn = train_input_fn)
 

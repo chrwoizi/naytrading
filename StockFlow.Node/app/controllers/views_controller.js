@@ -52,7 +52,7 @@ exports.manage = function (req, res) {
 
     var args = get_default_args(req);
 
-    var filePath = path.resolve(config.processing_dir + "/" + req.user.email + "/buying_train_aug_norm.csv");
+    var filePath = path.resolve(config.processing_dir + "/" + req.user.email + "/buying_train_norm.csv");
     if (fs.existsSync(filePath) && fs.existsSync(filePath + ".meta")) {
         args.buyingTrain = JSON.parse(fs.readFileSync(filePath + ".meta", 'utf8'));
         formatTime(args.buyingTrain);
@@ -62,7 +62,7 @@ exports.manage = function (req, res) {
         args.buyingTrain = null;
     }
 
-    filePath = path.resolve(config.processing_dir + "/" + req.user.email + "/buying_test_aug_norm.csv");
+    filePath = path.resolve(config.processing_dir + "/" + req.user.email + "/buying_test_norm.csv");
     if (fs.existsSync(filePath) && fs.existsSync(filePath + ".meta")) {
         args.buyingTest = JSON.parse(fs.readFileSync(filePath + ".meta", 'utf8'));
         formatTime(args.buyingTest);
@@ -72,7 +72,7 @@ exports.manage = function (req, res) {
         args.buyingTest = null;
     }
 
-    filePath = path.resolve(config.processing_dir + "/" + req.user.email + "/selling_train_aug_norm.csv");
+    filePath = path.resolve(config.processing_dir + "/" + req.user.email + "/selling_train_norm.csv");
     if (fs.existsSync(filePath) && fs.existsSync(filePath + ".meta")) {
         args.sellingTrain = JSON.parse(fs.readFileSync(filePath + ".meta", 'utf8'));
         formatTime(args.sellingTrain);
@@ -82,7 +82,7 @@ exports.manage = function (req, res) {
         args.sellingTrain = null;
     }
 
-    filePath = path.resolve(config.processing_dir + "/" + req.user.email + "/selling_test_aug_norm.csv");
+    filePath = path.resolve(config.processing_dir + "/" + req.user.email + "/selling_test_norm.csv");
     if (fs.existsSync(filePath) && fs.existsSync(filePath + ".meta")) {
         args.sellingTest = JSON.parse(fs.readFileSync(filePath + ".meta", 'utf8'));
         formatTime(args.sellingTest);

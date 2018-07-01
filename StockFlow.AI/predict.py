@@ -31,7 +31,7 @@ if __name__ == '__main__':
 
     def input_fn():
         print('Loading data from %s' % FLAGS.data_file)
-        data = Data(FLAGS.data_file, FLAGS.batch_size, FLAGS.buy_label, FLAGS.first_day, FLAGS.last_day, FLAGS.additional_columns)
+        data = Data(FLAGS.data_file, FLAGS.batch_size, FLAGS.buy_label, FLAGS.first_day, FLAGS.last_day, 1, FLAGS.additional_columns)
         return data.dataset
 
     def model_fn(features, labels, mode, params):
@@ -46,7 +46,9 @@ if __name__ == '__main__':
                 "aux_fc_dropout_keep": 1,
                 "aux_exit_4a_weight": 0,
                 "aux_exit_4e_weight": 0,
-                "exit_weight": 1.0
+                "exit_weight": 1.0,
+                "days": params['days'],
+                "action": FLAGS.buy_label
             }
 
             model = GoogLeNet(1, features, labels, mode, options)
@@ -56,7 +58,9 @@ if __name__ == '__main__':
             options = {
                 "is_train": False,
                 "fc_dropout_keep": 1.0,
-                "residual_scale": 0.1
+                "residual_scale": 0.1,
+                "days": params['days'],
+                "action": FLAGS.buy_label
             }
 
             model = InceptionResNetV2(1, features, labels, mode, options)
@@ -82,7 +86,7 @@ if __name__ == '__main__':
     estimator = tf.estimator.Estimator(
         model_fn = model_fn,
         config = config,
-        params = {}
+        params = {'days': FLAGS.last_day - FLAGS.first_day + 1}
     )
 
     predictions = list(estimator.predict(input_fn = input_fn))

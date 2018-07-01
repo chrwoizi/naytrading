@@ -313,17 +313,17 @@ function downloadFile(req, res, filename) {
 }
 
 exports.downloadBuyingTrain = async function (req, res) {
-    downloadFile(req, res, "buying_train_aug_norm.csv");
+    downloadFile(req, res, "buying_train_norm.csv");
 }
 
 exports.downloadBuyingTest = async function (req, res) {
-    downloadFile(req, res, "buying_test_aug_norm.csv");
+    downloadFile(req, res, "buying_test_norm.csv");
 }
 
 exports.downloadSellingTrain = async function (req, res) {
-    downloadFile(req, res, "selling_train_aug_norm.csv");
+    downloadFile(req, res, "selling_train_norm.csv");
 }
 
 exports.downloadSellingTest = async function (req, res) {
-    downloadFile(req, res, "selling_test_aug_norm.csv");
+    downloadFile(req, res, "selling_test_norm.csv");
 }
