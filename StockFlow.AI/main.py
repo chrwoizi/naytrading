@@ -129,7 +129,7 @@ if __name__ == '__main__':
             batch_size = params['batch_size']
 
         print('Loading data from %s' % data_file)
-        data = Data(data_file, batch_size, FLAGS.buy_label, FLAGS.first_day, FLAGS.last_day, repeat, FLAGS.additional_columns)
+        data = Data(data_file, batch_size, FLAGS.buy_label, FLAGS.first_day, FLAGS.last_day, repeat, FLAGS.additional_columns, False)
         return data.dataset
 
     def train_input_fn(params = None):
