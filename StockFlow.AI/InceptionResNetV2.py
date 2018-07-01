@@ -70,6 +70,41 @@ class InceptionResNetV2(NetworkBase):
                 if self.summary_level >= 1:
                     tf.summary.scalar('value', self.accuracy)
 
+            with tf.variable_scope('imitations'):
+
+                expected_one = tf.cast(self.y_argmax, tf.float32)
+                expected_zero = tf.subtract(float(1), expected_one)
+                actual_one = tf.cast(self.exit_argmax, tf.float32)
+                actual_zero = tf.subtract(float(1), actual_one)
+
+                with tf.variable_scope(options['action'] + 's_detected'):
+                    self.positives_detected = tf.divide(
+                        tf.reduce_sum(tf.multiply(expected_one, actual_one)),
+                        tf.maximum(float(1), tf.reduce_sum(expected_one)))
+                    if self.summary_level >= 1:
+                        tf.summary.scalar('value', self.positives_detected)
+
+                with tf.variable_scope('waits_detected'):
+                    self.negatives_detected = tf.divide(
+                        tf.reduce_sum(tf.multiply(expected_zero, actual_zero)),
+                        tf.maximum(float(1), tf.reduce_sum(expected_zero)))
+                    if self.summary_level >= 1:
+                        tf.summary.scalar('value', self.negatives_detected)
+
+                with tf.variable_scope(options['action'] + 's_correct'):
+                    self.positives_correct = tf.divide(
+                        tf.reduce_sum(tf.multiply(expected_one, actual_one)),
+                        tf.maximum(float(1), tf.reduce_sum(actual_one)))
+                    if self.summary_level >= 1:
+                        tf.summary.scalar('value', self.positives_correct)
+
+                with tf.variable_scope('waits_correct'):
+                    self.negatives_correct = tf.divide(
+                        tf.reduce_sum(tf.multiply(expected_zero, actual_zero)),
+                        tf.maximum(float(1), tf.reduce_sum(actual_zero)))
+                    if self.summary_level >= 1:
+                        tf.summary.scalar('value', self.negatives_correct)
+
     def resnet_sum(self, x, residual):
         residual_scaled = tf.divide(residual, self.residual_scale, 'scale')
         sum1 = tf.add(residual_scaled, x, 'addition')

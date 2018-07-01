@@ -12,7 +12,7 @@ from KillFileMonitor import *
 parser = argparse.ArgumentParser()
 
 parser.add_argument('--input_path', type=str, default='data\\selling_test_aug.csv', help='Input file path.')
-parser.add_argument('--output_path', type=str, default='data\\selling_test_aug_norm.csv', help='Output file path.')
+parser.add_argument('--output_path', type=str, default='data\\selling_test_norm.csv', help='Output file path.')
 
 
 def normalize(rates):

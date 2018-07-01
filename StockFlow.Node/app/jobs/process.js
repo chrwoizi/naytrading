@@ -310,10 +310,10 @@ async function processUser(user) {
     }
 
     var latestSnapshotDate = getMaxDate(files);
-    if (isUpToDate(processingDir + "/buying_train_aug_norm.csv", latestSnapshotDate)
-        && isUpToDate(processingDir + "/buying_test_aug_norm.csv", latestSnapshotDate)
-        && isUpToDate(processingDir + "/selling_train_aug_norm.csv", latestSnapshotDate)
-        && isUpToDate(processingDir + "/selling_test_aug_norm.csv", latestSnapshotDate)) {
+    if (isUpToDate(processingDir + "/buying_train_norm.csv", latestSnapshotDate)
+        && isUpToDate(processingDir + "/buying_test_norm.csv", latestSnapshotDate)
+        && isUpToDate(processingDir + "/selling_train_norm.csv", latestSnapshotDate)
+        && isUpToDate(processingDir + "/selling_test_norm.csv", latestSnapshotDate)) {
         logVerbose("done processing " + user);
         return;
     }
@@ -376,47 +376,52 @@ async function processUser(user) {
 
         await Promise.all([split(action), split("no_" + action)]);
 
-        async function processDataset(dataset) {
+        async function processDataset(dataset, should_augment) {
 
-            async function augment(file) {
-                await runProcess(config.python, processorsDir, [
-                    "augment.py",
-                    "--input_path=" + processingDir + "/" + file + "_" + dataset + ".csv",
-                    "--output_path=" + processingDir + "/" + file + "_" + dataset + "_aug.csv",
-                    "--factor=" + augmentFactor
-                ]);
+            var input_suffix = "";
+            if (should_augment) {
+                async function augment(file) {
+                    await runProcess(config.python, processorsDir, [
+                        "augment.py",
+                        "--input_path=" + processingDir + "/" + file + "_" + dataset + ".csv",
+                        "--output_path=" + processingDir + "/" + file + "_" + dataset + "_aug.csv",
+                        "--factor=" + augmentFactor
+                    ]);
+                }
+
+                await Promise.all([augment(action), augment("no_" + action)]);
+
+                input_suffix = "_aug";
             }
-
-            await Promise.all([augment(action), augment("no_" + action)]);
 
             await runProcess(config.python, processorsDir, [
                 "merge.py",
-                "--input_path_1=" + processingDir + "/" + action + "_" + dataset + "_aug.csv",
-                "--input_path_2=" + processingDir + "/no_" + action + "_" + dataset + "_aug.csv",
-                "--output_path=" + processingDir + "/" + action + "ing_" + dataset + "_aug.csv"
+                "--input_path_1=" + processingDir + "/" + action + "_" + dataset + input_suffix + ".csv",
+                "--input_path_2=" + processingDir + "/no_" + action + "_" + dataset + input_suffix + ".csv",
+                "--output_path=" + processingDir + "/" + action + "ing_" + dataset + ".csv"
             ]);
 
-            var outputPath = processingDir + "/" + action + "ing_" + dataset + "_aug_norm.csv";
+            var outputPath = processingDir + "/" + action + "ing_" + dataset + "_norm.csv";
             await runProcess(config.python, processorsDir, [
                 "normalize.py",
-                "--input_path=" + processingDir + "/" + action + "ing_" + dataset + "_aug.csv",
+                "--input_path=" + processingDir + "/" + action + "ing_" + dataset + ".csv",
                 "--output_path=" + outputPath
             ]);
 
             var lines = await countLines(outputPath);
 
             await writeMeta(
-                processingDir + "/" + action + "ing_" + dataset + "_aug_norm.csv.meta",
+                processingDir + "/" + action + "ing_" + dataset + "_norm.csv.meta",
                 now,
                 days,
                 maxMissingDays,
                 testDataRatio,
                 preserveTestIds,
-                augmentFactor,
+                should_augment ? augmentFactor : 1,
                 lines);
         }
 
-        await Promise.all([processDataset("train"), processDataset("test")]);
+        await Promise.all([processDataset("train", true), processDataset("test", false)]);
     }
 
     await Promise.all([processAction("buy"), processAction("sell")]);
