@@ -96,20 +96,20 @@ exports.isAutoWait = async function (newSnapshot) {
         var endTime = new Date();
         endTime.setHours(0, 0, 0, 0);
         var startTime = new Date(endTime.getTime() - config.chart_period_seconds * 1000);
-    
+
         var firstRatesUntil = new Date(startTime.getTime() + 1000 * (config.chart_period_seconds * 0.2));
         var lastRatesFrom = new Date(endTime.getTime() - 1000 * (config.chart_period_seconds * 0.2));
-    
+
         var firstRates = newSnapshot.Rates.filter(x => x.Time < firstRatesUntil);
         var lastRates = newSnapshot.Rates.filter(x => x.Time > lastRatesFrom);
-    
+
         if (firstRates.length == 0 || lastRates.length == 0) {
             return false;
         }
-    
+
         var firstAverage = firstRates.map(x => x.Close).reduce((a, b) => a + b) / firstRates.length;
         var lastAverage = lastRates.map(x => x.Close).reduce((a, b) => a + b) / lastRates.length;
-    
+
         // overall bearish trend
         return lastAverage < firstAverage;
     }
@@ -159,7 +159,7 @@ async function updateIsinWkn(instrument, isin, wkn) {
     }
 }
 
-exports.checkRates = function(rates, startTime, endTime, source) {
+exports.checkRates = function (rates, startTime, endTime, source) {
 
     var minRateTime = new Date(startTime.getTime() + 1000 * config.discard_threshold_seconds);
     var maxRateTime = new Date(endTime.getTime() - 1000 * config.discard_threshold_seconds);
@@ -332,9 +332,12 @@ exports.createNewRandomSnapshot = async function (req, res) {
             var endTime = new Date();
             endTime.setHours(0, 0, 0, 0);
 
+            var isAI = req.user.email.endsWith(".ai");
+
             var forgotten = await sql.query(rank_open_snapshots, {
                 "@userName": req.user.email,
-                "@hours": config.max_unused_snapshot_age_hours
+                "@hours": config.max_unused_snapshot_age_hours,
+                "@isAI": isAI ? 1 : 0
             });
 
             if (forgotten && forgotten.length > 0) {
@@ -344,35 +347,37 @@ exports.createNewRandomSnapshot = async function (req, res) {
                 return;
             }
 
-            var instrumentIds = await exports.getNewSnapshotInstruments(endTime, req.user.email);
+            if (!isAI) {
+                var instrumentIds = await exports.getNewSnapshotInstruments(endTime, req.user.email);
 
-            var newSnapshot = null;
-            for (var i = 0; i <= config.max_autowait_count; ++i) {
-                newSnapshot = await exports.createNewSnapshotFromRandomInstrument(instrumentIds);
-                if (newSnapshot != null) {
+                var newSnapshot = null;
+                for (var i = 0; i <= config.max_autowait_count; ++i) {
+                    newSnapshot = await exports.createNewSnapshotFromRandomInstrument(instrumentIds);
+                    if (newSnapshot != null) {
 
-                    var k = instrumentIds.indexOf(newSnapshot.Instrument_ID);
-                    instrumentIds.splice(k, 1);
+                        var k = instrumentIds.indexOf(newSnapshot.Instrument_ID);
+                        instrumentIds.splice(k, 1);
 
-                    var previous = await snapshotController.getPreviousDecision(newSnapshot, req.user.email);
-                    var viewModel = snapshotController.getSnapshotViewModel(newSnapshot, previous, req.user.email);
+                        var previous = await snapshotController.getPreviousDecision(newSnapshot, req.user.email);
+                        var viewModel = snapshotController.getSnapshotViewModel(newSnapshot, previous, req.user.email);
 
-                    if (i < config.max_autowait_count && exports.isAutoWait(viewModel)) {
-                        await model.usersnapshot.create({
-                            User: req.user.email,
-                            Snapshot_ID: newSnapshot.ID,
-                            Decision: "autowait",
-                            ModifiedTime: new Date()
-                        });
+                        if (i < config.max_autowait_count && exports.isAutoWait(viewModel)) {
+                            await model.usersnapshot.create({
+                                User: req.user.email,
+                                Snapshot_ID: newSnapshot.ID,
+                                Decision: "autowait",
+                                ModifiedTime: new Date()
+                            });
+                        }
+                        else {
+                            res.json(viewModel);
+                            return;
+                        }
+
                     }
                     else {
-                        res.json(viewModel);
-                        return;
+                        break;
                     }
-
-                }
-                else {
-                    break;
                 }
             }
 
