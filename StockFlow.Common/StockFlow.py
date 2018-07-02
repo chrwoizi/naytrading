@@ -28,6 +28,9 @@ class StockFlow:
             'password': stockflow_password
         }, proxies = self.proxies)
 
+        if r.status_code == 404:
+            return None
+
         if r.status_code != 200:
             raise Exception('%s returned %d' % (url, r.status_code))
 

@@ -21,7 +21,7 @@ from StockFlow import StockFlow
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument('--checkpoint_dir', type=str, default='model20180607082346/checkpoint', help='Model checkpoint directory.')
+parser.add_argument('--checkpoint_dir', type=str, default='model20180629121604/checkpoint', help='Model checkpoint directory.')
 parser.add_argument('--proxy_url', type=str, default='', help='Proxy URL.')
 parser.add_argument('--proxy_user', type=str, default='', help='Proxy user.')
 parser.add_argument('--proxy_password', type=str, default='', help='Proxy password.')
@@ -31,7 +31,7 @@ parser.add_argument('--stockflow_password', type=str, default='', help='StockFlo
 parser.add_argument('--model_name', type = str, default = 'GoogLeNet', help = 'The model name, e.g. GoogLeNet')
 parser.add_argument('--buy_label', type=str, default='buy', help='The label used if the user decided on an action for this dataset, e.g. buy')
 parser.add_argument('--tf_log', type=str, default='ERROR', help='The tensorflow log level: DEBUG, INFO, WARN, ERROR, FATAL')
-parser.add_argument('--sleep', type=int, default='300', help='The number of seconds to wait between snapshots')
+parser.add_argument('--sleep', type=int, default='3', help='The number of seconds to wait between snapshots')
 parser.add_argument('--checkpoint_copy', type=bool, default=True, help='Whether to create a local copy of the checkpoint')
 parser.add_argument('--min_buy_probability', type=float, default=0.99, help='Minimum predicted probability to decide for buy')
 
@@ -69,8 +69,8 @@ def plot(chart):
 def get_chart(snapshot):
     rates = list(map(lambda x: [datetime.datetime.strptime(x['T'], '%y%m%d'), x['C']], snapshot['Rates']))
 
-    start_date = datetime.datetime.strptime(snapshot['StartTime'], '%d.%m.%y')
-    end_date = datetime.datetime.strptime(snapshot['Date'], '%d.%m.%y')
+    start_date = datetime.datetime.strptime(snapshot['Rates'][0]['T'], '%y%m%d')
+    end_date = datetime.datetime.strptime(snapshot['Rates'][-1]['T'], '%y%m%d')
 
     total_days = (end_date - start_date).days + 1
     daily_rates = [[None, 0]] * total_days
@@ -174,61 +174,72 @@ if __name__ == '__main__':
 
     stockflow = StockFlow(FLAGS.proxy_url, proxy_user, proxy_password, FLAGS.stockflow_url)
     stockflow.login(stockflow_user, stockflow_password)
+    print("logged in")
 
     known_checkpoint_file = ''
 
     while True:
         try:
             checkpoint_file = tf.train.latest_checkpoint(FLAGS.checkpoint_dir)
-            if checkpoint_file:
+            if not checkpoint_file:
+                print("no checkpoint found")
+            else:
                 checkpoint_files = glob.glob(checkpoint_file + "*")
-                if checkpoint_file == known_checkpoint_file or len(checkpoint_files) > 2:
-
+                if checkpoint_file != known_checkpoint_file and len(checkpoint_files) <= 2:
+                    print("checkpoint is incomplete")
+                else:
+                    print("get snapshot")
                     snapshot = stockflow.new_snapshot()
-                    chart = get_chart(snapshot)
-                    # plot(chart)
+                    if snapshot is None:
+                        print("no snapshot available")
+                    else:
+                        print("prepare snapshot")
+                        chart = get_chart(snapshot)
+                        # plot(chart)
 
-                    if 'PreviousDecision' not in snapshot or snapshot['PreviousDecision'] != 'buy':
+                        if 'PreviousDecision' not in snapshot or snapshot['PreviousDecision'] != 'buy':
 
-                        if checkpoint_file != known_checkpoint_file:
-                            for file in glob.glob(checkpoint_dir + "/*"):
-                                os.unlink(file)
+                            if checkpoint_file != known_checkpoint_file:
+                                for file in glob.glob(checkpoint_dir + "/*"):
+                                    os.unlink(file)
 
-                            for file in checkpoint_files:
-                                shutil.copy(file, checkpoint_dir)
+                                for file in checkpoint_files:
+                                    shutil.copy(file, checkpoint_dir)
 
-                            with open(checkpoint_dir + '/checkpoint', 'w') as text_file:
-                                text_file.write('model_checkpoint_path: \"%s\"' % os.path.basename(checkpoint_file))
+                                with open(checkpoint_dir + '/checkpoint', 'w') as text_file:
+                                    text_file.write('model_checkpoint_path: \"%s\"' % os.path.basename(checkpoint_file))
 
-                            known_checkpoint_file = checkpoint_file
+                                known_checkpoint_file = checkpoint_file
 
-                        def input_fn():
-                            features = tf.constant(np.reshape(chart, [1, len(chart), 1, 1]), dtype=tf.float32, shape=[1, len(chart), 1, 1])
-                            labels = tf.constant([[0.0, 0.0]], dtype=tf.float32)
-                            dataset = tf.data.Dataset.from_tensor_slices((features, labels))
-                            dataset = dataset.batch(1)
-                            return dataset
+                            def input_fn():
+                                features = tf.constant(np.reshape(chart, [1, len(chart), 1, 1]), dtype=tf.float32, shape=[1, len(chart), 1, 1])
+                                labels = tf.constant([[0.0, 0.0]], dtype=tf.float32)
+                                dataset = tf.data.Dataset.from_tensor_slices((features, labels))
+                                dataset = dataset.batch(1)
+                                return dataset
 
-                        predictions = list(estimator.predict(input_fn=input_fn))
 
-                        classes = [p[FLAGS.buy_label] for p in predictions]
-                        probabilities = [p['probabilities'] for p in predictions]
+                            print("predict")
+                            predictions = list(estimator.predict(input_fn=input_fn))
 
-                        if classes[0] == 1 and probabilities[0][1] >= FLAGS.min_buy_probability:
-                            decision = 'buy'
+                            classes = [p[FLAGS.buy_label] for p in predictions]
+                            probabilities = [p['probabilities'] for p in predictions]
+
+                            if classes[0] == 1 and probabilities[0][1] >= FLAGS.min_buy_probability:
+                                decision = 'buy'
+                            else:
+                                decision = 'wait'
+
+                            reason = ' (wait=%d %s=%d)' % (round(100 * probabilities[0][0]), FLAGS.buy_label, round(100 * probabilities[0][1]))
+
                         else:
                             decision = 'wait'
+                            reason = ' because it was already bought'
 
-                        reason = ' (wait=%d %s=%d)' % (round(100 * probabilities[0][0]), FLAGS.buy_label, round(100 * probabilities[0][1]))
+                        print('%s %s on %s (snapshot %d)%s' % (
+                            decision, snapshot['Instrument']['InstrumentName'], snapshot['Date'], snapshot['ID'], reason))
 
-                    else:
-                        decision = 'wait'
-                        reason = ' because it was already bought'
-
-                    print('%s %s on %s (snapshot %d)%s' % (
-                        decision, snapshot['Instrument']['InstrumentName'], snapshot['Date'], snapshot['ID'], reason))
-
-                    stockflow.set_decision(snapshot['ID'], decision)
+                        stockflow.set_decision(snapshot['ID'], decision)
 
         except Exception as e:
             print("Unexpected error:", str(e))

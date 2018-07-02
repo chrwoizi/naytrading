@@ -418,7 +418,8 @@ exports.createNewSnapshotByInstrumentId = async function (req, res) {
 
             var newSnapshot = await exports.createNewSnapshotFromRandomInstrument(instrumentIds);
             if (newSnapshot != null) {
-                var viewModel = snapshotController.getSnapshotViewModel(newSnapshot, undefined, req.user.email);
+                var previous = await exports.getPreviousDecision(newSnapshot, req.user.email);
+                var viewModel = snapshotController.getSnapshotViewModel(newSnapshot, previous, req.user.email);
                 res.json(viewModel);
                 return;
             }

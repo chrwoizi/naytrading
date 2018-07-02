@@ -173,14 +173,17 @@ exports.snapshot = async function (req, res) {
 
 exports.getPreviousDecision = async function (snapshot, user) {
 
-    var previous = await sql.query("SELECT s.ID, u.Decision FROM snapshots AS s INNER JOIN usersnapshots AS u ON u.Snapshot_ID = s.ID \
-        WHERE u.User = @userName AND s.ID <> @snapshotId AND s.Instrument_ID = @instrumentId AND s.Time < @time AND (u.Decision = 'buy' OR u.Decision = 'sell') \
+    var previous = await sql.query("SELECT s.ID, u.Decision \
+        FROM usersnapshots AS u\
+        INNER JOIN snapshots AS s ON u.Snapshot_ID = s.ID\
+        INNER JOIN snapshots AS cs ON cs.ID = @snapshotId\
+        WHERE u.User = @userName \
+        AND s.Time < cs.Time AND s.Instrument_ID = cs.Instrument_ID \
+        AND (u.Decision = 'buy' OR u.Decision = 'sell')\
         ORDER BY s.Time DESC LIMIT 1",
         {
             "@userName": user,
-            "@snapshotId": snapshot.ID,
-            "@instrumentId": snapshot.Instrument_ID,
-            "@time": snapshot.Time
+            "@snapshotId": snapshot.ID
         });
 
     result = {};
