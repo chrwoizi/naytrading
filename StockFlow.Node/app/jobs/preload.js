@@ -40,7 +40,7 @@ exports.run = async function () {
                         "@days": config.job_preload_autowait_active_user_days
                     });
                 for (var i = 0; i < users.length; ++i) {
-                    var previous = await snapshotController.getPreviousDecision(newSnapshot, users[i].User);
+                    var previous = await snapshotController.getPreviousDecisionAndBuyRate(newSnapshot.ID, users[i].User);
                     var viewModel = snapshotController.getSnapshotViewModel(newSnapshot, previous);
 
                     if (await newSnapshotController.isAutoWait(viewModel)) {

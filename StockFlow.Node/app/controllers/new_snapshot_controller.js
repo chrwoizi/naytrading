@@ -358,7 +358,7 @@ exports.createNewRandomSnapshot = async function (req, res) {
                         var k = instrumentIds.indexOf(newSnapshot.Instrument_ID);
                         instrumentIds.splice(k, 1);
 
-                        var previous = await snapshotController.getPreviousDecision(newSnapshot, req.user.email);
+                        var previous = await snapshotController.getPreviousDecisionAndBuyRate(newSnapshot.ID, req.user.email);
                         var viewModel = snapshotController.getSnapshotViewModel(newSnapshot, previous, req.user.email);
 
                         if (i < config.max_autowait_count && exports.isAutoWait(viewModel)) {
@@ -400,16 +400,19 @@ exports.createNewSnapshotByInstrumentId = async function (req, res) {
         if (req.isAuthenticated()) {
 
             var upToDateFrom = new Date(new Date().getTime() - config.snapshot_valid_seconds * 1000);
-            var existing = await model.snapshot.findOne({
-                where: {
-                    Instrument_ID: req.params.instrumentId,
-                    Time: {
-                        [sequelize.Op.gte]: upToDateFrom
-                    }
-                }
+            var existing = await sql.query("SELECT s.ID FROM snapshots AS s \
+                WHERE s.Instrument_ID = @instrumentId AND s.Time >= @time \
+                AND NOT EXISTS (SELECT 1 FROM snapshots AS ns \
+                    INNER JOIN usersnapshots AS nu ON nu.Snapshot_ID = ns.ID AND nu.User = @user \
+                    WHERE ns.Instrument_ID = s.Instrument_ID AND ns.Time > s.Time) \
+                ORDER BY s.Time ASC", {
+                "@instrumentId": req.params.instrumentId,
+                "@time": upToDateFrom,
+                "@user": req.user.email
             });
-            if (existing != null) {
-                var viewModel = await snapshotController.getSnapshot(existing.ID, req.user.email);
+
+            if (existing && existing.length > 0) {
+                var viewModel = await snapshotController.getSnapshot(existing[0].ID, req.user.email);
                 res.json(viewModel);
                 return;
             }
@@ -418,7 +421,7 @@ exports.createNewSnapshotByInstrumentId = async function (req, res) {
 
             var newSnapshot = await exports.createNewSnapshotFromRandomInstrument(instrumentIds);
             if (newSnapshot != null) {
-                var previous = await exports.getPreviousDecision(newSnapshot, req.user.email);
+                var previous = await exports.getPreviousDecisionAndBuyRate(newSnapshot.ID, req.user.email);
                 var viewModel = snapshotController.getSnapshotViewModel(newSnapshot, previous, req.user.email);
                 res.json(viewModel);
                 return;
