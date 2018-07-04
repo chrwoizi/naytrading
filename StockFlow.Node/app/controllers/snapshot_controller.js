@@ -95,7 +95,7 @@ exports.countSnapshots = async function (req, res) {
         res.status(500);
         res.json({ error: error.message });
     }
-}
+};
 
 exports.snapshots = async function (req, res) {
     try {
@@ -103,8 +103,8 @@ exports.snapshots = async function (req, res) {
 
             var snapshots = await sql.query("SELECT s.ID, s.Time, i.InstrumentName, u.Decision, u.ModifiedTime FROM snapshots AS s \
             INNER JOIN instruments AS i ON i.ID = s.Instrument_ID INNER JOIN usersnapshots AS u ON u.Snapshot_ID = s.ID WHERE u.User = @user", {
-                "@user": req.user.email
-            });
+                    "@user": req.user.email
+                });
 
             var viewModels = snapshots.map(snapshot => exports.getSnapshotListViewModel(snapshot));
             res.json(viewModels);
@@ -119,7 +119,7 @@ exports.snapshots = async function (req, res) {
         res.status(500);
         res.json({ error: error.message });
     }
-}
+};
 
 exports.getSnapshot = async function (id, user) {
 
@@ -127,7 +127,7 @@ exports.getSnapshot = async function (id, user) {
         "@id": id,
         "@user": user
     });
-    
+
     if (snapshots && snapshots.length == 1) {
         var snapshot = snapshots[0];
         snapshot.instrument = {
@@ -136,15 +136,15 @@ exports.getSnapshot = async function (id, user) {
         snapshot.snapshotrates = await sql.query("SELECT r.Time, r.Close FROM snapshotrates AS r WHERE r.Snapshot_ID = @id ORDER BY r.Time ASC", {
             "@id": id
         });
-        
-        var previous = await exports.getPreviousDecision(snapshot, user);
+
+        var previous = await exports.getPreviousDecisionAndBuyRate(snapshot.ID, user);
         var viewModel = exports.getSnapshotViewModel(snapshot, previous, user);
         return viewModel;
     }
     else {
         return null;
     }
-}
+};
 
 exports.snapshot = async function (req, res) {
     try {
@@ -169,9 +169,9 @@ exports.snapshot = async function (req, res) {
         res.status(500);
         res.json({ error: error.message });
     }
-}
+};
 
-exports.getPreviousDecision = async function (snapshot, user) {
+exports.getPreviousDecision = async function (snapshotId, user) {
 
     var previous = await sql.query("SELECT s.ID, u.Decision \
         FROM usersnapshots AS u\
@@ -183,10 +183,34 @@ exports.getPreviousDecision = async function (snapshot, user) {
         ORDER BY s.Time DESC LIMIT 1",
         {
             "@userName": user,
-            "@snapshotId": snapshot.ID
+            "@snapshotId": snapshotId
         });
 
-    result = {};
+    var result = {};
+
+    if (previous && previous.length == 1) {
+        result.PreviousDecision = previous[0].Decision;
+    }
+
+    return result;
+};
+
+exports.getPreviousDecisionAndBuyRate = async function (snapshotId, user) {
+
+    var previous = await sql.query("SELECT s.ID, u.Decision \
+        FROM usersnapshots AS u\
+        INNER JOIN snapshots AS s ON u.Snapshot_ID = s.ID\
+        INNER JOIN snapshots AS cs ON cs.ID = @snapshotId\
+        WHERE u.User = @userName \
+        AND s.Time < cs.Time AND s.Instrument_ID = cs.Instrument_ID \
+        AND (u.Decision = 'buy' OR u.Decision = 'sell')\
+        ORDER BY s.Time DESC LIMIT 1",
+        {
+            "@userName": user,
+            "@snapshotId": snapshotId
+        });
+
+    var result = {};
 
     if (previous && previous.length == 1) {
         result.PreviousDecision = previous[0].Decision;
@@ -204,8 +228,31 @@ exports.getPreviousDecision = async function (snapshot, user) {
                 result.PreviousBuyRate = lastRates[0].Close;
                 result.PreviousTime = dateFormat(lastRates[0].Time, 'yymmdd');
             }
-
         }
+    }
+
+    return result;
+};
+
+exports.getNextDecision = async function (snapshotId, user) {
+
+    var next = await sql.query("SELECT s.ID, u.Decision \
+        FROM usersnapshots AS u\
+        INNER JOIN snapshots AS s ON u.Snapshot_ID = s.ID\
+        INNER JOIN snapshots AS cs ON cs.ID = @snapshotId\
+        WHERE u.User = @userName \
+        AND s.Time > cs.Time AND s.Instrument_ID = cs.Instrument_ID \
+        AND (u.Decision = 'buy' OR u.Decision = 'sell')\
+        ORDER BY s.Time DESC LIMIT 1",
+        {
+            "@userName": user,
+            "@snapshotId": snapshotId
+        });
+
+    var result = {};
+
+    if (next && next.length == 1) {
+        result.NextDecision = next[0].Decision;
     }
 
     return result;
@@ -214,6 +261,36 @@ exports.getPreviousDecision = async function (snapshot, user) {
 exports.setDecision = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
+
+            if (req.params.decision == "buy" || req.params.decision == "sell") {
+                var previous = await exports.getPreviousDecision(req.params.id, req.user.email);
+                if (previous.PreviousDecision) {
+                    if (previous.PreviousDecision == "buy") {
+                        if (req.params.decision == "buy") {
+                            throw { message: "Conflicting buy decision in the past" }
+                        }
+                    }
+                    else if (previous.PreviousDecision == "sell") {
+                        if (req.params.decision == "sell") {
+                            throw { message: "Conflicting sell decision in the past" }
+                        }
+                    }
+                }
+
+                var next = await exports.getNextDecision(req.params.id, req.user.email);
+                if (next.NextDecision) {
+                    if (next.NextDecision == "buy") {
+                        if (req.params.decision == "buy") {
+                            throw { message: "Conflicting buy decision in the future" }
+                        }
+                    }
+                    else if (next.NextDecision == "sell") {
+                        if (req.params.decision == "sell") {
+                            throw { message: "Conflicting sell decision in the future" }
+                        }
+                    }
+                }
+            }
 
             var usersnapshot = await model.usersnapshot.find({
                 where: {
@@ -303,7 +380,7 @@ exports.setDecision = async function (req, res) {
         res.status(500);
         res.json({ error: error.message });
     }
-}
+};
 
 exports.resetStats = async function (snapshotId, endTime) {
     var users = await sql.query("SELECT u.User FROM usersnapshots AS u WHERE u.Snapshot_ID = @snapshotId", {
@@ -344,7 +421,7 @@ exports.resetStats = async function (snapshotId, endTime) {
             }
         });
     }
-}
+};
 
 exports.setRates = async function (snapshotId, source, marketId, rates, endTime) {
 
@@ -399,7 +476,7 @@ exports.setRates = async function (snapshotId, source, marketId, rates, endTime)
                 },
                 transaction: transaction
             });
-    
+
         await transaction.commit();
 
     } catch (err) {
@@ -407,7 +484,7 @@ exports.setRates = async function (snapshotId, source, marketId, rates, endTime)
     }
 
     await exports.resetStats(snapshotId, endTime);
-}
+};
 
 exports.refreshSnapshotRates = async function (req, res) {
     try {
@@ -511,4 +588,4 @@ exports.refreshSnapshotRates = async function (req, res) {
         res.status(500);
         res.json({ error: error.message });
     }
-}
+};

@@ -231,6 +231,14 @@ angular.
                     SnapshotDecisionService.get({ id: self.snapshot.ID, decision: decision }, function () {
                         self.loading = false;
                         window.location.href = '#!/snapshot/new/random';
+                    }, function (error) {
+                        if (typeof (error.data) !== 'undefined' && error.data != null) {
+                            console.error('error: ' + JSON.stringify(error.data));
+                            if (error.data.error) {
+                                alert(error.data.error);
+                            }
+                        }
+                        self.loading = false;
                     });
                 };
             }
