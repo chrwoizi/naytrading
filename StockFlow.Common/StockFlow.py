@@ -37,7 +37,10 @@ class StockFlow:
 
     def new_snapshot(self):
         url = self.stockflow_url + '/api/snapshot/new/random'
-        r = self.session.get(url, proxies = self.proxies, timeout = 30)
+        r = self.session.get(url, proxies = self.proxies, timeout = 120)
+
+        if r.status_code == 404:
+            return None
 
         if r.status_code != 200:
             raise Exception('%s returned %d' %(url, r.status_code))

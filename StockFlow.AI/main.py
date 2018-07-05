@@ -31,7 +31,7 @@ parser.add_argument('--test_file', type = str, default = 'buying_test_norm.csv',
 parser.add_argument('--train_file', type = str, default = 'buying_train_norm.csv', help = 'Path to the train data.')
 parser.add_argument('--first_day', type = int, default = 0, help = 'The first day column name e.g. -1814.')
 parser.add_argument('--last_day', type = int, default = 1023, help = 'The last day column name e.g. 0.')
-parser.add_argument('--buy_label', type = str, default = 'buy', help = 'The label used if the user decided on an action for this dataset, e.g. buy')
+parser.add_argument('--action', type = str, default = 'buy', help = 'The label used if the user decided on an action for this dataset, e.g. buy or sell')
 parser.add_argument('--use_tpu', type = bool, default = False, help = 'Whether to use the TPU for training')
 parser.add_argument('--model_name', type = str, default = 'GoogLeNet', help = 'The model name, e.g. GoogLeNet')
 parser.add_argument('--save_summary_steps', type = int, default = 100, help = 'The steps between summary saves')
@@ -122,21 +122,21 @@ if __name__ == '__main__':
         test_file = FLAGS.model_dir + '/test.csv'
         train_file = FLAGS.model_dir + '/train.csv'
 
-    def input_fn(data_file, repeat, params):
+    def input_fn(data_file, repeat, params, shuffle):
 
         batch_size = FLAGS.batch_size
         if params and 'batch_size' in params:
             batch_size = params['batch_size']
 
         print('Loading data from %s' % data_file)
-        data = Data(data_file, batch_size, FLAGS.buy_label, FLAGS.first_day, FLAGS.last_day, repeat, FLAGS.additional_columns, False)
+        data = Data(data_file, batch_size, FLAGS.action, FLAGS.first_day, FLAGS.last_day, repeat, FLAGS.additional_columns, shuffle)
         return data.dataset
 
     def train_input_fn(params = None):
-        return input_fn(train_file, FLAGS.repeat_train_data, params)
+        return input_fn(train_file, FLAGS.repeat_train_data, params, True)
 
     def test_input_fn(params = None):
-        return input_fn(test_file, 1, params)
+        return input_fn(test_file, 1, params, False)
 
     gln_aux_exit_4a_weight_falloff = 0
     gln_aux_exit_4e_weight_falloff = 0
@@ -158,8 +158,7 @@ if __name__ == '__main__':
                     "aux_exit_4a_weight": FLAGS.gln_aux_exit_4a_weight * weight_4a,
                     "aux_exit_4e_weight": FLAGS.gln_aux_exit_4e_weight * weight_4e,
                     "exit_weight": 1.0,
-                    "days": params['days'],
-                    "action": FLAGS.buy_label
+                    "action": FLAGS.action
                 }
             else:
                 options = {
@@ -169,8 +168,7 @@ if __name__ == '__main__':
                     "aux_exit_4a_weight": FLAGS.gln_aux_exit_4a_weight * weight_4a,
                     "aux_exit_4e_weight": FLAGS.gln_aux_exit_4e_weight * weight_4e,
                     "exit_weight": 1.0,
-                    "days": params['days'],
-                    "action": FLAGS.buy_label
+                    "action": FLAGS.action
                 }
 
             model = GoogLeNet(1, features, labels, mode, options)
@@ -182,16 +180,14 @@ if __name__ == '__main__':
                     "is_train": True,
                     "fc_dropout_keep": 0.8,
                     "residual_scale": 0.1,
-                    "days": params['days'],
-                    "action": FLAGS.buy_label
+                    "action": FLAGS.action
                 }
             else:
                 options = {
                     "is_train": False,
                     "fc_dropout_keep": 1.0,
                     "residual_scale": 0.1,
-                    "days": params['days'],
-                    "action": FLAGS.buy_label
+                    "action": FLAGS.action
                 }
 
             model = InceptionResNetV2(1, features, labels, mode, options)
@@ -222,9 +218,9 @@ if __name__ == '__main__':
             return {
                 'accuracy': tf.metrics.accuracy(y_argmax, exit_argmax),
                 'precision': tf.metrics.precision(y_argmax, exit_argmax),
-                FLAGS.buy_label + 's_detected': tf.metrics.mean(positives_detected),
+                FLAGS.action + 's_detected': tf.metrics.mean(positives_detected),
                 'waits_detected': tf.metrics.mean(negatives_detected),
-                FLAGS.buy_label + 's_correct': tf.metrics.mean(positives_correct),
+                FLAGS.action + 's_correct': tf.metrics.mean(positives_correct),
                 'waits_correct': tf.metrics.mean(negatives_correct)
             }
 

@@ -50,7 +50,6 @@ if __name__ == '__main__':
                 "aux_exit_4a_weight": 0,
                 "aux_exit_4e_weight": 0,
                 "exit_weight": 1.0,
-                "days": params['days'],
                 "action": FLAGS.buy_label
             }
 
@@ -62,7 +61,6 @@ if __name__ == '__main__':
                 "is_train": False,
                 "fc_dropout_keep": 1.0,
                 "residual_scale": 0.1,
-                "days": params['days'],
                 "action": FLAGS.buy_label
             }
 
