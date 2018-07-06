@@ -118,14 +118,14 @@ exports.isAutoWait = async function (newSnapshot) {
 async function handleRateProviderError(instrument, source, error) {
     if (error == ratesProvider.market_not_found) {
         var strikes = config.max_strikes + 12;
-        console.log("Setting " + strikes + " strikes on instrument " + instrument.InstrumentName + " because the market id does not exist");
+        console.log("Setting " + strikes + " strikes on instrument " + instrument.InstrumentName + " (" + source.SourceId + " on " + source.SourceType + ") because the market id " + source.MarketId + " does not exist");
         await source.updateAttributes({
             Strikes: strikes,
             LastStrikeTime: new Date()
         });
     }
     else if (error == ratesProvider.invalid_response) {
-        console.log("Adding 5 strikes to instrument " + instrument.InstrumentName + " because the server returned an unexpected response");
+        console.log("Adding 5 strikes to instrument " + instrument.InstrumentName + " (" + source.SourceId + " on " + source.SourceType + ") because the server returned an unexpected response for market id " + source.MarketId);
         await source.updateAttributes({
             Strikes: source.Strikes + 5,
             LastStrikeTime: new Date()
@@ -133,7 +133,7 @@ async function handleRateProviderError(instrument, source, error) {
     }
     else {
         console.log(error);
-        console.log("Adding 1 strike to instrument " + instrument.InstrumentName + " because it caused an exception: " + error);
+        console.log("Adding 1 strike to instrument " + instrument.InstrumentName + " (" + source.SourceId + " on " + source.SourceType + ") because it caused an exception: " + error);
         await source.updateAttributes({
             Strikes: source.Strikes + 1,
             LastStrikeTime: new Date()
