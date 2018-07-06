@@ -1,5 +1,5 @@
 # StockFlow.AI #
-This is the machine learning part of [StockFlow](https://github.com/chrwoizi/stockflow).
+This is the machine learning part of [StockFlow](../).
 
 ## :mortar_board: Training a Convolutional Neural Network on the recorded data ##
 
@@ -26,14 +26,14 @@ root@host:~$ pip install noise
 ```
 <p></p>
 
-Download the sources of [StockFlow.AI](https://github.com/chrwoizi/stockflow/tree/master/StockFlow.AI) and [StockFlow.Common](https://github.com/chrwoizi/stockflow/tree/master/StockFlow.Common) or the whole [StockFlow](https://github.com/chrwoizi/stockflow/tree/master) repository.
+Download the sources of [StockFlow.AI](/) and [StockFlow.Common](../StockFlow.Common) or the whole [StockFlow](../) repository.
 
 </details>
 
 Go to your account page ([use this link if you are logged into stockflow.net](http://stockflow.net/manage)) and download your processed trade decisions as CSV files using the download buttons in the *Export preprocessed training data for neural networks* section.
 Save the files in the StockFlow.AI folder (next to the main.py file).
 
-Run [main_buying_train_norm.bat](https://github.com/chrwoizi/stockflow/blob/master/StockFlow.AI/main_buying_train_norm.bat) or [main_selling_train_norm.bat](https://github.com/chrwoizi/stockflow/blob/master/StockFlow.AI/main_selling_train_norm.bat).
+Run [main_buying_train_norm.bat](StockFlow.AI/main_buying_train_norm.bat) or [main_selling_train_norm.bat](main_selling_train_norm.bat).
 
 A folder with the name modelXXX will be created where XXX is the current time. Open that folder and run *tensorboard.bat*. Go to [Tensorboard](http://localhost:6006/#scalars&run=log%5Ctrain&_smoothingWeight=0&tagFilter=%5Eloss%24%7C%5Eloss%2Fcombined%7C(buy%7Csell)s_detected%7C(buy%7Csell)s_correct&_ignoreYOutliers=false) to monitor the training progress.
 
@@ -47,3 +47,32 @@ Later, when the first evaluation of the trained model occurs (automatically), th
 The training optimum is reached when the blue loss curve is at its lowest point. You need to estimate that by observing Tensorboard regularly throughout the training process. It takes a couple of minutes between updates of the curve, so don't feel rushed. 
 
 Training is a hardware demanding process. If you are using a graphics card, it can take hours or days to reach the optimum. If you are only using your CPU, good luck ;).
+
+## :moneybag: Using the trained network ##
+
+Once you have a trained network for buying (and preferably another network for selling), you can run client.py to act as a user on StockFlow using the trained network(s) to decide on snapshots automatically. 
+
+Go to [http://stockflow.net](http://stockflow.net) and register a new account for your AI. A recommended account email address is your real email address followed by *.ai*, e.g. *john.doe@mailbox.com.ai*. That email address doesn't need to actually exist. Consider it an account "name". Using that convention is optional, but it automatically enables some convenient features.
+
+Log in with your AI account and click the *Add all instruments* button on the [instruments page](http://stockflow.net/app/#!/instruments).
+
+Run client.py with your trained models:
+
+```sh
+# replace %1 with your buying model directory path, e.g. model20180629121604
+# replace %2 with your selling model directory path, e.g. model20180703114329
+# replace %3 with the number of seconds the AI should wait between snapshots, e.g. 30
+python client.py --buy_checkpoint_dir=%1\\checkpoint --sell_checkpoint_dir=%2\\checkpoint --sleep=%3
+```
+
+Having a selling network is optional. If you don't have enough training data yet to achieve a satisfying ratio of sells_correct (see Tensorboard above), you can remove the sell_checkpoint_dir option and use thresholds to make sell decisions.
+```sh
+# replace %1 with your buying model directory path, e.g. model20180629121604
+# replace %2 with the number of seconds the AI should wait between snapshots, e.g. 30
+# see client.py for help on the threshold parameters.
+python client.py --buy_checkpoint_dir=%1\\checkpoint --sleep=%2 --min_loss=0.1 --min_gain=0.04 --max_loss=0.3 --max_gain=0.15 --sell_at_max_factor=1
+```
+
+When asked, enter your AI account email address (the one ending on *.ai*) and its password. **Do not** enter your regular StockFlow account email address (e.g. *john.doe@mailbox.com*) because client.py will decide on snapshots using the given account and you probably don't want your real decisions mixed with the network's decisions.
+
+You can continue deciding on snapshots with your regular account and, from time to time, log in as your AI account to check its performance using the [Stats page](http://stockflow.net/app/#!/stats). The two accounts are independent from each other.
