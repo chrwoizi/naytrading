@@ -9,7 +9,7 @@ angular.
             function SnapshotListController(SnapshotListService, $routeParams, $scope) {
                 var self = this;
 
-                self.orderProp = "-DateSortable";
+                self.orderProp = "-ModifiedDateSortable";
 
                 self.query = "";
                 self.filter = function (query) {
