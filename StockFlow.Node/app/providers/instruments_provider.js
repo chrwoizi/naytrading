@@ -29,7 +29,7 @@ exports.getAllInstruments = async function (source, minCapitalization) {
     else {
         var result = [];
         for (var i = 0; i < sources.length; ++i) {
-            var instruments = await providers[source[i]].getInstrumentByUrl(url);
+            var instruments = await providers[sources[i]].getAllInstruments(sources[i], minCapitalization);
             if (instruments && instruments.length > 0) {
                 for (var k = 0; k < sources.length; ++k) {
                     result.push(instruments[k]);
@@ -51,7 +51,7 @@ exports.getInstrumentByUrl = async function (source, url) {
     }
     else {
         for (var i = 0; i < sources.length; ++i) {
-            var instrument = await providers[source[i]].getInstrumentByUrl(url);
+            var instrument = await providers[sources[i]].getInstrumentByUrl(sources[i], url);
             if (instrument) {
                 return instrument;
             }
