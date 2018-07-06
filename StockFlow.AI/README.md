@@ -1,5 +1,5 @@
 # StockFlow.AI #
-This is the machine learning part of [StockFlow](../).
+This is the machine learning part of [StockFlow](/../../).
 
 ## :mortar_board: Training a Convolutional Neural Network on the recorded data ##
 
