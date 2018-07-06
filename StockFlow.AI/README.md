@@ -46,7 +46,7 @@ Later, when the first evaluation of the trained model occurs (automatically), th
 
 The training optimum is reached when the blue loss curve is at its lowest point. You need to estimate that by observing Tensorboard regularly throughout the training process. It takes a couple of minutes between updates of the curve, so don't feel rushed. Stop the training process when the blue loss curve stops going down and starts to go horizontally. If you don't stop at that point, the loss on the training data will continue to decrease but the loss on the evaluation data (unseen stock price history) will start to increase. That means, a longer training period does not necessarily yield better results.
 
-Training is a hardware demanding process. If you are using a graphics card, it can take hours or days to reach the optimum. If you are only using your CPU, good luck ;).
+Training is a hardware demanding process. If you are using a graphics card, it can still take hours or days to reach the optimum. If you are only using your CPU, good luck ;).
 
 ## :moneybag: Using the trained network ##
 
