@@ -97,10 +97,14 @@ The console application [StockFlow.Trader](StockFlow.Trader) can be used to actu
 
 The web site periodically processes the recorded data using [StockFlow.Data](StockFlow.Data) and provides CSV file downloads which are optimized for a neural network.
 
-With [main.py](StockFlow.AI/main.py), a convolutional neural network is trained on the processed data, using the price history as input and the user decision as desired output.
+With [main.py](StockFlow.AI/main.py), a convolutional neural network is trained on the processed data, using the price history as input and the user decision as desired output. 
+
+See [StockFlow.AI](StockFlow.AI) for an in-depth description on how to install and use [main.py](StockFlow.AI/main.py).
 
 With [synth.py](StockFlow.AI/synth.py), synthetical data can be generated to pre-train the network, potentially increasing accuracy on a small real-world training set.
 
 ## :moneybag: Using the trained network ##
 
-With [client.py](StockFlow.AI/client.py), current stock prices are fed into the trained network periodically to find stocks that can be bought or sold based on the user's analysis pattern. The application acts as a user on [StockFlow.Node](StockFlow.Node), so the gains and losses can be evaluated by logging in on [StockFlow.Node](StockFlow.Node) using the same account as [client.py](StockFlow.AI/client.py). Also, the trade decisions can be forwarded to a broker using [StockFlow.Trader](StockFlow.Trader), making StockFlow an **automated stock trading system**.
+With [client.py](StockFlow.AI/client.py), current stock prices are fed into the trained network periodically to find stocks that can be bought or sold based on the user's analysis pattern. The application acts as a user on [StockFlow.Node](StockFlow.Node), so the gains and losses can be evaluated by logging in on [StockFlow.Node](StockFlow.Node) using the same account as [client.py](StockFlow.AI/client.py). Also, the trade decisions can be forwarded to a broker using [StockFlow.Trader](StockFlow.Trader), making StockFlow an **automated stock trading system**. 
+
+See [StockFlow.AI](StockFlow.AI) for an in-depth description on how to install and use [client.py](StockFlow.AI/client.py).
