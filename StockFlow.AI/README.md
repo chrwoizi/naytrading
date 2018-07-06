@@ -33,7 +33,7 @@ Download the sources of [StockFlow.AI](/) and [StockFlow.Common](../StockFlow.Co
 Go to your account page ([use this link if you are logged into stockflow.net](http://stockflow.net/manage)) and download your processed trade decisions as CSV files using the download buttons in the *Export preprocessed training data for neural networks* section.
 Save the files in the StockFlow.AI folder (next to the main.py file).
 
-Run [main_buying_train_norm.bat](StockFlow.AI/main_buying_train_norm.bat) or [main_selling_train_norm.bat](main_selling_train_norm.bat).
+Run [main_buying_train_norm.bat](main_buying_train_norm.bat) or [main_selling_train_norm.bat](main_selling_train_norm.bat).
 
 A folder with the name modelXXX will be created where XXX is the current time. Open that folder and run *tensorboard.bat*. Go to [Tensorboard](http://localhost:6006/#scalars&run=log%5Ctrain&_smoothingWeight=0&tagFilter=%5Eloss%24%7C%5Eloss%2Fcombined%7C(buy%7Csell)s_detected%7C(buy%7Csell)s_correct&_ignoreYOutliers=false) to monitor the training progress.
 
