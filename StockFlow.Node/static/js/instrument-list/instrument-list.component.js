@@ -67,20 +67,6 @@ angular.
 
                 self.newInstrumentUrl = "";
 
-                self.addInstrument = function addInstrument() {
-                    self.loading = true;
-                    InstrumentAddService.add({ url: self.newInstrumentUrl }, function () {
-                        self.loading = false;
-                        window.location.reload();
-                    }, function (error) {
-                        self.loading = false;
-                        if (typeof(error.data) !== 'undefined' && error.data != null) {
-                            alert('error: ' + JSON.stringify(error.data));
-                        }
-                        window.location.href = '#!/instruments';
-                    });
-                };
-
                 self.loadMore = function () {
                     if (self.loading == false && self.viewCount < self.filteredItems.length) {
                         self.viewCount = Math.min(self.viewCount + 50, self.filteredItems.length);

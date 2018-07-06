@@ -49,7 +49,7 @@ exports.addUrl = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
 
-            var instrument = await instrumentsProvider.getInstrumentByUrl(null, req.params.url);
+            var instrument = await instrumentsProvider.getInstrumentByUrl(null, req.body.url);
 
             if (instrument && instrument.sources && instrument.sources.length > 0) {
 

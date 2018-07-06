@@ -11,7 +11,7 @@ module.exports = function (app, passport) {
 
     app.post('/api/instruments/add/default', instrumentController.addDefault);
 
-    app.post('/api/instruments/add/url/:url', instrumentController.addUrl);
+    app.post('/api/instruments/add/url', instrumentController.addUrl);
 
     app.get('/api/instruments', instrumentController.instruments);
 
