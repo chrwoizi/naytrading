@@ -8,7 +8,7 @@ This is the machine learning part of [StockFlow](/../../).
 
 Install [Python 3.6](https://www.python.org/downloads/release/python-366/). Include PIP if asked by the setup.
 
-If you have an NVIDIA graphics card: Follow the instructions by [NVIDIA](https://www.nvidia.com/en-us/data-center/gpu-accelerated-applications/tensorflow/) to install CUDA and cuDNN.
+If you have an NVIDIA graphics card: Follow the [instructions by NVIDIA](https://www.nvidia.com/en-us/data-center/gpu-accelerated-applications/tensorflow/) to install CUDA and cuDNN.
 
 Install the python modules:
 ```sh
