@@ -26,7 +26,7 @@ root@host:~$ pip install noise
 ```
 <p></p>
 
-Download the sources of [StockFlow.AI](/) and [StockFlow.Common](../StockFlow.Common) or the whole [StockFlow](../) repository.
+Download the sources of [StockFlow.AI](/StockFlow.AI) and [StockFlow.Common](/StockFlow.Common) or the whole [StockFlow](/../../) repository.
 
 </details>
 
