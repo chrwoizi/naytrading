@@ -30,7 +30,7 @@ Download the sources of [StockFlow.AI](/StockFlow.AI) and [StockFlow.Common](/St
 
 </details>
 
-Go to your account page ([use this link if you are logged into stockflow.net](http://stockflow.net/manage)) and download your processed trade decisions as CSV files using the download buttons in the *Export preprocessed training data for neural networks* section.
+Go to your StockFlow [account page](http://stockflow.net/manage) and download your processed trade decisions as CSV files using the download buttons in the *Export preprocessed training data for neural networks* section.
 Save the files in the StockFlow.AI folder (next to the main.py file).
 
 Run [main_buying_train_norm.bat](main_buying_train_norm.bat) or [main_selling_train_norm.bat](main_selling_train_norm.bat).
