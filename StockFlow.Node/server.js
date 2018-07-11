@@ -104,7 +104,7 @@ var sql = require('./app/sql/sql');
             console.log(err);
 
     });
-/*
+
     setTimeout(function () {
         new Promise(function (resolve, reject) { splitJob.run(); });
     }, 1000);
@@ -136,5 +136,5 @@ var sql = require('./app/sql/sql');
     setTimeout(function () {
         new Promise(function (resolve, reject) { processJob.run(); });
     }, 12000);
-*/
+
 })();
