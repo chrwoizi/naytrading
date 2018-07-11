@@ -9,6 +9,16 @@ module.exports = function (app, passport) {
 
     app.get('/contact', viewsController.contact);
 
+    app.get('/terms', viewsController.terms);
+
+    app.get('/cookies', viewsController.cookies);
+
+    app.get('/privacy', viewsController.privacy);
+
+    app.get('/disclaimer', viewsController.disclaimer);
+
+    app.get('/faq', viewsController.faq);
+
     app.get('/manage', isLoggedIn, viewsController.manage);
 
     app.get('/admin', isAdmin, viewsController.admin);

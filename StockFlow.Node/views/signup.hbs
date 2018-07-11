@@ -1,55 +1,57 @@
-<h1>Sign up</h1>
-<div class="row">
-    <div class="col-md-8">
-        <section id="signupForm">
-            <form action="signup" class="form-horizontal" method="post" role="form">
-                <hr />
-                <div class="form-group">
-                    <label class="col-md-2 control-label" for="email">E-Mail</label>
-                    <div class="col-md-10">
-                        <input class="form-control" id="email" name="email" type="text" value="" />
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="col-md-2 control-label" for="password">Password</label>
-                    <div class="col-md-10">
-                        <input class="form-control" id="password" name="password" type="password" />
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="col-md-2 control-label" for="password">Repeat password</label>
-                    <div class="col-md-10">
-                        <input class="form-control" id="confirmPassword" name="confirmPassword" type="password" />
-                    </div>
-                </div>
-                <div class="form-group">
-                    <p>
-                        This website uses cookies to keep you signed in after you close and reopen this website in your browser.
-                        <br/>
-                        By creating an account you are giving consent to cookies being used for this purpose.
-                    </p>
-                </div>
-                <div class="form-group">
-                    <div class="col-md-offset-2 col-md-10">
-                        <input type="submit" value="Create Account" class="btn btn-default" />
-                    </div>
-                </div>
-                {{#if hasError}}
-                <div class="validation-summary-errors text-danger">
-                    <ul>
-                        <li>{{message}}</li>
-                    </ul>
-                </div>
-                {{else}}
-                {{#if hasMessage}}
-                <div class="validation-summary-valid text-success">
-                    <ul>
-                        <li>{{message}}</li>
-                    </ul>
-                </div>
-                {{/if}}
-                {{/if}}
-            </form>
-        </section>
+<section class="policy bg-light">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <h2>Sign up</h2>
+                <section id="signupForm">
+                    <form action="signup" class="form-horizontal" method="post" role="form">
+                        <hr />
+                        <div class="form-group">
+                            <label class="col-md-2 control-label" for="email">E-Mail</label>
+                            <div class="col-md-10">
+                                <input class="form-control" id="email" name="email" type="text" value="" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-md-2 control-label" for="password">Password</label>
+                            <div class="col-md-10">
+                                <input class="form-control" id="password" name="password" type="password" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-md-2 control-label" for="password">Repeat password</label>
+                            <div class="col-md-10">
+                                <input class="form-control" id="confirmPassword" name="confirmPassword" type="password" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <p>
+                                By creating an account you are aggreeing to our <a href="/terms" target="_blank">terms of service</a>, our <a href="/cookies" target="_blank">cookies policy</a>, our <a href="/privacy" target="_blank">privacy policy</a>, and our <a href="/disclaimer" target="_blank">disclaimer</a>.
+                            </p>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-md-offset-2 col-md-10">
+                                <input type="submit" value="Create Account" class="btn btn-default" />
+                            </div>
+                        </div>
+                        {{#if hasError}}
+                        <div class="validation-summary-errors text-danger">
+                            <ul>
+                                <li>{{message}}</li>
+                            </ul>
+                        </div>
+                        {{else}}
+                        {{#if hasMessage}}
+                        <div class="validation-summary-valid text-success">
+                            <ul>
+                                <li>{{message}}</li>
+                            </ul>
+                        </div>
+                        {{/if}}
+                        {{/if}}
+                    </form>
+                </section>
+            </div>
+        </div>
     </div>
-</div>
+</section>

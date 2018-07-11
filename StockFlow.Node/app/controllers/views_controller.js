@@ -34,6 +34,36 @@ exports.contact = function (req, res) {
 
 }
 
+exports.terms = function (req, res) {
+
+    res.render('terms', get_default_args(req));
+
+}
+
+exports.cookies = function (req, res) {
+
+    res.render('cookies', get_default_args(req));
+
+}
+
+exports.privacy = function (req, res) {
+
+    res.render('privacy', get_default_args(req));
+
+}
+
+exports.disclaimer = function (req, res) {
+
+    res.render('disclaimer', get_default_args(req));
+
+}
+
+exports.faq = function (req, res) {
+
+    res.render('faq', get_default_args(req));
+
+}
+
 function formatTime(obj) {
     var str = obj.time;
     var date = new Date(str.substr(0, 4), parseInt(str.substr(4, 2)) - 1, str.substr(6, 2), str.substr(8, 2), parseInt(str.substr(10, 2)), str.substr(12, 2));

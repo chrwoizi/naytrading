@@ -1,227 +1,233 @@
-<h2>Account</h2>
-<div>
-    <p class="text-success">{{statusMessage}}</p>
-    <hr />
-    <dl class="dl-horizontal">
-        <dt>Export preprocessed training data for neural networks:</dt>
-        <dd>
-            {{#if hasProcessedData}}
-            {{#if buyingTrain}}
-            <a href="/api/export/user/train/buying/{{buyingTrain.time}}" class="btn btn-secondary" role="button">Download Buy-Training</a>
-            <table>
-                <tbody>
-                    <tr>
-                        <th>Time: </th>
-                        <td>{{buyingTrain.timeStr}}</td>
-                    </tr>
-                    <tr>
-                        <th>Datasets: </th>
-                        <td>{{buyingTrain.lines}} ({{buyingTrain.dataRatioPercent}}%)</td>
-                    </tr>
-                    <tr>
-                        <th>Days: </th>
-                        <td>{{buyingTrain.days}}</td>
-                    </tr>
-                    <tr>
-                        <th>Allow missing days: </th>
-                        <td>{{buyingTrain.max_missing_days}}</td>
-                    </tr>
-                    <tr>
-                        <th>Keep evaluation datasets: </th>
-                        <td>{{buyingTrain.preserve_test_ids}}</td>
-                    </tr>
-                    <tr>
-                        <th>Augmentation: </th>
-                        <td>{{buyingTrain.augment_factor}}x</td>
-                    </tr>
-                </tbody>
-            </table>
-            {{else}}
-            <button class="btn btn-secondary" disabled>Download Buy-Training</button>
-            <div>Not available yet.</div>
-            {{/if}}
-            <br/>
-            {{#if buyingTest}}
-            <a href="/api/export/user/test/buying/{{buyingTest.time}}" class="btn btn-secondary" role="button">Download Buy-Evaluation</a>
-            <table>
-                <tbody>
-                    <tr>
-                        <th>Time: </th>
-                        <td>{{buyingTest.timeStr}}</td>
-                    </tr>
-                    <tr>
-                        <th>Datasets: </th>
-                        <td>{{buyingTest.lines}} ({{buyingTest.dataRatioPercent}}%)</td>
-                    </tr>
-                    <tr>
-                        <th>Days: </th>
-                        <td>{{buyingTest.days}}</td>
-                    </tr>
-                    <tr>
-                        <th>Allow missing days: </th>
-                        <td>{{buyingTest.max_missing_days}}</td>
-                    </tr>
-                    <tr>
-                        <th>Keep evaluation datasets: </th>
-                        <td>{{buyingTest.preserve_test_ids}}</td>
-                    </tr>
-                    <tr>
-                        <th>Augmentation: </th>
-                        <td>{{buyingTest.augment_factor}}x</td>
-                    </tr>
-                </tbody>
-            </table>
-            {{else}}
-            <button class="btn btn-secondary" disabled>Download Buy-Evaluation</button>
-            <div>Not available yet.</div>
-            {{/if}}
-            <br/>
-            {{#if sellingTrain}}
-            <a href="/api/export/user/train/selling/{{sellingTrain.time}}" class="btn btn-secondary" role="button">Download Sell-Training</a>
-            <table>
-                <tbody>
-                    <tr>
-                        <th>Time: </th>
-                        <td>{{sellingTrain.timeStr}}</td>
-                    </tr>
-                    <tr>
-                        <th>Datasets: </th>
-                        <td>{{sellingTrain.lines}} ({{sellingTrain.dataRatioPercent}}%)</td>
-                    </tr>
-                    <tr>
-                        <th>Days: </th>
-                        <td>{{sellingTrain.days}}</td>
-                    </tr>
-                    <tr>
-                        <th>Allow missing days: </th>
-                        <td>{{sellingTrain.max_missing_days}}</td>
-                    </tr>
-                    <tr>
-                        <th>Keep evaluation datasets: </th>
-                        <td>{{sellingTrain.preserve_test_ids}}</td>
-                    </tr>
-                    <tr>
-                        <th>Augmentation: </th>
-                        <td>{{sellingTrain.augment_factor}}x</td>
-                    </tr>
-                </tbody>
-            </table>
-            {{else}}
-            <button class="btn btn-secondary" disabled>Download Sell-Training</button>
-            <div>Not available yet.</div>
-            {{/if}}
-            <br/>
-            {{#if sellingTest}}
-            <a href="/api/export/user/test/selling/{{sellingTest.time}}" class="btn btn-secondary" role="button">Download Sell-Evaluation</a>
-            <table>
-                <tbody>
-                    <tr>
-                        <th>Time: </th>
-                        <td>{{sellingTest.timeStr}}</td>
-                    </tr>
-                    <tr>
-                        <th>Datasets: </th>
-                        <td>{{sellingTest.lines}} ({{sellingTest.dataRatioPercent}}%)</td>
-                    </tr>
-                    <tr>
-                        <th>Days: </th>
-                        <td>{{sellingTest.days}}</td>
-                    </tr>
-                    <tr>
-                        <th>Allow missing days: </th>
-                        <td>{{sellingTest.max_missing_days}}</td>
-                    </tr>
-                    <tr>
-                        <th>Keep evaluation datasets: </th>
-                        <td>{{sellingTest.preserve_test_ids}}</td>
-                    </tr>
-                    <tr>
-                        <th>Augmentation: </th>
-                        <td>{{sellingTest.augment_factor}}x</td>
-                    </tr>
-                </tbody>
-            </table>
-            {{else}}
-            <button class="btn btn-secondary" disabled>Download Sell-Evaluation</button>
-            <div>Not available yet.</div>
-            {{/if}}
-            {{else}}
-            <span>The processing job runs periodically. Please wait until the data becomes available.</span>
-            {{/if}}
-        </dd>
-        <dt>Export raw data:</dt>
-        <dd>
-            <div class="export-button">
-                <a href="/api/export/user/instruments" class="btn btn-secondary" role="button">Export Instruments</a>
+<section class="policy bg-light">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <h2>Account</h2>
+                <p class="text-success">{{statusMessage}}</p>
+                <hr />
+                <dl class="dl-horizontal">
+                    <dt>Export preprocessed training data for neural networks:</dt>
+                    <dd>
+                        {{#if hasProcessedData}}
+                        {{#if buyingTrain}}
+                        <a href="/api/export/user/train/buying/{{buyingTrain.time}}" class="btn btn-secondary" role="button">Download Buy-Training</a>
+                        <table>
+                            <tbody>
+                                <tr>
+                                    <th>Time: </th>
+                                    <td>{{buyingTrain.timeStr}}</td>
+                                </tr>
+                                <tr>
+                                    <th>Datasets: </th>
+                                    <td>{{buyingTrain.lines}} ({{buyingTrain.dataRatioPercent}}%)</td>
+                                </tr>
+                                <tr>
+                                    <th>Days: </th>
+                                    <td>{{buyingTrain.days}}</td>
+                                </tr>
+                                <tr>
+                                    <th>Allow missing days: </th>
+                                    <td>{{buyingTrain.max_missing_days}}</td>
+                                </tr>
+                                <tr>
+                                    <th>Keep evaluation datasets: </th>
+                                    <td>{{buyingTrain.preserve_test_ids}}</td>
+                                </tr>
+                                <tr>
+                                    <th>Augmentation: </th>
+                                    <td>{{buyingTrain.augment_factor}}x</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        {{else}}
+                        <button class="btn btn-secondary" disabled>Download Buy-Training</button>
+                        <div>Not available yet.</div>
+                        {{/if}}
+                        <br/>
+                        {{#if buyingTest}}
+                        <a href="/api/export/user/test/buying/{{buyingTest.time}}" class="btn btn-secondary" role="button">Download Buy-Evaluation</a>
+                        <table>
+                            <tbody>
+                                <tr>
+                                    <th>Time: </th>
+                                    <td>{{buyingTest.timeStr}}</td>
+                                </tr>
+                                <tr>
+                                    <th>Datasets: </th>
+                                    <td>{{buyingTest.lines}} ({{buyingTest.dataRatioPercent}}%)</td>
+                                </tr>
+                                <tr>
+                                    <th>Days: </th>
+                                    <td>{{buyingTest.days}}</td>
+                                </tr>
+                                <tr>
+                                    <th>Allow missing days: </th>
+                                    <td>{{buyingTest.max_missing_days}}</td>
+                                </tr>
+                                <tr>
+                                    <th>Keep evaluation datasets: </th>
+                                    <td>{{buyingTest.preserve_test_ids}}</td>
+                                </tr>
+                                <tr>
+                                    <th>Augmentation: </th>
+                                    <td>{{buyingTest.augment_factor}}x</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        {{else}}
+                        <button class="btn btn-secondary" disabled>Download Buy-Evaluation</button>
+                        <div>Not available yet.</div>
+                        {{/if}}
+                        <br/>
+                        {{#if sellingTrain}}
+                        <a href="/api/export/user/train/selling/{{sellingTrain.time}}" class="btn btn-secondary" role="button">Download Sell-Training</a>
+                        <table>
+                            <tbody>
+                                <tr>
+                                    <th>Time: </th>
+                                    <td>{{sellingTrain.timeStr}}</td>
+                                </tr>
+                                <tr>
+                                    <th>Datasets: </th>
+                                    <td>{{sellingTrain.lines}} ({{sellingTrain.dataRatioPercent}}%)</td>
+                                </tr>
+                                <tr>
+                                    <th>Days: </th>
+                                    <td>{{sellingTrain.days}}</td>
+                                </tr>
+                                <tr>
+                                    <th>Allow missing days: </th>
+                                    <td>{{sellingTrain.max_missing_days}}</td>
+                                </tr>
+                                <tr>
+                                    <th>Keep evaluation datasets: </th>
+                                    <td>{{sellingTrain.preserve_test_ids}}</td>
+                                </tr>
+                                <tr>
+                                    <th>Augmentation: </th>
+                                    <td>{{sellingTrain.augment_factor}}x</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        {{else}}
+                        <button class="btn btn-secondary" disabled>Download Sell-Training</button>
+                        <div>Not available yet.</div>
+                        {{/if}}
+                        <br/>
+                        {{#if sellingTest}}
+                        <a href="/api/export/user/test/selling/{{sellingTest.time}}" class="btn btn-secondary" role="button">Download Sell-Evaluation</a>
+                        <table>
+                            <tbody>
+                                <tr>
+                                    <th>Time: </th>
+                                    <td>{{sellingTest.timeStr}}</td>
+                                </tr>
+                                <tr>
+                                    <th>Datasets: </th>
+                                    <td>{{sellingTest.lines}} ({{sellingTest.dataRatioPercent}}%)</td>
+                                </tr>
+                                <tr>
+                                    <th>Days: </th>
+                                    <td>{{sellingTest.days}}</td>
+                                </tr>
+                                <tr>
+                                    <th>Allow missing days: </th>
+                                    <td>{{sellingTest.max_missing_days}}</td>
+                                </tr>
+                                <tr>
+                                    <th>Keep evaluation datasets: </th>
+                                    <td>{{sellingTest.preserve_test_ids}}</td>
+                                </tr>
+                                <tr>
+                                    <th>Augmentation: </th>
+                                    <td>{{sellingTest.augment_factor}}x</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        {{else}}
+                        <button class="btn btn-secondary" disabled>Download Sell-Evaluation</button>
+                        <div>Not available yet.</div>
+                        {{/if}}
+                        {{else}}
+                        <span>The processing job runs periodically. Please wait until the data becomes available.</span>
+                        {{/if}}
+                    </dd>
+                    <dt>Export raw data:</dt>
+                    <dd>
+                        <div class="export-button">
+                            <a href="/api/export/user/instruments" class="btn btn-secondary" role="button">Export Instruments</a>
+                        </div>
+                        <div class="export-button">
+                            <a href="/api/export/user/snapshots/19700101" class="btn btn-secondary" role="button">Export Snapshots</a>
+                        </div>
+                        <div class="export-button">
+                            <a href="/api/export/user/trades/19700101" class="btn btn-secondary" role="button">Export Trades</a>
+                        </div>
+                    </dd>
+                    <dt>Import raw data:</dt>
+                    <dd>
+                        <form action="/api/import/user/instruments" method="post" enctype="multipart/form-data">
+                            <div class="form-group" style="margin-bottom:0">
+                                <input type="file" name="file" class="form-control-file"></input>
+                            </div>
+                            <div class="form-check">
+                                <label class="form-check-label">
+                                    <input type="checkbox" class="form-check-input" name="delete">
+                                    Delete existing instruments
+                                </label>
+                            </div>
+                            <button type="submit" class="btn btn-secondary">Import Instruments</button>
+                        </form>
+                        <br/>
+                        <form action="/api/import/user/snapshots" method="post" enctype="multipart/form-data">
+                            <div class="form-group" style="margin-bottom:0">
+                                <input type="file" name="file" class="form-control-file"></input>
+                            </div>
+                            <div class="form-check">
+                                <label class="form-check-label">
+                                    <input type="checkbox" class="form-check-input" name="delete">
+                                    Delete existing snapshots
+                                </label>
+                            </div>
+                            <button type="submit" class="btn btn-secondary">Import Snapshots</button>
+                        </form>
+                    </dd>
+                    {{#if isAi}}
+                    <dt>Clear decisions:</dt>
+                    <dd>
+                        <form action="/api/clear/decisions" class="form-horizontal" method="post" role="form">
+                            <input type="submit" value="Delete all snapshot decisions" class="btn btn-danger" />
+                        </form>
+                    </dd>
+                    {{/if}}
+                    <dt>Password:</dt>
+                    <dd>
+                        <a href="/password" class="btn btn-secondary" role="button">Change</a>
+                    </dd>
+                    <dt>Delete my account:</dt>
+                    <dd>
+                        <form action="/deleteme" method="post">
+                            <div class="form-group">
+                                <p>
+                                    Type your email address into this field and click the button to permanently delete your account. 
+                                    This action is final and cannot be undone. All your data will be lost forever.
+                                </p>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-md-2 control-label" for="token">Account to delete:</label>
+                                <div class="col-md-10">
+                                    <input class="form-control" id="token" name="token" type="text" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-md-offset-2 col-md-10">
+                                    <input type="submit" value="Delete my account" class="btn btn-danger" />
+                                </div>
+                            </div>
+                        </form>
+                    </dd>
+                </dl>
             </div>
-            <div class="export-button">
-                <a href="/api/export/user/snapshots/19700101" class="btn btn-secondary" role="button">Export Snapshots</a>
-            </div>
-            <div class="export-button">
-                <a href="/api/export/user/trades/19700101" class="btn btn-secondary" role="button">Export Trades</a>
-            </div>
-        </dd>
-        <dt>Import raw data:</dt>
-        <dd>
-            <form action="/api/import/user/instruments" method="post" enctype="multipart/form-data">
-                <div class="form-group" style="margin-bottom:0">
-                    <input type="file" name="file" class="form-control-file"></input>
-                </div>
-                <div class="form-check">
-                    <label class="form-check-label">
-                        <input type="checkbox" class="form-check-input" name="delete">
-                        Delete existing instruments
-                    </label>
-                </div>
-                <button type="submit" class="btn btn-secondary">Import Instruments</button>
-            </form>
-            <br/>
-            <form action="/api/import/user/snapshots" method="post" enctype="multipart/form-data">
-                <div class="form-group" style="margin-bottom:0">
-                    <input type="file" name="file" class="form-control-file"></input>
-                </div>
-                <div class="form-check">
-                    <label class="form-check-label">
-                        <input type="checkbox" class="form-check-input" name="delete">
-                        Delete existing snapshots
-                    </label>
-                </div>
-                <button type="submit" class="btn btn-secondary">Import Snapshots</button>
-            </form>
-        </dd>
-        {{#if isAi}}
-        <dt>Clear decisions:</dt>
-        <dd>
-            <form action="/api/clear/decisions" class="form-horizontal" method="post" role="form">
-                <input type="submit" value="Delete all snapshot decisions" class="btn btn-danger" />
-            </form>
-        </dd>
-        {{/if}}
-        <dt>Password:</dt>
-        <dd>
-            <a href="/password" class="btn btn-secondary" role="button">Change</a>
-        </dd>
-        <dt>Delete my account:</dt>
-        <dd>
-            <form action="/deleteme" method="post">
-                <div class="form-group">
-                    <p>
-                        Type your email address into this field and click the button to permanently delete your account. 
-                        This action is final and cannot be undone. All your data will be lost forever.
-                    </p>
-                </div>
-                <div class="form-group">
-                    <label class="col-md-2 control-label" for="token">Account to delete:</label>
-                    <div class="col-md-10">
-                        <input class="form-control" id="token" name="token" type="text" />
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="col-md-offset-2 col-md-10">
-                        <input type="submit" value="Delete my account" class="btn btn-danger" />
-                    </div>
-                </div>
-            </form>
-        </dd>
-    </dl>
-</div>
+        </div>
+    </div>
+</section>

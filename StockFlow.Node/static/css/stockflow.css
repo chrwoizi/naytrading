@@ -3,16 +3,16 @@
 }
 
 body {
-    padding-top: 50px;
-    padding-bottom: 20px;
+    /*padding-top: 50px;
+    padding-bottom: 20px;*/
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 /* Set padding to keep content from hitting the edges */
-.body-content {
+/*.body-content {
     padding-left: 15px;
     padding-right: 15px;
-}
+}*/
 
 /* Override the default bootstrap behavior where horizontal description lists 
    will truncate terms that are too long to fit in the left column 
@@ -80,3 +80,31 @@ dt {
     margin-top: 0.5em;
     margin-bottom: 0.5em;
 }
+
+.stockflow-beta {
+    color: #888;
+    font-size: 0.5em;
+    position: relative;
+    top: -0.7em;
+    margin-left: 0.5em;
+}
+
+
+header.masthead {
+    background: url("/static/images/pattern.jpg") repeat center center;
+}
+  
+.call-to-action {
+    background: url("/static/images/pattern.jpg") repeat center center;
+}
+
+.showcase .showcase-img {
+    min-height: 40rem;
+}
+
+.app {
+    max-width: 40em;
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+ }
