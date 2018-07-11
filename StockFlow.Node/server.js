@@ -54,6 +54,7 @@ var sql = require('./app/sql/sql');
     app.use('/angular-spinner', express.static('./node_modules/angular-spinner/dist/'));
     app.use('/bootstrap', express.static('./node_modules/bootstrap/dist/'));
     app.use('/glyphicons-only-bootstrap', express.static('./node_modules/glyphicons-only-bootstrap/'));
+    app.use('/startbootstrap-landing-page', express.static('./node_modules/startbootstrap-landing-page/'));
     app.use('/chart.js', express.static('./node_modules/chart.js/dist/'));
     app.use('/jquery', express.static('./node_modules/jquery/dist/'));
     app.use('/ng-infinite-scroll', express.static('./node_modules/ng-infinite-scroll/build/'));
@@ -103,7 +104,7 @@ var sql = require('./app/sql/sql');
             console.log(err);
 
     });
-
+/*
     setTimeout(function () {
         new Promise(function (resolve, reject) { splitJob.run(); });
     }, 1000);
@@ -135,5 +136,5 @@ var sql = require('./app/sql/sql');
     setTimeout(function () {
         new Promise(function (resolve, reject) { processJob.run(); });
     }, 12000);
-
+*/
 })();

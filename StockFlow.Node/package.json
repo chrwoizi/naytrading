@@ -40,6 +40,7 @@
     "passport-local": "^1.0.0",
     "querystring": "^0.2.0",
     "sequelize": "^4.37.6",
+    "startbootstrap-landing-page": "^4.1.1",
     "xmldom": "^0.1.27",
     "xmlserializer": "^0.6.1",
     "xpath": "0.0.27"
