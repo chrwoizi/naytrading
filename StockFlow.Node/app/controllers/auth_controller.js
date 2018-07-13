@@ -12,6 +12,12 @@ function getDefaultArgs(req) {
     }
 }
 
+exports.setLastLogin = async function (userName) {
+    await sql.query("UPDATE users SET last_login = NOW() WHERE email = @userName", {
+        "@userName": userName
+    });
+}
+
 exports.signup = function (req, res) {
 
     var args = getDefaultArgs(req);

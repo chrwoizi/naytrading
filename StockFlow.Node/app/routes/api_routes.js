@@ -17,7 +17,7 @@ module.exports = function (app, passport) {
 
     app.get('/api/instrument/:id', instrumentController.instrument);
 
-    app.post('/api/instruments/update/:importSecret', instrumentController.updateInstruments);
+    app.post('/api/instruments/update', instrumentController.updateInstruments);
 
     app.get('/api/weight/:instrumentId/:type', instrumentController.getWeight);
 
@@ -59,11 +59,11 @@ module.exports = function (app, passport) {
 
     app.get('/api/export/log', exportController.exportLog);
 
-    app.post('/api/import/instruments/:importSecret', importController.importInstruments);
+    app.post('/api/import/instruments', importController.importInstruments);
 
     app.post('/api/import/user/instruments', importUserController.importUserInstruments);
 
-    app.post('/api/import/snapshots/:importSecret', importController.importSnapshots);
+    app.post('/api/import/snapshots', importController.importSnapshots);
 
     app.post('/api/import/user/snapshots', importUserController.importUserSnapshots);
 

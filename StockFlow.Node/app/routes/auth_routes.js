@@ -1,5 +1,5 @@
-var authController = require('../controllers/auth_controller.js');
-
+var authController = require('../controllers/auth_controller');
+var instrumentController = require('../controllers/instrument_controller');
 
 module.exports = function (app, passport) {
     
@@ -7,7 +7,7 @@ module.exports = function (app, passport) {
 
     app.post('/signup', function (req, res, next) {
         passport.authenticate('local-signup', function (err, user, info) {
-            req.login(user, {}, function (err) {
+            req.login(user, {}, async function (err) {
                 if (err) {
                     if (typeof (info) !== 'undefined') {
                         res.hasError = info.hasError;
@@ -21,7 +21,9 @@ module.exports = function (app, passport) {
                     return authController.signup(req, res);
                 }
                 else {
-                    return res.redirect('/app');
+                    await instrumentController.addAllInstruments(user.email);
+                    await authController.setLastLogin(user.email);
+                    return res.redirect('/app/#!/snapshot/new/random');
                 }
             });
         })(req, res, next);
@@ -31,7 +33,7 @@ module.exports = function (app, passport) {
 
     app.post('/signin', function (req, res, next) {
         passport.authenticate('local-signin', function (err, user, info) {
-            req.login(user, {}, function (err) {
+            req.login(user, {}, async function (err) {
                 if (err) {
                     if (typeof (info) !== 'undefined') {
                         res.hasError = info.hasError;
@@ -45,6 +47,8 @@ module.exports = function (app, passport) {
                     return authController.signin(req, res);
                 }
                 else {
+                    await instrumentController.addAllInstruments(user.email);
+                    await authController.setLastLogin(user.email);
                     return res.redirect('/app');
                 }
             });

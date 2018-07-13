@@ -24,15 +24,21 @@ function getInstrumentViewModel(instrument) {
     };
 }
 
+exports.addAllInstruments = async function (userName) {
+    var result = await sql.query(copy_sql, {
+        "@userName": userName
+    });
+
+    return result.affectedRows;
+}
+
 exports.addDefault = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
 
-            var result = await sql.query(copy_sql, {
-                "@userName": req.user.email
-            });
+            var affectedRows = await addAllInstruments(req.user.email);
 
-            res.json({ added: result.affectedRows });
+            res.json({ added: affectedRows });
         }
         else {
             res.status(401);
@@ -47,7 +53,7 @@ exports.addDefault = async function (req, res) {
 
 exports.addUrl = async function (req, res) {
     try {
-        if (req.isAuthenticated()) {
+        if (req.isAuthenticated() && req.body.import_secret == config.import_secret) {
 
             var instrument = await instrumentsProvider.getInstrumentByUrl(null, req.body.url);
 
@@ -116,9 +122,10 @@ exports.instruments = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
 
-            var instruments = await sql.query("SELECT i.ID, i.InstrumentName, i.Capitalization FROM instruments AS i INNER JOIN userinstruments AS u ON u.Instrument_ID = i.ID WHERE u.User = @userName ORDER BY i.Capitalization DESC",
+            var instruments = await sql.query("SELECT i.ID, i.InstrumentName, i.Capitalization FROM instruments AS i INNER JOIN userinstruments AS u ON u.Instrument_ID = i.ID WHERE u.User = @userName AND EXISTS (SELECT 1 FROM sources AS s WHERE s.Instrument_ID = i.ID AND s.Strikes <= @maxStrikes) ORDER BY i.Capitalization DESC",
                 {
-                    "@userName": req.user.email
+                    "@userName": req.user.email,
+                    "@maxStrikes": config.max_strikes
                 });
 
             res.json(instruments.map(getInstrumentViewModel));
@@ -287,7 +294,7 @@ exports.setWeight = async function (req, res) {
 exports.updateInstruments = async function (req, res) {
     try {
 
-        if (req.params.importSecret == config.import_secret) {
+        if (req.isAuthenticated() && req.body.import_secret == config.import_secret) {
 
             await settings.set("update_instruments", "true");
 

@@ -18,7 +18,8 @@
                     </dd>
                     <dt>Import All Instruments:</dt>
                     <dd>
-                        <form action="/api/import/instruments/{{import_secret}}" method="post" enctype="multipart/form-data">
+                        <form action="/api/import/instruments" method="post" enctype="multipart/form-data">
+                            <input type="hidden" name="import_secret" value="{{import_secret}}"></input>                        
                             <div class="form-group">
                                 <input type="file" name="file" class="form-control-file"></input>
                             </div>
@@ -33,7 +34,8 @@
                     </dd>
                     <dt>Import All Snapshots:</dt>
                     <dd>
-                        <form action="/api/import/snapshots/{{import_secret}}" method="post" enctype="multipart/form-data">
+                        <form action="/api/import/snapshots" method="post" enctype="multipart/form-data">
+                            <input type="hidden" name="import_secret" value="{{import_secret}}"></input>
                             <div class="form-group">
                                 <input type="file" name="file" class="form-control-file"></input>
                             </div>
@@ -46,15 +48,29 @@
                             <button type="submit" class="btn btn-danger">Import All Snapshots</button>
                         </form>
                     </dd>
-                    <dt>Cache:</dt>
+                    <dt>Instruments:</dt>
                     <dd>
-                        <form action="/api/instruments/update/{{import_secret}}" method="post" enctype="multipart/form-data">
+                        <form action="/api/instruments/update" method="post" enctype="multipart/form-data">
+                            <input type="hidden" name="import_secret" value="{{import_secret}}"></input>
                             <button type="submit" class="btn btn-danger">Refresh Default Instruments</button>
+                        </form>
+                        <br/>
+                        <br/>
+                        <form action="/api/instruments/add/url" method="POST">
+                            <input type="hidden" name="import_secret" value="{{import_secret}}"></input>
+                            <div class="form-group">
+                                <label for="url">URL</label>
+                                <input type="text" name="url" id="url" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <input type="submit" value="Add by URL" class="btn btn-danger" />
+                            </div>
                         </form>
                     </dd>
                     <dt>Refresh Rates:</dt>
                     <dd>
                         <form action="/api/snapshot/refresh" method="post">
+                            <input type="hidden" name="import_secret" value="{{import_secret}}"></input>
                             <div class="form-group">
                                 <label for="id">Snapshot ID</label>
                                 <input type="number" class="form-control" id="id" name="id">
