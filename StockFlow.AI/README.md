@@ -54,7 +54,7 @@ Once you have a trained network for buying (and preferably another network for s
 
 Go to [http://stockflow.net](http://stockflow.net) and register a new account for your AI. A recommended account email address is your real email address followed by *.ai*, e.g. *john.doe@mailbox.com.ai*. That email address doesn't need to actually exist. Consider it an account "name". Using that convention is optional, but it automatically enables some convenient features.
 
-Log in with your AI account and click the *Add all instruments* button on the [instruments page](http://stockflow.net/app/#!/instruments).
+
 
 Run client.py with your trained models:
 
