@@ -5,8 +5,14 @@ var dateFormat = require('dateformat');
 var config = require('../config/envconfig');
 var ratesProvider = require('../providers/rates_provider');
 
-function get_default_args(req) {
+function get_default_args(req, title) {
+    var fullTitle = "StockFlow";
+    if (title) {
+        fullTitle = title + " - StockFlow";
+    }
+
     return {
+        title: fullTitle,
         isAuthenticated: req.isAuthenticated(),
         username: req.isAuthenticated() ? req.user.email : undefined,
         isAi: req.isAuthenticated() ? req.user.email.endsWith('.ai') : false,
@@ -24,43 +30,43 @@ exports.home = function (req, res) {
 
 exports.about = function (req, res) {
 
-    res.render('about', get_default_args(req));
+    res.render('about', get_default_args(req, "About"));
 
 }
 
 exports.contact = function (req, res) {
 
-    res.render('contact', get_default_args(req));
+    res.render('contact', get_default_args(req, "Impressum"));
 
 }
 
 exports.terms = function (req, res) {
 
-    res.render('terms', get_default_args(req));
+    res.render('terms', get_default_args(req, "Terms of Service"));
 
 }
 
 exports.cookies = function (req, res) {
 
-    res.render('cookies', get_default_args(req));
+    res.render('cookies', get_default_args(req, "Cookies Policy"));
 
 }
 
 exports.privacy = function (req, res) {
 
-    res.render('privacy', get_default_args(req));
+    res.render('privacy', get_default_args(req, "Privacy Policy"));
 
 }
 
 exports.disclaimer = function (req, res) {
 
-    res.render('disclaimer', get_default_args(req));
+    res.render('disclaimer', get_default_args(req, "Disclaimer"));
 
 }
 
 exports.faq = function (req, res) {
 
-    res.render('faq', get_default_args(req));
+    res.render('faq', get_default_args(req, "FAQ"));
 
 }
 
@@ -80,7 +86,7 @@ function formatTestDataRatio(obj) {
 
 exports.manage = function (req, res) {
 
-    var args = get_default_args(req);
+    var args = get_default_args(req, "My Account");
 
     var filePath = path.resolve(config.processing_dir + "/" + req.user.email + "/buying_train_norm.csv");
     if (fs.existsSync(filePath) && fs.existsSync(filePath + ".meta")) {
@@ -129,7 +135,7 @@ exports.manage = function (req, res) {
 
 exports.admin = function (req, res) {
 
-    var args = get_default_args(req);
+    var args = get_default_args(req, "Admin");
     if (args.isAdmin) {
         args.export_secret = config.export_secret;
         args.import_secret = config.import_secret;
@@ -146,7 +152,7 @@ exports.admin = function (req, res) {
 
 exports.clear = function (req, res) {
 
-    res.render('clear', get_default_args(req));
+    res.render('clear', get_default_args(req, "Delete my Decisions"));
 
 }
 

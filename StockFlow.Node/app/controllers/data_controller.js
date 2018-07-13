@@ -262,7 +262,7 @@ exports.clearDecisions = async function (req, res) {
                     }
                 });
 
-                res.render('clear', viewsController.get_default_args(req));
+                res.render('clear', viewsController.get_default_args(req, "Delete my decisions"));
 
             }
             else {
