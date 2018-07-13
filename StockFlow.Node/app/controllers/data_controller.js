@@ -190,7 +190,9 @@ exports.getStats = async function (req, res) {
             
             if (errors.length > 0) {
 
-                if (portfolioJob.getUserLock(req.user.email)) {
+                console.log("Error in stats for user " + req.user.email + ": " + errors);
+                
+                /*if (portfolioJob.getUserLock(req.user.email)) {
 
                     try {
                         await model.portfolio.destroy({
@@ -227,7 +229,7 @@ exports.getStats = async function (req, res) {
                 else {
                     errors += " Please wait a few minutes for the stats to be rebuild.";
                     throw { message: errors };
-                }
+                }*/
             }
 
             var viewModel = getStatsViewModel(stats);
