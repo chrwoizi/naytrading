@@ -347,39 +347,39 @@ exports.createNewRandomSnapshot = async function (req, res) {
                 return;
             }
 
-            if (!isAI) {
-                var instrumentIds = await exports.getNewSnapshotInstruments(endTime, req.user.email);
+            // if (!isAI) {
+            //     var instrumentIds = await exports.getNewSnapshotInstruments(endTime, req.user.email);
 
-                var newSnapshot = null;
-                for (var i = 0; i <= config.max_autowait_count; ++i) {
-                    newSnapshot = await exports.createNewSnapshotFromRandomInstrument(instrumentIds);
-                    if (newSnapshot != null) {
+            //     var newSnapshot = null;
+            //     for (var i = 0; i <= config.max_autowait_count; ++i) {
+            //         newSnapshot = await exports.createNewSnapshotFromRandomInstrument(instrumentIds);
+            //         if (newSnapshot != null) {
 
-                        var k = instrumentIds.indexOf(newSnapshot.Instrument_ID);
-                        instrumentIds.splice(k, 1);
+            //             var k = instrumentIds.indexOf(newSnapshot.Instrument_ID);
+            //             instrumentIds.splice(k, 1);
 
-                        var previous = await snapshotController.getPreviousDecisionAndBuyRate(newSnapshot.ID, req.user.email);
-                        var viewModel = snapshotController.getSnapshotViewModel(newSnapshot, previous, req.user.email);
+            //             var previous = await snapshotController.getPreviousDecisionAndBuyRate(newSnapshot.ID, req.user.email);
+            //             var viewModel = snapshotController.getSnapshotViewModel(newSnapshot, previous, req.user.email);
 
-                        if (i < config.max_autowait_count && exports.isAutoWait(viewModel)) {
-                            await model.usersnapshot.create({
-                                User: req.user.email,
-                                Snapshot_ID: newSnapshot.ID,
-                                Decision: "autowait",
-                                ModifiedTime: new Date()
-                            });
-                        }
-                        else {
-                            res.json(viewModel);
-                            return;
-                        }
+            //             if (i < config.max_autowait_count && exports.isAutoWait(viewModel)) {
+            //                 await model.usersnapshot.create({
+            //                     User: req.user.email,
+            //                     Snapshot_ID: newSnapshot.ID,
+            //                     Decision: "autowait",
+            //                     ModifiedTime: new Date()
+            //                 });
+            //             }
+            //             else {
+            //                 res.json(viewModel);
+            //                 return;
+            //             }
 
-                    }
-                    else {
-                        break;
-                    }
-                }
-            }
+            //         }
+            //         else {
+            //             break;
+            //         }
+            //     }
+            // }
 
             res.status(404);
             res.json({ error: 'no instrument available' });

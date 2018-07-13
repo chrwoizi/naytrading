@@ -108,3 +108,8 @@ header.masthead {
     margin-right: auto;
     display: block;
  }
+
+ .spinner {
+    display: block;
+    min-height: 10em;
+ }

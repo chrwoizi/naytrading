@@ -6,7 +6,7 @@
                 <p class="text-success">{{statusMessage}}</p>
                 <hr />
                 <dl class="dl-horizontal">
-                    <dt>Export preprocessed training data for neural networks:</dt>
+                    <dt>Export preprocessed training data for artifical intelligence training:</dt>
                     <dd>
                         {{#if hasProcessedData}}
                         {{#if buyingTrain}}
@@ -155,13 +155,13 @@
                     <dt>Export raw data:</dt>
                     <dd>
                         <div class="export-button">
-                            <a href="/api/export/user/instruments" class="btn btn-secondary" role="button">Export Instruments</a>
+                            <a href="/api/export/user/instruments" class="btn btn-secondary" role="button">Export stocks</a>
                         </div>
                         <div class="export-button">
-                            <a href="/api/export/user/snapshots/19700101" class="btn btn-secondary" role="button">Export Snapshots</a>
+                            <a href="/api/export/user/snapshots/19700101" class="btn btn-secondary" role="button">Export decisions with price history</a>
                         </div>
                         <div class="export-button">
-                            <a href="/api/export/user/trades/19700101" class="btn btn-secondary" role="button">Export Trades</a>
+                            <a href="/api/export/user/trades/19700101" class="btn btn-secondary" role="button">Export buy/sell decisions with ISIN/WKN</a>
                         </div>
                     </dd>
                     <dt>Import raw data:</dt>
@@ -173,10 +173,10 @@
                             <div class="form-check">
                                 <label class="form-check-label">
                                     <input type="checkbox" class="form-check-input" name="delete">
-                                    Delete existing instruments
+                                    Delete existing stocks
                                 </label>
                             </div>
-                            <button type="submit" class="btn btn-secondary">Import Instruments</button>
+                            <button type="submit" class="btn btn-secondary">Import stocks</button>
                         </form>
                         <br/>
                         <form action="/api/import/user/snapshots" method="post" enctype="multipart/form-data">
@@ -186,10 +186,10 @@
                             <div class="form-check">
                                 <label class="form-check-label">
                                     <input type="checkbox" class="form-check-input" name="delete">
-                                    Delete existing snapshots
+                                    Delete existing decisions
                                 </label>
                             </div>
-                            <button type="submit" class="btn btn-secondary">Import Snapshots</button>
+                            <button type="submit" class="btn btn-secondary">Import decisions</button>
                         </form>
                     </dd>
                     {{#if isAi}}

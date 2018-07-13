@@ -3,27 +3,11 @@
 
 <div class="row row-spacer">
     <div class="col-12">
-        <form class="form-inline" method="POST">
-            <button class="btn btn-info" ng-click="$ctrl.refreshInstruments()">Add all instruments</button>
-        </form>
+        <a href="#!/snapshot/new/random" class="btn btn-info btn-block" role="button">New decision on random stock</a>
     </div>
 </div>
 
-<div class="row row-spacer">
-    <form action="/api/instruments/add/url" class="form-inline" method="POST">
-        <div class="col-2">
-            <p style="margin-bottom: 0;">Url:</p>
-        </div>
-        <div class="col-7">
-            <input type="text" name="url" ng-model="$ctrl.newInstrumentUrl">
-        </div>
-        <div class="col-3">
-            <input type="submit" value="Add" class="btn btn-info" />
-        </div>
-    </form>
-</div>
-
-<span us-spinner spinner-on="$ctrl.loading">
+<span us-spinner spinner-on="$ctrl.loading" class="spinner">
     <div ng-hide="$ctrl.loading">
         <div class="row">
             <div class="col-2">
@@ -62,7 +46,7 @@
                     <a href="#!/snapshots/{{instrument.InstrumentName}}">{{instrument.InstrumentName}}</a>
                 </div>
                 <div class="col-3 instrument-name" style="text-align: right;">
-                    <a href="#!/snapshot/new/{{instrument.ID}}" class="btn btn-info list-button">SNAPSHOT</a>
+                    <a href="#!/snapshot/new/{{instrument.ID}}" class="btn btn-info list-button">NEW DECISION</a>
                 </div>
                 <div class="col-4 instrument-capitalization">{{instrument.Capitalization}}</div>
             </div>
