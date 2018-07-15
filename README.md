@@ -1,4 +1,4 @@
-# StockFlow #
+# StockFlow (also known as N.A.Y.trading) #
 StockFlow (N.A.Y.trading) is a machine learning application that mimics stock trading decisions of the user. 
 
 The user's analysis philosophy must be purely technical, i.e. the only resource data for a buy/sell decision is the price history of the past 5 years. No stock name, no news, no ratings.
