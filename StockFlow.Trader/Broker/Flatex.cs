@@ -42,6 +42,11 @@ namespace StockFlow.Trader
             var element = WaitForElementById(chrome, "menu_overviewMenu", 50, x => true);
             if (element == null)
             {
+                if (WaitForElementByXPath(chrome, "//*[contains(text(), 'Bitte prüfen Sie Kundennummer und Passwort')]", 1, x => true) != null)
+                {
+                    throw new FatalException("Incorrect username or password");
+                }
+
                 SaveScreenshot(chrome);
                 throw new Exception("Did not load landing page");
             }
@@ -505,6 +510,10 @@ namespace StockFlow.Trader
                         {
                             throw new CancelOrderException(Status.TemporaryError, "Error message from broker: " + error);
                         }
+                        else if (error.Contains("Der Handelspartner lieferte kein Preisangebot"))
+                        {
+                            throw new CancelOrderException(Status.TemporaryError, "Error message from broker: " + error);
+                        }
                         else
                         {
                             SaveScreenshot(chrome);
@@ -512,7 +521,7 @@ namespace StockFlow.Trader
                         }
                     }
                 }
-                
+
                 throw new CancelOrderException(Status.TemporaryError, "Could not get offer or error message");
             }
 
@@ -592,7 +601,11 @@ namespace StockFlow.Trader
                 {
                     throw new CancelOrderException(Status.TemporaryError, "Error message from broker: " + text);
                 }
-                else
+                else if (text != null && text.Contains("Nicht genügend Cash-Bestand"))
+                {
+                    throw new CancelOrderException(Status.TemporaryError, "Error message from broker: " + text);
+                }
+                else 
                 {
                     SaveScreenshot(chrome);
                     throw new CancelOrderException(Status.FatalError, "Error message from broker: " + text);

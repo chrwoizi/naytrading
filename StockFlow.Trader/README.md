@@ -1,5 +1,5 @@
 # StockFlow.Trader #
-This is the broker connector of [StockFlow](/../../).
+This is the broker connector of [StockFlow](/../../) (N.A.Y.trading).
 
 ## :telephone: Forwarding the simulated trades to a broker ##
 

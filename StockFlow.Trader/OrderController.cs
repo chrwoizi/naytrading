@@ -37,7 +37,7 @@ namespace StockFlow.Trader
             var service = ChromeDriverService.CreateDefaultService();
             service.SuppressInitialDiagnosticInformation = true;
             service.HideCommandPromptWindow = true;
-            
+
             ChromeOptions option = new ChromeOptions();
             option.AddArgument("--window-size=1920,1080");
 
