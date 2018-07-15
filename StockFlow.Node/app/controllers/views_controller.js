@@ -6,9 +6,9 @@ var config = require('../config/envconfig');
 var ratesProvider = require('../providers/rates_provider');
 
 function get_default_args(req, title) {
-    var fullTitle = "StockFlow";
+    var fullTitle = "N.A.Y.trading";
     if (title) {
-        fullTitle = title + " - StockFlow";
+        fullTitle = title + " - N.A.Y.trading";
     }
 
     return {

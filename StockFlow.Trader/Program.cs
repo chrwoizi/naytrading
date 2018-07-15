@@ -188,7 +188,13 @@ namespace StockFlow.Trader
                             }
                         }
                     }
-                    catch(Exception ex)
+                    catch (FatalException ex)
+                    {
+                        globalLogger.WriteLine("Exception: " + ex);
+                        globalLogger.WriteLine("Press enter to continue");
+                        Console.ReadLine();
+                    }
+                    catch (Exception ex)
                     {
                         globalLogger.WriteLine("Exception: " + ex);
                     }

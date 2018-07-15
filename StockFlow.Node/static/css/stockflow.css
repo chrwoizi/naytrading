@@ -113,3 +113,11 @@ header.masthead {
     display: block;
     min-height: 10em;
  }
+
+ header.masthead .overlay {
+     opacity: 0.5;
+ }
+
+ .call-to-action .overlay {
+     opacity: 0.5;
+ }

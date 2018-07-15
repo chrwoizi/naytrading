@@ -1,12 +1,12 @@
 # StockFlow #
-StockFlow is a machine learning application that mimics stock trading decisions of the user. 
+StockFlow (N.A.Y.trading) is a machine learning application that mimics stock trading decisions of the user. 
 
 The user's analysis philosophy must be purely technical, i.e. the only resource data for a buy/sell decision is the price history of the past 5 years. No stock name, no news, no ratings.
 
 ## :pencil: Recording the user's trade decisions ##
 The website [StockFlow.Node](StockFlow.Node) presents a stock price chart to the user and lets him/her choose whether to buy, ignore, or sell the stock. The price history and the decision are stored in a database. 
 
-**Try the official online version: [stockflow.net](http://stockflow.net)**
+**Try the official online version: [naytrading.com](http://naytrading.com)**
 
 <details>
 <summary>How to install</summary>
@@ -105,6 +105,6 @@ With [synth.py](StockFlow.AI/synth.py), synthetical data can be generated to pre
 
 ## :moneybag: Using the trained network ##
 
-With [client.py](StockFlow.AI/client.py), current stock prices are fed into the trained network periodically to find stocks that can be bought or sold based on the user's analysis pattern. The application acts as a user on [StockFlow.Node](StockFlow.Node), so the gains and losses can be evaluated by logging in on [StockFlow.Node](StockFlow.Node) using the same account as [client.py](StockFlow.AI/client.py). Also, the trade decisions can be forwarded to a broker using [StockFlow.Trader](StockFlow.Trader), making StockFlow an **automated stock trading system**. 
+With [client.py](StockFlow.AI/client.py), current stock prices are fed into the trained network periodically to find stocks that can be bought or sold based on the user's analysis pattern. The application acts as a user on [StockFlow.Node](StockFlow.Node), so the gains and losses can be evaluated by logging in on [StockFlow.Node](StockFlow.Node) using the same account as [client.py](StockFlow.AI/client.py). Also, the trade decisions can be forwarded to a broker using [StockFlow.Trader](StockFlow.Trader), making StockFlow (N.A.Y.trading) an **automated stock trading system**. 
 
 See [StockFlow.AI](StockFlow.AI) for an in-depth description on how to install and use [client.py](StockFlow.AI/client.py).

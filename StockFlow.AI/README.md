@@ -1,5 +1,5 @@
 # StockFlow.AI #
-This is the machine learning part of [StockFlow](/../../).
+This is the machine learning part of [StockFlow](/../../) (N.A.Y.trading).
 
 ## :mortar_board: Training a Convolutional Neural Network on the recorded data ##
 
@@ -30,7 +30,7 @@ Download the sources of [StockFlow.AI](/StockFlow.AI) and [StockFlow.Common](/St
 
 </details>
 
-Go to your StockFlow [account page](http://stockflow.net/manage) and download your processed trade decisions as CSV files using the download buttons in the *Export preprocessed training data for neural networks* section.
+Go to your StockFlow (N.A.Y.trading) [account page](http://naytrading.com/manage) and download your processed trade decisions as CSV files using the download buttons in the *Export preprocessed training data for neural networks* section.
 Save the files in the StockFlow.AI folder (next to the main.py file).
 
 Run [main_buying_train_norm.bat](main_buying_train_norm.bat) or [main_selling_train_norm.bat](main_selling_train_norm.bat).
@@ -50,11 +50,11 @@ Training is a hardware demanding process. If you are using a graphics card, it c
 
 ## :moneybag: Using the trained network ##
 
-Once you have a trained network for buying (and preferably another network for selling), you can run client.py to act as a user on StockFlow using the trained network(s) to decide on snapshots automatically. 
+Once you have a trained network for buying (and preferably another network for selling), you can run client.py to act as a user on StockFlow (N.A.Y.trading) using the trained network(s) to decide on snapshots automatically. 
 
-Go to [http://stockflow.net](http://stockflow.net) and register a new account for your AI. A recommended account email address is your real email address followed by *.ai*, e.g. *john.doe@mailbox.com.ai*. That email address doesn't need to actually exist. Consider it an account "name". Using that convention is optional, but it automatically enables some convenient features.
+Go to [http://naytrading.com](http://naytrading.com) and register a new account for your AI. A recommended account email address is your real email address followed by *.ai*, e.g. *john.doe@mailbox.com.ai*. That email address doesn't need to actually exist. Consider it an account "name". Using that convention is optional, but it automatically enables some convenient features.
 
-Log in with your AI account and click the *Add all instruments* button on the [instruments page](http://stockflow.net/app/#!/instruments).
+Log in with your AI account and click the *Add all instruments* button on the [instruments page](http://naytrading.com/app/#!/instruments).
 
 Run client.py with your trained models:
 
@@ -73,6 +73,6 @@ Having a selling network is optional. If you don't have enough training data yet
 python client.py --buy_checkpoint_dir=%1\\checkpoint --sleep=%2 --min_loss=0.1 --min_gain=0.04 --max_loss=0.3 --max_gain=0.15 --sell_at_max_factor=1
 ```
 
-When asked, enter your AI account email address (the one ending on *.ai*) and its password. **Do not** enter your regular StockFlow account email address (e.g. *john.doe@mailbox.com*) because client.py will decide on snapshots using the given account and you probably don't want your real decisions mixed with the network's decisions.
+When asked, enter your AI account email address (the one ending on *.ai*) and its password. **Do not** enter your regular StockFlow (N.A.Y.trading) account email address (e.g. *john.doe@mailbox.com*) because client.py will decide on snapshots using the given account and you probably don't want your real decisions mixed with the network's decisions.
 
-You can continue deciding on snapshots with your regular account and, from time to time, log in as your AI account to check its performance using the [Stats page](http://stockflow.net/app/#!/stats). The two accounts are independent from each other.
+You can continue deciding on snapshots with your regular account and, from time to time, log in as your AI account to check its performance using the [Stats page](http://naytrading.com/app/#!/stats). The two accounts are independent from each other.

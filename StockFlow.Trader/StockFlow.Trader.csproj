@@ -97,6 +97,7 @@
     <Compile Include="ConsoleLogger.cs" />
     <Compile Include="Broker\ConsoleTanProvider.cs" />
     <Compile Include="Broker\IBroker.cs" />
+    <Compile Include="FatalException.cs" />
     <Compile Include="ILogger.cs" />
     <Compile Include="Broker\ITanProvider.cs" />
     <Compile Include="Migrations\Configuration.cs" />
