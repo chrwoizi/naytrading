@@ -1,5 +1,5 @@
-# NAYtrading (also known as N.A.Y.trading) #
-NAYtrading (N.A.Y.trading) is a machine learning application that mimics stock trading decisions of the user. 
+# N.A.Y.trading #
+N.A.Y.trading is a machine learning application that mimics stock trading decisions of the user. 
 
 The user's analysis philosophy must be purely technical, i.e. the only resource data for a buy/sell decision is the price history of the past 5 years. No stock name, no news, no ratings.
 
@@ -105,6 +105,6 @@ With [synth.py](NAYtrading.AI/synth.py), synthetical data can be generated to pr
 
 ## :moneybag: Using the trained network ##
 
-With [client.py](NAYtrading.AI/client.py), current stock prices are fed into the trained network periodically to find stocks that can be bought or sold based on the user's analysis pattern. The application acts as a user on [NAYtrading.Node](NAYtrading.Node), so the gains and losses can be evaluated by logging in on [NAYtrading.Node](NAYtrading.Node) using the same account as [client.py](NAYtrading.AI/client.py). Also, the trade decisions can be forwarded to a broker using [NAYtrading.Trader](NAYtrading.Trader), making NAYtrading (N.A.Y.trading) an **automated stock trading system**. 
+With [client.py](NAYtrading.AI/client.py), current stock prices are fed into the trained network periodically to find stocks that can be bought or sold based on the user's analysis pattern. The application acts as a user on [NAYtrading.Node](NAYtrading.Node), so the gains and losses can be evaluated by logging in on [NAYtrading.Node](NAYtrading.Node) using the same account as [client.py](NAYtrading.AI/client.py). Also, the trade decisions can be forwarded to a broker using [NAYtrading.Trader](NAYtrading.Trader), making N.A.Y.trading an **automated stock trading system**. 
 
 See [NAYtrading.AI](NAYtrading.AI) for an in-depth description on how to install and use [client.py](NAYtrading.AI/client.py).
