@@ -85,9 +85,9 @@ naytrading@host:~/naytrading/NAYtrading.Node$ ./production.sh &
 ```
 </details><p></p>
 
-![list of stocks](Documentation/NAYtrading.Web.instruments.png "list of stocks") ![a new price history snapshot of a previously bought stock with trade decision buttons](Documentation/NAYtrading.Web.snapshot.png "a new price history snapshot of a previously bought stock with trade decision buttons")
+![list of stocks](Documentation/NAYtrading.instruments.png "list of stocks") ![a new price history snapshot of a previously bought stock with trade decision buttons](Documentation/NAYtrading.snapshot.png "a new price history snapshot of a previously bought stock with trade decision buttons")
 
-![list of price history snapshots](Documentation/NAYtrading.Web.snapshots.png "list of price history snapshots") ![statistics about gains and losses over the recorded trade decisions](Documentation/NAYtrading.Web.stats.png "statistics about gains and losses over the recorded trade decisions")
+![list of price history snapshots](Documentation/NAYtrading.snapshots.png "list of decisions") ![statistics about gains and losses over the recorded trade decisions](Documentation/NAYtrading.stats.png "statistics about gains and losses over the recorded trade decisions")
 
 ## :telephone: Forwarding the simulated trades to a broker ##
 
