@@ -1,5 +1,5 @@
 # NAYtrading.Trader #
-This is the broker connector of [NAYtrading](/../../) (N.A.Y.trading).
+This is the broker connector of [N.A.Y.trading](/../../).
 
 ## :telephone: Forwarding the simulated trades to a broker ##
 
