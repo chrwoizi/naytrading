@@ -1,0 +1,11 @@
+{
+	"folders": [
+		{
+			"path": "NAYtrading.Node"
+		},
+		{
+			"path": "NAYtrading.Node.Providers"
+		}
+	],
+	"settings": {}
+}
