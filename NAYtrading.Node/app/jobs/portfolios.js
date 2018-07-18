@@ -35,28 +35,6 @@ async function getOpenValues(user, fromTime) {
     return openTradeValuesSum[0].Value;
 }
 
-exports.userLocks = {};
-
-exports.getUserLock = function (user) {
-
-    if (typeof (exports.userLocks[user]) === 'undefined') {
-        exports.userLocks[user] = 0;
-    }
-
-    var lockCount = exports.userLocks[user];
-    if (lockCount > 0) {
-        console.log("User " + user + " is locked " + lockCount + " times.");
-        return false;
-    }
-
-    exports.userLocks[user]++;
-    return true;
-};
-
-exports.releaseUserLock = function (user) {
-    exports.userLocks[user]--;
-};
-
 exports.updateUser = async function(user) {
     var latest = await model.portfolio.find({
         where: {
@@ -210,15 +188,11 @@ exports.run = async function () {
         for (var i = 0; i < users.length; ++i) {
             var user = users[i].User;
 
-            if (!exports.getUserLock(user)) {
-                continue;
-            }
-
             try {
                 await exports.updateUser(user);
             }
-            finally {
-                exports.releaseUserLock(user);
+            catch (userError) {
+                console.log("error in portfolios job for user " + user + ": " + userError.message);
             }
         }
 

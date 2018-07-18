@@ -189,47 +189,7 @@ exports.getStats = async function (req, res) {
             var errors = getErrors(stats);
             
             if (errors.length > 0) {
-
-                console.log("Error in stats for user " + req.user.email + ": " + errors);
-                
-                /*if (portfolioJob.getUserLock(req.user.email)) {
-
-                    try {
-                        await model.portfolio.destroy({
-                            where: {
-                                User: req.user.email
-                            }
-                        });
-
-                        await model.trade.destroy({
-                            where: {
-                                User: req.user.email
-                            }
-                        });
-
-                        await portfolioJob.updateUser(req.user.email);
-
-                        stats = await getStatsForUser(req.user.email);
-
-                        var errors = getErrors(stats);                        
-                        if (errors.length > 0) {
-                            throw { message: errors };
-                        }
-                    }
-                    catch (error) {
-                        errors += " ";
-                        errors += error.message;
-                        throw { message: errors };
-                    }
-                    finally {
-                        portfolioJob.releaseUserLock(req.user.email);
-                    }
-
-                }
-                else {
-                    errors += " Please wait a few minutes for the stats to be rebuild.";
-                    throw { message: errors };
-                }*/
+                console.log("Error in stats for user " + req.user.email + ": " + errors);                
             }
 
             var viewModel = getStatsViewModel(stats);
