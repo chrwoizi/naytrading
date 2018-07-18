@@ -133,7 +133,7 @@ if __name__ == '__main__':
         return data.dataset
 
     def train_input_fn(params = None):
-        return input_fn(train_file, FLAGS.repeat_train_data, params, True)
+        return input_fn(train_file, FLAGS.repeat_train_data, params, False)
 
     def test_input_fn(params = None):
         return input_fn(test_file, 1, params, False)
