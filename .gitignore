@@ -3,6 +3,8 @@ __pycache__
 /packages
 /.idea/workspace.xml
 /NAYtrading.AI/model*
+/NAYtrading.AI/buying*
+/NAYtrading.AI/selling*
 /NAYtrading.Common.Net/bin
 /NAYtrading.Common.Net/obj
 /NAYtrading.Common.Net/.vs

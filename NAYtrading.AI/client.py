@@ -28,13 +28,14 @@ parser.add_argument('--proxy_url', type=str, default='', help='Proxy URL.')
 parser.add_argument('--proxy_user', type=str, default='', help='Proxy user.')
 parser.add_argument('--proxy_password', type=str, default='', help='Proxy password.')
 parser.add_argument('--naytrading_url', type=str, default='http://naytrading.com', help='NAYtrading base url.')
-parser.add_argument('--naytrading_user', type=str, default='', help='NAYtrading user.')
+parser.add_argument('--naytrading_user', type=str, default='', help='NAYtrading AI user.')
 parser.add_argument('--naytrading_password', type=str, default='', help='NAYtrading password.')
 parser.add_argument('--model_name', type = str, default = 'GoogLeNet', help = 'The model name, e.g. GoogLeNet')
 parser.add_argument('--buy_label', type=str, default='buy', help='The label used if the user decided on a buy action for this dataset, e.g. buy')
 parser.add_argument('--sell_label', type=str, default='sell', help='The label used if the user decided on a sell action for this dataset, e.g. sell')
 parser.add_argument('--tf_log', type=str, default='ERROR', help='The tensorflow log level: DEBUG, INFO, WARN, ERROR, FATAL')
 parser.add_argument('--sleep', type=int, default='3', help='The number of seconds to wait between snapshots')
+parser.add_argument('--no_snapshot_sleep', type=int, default='60', help='The number of seconds to wait after no snapshot is available')
 parser.add_argument('--checkpoint_copy', type=bool, default=True, help='Whether to create a local copy of the checkpoint')
 parser.add_argument('--min_buy_probability', type=float, default=0.99, help='Minimum predicted probability to decide for buy')
 parser.add_argument('--min_sell_probability', type=float, default=0.99, help='Minimum predicted probability to decide for sell')
@@ -145,7 +146,10 @@ if __name__ == '__main__':
         proxy_password = getpass.getpass(prompt = 'Proxy Password: ')
 
     if len(naytrading_user) == 0:
-        naytrading_user = input("NAYtrading User: ")
+        naytrading_user = input("NAYtrading AI User: ")
+
+    if not naytrading_user.endswith('.ai'):
+        input("WARNING - User does not end with .ai - type override to continue: ")
 
     if len(naytrading_password) == 0:
         naytrading_password = getpass.getpass(prompt = 'NAYtrading Password: ')
@@ -267,6 +271,7 @@ if __name__ == '__main__':
 
 
     while True:
+        sleep = FLAGS.sleep
         try:
             buy_checkpoint_file = tf.train.latest_checkpoint(FLAGS.buy_checkpoint_dir)
 
@@ -295,8 +300,10 @@ if __name__ == '__main__':
                     print("get snapshot")
                     snapshot = naytrading.new_snapshot()
                     if snapshot is None:
+                        sleep = FLAGS.no_snapshot_sleep
                         print("no snapshot available")
                     else:
+                        sleep = FLAGS.sleep
                         print("prepare snapshot")
                         chart = get_chart(snapshot)
                         # plot(chart)
@@ -338,4 +345,4 @@ if __name__ == '__main__':
         except Exception as e:
             print("Unexpected error:", str(e))
 
-        time.sleep(FLAGS.sleep)
+        time.sleep(sleep)
