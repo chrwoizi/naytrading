@@ -94,7 +94,7 @@ namespace NAYtrading.Trader
 
             var fundsText = quantityElement.GetAttribute("innerText");
 
-            var regex = new Regex("^([\\d\\.]+)(,(\\d{0,3}))?(&nbsp;|\\s+)EUR$");
+            var regex = new Regex("^-?([\\d\\.]+)(,(\\d{0,3}))?(&nbsp;|\\s+)EUR$");
             var match = regex.Match(fundsText);
             if (match.Success)
             {
