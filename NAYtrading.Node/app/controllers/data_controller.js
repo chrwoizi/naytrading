@@ -4,7 +4,6 @@ var sql = require('../sql/sql');
 var dateFormat = require('dateformat');
 var fs = require('fs');
 var viewsController = require('./views_controller.js');
-var portfolioJob = require('../jobs/portfolios.js');
 
 var stats_sql = "";
 try {
@@ -46,13 +45,38 @@ function getStatsViewModel(model) {
 
     var valueHistory = [];
     if (model.portfolios && model.portfolios.length > 0) {
+
         var history = model.portfolios.map(x => {
             return {
-                Time: dateFormat(x.Time, 'dd.mm.yyyy'),
+                Time: new Date(x.Time),
                 Return: (x.Value - x.Deposit) / x.Deposit
             };
         });
-        valueHistory = history.concat(valueHistory);
+
+        var day = 24 * 60 * 60 * 1000;
+        var previousItem = history[0];
+        var dailyHistory = [];
+
+        for (var i = 0; i < history.length; ++i) {
+            var item = history[i];
+            var previousTime = previousItem.Time;
+            while (item.Time.getTime() - previousTime.getTime() >= 1.5 * day) {
+                previousTime = new Date(previousTime.getTime() + day);
+                dailyHistory.push({
+                    Time: previousTime,
+                    Return: previousItem.Return
+                });
+            }
+            dailyHistory.push(item);
+            previousItem = item;
+        }
+
+        valueHistory = dailyHistory.map(x => {
+            return {
+                Time: dateFormat(x.Time, 'dd.mm.yyyy'),
+                Return: x.Return
+            };
+        });
     }
 
     return {
@@ -187,9 +211,9 @@ exports.getStats = async function (req, res) {
             var stats = await getStatsForUser(req.user.email);
 
             var errors = getErrors(stats);
-            
+
             if (errors.length > 0) {
-                console.log("Error in stats for user " + req.user.email + ": " + errors);                
+                console.log("Error in stats for user " + req.user.email + ": " + errors);
             }
 
             var viewModel = getStatsViewModel(stats);
