@@ -4,13 +4,8 @@ SELECT
 			latestSnapshot.Price
 		FROM
 			snapshots AS latestSnapshot
-		INNER JOIN
-			usersnapshots AS latestUserSnapshot
-		ON
-			latestUserSnapshot.Snapshot_ID = latestSnapshot.ID
 		WHERE
-			latestUserSnapshot.User = @userName
-			AND latestSnapshot.Instrument_ID = buySnapshot.Instrument_ID
+			latestSnapshot.Instrument_ID = buySnapshot.Instrument_ID
 			AND latestSnapshot.Time >= buySnapshot.Time
 			AND latestSnapshot.Time <= @toDate
 		ORDER BY
