@@ -8,25 +8,12 @@ This is the machine learning part of [N.A.Y.trading](/../../).
 
 Install [Python 3.6](https://www.python.org/downloads/release/python-366/). Include PIP if asked by the setup.
 
-If you have an NVIDIA graphics card: Follow the [instructions by NVIDIA](https://www.nvidia.com/en-us/data-center/gpu-accelerated-applications/tensorflow/) to install CUDA and cuDNN.
+If you have an NVIDIA graphics card:
+- Install the latest [graphics card driver](https://www.nvidia.com/Download/index.aspx?lang=en-us)
+- Install [CUDA Toolkit](https://developer.nvidia.com/cuda-downloads)
+- Install [cuDNN](https://developer.nvidia.com/cudnn). Get a cuDNN version that matches your CUDA version number.
 
-Install the python modules:
-```sh
-# install modules for training (Used by main.py)
-root@host:~$ pip install numpy
-root@host:~$ pip install tensorflow
-root@host:~$ pip install tensorflow-gpu
-root@host:~$ pip install matplotlib
-
-# install modules for running the trained model as a NAYtrading AI account (Used by client.py)
-root@host:~$ pip install requests
-
-# install modules for generating synthetic data (Optional. Used by synth.py)
-root@host:~$ pip install noise
-```
-<p></p>
-
-Download the sources of [NAYtrading.AI](/NAYtrading.AI) and [NAYtrading.Common](/NAYtrading.Common) or the whole [NAYtrading](/../../) repository.
+Download the sources of [NAYtrading.AI](/NAYtrading.AI) and [NAYtrading.Common](/NAYtrading.Common) or the whole [NAYtrading](/../../) repository. You should now have a folder that contains both the NAYtrading.AI and NAYtrading.Common folders.
 
 </details>
 
@@ -56,12 +43,13 @@ Go to [http://naytrading.com](http://naytrading.com) and register a new account 
 
 Log in with your AI account and click the *Add all instruments* button on the [instruments page](http://naytrading.com/app/#!/instruments).
 
-Run client.py with your trained models:
+Drag your model folder(s) onto client_on_dropped_models.bat or run client.py from the console:
 
 ```sh
 # replace %1 with your buying model directory path, e.g. model20180629121604
 # replace %2 with your selling model directory path, e.g. model20180703114329
 # replace %3 with the number of seconds the AI should wait between snapshots, e.g. 30
+pip install requests
 python client.py --buy_checkpoint_dir=%1\\checkpoint --sell_checkpoint_dir=%2\\checkpoint --sleep=%3
 ```
 
@@ -70,6 +58,7 @@ Having a selling network is optional. If you don't have enough training data yet
 # replace %1 with your buying model directory path, e.g. model20180629121604
 # replace %2 with the number of seconds the AI should wait between snapshots, e.g. 30
 # see client.py for help on the threshold parameters.
+pip install requests
 python client.py --buy_checkpoint_dir=%1\\checkpoint --sleep=%2 --min_loss=0.1 --min_gain=0.04 --max_loss=0.3 --max_gain=0.15 --sell_at_max_factor=1
 ```
 
