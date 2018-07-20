@@ -85,9 +85,21 @@ naytrading@host:~/naytrading/NAYtrading.Node$ ./production.sh &
 ```
 </details><p></p>
 
-![list of stocks](Documentation/NAYtrading.instruments.png "list of stocks") ![a new price history snapshot of a previously bought stock with trade decision buttons](Documentation/NAYtrading.snapshot.png "a new price history snapshot of a previously bought stock with trade decision buttons")
+List of stocks:
 
-![list of price history snapshots](Documentation/NAYtrading.snapshots.png "list of decisions") ![statistics about gains and losses over the recorded trade decisions](Documentation/NAYtrading.stats.png "statistics about gains and losses over the recorded trade decisions")
+![list of stocks](Documentation/NAYtrading.instruments.png "list of stocks")
+
+Making a new decision:
+
+![a new price history snapshot of a previously bought stock with trade decision buttons](Documentation/NAYtrading.snapshot.png "a new price history snapshot of a previously bought stock with trade decision buttons")
+
+List of all previous decisions:
+
+![list of price history snapshots](Documentation/NAYtrading.snapshots.png "list of decisions") 
+
+Statistics about the portfolio:
+
+![statistics about gains and losses over the recorded trade decisions](Documentation/NAYtrading.stats.png "statistics about gains and losses over the recorded trade decisions")
 
 ## :telephone: Forwarding the simulated trades to a broker ##
 
@@ -97,14 +109,14 @@ The console application [NAYtrading.Trader](NAYtrading.Trader) can be used to ac
 
 The web site periodically processes the recorded data using [NAYtrading.Data](NAYtrading.Data) and provides CSV file downloads which are optimized for a neural network.
 
-With [main.py](NAYtrading.AI/main.py), a convolutional neural network is trained on the processed data, using the price history as input and the user decision as desired output. 
+With [main.py](NAYtrading.AI/src/main.py), a convolutional neural network is trained on the processed data, using the price history as input and the user decision as desired output. 
 
-See [NAYtrading.AI](NAYtrading.AI) for an in-depth description on how to install and use [main.py](NAYtrading.AI/main.py).
+See [NAYtrading.AI](NAYtrading.AI) for a description on how to install and use [main.py](NAYtrading.AI/src/main.py).
 
-With [synth.py](NAYtrading.AI/synth.py), synthetical data can be generated to pre-train the network, potentially increasing accuracy on a small real-world training set.
+With [synth.py](NAYtrading.AI/src/synth.py), synthetical data can be generated to pre-train the network, potentially increasing accuracy on a small real-world training set.
 
 ## :moneybag: Using the trained network ##
 
-With [client.py](NAYtrading.AI/client.py), current stock prices are fed into the trained network periodically to find stocks that can be bought or sold based on the user's analysis pattern. The application acts as a user on [NAYtrading.Node](NAYtrading.Node), so the gains and losses can be evaluated by logging in on [NAYtrading.Node](NAYtrading.Node) using the same account as [client.py](NAYtrading.AI/client.py). Also, the trade decisions can be forwarded to a broker using [NAYtrading.Trader](NAYtrading.Trader), making N.A.Y.trading an **automated stock trading system**. 
+With [client.py](NAYtrading.AI/src/client.py), current stock prices are fed into the trained network periodically to find stocks that can be bought or sold based on the user's analysis pattern. The application acts as a user on [NAYtrading.Node](NAYtrading.Node), so the gains and losses can be evaluated by logging in on [NAYtrading.Node](NAYtrading.Node) using the same account as [client.py](NAYtrading.AI/src/client.py). Also, the trade decisions can be forwarded to a broker using [NAYtrading.Trader](NAYtrading.Trader), making N.A.Y.trading an **automated stock trading system**. 
 
-See [NAYtrading.AI](NAYtrading.AI) for an in-depth description on how to install and use [client.py](NAYtrading.AI/client.py).
+See [NAYtrading.AI](NAYtrading.AI) for a description on how to install and use [client.py](NAYtrading.AI/src/client.py).
