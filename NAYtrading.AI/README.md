@@ -15,18 +15,26 @@ Download the sources of [NAYtrading.AI](/NAYtrading.AI) and [NAYtrading.Common](
 Go to your N.A.Y.trading [account page](http://naytrading.com/manage) and download your processed trade decisions as CSV files using the download buttons in the *Export preprocessed training data for neural networks* section.
 Save the files in the NAYtrading.AI folder.
 
-Run [main_buying_train_norm.bat](main_buying_train_norm.bat) or [main_selling_train_norm.bat](main_selling_train_norm.bat).
+Run [main_buying_train_norm.bat](main_buying_train_norm.bat) or [main_selling_train_norm.bat](main_selling_train_norm.bat) from the NAYtrading.AI folder.
 
 A folder with the name modelXXX will be created where XXX is the current time. Open that folder and run *tensorboard.bat*. Go to [Tensorboard](http://localhost:6006/#scalars&run=log%5Ctrain&_smoothingWeight=0&tagFilter=%5Eloss%24%7C%5Eloss%2Fcombined%7C(buy%7Csell)s_detected%7C(buy%7Csell)s_correct&_ignoreYOutliers=false) to monitor the training progress.
 
-In the top section of Tensorboard it will show three red graphs. These are the statistics of how well your trained network performs on the training data.
+In the top section of Tensorboard it will show three red graphs. 
+
+![loss](../Documentation/training_loss.png "loss graph") ![buys_correct](../Documentation/training_correct.png "buys correct graph") ![buys_detected](../Documentation/training_detected.png "buys detected graph")
+
+These are the statistics of how well your trained network performs on the training data.
 - The graph containing the word *loss* in its title (e.g. *loss/combined/value*) shows a metric about how different the network's current decision making is from the given training data. This will go down over time. 0 meaning that the trained network reproduces all given decisions correctly.
 - The graph containing the word *buys_correct* or *sells_correct* in its title (e.g. *imitations/buys_correct/value*) shows a metric about how many buy or sell decisions by the trained network are also buy or sell decisions in your training data. The values range between 0 and 1. 1 meaning that 100% of the network's buy or sell decisions are (presumably) correct.
 - The graph containing the word *buys_detected* or *sells_detected* in its title (e.g. *imitations/buys_detected/value*) shows a metric about how many of your buy or sell decisions were also classified as buy or sell by the trained network. The values range between 0 and 1. 1 meaning that 100% of your buy or sell decisions were reproduced by the trained network.
 
-Later, when the first evaluation of the trained model occurs (automatically), three blue graphs will appear. These are the statistics of how well your trained network performs on unseen data (the evaluation CSV file). You want this to be as good as possible. If your network performs poorly, you need more training data.
+Later, when the first evaluation of the trained model occurs (automatically), three blue graphs will appear. 
 
-The training optimum is reached when the blue loss curve is at its lowest point. You need to estimate that by observing Tensorboard regularly throughout the training process. It takes a couple of minutes between updates of the curve, so don't feel rushed. Stop the training process when the blue loss curve stops going down and starts to go horizontally. If you don't stop at that point, the loss on the training data will continue to decrease but the loss on the evaluation data (unseen stock price history) will start to increase. That means, a longer training period does not necessarily yield better results.
+![loss](../Documentation/evaluation_loss.png "loss graph") ![buys_correct](../Documentation/evaluation_correct.png "buys correct graph") ![buys_detected](../Documentation/evaluation_detected.png "buys detected graph")
+
+These are the statistics of how well your trained network performs on unseen data (the evaluation CSV file). You want this to be as good as possible. If your network performs poorly, you need more training data.
+
+The training optimum is reached when the blue loss curve is at its lowest point (at 200.0k in the image above). You need to estimate that by observing Tensorboard regularly throughout the training process. It takes a couple of minutes between updates of the curve, so don't feel rushed. Stop the training process when the blue loss curve stops going down and starts to go horizontally. If you don't stop at that point, the loss on the training data will continue to decrease but the loss on the evaluation data (unseen stock price history) will start to increase. That means, a longer training period does not necessarily yield better results.
 
 Training is a hardware demanding process. If you are using a graphics card, it can still take hours or days to reach the optimum. If you are only using your CPU, good luck ;).
 
