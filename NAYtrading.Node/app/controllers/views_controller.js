@@ -4,6 +4,7 @@ var path = require('path');
 var dateFormat = require('dateformat');
 var config = require('../config/envconfig');
 var ratesProvider = require('../providers/rates_provider');
+var sql = require('../sql/sql');
 
 function get_default_args(req, title) {
     var fullTitle = "N.A.Y.trading";
@@ -133,7 +134,7 @@ exports.manage = function (req, res) {
     res.render('manage', args);
 }
 
-exports.admin = function (req, res) {
+exports.admin = async function (req, res) {
 
     var args = get_default_args(req, "Admin");
     if (args.isAdmin) {
@@ -145,6 +146,7 @@ exports.admin = function (req, res) {
             var markets = ratesProvider.providers[ratesProvider.sources[i]].markets.map(function (x) { return { market: x } });
             args.markets = args.markets.concat(markets);
         }
+        args.users = await sql.query("SELECT email FROM users");
     }
     res.render('admin', args);
 

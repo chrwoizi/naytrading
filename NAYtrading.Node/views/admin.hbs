@@ -96,6 +96,12 @@
                             <button type="submit" class="btn btn-danger">Refresh Rates</button>
                         </form>
                     </dd>
+                    <dt>Users:</dt>
+                    <dd>
+                        {{#each users}}
+                            <option>{{email}}</option>
+                        {{/each}}
+                    </dd>
                 </dl>
             </div>
         </div>
