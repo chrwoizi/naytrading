@@ -45,9 +45,10 @@ root@host:~$ pip3 install datetime
 root@host:~$ pip3 install noise
 root@host:~$ pip3 install numpy
 
-# redirect port 80 to 5000 (or setup a reverse proxy)
+# redirect port 80 to 5000 and 443 to 5001 (or setup a reverse proxy)
 root@host:~$ apt-get install iptables-persistent
 root@host:~$ iptables -t nat -I PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 5000
+root@host:~$ iptables -t nat -I PREROUTING -p tcp --dport 443 -j REDIRECT --to-port 5001
 root@host:~$ iptables-save > /etc/iptables/rules.v4
 
 # create user
@@ -81,6 +82,36 @@ naytrading@host:~/naytrading/NAYtrading.Node$ ./dbmigrate.sh
 
 # run naytrading
 naytrading@host:~/naytrading/NAYtrading.Node$ autostart enable -n "naytrading" -p "/home/naytrading/naytrading/NAYtrading.Node" -c "./production.sh"
+naytrading@host:~/naytrading/NAYtrading.Node$ ./production.sh &
+
+# back to root
+naytrading@host:~/naytrading/NAYtrading.Node$ exit
+
+# optional: activate HTTPS using letsencrypt.org
+
+# if using Debian 8 (otherwise follow the instructions on https://certbot.eff.org)
+root@host:~$ echo deb http://ftp.debian.org/debian jessie-backports main>/etc/apt/sources.list.d/jessie-backports.list
+root@host:~$ apt-get update
+root@host:~$ apt-get install certbot -t jessie-backports
+
+# register with letsencrypt
+root@host:~$ certbot certonly
+[select the webroot method]
+[set your domain name]
+[set the web root /home/naytrading/naytrading/NAYtrading.Node/static]
+
+# link the certificate
+root@host:~$ ln -s /etc/letsencrypt/live/[YOUR DOMAIN]/privkey.pem /home/naytrading/naytrading/NAYtrading.Node/keys/privkey.pem
+root@host:~$ ln -s /etc/letsencrypt/live/[YOUR DOMAIN]/cert.pem /home/naytrading/naytrading/NAYtrading.Node/keys/cert.pem
+root@host:~$ ln -s /etc/letsencrypt/live/[YOUR DOMAIN]/chain.pem /home/naytrading/naytrading/NAYtrading.Node/keys/chain.pem
+
+# enable https
+root@host:~$ su naytrading
+naytrading@host:~/naytrading/NAYtrading.Node$ vi app/config/config.json
+[add a new line] "https_enabled": true
+:wq
+naytrading@host:~/naytrading/NAYtrading.Node$ killall production.sh
+naytrading@host:~/naytrading/NAYtrading.Node$ killall node
 naytrading@host:~/naytrading/NAYtrading.Node$ ./production.sh &
 ```
 </details><p></p>

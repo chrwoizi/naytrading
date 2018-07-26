@@ -1,4 +1,7 @@
 var express = require('express');
+var https = require('https');
+var http = require('http');
+var fs = require('fs');
 var app = express();
 var passport = require('passport');
 var session = require('express-session');
@@ -47,6 +50,7 @@ var sql = require('./app/sql/sql');
 
     // For static files
     app.use('/static', express.static('./static/'));
+    app.use('/.well-known', express.static('./static/.well-known'));
     app.use('/angular', express.static('./node_modules/angular/'));
     app.use('/angular-chart.js', express.static('./node_modules/angular-chart.js/dist/'));
     app.use('/angular-resource', express.static('./node_modules/angular-resource/'));
@@ -94,15 +98,18 @@ var sql = require('./app/sql/sql');
 
     });
 
+    var httpsOptions = {
+        key: fs.readFileSync(config.https_key),
+        cert: fs.readFileSync(config.https_cert),
+        ca: fs.readFileSync(config.https_ca)
+    };
 
-    // Start server
-    app.listen(config.port, function (err) {
+    http.createServer(app).listen(config.port_http, () => {
+        console.log('HTTP Server running on port ' + config.port_http);
+    });
 
-        if (!err)
-            console.log("Site is live");
-        else
-            console.log(err);
-
+    https.createServer(httpsOptions, app).listen(config.port_https, () => {
+        console.log('HTTPS Server running on port ' + config.port_https);
     });
 
     setTimeout(function () {
