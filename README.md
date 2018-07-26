@@ -95,18 +95,21 @@ root@host:~$ apt-get update
 root@host:~$ apt-get install certbot -t jessie-backports
 
 # register with letsencrypt
-root@host:~$ certbot certonly
+root@host:~$ su naytrading
+naytrading@host:~/naytrading/NAYtrading.Node$ certbot certonly --config-dir=./letsencrypt/config --logs-dir=./letsencrypt/logs --work-dir=./letsencrypt/work-dir
 [select the webroot method]
-[set your domain name]
-[set the web root /home/naytrading/naytrading/NAYtrading.Node/static]
+[enter your email address]
+[read and agree to the terms of service]
+[enter your domain name]
+[select enter a new webroot]
+[enter the web root /home/naytrading/naytrading/NAYtrading.Node/static]
 
 # link the certificate
-root@host:~$ ln -s /etc/letsencrypt/live/[YOUR DOMAIN]/privkey.pem /home/naytrading/naytrading/NAYtrading.Node/keys/privkey.pem
-root@host:~$ ln -s /etc/letsencrypt/live/[YOUR DOMAIN]/cert.pem /home/naytrading/naytrading/NAYtrading.Node/keys/cert.pem
-root@host:~$ ln -s /etc/letsencrypt/live/[YOUR DOMAIN]/chain.pem /home/naytrading/naytrading/NAYtrading.Node/keys/chain.pem
+naytrading@host:~/naytrading/NAYtrading.Node$ ln -s ./letsencrypt/config/live/[YOUR DOMAIN]/privkey.pem ./keys/privkey.pem
+naytrading@host:~/naytrading/NAYtrading.Node$ ln -s ./letsencrypt/config/live/[YOUR DOMAIN]/cert.pem ./keys/cert.pem
+naytrading@host:~/naytrading/NAYtrading.Node$ ln -s ./letsencrypt/config/live/[YOUR DOMAIN]/chain.pem ./keys/chain.pem
 
 # enable https
-root@host:~$ su naytrading
 naytrading@host:~/naytrading/NAYtrading.Node$ vi app/config/config.json
 [add a new line] "https_enabled": true
 :wq
