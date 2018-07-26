@@ -105,9 +105,9 @@ naytrading@host:~/naytrading/NAYtrading.Node$ certbot certonly --config-dir=./le
 [enter the web root /home/naytrading/naytrading/NAYtrading.Node/static]
 
 # link the certificate
-naytrading@host:~/naytrading/NAYtrading.Node$ ln -s ./letsencrypt/config/live/[YOUR DOMAIN]/privkey.pem ./keys/privkey.pem
-naytrading@host:~/naytrading/NAYtrading.Node$ ln -s ./letsencrypt/config/live/[YOUR DOMAIN]/cert.pem ./keys/cert.pem
-naytrading@host:~/naytrading/NAYtrading.Node$ ln -s ./letsencrypt/config/live/[YOUR DOMAIN]/chain.pem ./keys/chain.pem
+naytrading@host:~/naytrading/NAYtrading.Node$ ln -s ../letsencrypt/config/live/[YOUR DOMAIN]/privkey.pem ./keys/privkey.pem
+naytrading@host:~/naytrading/NAYtrading.Node$ ln -s ../letsencrypt/config/live/[YOUR DOMAIN]/cert.pem ./keys/cert.pem
+naytrading@host:~/naytrading/NAYtrading.Node$ ln -s ../letsencrypt/config/live/[YOUR DOMAIN]/chain.pem ./keys/chain.pem
 
 # enable https
 naytrading@host:~/naytrading/NAYtrading.Node$ vi app/config/config.json
