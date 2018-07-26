@@ -98,19 +98,21 @@ var sql = require('./app/sql/sql');
 
     });
 
-    var httpsOptions = {
-        key: fs.readFileSync(config.https_key),
-        cert: fs.readFileSync(config.https_cert),
-        ca: fs.readFileSync(config.https_ca)
-    };
-
     http.createServer(app).listen(config.port_http, () => {
         console.log('HTTP Server running on port ' + config.port_http);
     });
 
-    https.createServer(httpsOptions, app).listen(config.port_https, () => {
-        console.log('HTTPS Server running on port ' + config.port_https);
-    });
+    if (config.https_enabled) {
+        var httpsOptions = {
+            key: fs.readFileSync(config.https_key),
+            cert: fs.readFileSync(config.https_cert),
+            ca: fs.readFileSync(config.https_ca)
+        };
+    
+        https.createServer(httpsOptions, app).listen(config.port_https, () => {
+            console.log('HTTPS Server running on port ' + config.port_https);
+        });
+    }
 
     setTimeout(function () {
         new Promise(function (resolve, reject) { splitJob.run(); });
