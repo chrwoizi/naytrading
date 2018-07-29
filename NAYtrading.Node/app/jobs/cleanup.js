@@ -67,6 +67,15 @@ async function cleanupDuplicates() {
                         Snapshot_ID: snapshots[i].ID
                     }
                 });
+            await model.trade.update(
+                {
+                    Snapshot_ID: snapshots[0].ID
+                },
+                {
+                    where: {
+                        Snapshot_ID: snapshots[i].ID
+                    }
+                });
             await model.snapshot.destroy({
                 where: {
                     ID: snapshots[i].ID
@@ -82,12 +91,12 @@ async function cleanupMissingRates() {
     });
 
     for (var i = 0; i < rows.length; ++i) {
-        console.log("deleting snapshot " + rows[i].ID + " for instrument " + rows[i].Instrument_ID + " because of missing rates in time span");
-        await model.snapshot.destroy({
+        console.log("snapshot " + rows[i].ID + " for instrument " + rows[i].Instrument_ID + " has missing rates in time span");
+        /*await model.snapshot.destroy({
             where: {
                 ID: rows[i].ID
             }
-        })
+        });*/
     }
 }
 
@@ -97,12 +106,12 @@ async function cleanupLateBegin() {
     });
 
     for (var i = 0; i < rows.length; ++i) {
-        console.log("deleting snapshot " + rows[i].ID + " for instrument " + rows[i].Instrument_ID + " because first rate is late");
-        await model.snapshot.destroy({
+        console.log("snapshot " + rows[i].ID + " for instrument " + rows[i].Instrument_ID + " first rate is late");
+        /*await model.snapshot.destroy({
             where: {
                 ID: rows[i].ID
             }
-        })
+        });*/
     }
 }
 
