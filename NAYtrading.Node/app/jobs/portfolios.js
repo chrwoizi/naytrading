@@ -35,7 +35,11 @@ async function getOpenValues(user, fromTime) {
     return openTradeValuesSum[0].Value;
 }
 
+exports.updatingUser = null;
+
 exports.updateUser = async function(user) {
+    exports.updatingUser = user;
+
     var latest = await model.portfolio.find({
         where: {
             User: user
@@ -178,6 +182,8 @@ exports.updateUser = async function(user) {
         OpenCount: open,
         CompleteCount: complete
     });
+
+    exports.updatingUser = null;
 };
 
 exports.run = async function () {
