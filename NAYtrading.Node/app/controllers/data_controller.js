@@ -4,6 +4,7 @@ var sql = require('../sql/sql');
 var dateFormat = require('dateformat');
 var fs = require('fs');
 var viewsController = require('./views_controller.js');
+var portfoliosJob = require('../jobs/portfolios.js');
 
 var stats_sql = "";
 try {
@@ -204,7 +205,7 @@ function getErrors(stats) {
     return errors;
 }
 
-exports.getStats = async function (req, res) {
+exports.getStats = async function(req, res) {
     try {
         if (req.isAuthenticated()) {
 
@@ -226,11 +227,21 @@ exports.getStats = async function (req, res) {
         }
     }
     catch (error) {
+        if (portfoliosJob.updatingUser != req.user.email) {
+            await sql.query("DELETE FROM trades WHERE User = @user", {
+                "@user": req.user.email
+            });
+
+            await sql.query("DELETE FROM portfolios WHERE User = @user", {
+                "@user": req.user.email
+            });
+        }
+
         return500(res, error);
     }
 };
 
-exports.clearDecisions = async function (req, res) {
+exports.clearDecisions = async function(req, res) {
     try {
         if (req.isAuthenticated()) {
 
