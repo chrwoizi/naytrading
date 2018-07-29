@@ -91,59 +91,57 @@ var sql = require('./app/sql/sql');
 
         console.log('Database initialized')
 
+        http.createServer(app).listen(config.port_http, () => {
+            console.log('HTTP Server running on port ' + config.port_http);
+        });
 
+        if (config.https_enabled) {
+            var httpsOptions = {
+                key: fs.readFileSync(config.https_key),
+                cert: fs.readFileSync(config.https_cert),
+                ca: fs.readFileSync(config.https_ca)
+            };
+        
+            https.createServer(httpsOptions, app).listen(config.port_https, () => {
+                console.log('HTTPS Server running on port ' + config.port_https);
+            });
+        }
+    
+        setTimeout(function () {
+            new Promise(function (resolve, reject) { splitJob.run(); });
+        }, 1000);
+
+        setTimeout(function () {
+            new Promise(function (resolve, reject) { instrumentsJob.run(); });
+        }, 2000);
+
+        setTimeout(function () {
+            new Promise(function (resolve, reject) { sourcesJob.run(); });
+        }, 3000);
+
+        setTimeout(function () {
+            new Promise(function (resolve, reject) { cleanupJob.run(); });
+        }, 4000);
+
+        setTimeout(function () {
+            new Promise(function (resolve, reject) { strikesJob.run(); });
+        }, 6000);
+    
+        setTimeout(function () {
+            new Promise(function (resolve, reject) { portfoliosJob.run(); });
+        }, 8000);
+    
+        setTimeout(function () {
+            new Promise(function (resolve, reject) { preloadJob.run(); });
+        }, 10000);
+
+        setTimeout(function () {
+            new Promise(function (resolve, reject) { processJob.run(); });
+        }, 12000);
+    
     }).catch(function (err) {
 
         console.log(err, "Something went wrong with the Database Update!")
 
     });
-
-    http.createServer(app).listen(config.port_http, () => {
-        console.log('HTTP Server running on port ' + config.port_http);
-    });
-
-    if (config.https_enabled) {
-        var httpsOptions = {
-            key: fs.readFileSync(config.https_key),
-            cert: fs.readFileSync(config.https_cert),
-            ca: fs.readFileSync(config.https_ca)
-        };
-    
-        https.createServer(httpsOptions, app).listen(config.port_https, () => {
-            console.log('HTTPS Server running on port ' + config.port_https);
-        });
-    }
-
-    setTimeout(function () {
-        new Promise(function (resolve, reject) { splitJob.run(); });
-    }, 1000);
-
-    setTimeout(function () {
-        new Promise(function (resolve, reject) { instrumentsJob.run(); });
-    }, 2000);
-
-    setTimeout(function () {
-        new Promise(function (resolve, reject) { sourcesJob.run(); });
-    }, 3000);
-
-    setTimeout(function () {
-        new Promise(function (resolve, reject) { cleanupJob.run(); });
-    }, 4000);
-
-    setTimeout(function () {
-        new Promise(function (resolve, reject) { strikesJob.run(); });
-    }, 6000);
-
-    setTimeout(function () {
-        new Promise(function (resolve, reject) { portfoliosJob.run(); });
-    }, 8000);
-
-    setTimeout(function () {
-        new Promise(function (resolve, reject) { preloadJob.run(); });
-    }, 10000);
-
-    setTimeout(function () {
-        new Promise(function (resolve, reject) { processJob.run(); });
-    }, 12000);
-
 })();
