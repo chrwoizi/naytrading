@@ -20,17 +20,17 @@ module.exports = (sequelize, DataTypes) => {
         },
 
         Deposit: {
-            type: DataTypes.DECIMAL(8, 2),
+            type: DataTypes.DECIMAL(14, 2),
             allowNull: false
         },
 
         Balance: {
-            type: DataTypes.DECIMAL(8, 2),
+            type: DataTypes.DECIMAL(14, 2),
             allowNull: false
         },
 
         Value: {
-            type: DataTypes.DECIMAL(8, 2),
+            type: DataTypes.DECIMAL(14, 2),
             allowNull: false
         },
 
