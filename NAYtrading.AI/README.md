@@ -44,8 +44,6 @@ Once you have a trained network for buying (and preferably another network for s
 
 Go to [http://naytrading.com](http://naytrading.com) and register a new account for your AI. A recommended account email address is your real email address followed by *.ai*, e.g. *john.doe@mailbox.com.ai*. That email address doesn't need to actually exist. Consider it an account "name". Using that convention is optional, but it automatically enables some convenient features.
 
-Log in with your AI account and click the *Add all instruments* button on the [instruments page](http://naytrading.com/app/#!/instruments).
-
 Drag your model folder(s) onto client_on_dropped_models.bat or run client.py from the console:
 
 ```sh
