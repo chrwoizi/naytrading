@@ -12,7 +12,7 @@ If you have an NVIDIA graphics card:
 
 Download the sources of [NAYtrading.AI](/NAYtrading.AI) and [NAYtrading.Common](/NAYtrading.Common) or the whole [NAYtrading](/../../) repository. You should now have a folder that contains both the NAYtrading.AI and NAYtrading.Common folders.
 
-Go to your N.A.Y.trading [account page](http://naytrading.com/manage) and download your processed trade decisions as CSV files using the download buttons in the *Export preprocessed training data for neural networks* section.
+Go to your N.A.Y.trading [account page](http://naytrading.com/manage) and download your processed trade decisions as CSV files using the download buttons in the *Export preprocessed training data for artifical intelligence training* section.
 Save the files in the NAYtrading.AI folder.
 
 Run [main_buying_train_norm.bat](main_buying_train_norm.bat) or [main_selling_train_norm.bat](main_selling_train_norm.bat) from the NAYtrading.AI folder.
