@@ -17,7 +17,7 @@ from GoogLeNet import GoogLeNet
 from InceptionResNetV2 import InceptionResNetV2
 from Data import shape_features
 
-sys.path.append('../NAYtrading.Common')
+sys.path.append('../../NAYtrading.Common')
 from NAYtrading import NAYtrading
 
 parser = argparse.ArgumentParser()
@@ -299,7 +299,7 @@ if __name__ == '__main__':
                 else:
                     print("get snapshot")
                     snapshot = naytrading.new_snapshot()
-                    if snapshot is None:
+                    if snapshot is None or snapshot['Rates'] is None or len(snapshot['Rates']) == 0:
                         sleep = FLAGS.no_snapshot_sleep
                         print("no snapshot available")
                     else:
