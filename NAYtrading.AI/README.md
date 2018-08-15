@@ -12,7 +12,7 @@ If you have an NVIDIA graphics card:
 
 Download the sources of [NAYtrading.AI](/NAYtrading.AI) and [NAYtrading.Common](/NAYtrading.Common) or the whole [NAYtrading](/../../) repository. You should now have a folder that contains both the NAYtrading.AI and NAYtrading.Common folders.
 
-Go to your N.A.Y.trading [account page](http://naytrading.com/manage) and download your processed trade decisions as CSV files using the download buttons in the *Export preprocessed training data for neural networks* section.
+Go to your N.A.Y.trading [account page](http://naytrading.com/manage) and download your processed trade decisions as CSV files using the download buttons in the *Export preprocessed training data for artifical intelligence training* section.
 Save the files in the NAYtrading.AI folder.
 
 Run [main_buying_train_norm.bat](main_buying_train_norm.bat) or [main_selling_train_norm.bat](main_selling_train_norm.bat) from the NAYtrading.AI folder.
@@ -43,8 +43,6 @@ Training is a hardware demanding process. If you are using a graphics card, it c
 Once you have a trained network for buying (and preferably another network for selling), you can run client.py to act as a user on N.A.Y.trading using the trained network(s) to decide on snapshots automatically. 
 
 Go to [http://naytrading.com](http://naytrading.com) and register a new account for your AI. A recommended account email address is your real email address followed by *.ai*, e.g. *john.doe@mailbox.com.ai*. That email address doesn't need to actually exist. Consider it an account "name". Using that convention is optional, but it automatically enables some convenient features.
-
-Log in with your AI account and click the *Add all instruments* button on the [instruments page](http://naytrading.com/app/#!/instruments).
 
 Drag your model folder(s) onto client_on_dropped_models.bat or run client.py from the console:
 
