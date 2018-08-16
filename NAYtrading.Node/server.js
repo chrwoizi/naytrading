@@ -9,6 +9,10 @@ var MySQLStore = require('express-mysql-session')(session);
 var bodyParser = require('body-parser');
 var env = require('dotenv').load();
 var exphbs = require('express-handlebars');
+
+require('sequelize'); // must be loaded before envconfig
+var config = require('./app/config/envconfig');
+
 var splitJob = require('./app/jobs/split');
 var instrumentsJob = require('./app/jobs/instruments');
 var cleanupJob = require('./app/jobs/cleanup');
@@ -17,7 +21,7 @@ var strikesJob = require('./app/jobs/strikes');
 var portfoliosJob = require('./app/jobs/portfolios');
 var processJob = require('./app/jobs/process');
 var sourcesJob = require('./app/jobs/sources');
-var config = require('./app/config/envconfig');
+
 var sql = require('./app/sql/sql');
 
 (async () => {
