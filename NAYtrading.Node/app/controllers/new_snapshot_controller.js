@@ -346,8 +346,8 @@ exports.createNewRandomSnapshot = async function (req, res) {
             });
 
             if (forgotten && forgotten.length > 0) {
-                var index = getRandomIndex(forgotten.length, config.random_order_weight);
-                var viewModel = await snapshotController.getSnapshot(forgotten[index].ID, req.user.email);
+                // var index = getRandomIndex(forgotten.length, config.random_order_weight);
+                var viewModel = await snapshotController.getSnapshot(forgotten[0].ID, req.user.email);
                 res.json(viewModel);
                 return;
             }
