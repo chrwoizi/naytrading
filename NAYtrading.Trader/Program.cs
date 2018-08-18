@@ -161,7 +161,7 @@ namespace NAYtrading.Trader
 
                                 var suggestionsQuery =
                                     from suggestion in db.TradeSuggestions
-                                    where suggestion.Time >= oldestSuggestionTime
+                                    where suggestion.Action == "sell" || suggestion.Time >= oldestSuggestionTime
                                     where suggestion.Logs.All(x => x.Status != Status.Complete.ToString())
                                     let lastLog = suggestion.Logs.OrderByDescending(x => x.Time).FirstOrDefault()
                                     where lastLog == null || lastLog.Status == Status.Initial.ToString() || lastLog.Status == Status.TemporaryError.ToString()
