@@ -44,7 +44,7 @@ parser.add_argument('--min_gain', type=float, default=0.04, help='Wait automatic
 parser.add_argument('--max_loss', type=float, default=0.3, help='Sell automatically if the loss is greater than this value. Set 0 to disable.')
 parser.add_argument('--max_gain', type=float, default=0.15, help='Sell automatically if the gain is greater than this value. Set 0 to disable.')
 parser.add_argument('--sell_at_max_factor', type=float, default=1, help='Sell automatically if the current price is at the historic maximum multiplied by this value. Set 0 to disable.')
-
+parser.add_argument('--max_age', type=float, default=0, help='The maximum age of a snapshot in hours from which to grab in chronological order. Older snapshots will be grabbed from newest to oldest. Set 0 to use server default.')
 
 def sample(chart, x):
     return chart[max(0, min(int(x), len(chart) - 1))]
@@ -298,7 +298,7 @@ if __name__ == '__main__':
                     print(FLAGS.sell_label + " checkpoint is incomplete")
                 else:
                     print("get snapshot")
-                    snapshot = naytrading.new_snapshot()
+                    snapshot = naytrading.new_snapshot(FLAGS.max_age)
                     if snapshot is None or snapshot['Rates'] is None or len(snapshot['Rates']) == 0:
                         sleep = FLAGS.no_snapshot_sleep
                         print("no snapshot available")

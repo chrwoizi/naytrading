@@ -35,8 +35,10 @@ class NAYtrading:
             raise Exception('%s returned %d' % (url, r.status_code))
 
 
-    def new_snapshot(self):
+    def new_snapshot(self, max_age):
         url = self.naytrading_url + '/api/snapshot/new/random'
+        if max_age > 0:
+            url = url + '?max_age=' + str(max_age)
         r = self.session.get(url, proxies = self.proxies, timeout = 120)
 
         if r.status_code == 404:
