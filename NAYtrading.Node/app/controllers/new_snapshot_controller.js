@@ -334,9 +334,14 @@ exports.createNewRandomSnapshot = async function (req, res) {
 
             var isAI = req.user.email.endsWith(".ai");
 
+            var hours = config.max_unused_snapshot_age_hours;
+            if (req.query.max_age) {
+                hours = parseFloat(req.query.max_age);
+            }
+
             var forgotten = await sql.query(rank_open_snapshots, {
                 "@userName": req.user.email,
-                "@hours": config.max_unused_snapshot_age_hours,
+                "@hours": hours,
                 "@isAI": isAI ? 1 : 0
             });
 
