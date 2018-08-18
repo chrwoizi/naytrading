@@ -6,7 +6,7 @@ import re
 import getpass
 import datetime
 
-sys.path.append(os.path.abspath('..\\..\\NAYtrading.Common'))
+sys.path.append(os.path.abspath('../../NAYtrading.Common'))
 from FileBinaryProgress import *
 from NAYtrading import *
 from KillFileMonitor import *
