@@ -17,6 +17,7 @@ INNER JOIN snapshots AS buySnapshot
 ON buySnapshot.ID = trade.Snapshot_ID
 INNER JOIN usersnapshots AS buyUserSnapshot
 ON buyUserSnapshot.Snapshot_ID = trade.Snapshot_ID
+AND buyUserSnapshot.User = @userName
 WHERE 
 	trade.User = @userName
 	AND buyUserSnapshot.Decision = 'buy'
