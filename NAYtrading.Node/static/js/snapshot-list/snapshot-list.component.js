@@ -48,7 +48,12 @@ angular.
                 }, function (error) {
                     self.loading = false;
                     if (typeof (error.data) !== 'undefined' && error.data != null) {
-                        alert('error: ' + JSON.stringify(error.data));
+                        if (error.data.error == 'unauthorized') {
+                            window.location.href = 'signin';
+                        }
+                        else {
+                            alert('error: ' + JSON.stringify(error.data));
+                        }
                     }
                 });
 
