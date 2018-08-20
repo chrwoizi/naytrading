@@ -45,8 +45,13 @@ angular.
                     self.pagedItems = self.filteredItems.slice(0, self.viewCount);
                 }, function (error) {
                     self.loading = false;
-                    if (typeof(error.data) !== 'undefined' && error.data != null) {
-                        alert('error: ' + JSON.stringify(error.data));
+                    if (typeof (error.data) !== 'undefined' && error.data != null) {
+                        if (error.data.error == 'unauthorized') {
+                            window.location.href = 'signin';
+                        }
+                        else {
+                            alert('error: ' + JSON.stringify(error.data));
+                        }
                     }
                 });
 

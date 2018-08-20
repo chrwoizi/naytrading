@@ -12,7 +12,7 @@ angular.
                 self.orderProp = "-DS";
 
                 self.query = "";
-                self.filter = function(query) {
+                self.filter = function (query) {
                     return function (value, index, array) {
                         if (query == "") {
                             return true;
@@ -39,18 +39,18 @@ angular.
                     self.query = $routeParams.query;
                 }
 
-                self.formatCurrency = function(n) {
-                    if (typeof(n) === 'undefined')
+                self.formatCurrency = function (n) {
+                    if (typeof (n) === 'undefined')
                         return undefined;
                     var abbrv = ["", "T", "M"];
-                    for(var i = 0; i < abbrv.length - 1 && Math.abs(n) >= 1000; ++i) {
+                    for (var i = 0; i < abbrv.length - 1 && Math.abs(n) >= 1000; ++i) {
                         n /= 1000.0;
                     }
                     return n.toFixed(2) + abbrv[i];
                 }
 
-                self.formatPercentage = function(n) {
-                    if (typeof(n) === 'undefined')
+                self.formatPercentage = function (n) {
+                    if (typeof (n) === 'undefined')
                         return undefined;
                     return (n * 100).toFixed(2);
                 }
@@ -152,7 +152,7 @@ angular.
                                     display: true,
                                     position: 'right',
                                     ticks: {
-                                        callback: function(value, index, values) {
+                                        callback: function (value, index, values) {
                                             return value + '%';
                                         }
                                     }
@@ -177,7 +177,7 @@ angular.
                     self.labels = stats.ValueHistory.map(function (v) {
                         return v.Time;
                     });
-                    
+
                     self.data = stats.ValueHistory.map(function (v, i) {
                         return 100 * v.Return;
                     });
@@ -187,8 +187,13 @@ angular.
                     self.pagedItems = self.filteredItems.slice(0, self.viewCount);
                 }, function (error) {
                     self.loading = false;
-                    if (typeof(error.data) !== 'undefined' && error.data != null) {
-                        alert('error: ' + JSON.stringify(error.data));
+                    if (typeof (error.data) !== 'undefined' && error.data != null) {
+                        if (error.data.error == 'unauthorized') {
+                            window.location.href = 'signin';
+                        }
+                        else {
+                            alert('error: ' + JSON.stringify(error.data));
+                        }
                     }
                 });
 

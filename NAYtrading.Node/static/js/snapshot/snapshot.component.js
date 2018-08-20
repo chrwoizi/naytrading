@@ -40,7 +40,12 @@ angular.
                         if (typeof (error.data) !== 'undefined' && error.data != null) {
                             console.error('error: ' + JSON.stringify(error.data));
                             if (typeof (error.data.error) === 'string' && error.data.error.length > 0) {
-                                alert('error: ' + error.data.error);
+                                if (error.data.error == 'unauthorized') {
+                                    window.location.href = 'signin';
+                                }
+                                else {
+                                    alert('error: ' + error.data.error);
+                                }
                             }
                         }
                     }
@@ -238,7 +243,12 @@ angular.
                         if (typeof (error.data) !== 'undefined' && error.data != null) {
                             console.error('error: ' + JSON.stringify(error.data));
                             if (error.data.error) {
-                                alert(error.data.error);
+                                if (error.data.error == 'unauthorized') {
+                                    window.location.href = 'signin';
+                                }
+                                else {
+                                    alert('error: ' + error.data.error);
+                                }
                             }
                         }
                         self.loading = false;
