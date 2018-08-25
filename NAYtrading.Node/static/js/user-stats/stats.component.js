@@ -189,7 +189,7 @@ angular.
                     self.loading = false;
                     if (typeof (error.data) !== 'undefined' && error.data != null) {
                         if (error.data.error == 'unauthorized') {
-                            window.location.href = 'signin';
+                            window.location.href = '/signin';
                         }
                         else {
                             alert('error: ' + JSON.stringify(error.data));
