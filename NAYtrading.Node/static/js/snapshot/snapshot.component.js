@@ -41,7 +41,7 @@ angular.
                             console.error('error: ' + JSON.stringify(error.data));
                             if (typeof (error.data.error) === 'string' && error.data.error.length > 0) {
                                 if (error.data.error == 'unauthorized') {
-                                    window.location.href = 'signin';
+                                    window.location.href = '/signin';
                                 }
                                 else {
                                     alert('error: ' + error.data.error);
@@ -244,7 +244,7 @@ angular.
                             console.error('error: ' + JSON.stringify(error.data));
                             if (error.data.error) {
                                 if (error.data.error == 'unauthorized') {
-                                    window.location.href = 'signin';
+                                    window.location.href = '/signin';
                                 }
                                 else {
                                     alert('error: ' + error.data.error);
