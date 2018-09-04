@@ -6,7 +6,7 @@ import getpass
 import datetime
 import numpy as np
 import tensorflow as tf
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 import glob
 import shutil
 import re
@@ -66,14 +66,14 @@ def normalize(chart):
             chart[i] = (chart[i] - chart_min) / diff
 
 
-def plot(chart):
-    fig_size = plt.rcParams["figure.figsize"]
-    fig_size[0] = 7
-    fig_size[1] = 2
-    plt.rcParams["figure.figsize"] = fig_size
-
-    plt.plot(chart)
-    plt.show()
+# def plot(chart):
+#     fig_size = plt.rcParams["figure.figsize"]
+#     fig_size[0] = 7
+#     fig_size[1] = 2
+#     plt.rcParams["figure.figsize"] = fig_size
+# 
+#     plt.plot(chart)
+#     plt.show()
 
 
 def get_chart(snapshot):
