@@ -49,16 +49,9 @@ Go to [http://naytrading.com](http://naytrading.com) and register a new account 
 <summary>How to install on Raspberry PI</summary>
 
 ```sh
-pi@raspberrypi:~/ $ sudo apt-get install libssl-dev openssl
-pi@raspberrypi:~/ $ sudo apt-get install libssl1.0-dev
-pi@raspberrypi:~/ $ sudo apt-get install build-essential checkinstall
-pi@raspberrypi:~/ $ sudo apt-get install libreadline-gplv2-dev libncursesw5-dev libssl-dev libsqlite3-dev tk-dev libgdbm-dev libc6-dev libbz2-dev libpq-dev zlib1g-dev
-pi@raspberrypi:~/ $ wget https://www.python.org/ftp/python/3.4.9/Python-3.4.9.tar.xz
-pi@raspberrypi:~/ $ tar xf Python-3.4.9.tar.xz
-pi@raspberrypi:~/Python-3.4.9 $ cd Python-3.4.9
-pi@raspberrypi:~/Python-3.4.9 $ ./configure
-pi@raspberrypi:~/Python-3.4.9 $ make
-pi@raspberrypi:~/Python-3.4.9 $ sudo make altinstall
+pi@raspberrypi:~/ $ git clone https://github.com/chrwoizi/naytrading.git
+pi@raspberrypi:~/ $ cd naytrading/NAYtrading.AI
+pi@raspberrypi:~/naytrading/NAYtrading.AI $ ./install.sh
 
 ```
 
@@ -68,8 +61,6 @@ Run client.py with trained buying and selling models:
 # replace %1 with your buying model directory path, e.g. model20180629121604
 # replace %2 with your selling model directory path, e.g. model20180703114329
 # replace %3 with the number of seconds the AI should wait between snapshots, e.g. 30
-pip3.4 install requests
-pip3.4 install tensorflow
 python3.4 client.py --buy_checkpoint_dir=%1\\checkpoint --sell_checkpoint_dir=%2\\checkpoint --sleep=%3
 ```
 
@@ -78,8 +69,6 @@ Having a selling network is optional. If you don't have enough training data yet
 # replace %1 with your buying model directory path, e.g. model20180629121604
 # replace %2 with the number of seconds the AI should wait between snapshots, e.g. 30
 # see client.py for help on the threshold parameters.
-sudo pip3.4 install requests
-sudo pip3.4 install tensorflow
 python3.4 client.py --buy_checkpoint_dir=%1\\checkpoint --sleep=%2 --min_loss=0.1 --min_gain=0.04 --max_loss=0.3 --max_gain=0.15 --sell_at_max_factor=1
 ```
 
