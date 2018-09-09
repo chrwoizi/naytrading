@@ -44,14 +44,33 @@ Once you have a trained network for buying (and preferably another network for s
 
 Go to [http://naytrading.com](http://naytrading.com) and register a new account for your AI. A recommended account email address is your real email address followed by *.ai*, e.g. *john.doe@mailbox.com.ai*. That email address doesn't need to actually exist. Consider it an account "name". Using that convention is optional, but it automatically enables some convenient features.
 
-Drag your model folder(s) onto client_on_dropped_models.bat or run client.py from the console:
+
+<details>
+<summary>How to install on Raspberry PI</summary>
+
+```sh
+pi@raspberrypi:~/ $ sudo apt-get install libssl-dev openssl
+pi@raspberrypi:~/ $ sudo apt-get install libssl1.0-dev
+pi@raspberrypi:~/ $ sudo apt-get install build-essential checkinstall
+pi@raspberrypi:~/ $ sudo apt-get install libreadline-gplv2-dev libncursesw5-dev libssl-dev libsqlite3-dev tk-dev libgdbm-dev libc6-dev libbz2-dev libpq-dev zlib1g-dev
+pi@raspberrypi:~/ $ wget https://www.python.org/ftp/python/3.4.9/Python-3.4.9.tar.xz
+pi@raspberrypi:~/ $ tar xf Python-3.4.9.tar.xz
+pi@raspberrypi:~/Python-3.4.9 $ cd Python-3.4.9
+pi@raspberrypi:~/Python-3.4.9 $ ./configure
+pi@raspberrypi:~/Python-3.4.9 $ make
+pi@raspberrypi:~/Python-3.4.9 $ sudo make altinstall
+
+```
+
+Run client.py with trained buying and selling models:
 
 ```sh
 # replace %1 with your buying model directory path, e.g. model20180629121604
 # replace %2 with your selling model directory path, e.g. model20180703114329
 # replace %3 with the number of seconds the AI should wait between snapshots, e.g. 30
-pip install requests
-python client.py --buy_checkpoint_dir=%1\\checkpoint --sell_checkpoint_dir=%2\\checkpoint --sleep=%3
+pip3.4 install requests
+pip3.4 install tensorflow
+python3.4 client.py --buy_checkpoint_dir=%1\\checkpoint --sell_checkpoint_dir=%2\\checkpoint --sleep=%3
 ```
 
 Having a selling network is optional. If you don't have enough training data yet to achieve a satisfying ratio of sells_correct (see Tensorboard above), you can remove the sell_checkpoint_dir option and use thresholds to make sell decisions.
@@ -59,9 +78,40 @@ Having a selling network is optional. If you don't have enough training data yet
 # replace %1 with your buying model directory path, e.g. model20180629121604
 # replace %2 with the number of seconds the AI should wait between snapshots, e.g. 30
 # see client.py for help on the threshold parameters.
+sudo pip3.4 install requests
+sudo pip3.4 install tensorflow
+python3.4 client.py --buy_checkpoint_dir=%1\\checkpoint --sleep=%2 --min_loss=0.1 --min_gain=0.04 --max_loss=0.3 --max_gain=0.15 --sell_at_max_factor=1
+```
+
+</details><p></p>
+
+<details>
+<summary>How to install on Windows</summary>
+
+Download Python 3.x from https://www.python.org/downloads/ and run the installer.
+
+Drag your model folder(s) onto client_on_dropped_models.bat or run client.py from the console:
+
+```sh
+# replace %1 with your buying model directory path, e.g. model20180629121604
+# replace %2 with your selling model directory path, e.g. model20180703114329
+# replace %3 with the number of seconds the AI should wait between snapshots, e.g. 30
 pip install requests
+pip install tensorflow
+python client.py --buy_checkpoint_dir=%1\\checkpoint --sell_checkpoint_dir=%2\\checkpoint --sleep=%3
+```
+
+Having a selling network is optional. If you don't have enough training data yet to achieve a satisfying ratio of sells_correct (see Tensorboard above), you can remove the sell_checkpoint_dir option and use thresholds to make sell decisions. Drag your buying model directory onto client_on_dropped_models.bat or run client.py from the console:
+```sh
+# replace %1 with your buying model directory path, e.g. model20180629121604
+# replace %2 with the number of seconds the AI should wait between snapshots, e.g. 30
+# see client.py for help on the threshold parameters.
+pip install requests
+pip install tensorflow
 python client.py --buy_checkpoint_dir=%1\\checkpoint --sleep=%2 --min_loss=0.1 --min_gain=0.04 --max_loss=0.3 --max_gain=0.15 --sell_at_max_factor=1
 ```
+
+</details><p></p>
 
 When asked, enter your AI account email address (the one ending on *.ai*) and its password. **Do not** enter your regular N.A.Y.trading account email address (e.g. *john.doe@mailbox.com*) because client.py will decide on snapshots using the given account and you probably don't want your real decisions mixed with the network's decisions.
 
