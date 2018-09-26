@@ -55,147 +55,159 @@ angular.
                     return (n * 100).toFixed(2);
                 }
 
-                self.loading = true;
-                self.stats = StatsService.query({}, function (stats) {
-                    self.loading = false;
-                    self.completeStats = {
-                        count: 0,
-                        minReturn: 9999999,
-                        maxReturn: 0,
-                        sumReturn: 0
-                    };
-                    self.openStats = {
-                        count: 0,
-                        minReturn: 9999999,
-                        maxReturn: 0,
-                        sumReturn: 0
-                    };
-                    self.combinedStats = {
-                        count: 0,
-                        minReturn: 9999999,
-                        maxReturn: 0,
-                        sumReturn: 0
-                    };
-                    self.account = {
-                        deposit: stats.Deposit,
-                        value: stats.Value,
-                        return: (stats.Value - stats.Deposit) / stats.Deposit,
-                        open: stats.OpenCount,
-                        complete: stats.CompleteCount
-                    };
-
-                    for (var i = 0; i < stats.Sales.length; i++) {
-                        var sale = stats.Sales[i];
-                        var currentStats = self.completeStats;
-                        if (sale.S == 'c') {
-                            currentStats = self.completeStats;
-                        } else if (sale.S == 'o') {
-                            currentStats = self.openStats;
-                        }
-                        currentStats.count++;
-                        self.combinedStats.count++;
-                        currentStats.sumReturn += sale.R;
-                        self.combinedStats.sumReturn += sale.R;
-                        currentStats.minReturn = Math.min(currentStats.minReturn, sale.R);
-                        self.combinedStats.minReturn = Math.min(self.combinedStats.minReturn, sale.R);
-                        currentStats.maxReturn = Math.max(currentStats.maxReturn, sale.R);
-                        self.combinedStats.maxReturn = Math.max(self.combinedStats.maxReturn, sale.R);
-                    }
-
-                    self.combinedStats.averageReturn = self.combinedStats.sumReturn / self.combinedStats.count;
-                    self.completeStats.averageReturn = self.completeStats.sumReturn / self.completeStats.count;
-                    self.openStats.averageReturn = self.openStats.sumReturn / self.openStats.count;
-
-                    if (self.completeStats.count == 0) {
+                function load(user) {
+                    self.loading = true;
+                    self.stats = StatsService.get({user: user}, function (stats) {
+                        self.loading = false;
+                        self.users = stats.Users;
+                        self.hasOtherUser = stats.Users.length > 1;
+                        self.user = user || stats.Users[0];
+                        self.isSignedInUser = self.user == stats.Users[0];
                         self.completeStats = {
                             count: 0,
-                            minReturn: NaN,
-                            maxReturn: NaN,
-                            sumReturn: NaN,
-                            averageReturn: NaN
+                            minReturn: 9999999,
+                            maxReturn: 0,
+                            sumReturn: 0
                         };
-                    }
-
-                    if (self.openStats.count == 0) {
                         self.openStats = {
                             count: 0,
-                            minReturn: NaN,
-                            maxReturn: NaN,
-                            sumReturn: NaN,
-                            averageReturn: NaN
+                            minReturn: 9999999,
+                            maxReturn: 0,
+                            sumReturn: 0
                         };
-                    }
-
-                    if (self.combinedStats.count == 0) {
                         self.combinedStats = {
                             count: 0,
-                            minReturn: NaN,
-                            maxReturn: NaN,
-                            sumReturn: NaN,
-                            averageReturn: NaN
+                            minReturn: 9999999,
+                            maxReturn: 0,
+                            sumReturn: 0
                         };
-                    }
+                        self.account = {
+                            deposit: stats.Deposit,
+                            value: stats.Value,
+                            return: (stats.Value - stats.Deposit) / stats.Deposit,
+                            open: stats.OpenCount,
+                            complete: stats.CompleteCount
+                        };
 
-                    self.series = ["Value"];
-                    self.datasetOverride = [
-                        {
-                            yAxisID: 'y-axis-2'
+                        for (var i = 0; i < stats.Sales.length; i++) {
+                            var sale = stats.Sales[i];
+                            var currentStats = self.completeStats;
+                            if (sale.S == 'c') {
+                                currentStats = self.completeStats;
+                            } else if (sale.S == 'o') {
+                                currentStats = self.openStats;
+                            }
+                            currentStats.count++;
+                            self.combinedStats.count++;
+                            currentStats.sumReturn += sale.R;
+                            self.combinedStats.sumReturn += sale.R;
+                            currentStats.minReturn = Math.min(currentStats.minReturn, sale.R);
+                            self.combinedStats.minReturn = Math.min(self.combinedStats.minReturn, sale.R);
+                            currentStats.maxReturn = Math.max(currentStats.maxReturn, sale.R);
+                            self.combinedStats.maxReturn = Math.max(self.combinedStats.maxReturn, sale.R);
                         }
-                    ];
 
-                    self.options = {
-                        scales: {
-                            yAxes: [
-                                {
-                                    id: 'y-axis-2',
-                                    type: 'linear',
-                                    display: true,
-                                    position: 'right',
-                                    ticks: {
-                                        callback: function (value, index, values) {
-                                            return value + '%';
+                        self.combinedStats.averageReturn = self.combinedStats.sumReturn / self.combinedStats.count;
+                        self.completeStats.averageReturn = self.completeStats.sumReturn / self.completeStats.count;
+                        self.openStats.averageReturn = self.openStats.sumReturn / self.openStats.count;
+
+                        if (self.completeStats.count == 0) {
+                            self.completeStats = {
+                                count: 0,
+                                minReturn: NaN,
+                                maxReturn: NaN,
+                                sumReturn: NaN,
+                                averageReturn: NaN
+                            };
+                        }
+
+                        if (self.openStats.count == 0) {
+                            self.openStats = {
+                                count: 0,
+                                minReturn: NaN,
+                                maxReturn: NaN,
+                                sumReturn: NaN,
+                                averageReturn: NaN
+                            };
+                        }
+
+                        if (self.combinedStats.count == 0) {
+                            self.combinedStats = {
+                                count: 0,
+                                minReturn: NaN,
+                                maxReturn: NaN,
+                                sumReturn: NaN,
+                                averageReturn: NaN
+                            };
+                        }
+
+                        self.series = ["Value"];
+                        self.datasetOverride = [
+                            {
+                                yAxisID: 'y-axis-2'
+                            }
+                        ];
+
+                        self.options = {
+                            scales: {
+                                yAxes: [
+                                    {
+                                        id: 'y-axis-2',
+                                        type: 'linear',
+                                        display: true,
+                                        position: 'right',
+                                        ticks: {
+                                            callback: function (value, index, values) {
+                                                return value + '%';
+                                            }
                                         }
                                     }
+                                ],
+                                xAxes: [{
+                                    ticks: {
+                                        autoSkip: true,
+                                        maxTicksLimit: 5,
+                                        maxRotation: 0 // angle in degrees
+                                    }
+                                }]
+                            },
+                            elements: {
+                                point: {
+                                    radius: 0
                                 }
-                            ],
-                            xAxes: [{
-                                ticks: {
-                                    autoSkip: true,
-                                    maxTicksLimit: 5,
-                                    maxRotation: 0 // angle in degrees
-                                }
-                            }]
-                        },
-                        elements: {
-                            point: {
-                                radius: 0
+                            },
+                            animation: false
+                        };
+
+                        self.labels = stats.ValueHistory.map(function (v) {
+                            return v.Time;
+                        });
+
+                        self.data = stats.ValueHistory.map(function (v, i) {
+                            return 100 * v.Return;
+                        });
+
+                        self.updateList();
+                        self.viewCount = Math.min(100, self.filteredItems.length);
+                        self.pagedItems = self.filteredItems.slice(0, self.viewCount);
+                    }, function (error) {
+                        self.loading = false;
+                        if (typeof (error.data) !== 'undefined' && error.data != null) {
+                            if (error.data.error == 'unauthorized') {
+                                window.location.href = '/signin';
                             }
-                        },
-                        animation: false
-                    };
-
-                    self.labels = stats.ValueHistory.map(function (v) {
-                        return v.Time;
-                    });
-
-                    self.data = stats.ValueHistory.map(function (v, i) {
-                        return 100 * v.Return;
-                    });
-
-                    self.updateList();
-                    self.viewCount = Math.min(100, self.filteredItems.length);
-                    self.pagedItems = self.filteredItems.slice(0, self.viewCount);
-                }, function (error) {
-                    self.loading = false;
-                    if (typeof (error.data) !== 'undefined' && error.data != null) {
-                        if (error.data.error == 'unauthorized') {
-                            window.location.href = '/signin';
+                            else {
+                                alert('error: ' + JSON.stringify(error.data));
+                            }
                         }
-                        else {
-                            alert('error: ' + JSON.stringify(error.data));
-                        }
-                    }
-                });
+                    });
+                }
+
+                self.onUserChanged = function () {
+                    load(self.user);
+                }
+
+                load(undefined);
 
                 self.loadMore = function () {
                     if (self.loading == false && self.viewCount < self.filteredItems.length) {
