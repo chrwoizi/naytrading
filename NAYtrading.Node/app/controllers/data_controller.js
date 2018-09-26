@@ -5,6 +5,7 @@ var dateFormat = require('dateformat');
 var fs = require('fs');
 var viewsController = require('./views_controller.js');
 var portfoliosJob = require('../jobs/portfolios.js');
+var config = require('../config/envconfig.js');
 
 var stats_sql = "";
 try {
@@ -205,21 +206,54 @@ function getErrors(stats) {
     return errors;
 }
 
-exports.getStats = async function(req, res) {
+exports.getStats = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
 
-            var stats = await getStatsForUser(req.user.email);
-
-            var errors = getErrors(stats);
-
-            if (errors.length > 0) {
-                console.log("Error in stats for user " + req.user.email + ": " + errors);
+            var users = [req.user.email];
+            
+            var otherUser = null;
+            if (req.user.email.endsWith(".ai")) {
+                otherUser = req.user.email.substr(0, req.user.email.length - 3);
+            }
+            else {
+                otherUser = req.user.email + ".ai";
             }
 
-            var viewModel = getStatsViewModel(stats);
-            res.json(viewModel);
+            var count = await sql.query("SELECT COUNT(1) as c FROM users WHERE email = @user", {
+                "@user": otherUser
+            });
 
+            if (count[0].c > 0) {
+                users.push(otherUser);
+            }
+
+            if (req.user.email == config.admin_user) {
+                var all_users = await sql.query("SELECT email FROM users order by email");
+                users = users.concat(all_users.filter(x => users.indexOf(x.email) == -1).map(x => x.email));
+            }
+
+            var user = req.params.user || req.user.email;
+
+            if (users.indexOf(user) != -1) {
+                var stats = await getStatsForUser(user);
+
+                var errors = getErrors(stats);
+
+                if (errors.length > 0) {
+                    console.log("Error in stats for user " + req.user.email + ": " + errors);
+                }
+
+                var viewModel = getStatsViewModel(stats);
+
+                viewModel.Users = users;
+
+                res.json(viewModel);
+            }
+            else {
+                res.status(401);
+                res.json({ error: "unauthorized" });
+            }
         }
         else {
             res.status(401);
@@ -241,7 +275,7 @@ exports.getStats = async function(req, res) {
     }
 };
 
-exports.clearDecisions = async function(req, res) {
+exports.clearDecisions = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
 

@@ -10,6 +10,15 @@
 <span us-spinner spinner-on="$ctrl.loading" class="spinner">
     <div ng-hide="$ctrl.loading">
         
+        <div class="row" ng-show="$ctrl.hasOtherUser">
+            <div class="col-12">
+                <p>
+                    Account:
+                    <select ng-model="$ctrl.user" ng-change="$ctrl.onUserChanged()" ng-options="o as o for o in $ctrl.users"></select>
+                </p>
+            </div>
+        </div>
+
         <div class="row">
             <div class="col-12">
                 <table class="table">
@@ -107,7 +116,13 @@
         </div>
 
         <div infinite-scroll='$ctrl.loadMore()' infinite-scroll-distance='2' infinite-scroll-listen-for-event="list:filtered">
-            <a ng-repeat="sale in $ctrl.pagedItems" class="row" href="#!/snapshots/{{sale.I}}">
+            <div ng-if="!$ctrl.isSignedInUser" ng-repeat="sale in $ctrl.pagedItems" class="row">
+                <div class="col-3 snapshot-time">{{sale.D}}</div>
+                <div class="col-6 instrument-name">{{sale.I}}</div>
+                <div class="col-2 sale-return">{{$ctrl.formatPercentage(sale.R)}}%</div>
+                <div class="col-1 sale-status glyphicon" ng-class="sale.S == 'c' ? 'glyphicon-euro' : 'glyphicon-briefcase'"></div>
+            </div>
+            <a ng-if="$ctrl.isSignedInUser" ng-repeat="sale in $ctrl.pagedItems" class="row" href="#!/snapshots/{{sale.I}}">
                 <div class="col-3 snapshot-time">{{sale.D}}</div>
                 <div class="col-6 instrument-name">{{sale.I}}</div>
                 <div class="col-2 sale-return">{{$ctrl.formatPercentage(sale.R)}}%</div>

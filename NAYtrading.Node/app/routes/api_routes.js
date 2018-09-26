@@ -37,6 +37,8 @@ module.exports = function (app, passport) {
 
     app.get('/api/stats', dataController.getStats);
 
+    app.get('/api/stats/:user', dataController.getStats);
+
     app.post('/api/clear/decisions', dataController.clearDecisions);
 
     app.get('/api/export/instruments/:exportSecret', exportController.exportInstruments);
