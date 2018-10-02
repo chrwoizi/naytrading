@@ -42,7 +42,6 @@ FROM
 				AND s.Time > @validFromDateTime
 		)
 		AND EXISTS (SELECT 1 FROM sources AS c WHERE c.Instrument_ID = i.ID AND c.Status = "ACTIVE")
-		AND (@user IS NULL OR EXISTS (SELECT 1 FROM userinstruments AS ui WHERE ui.User = @user AND ui.Instrument_ID = i.ID))
 ) AS i
 WHERE
 	i.MaxStrikes <= @maxStrikes;
