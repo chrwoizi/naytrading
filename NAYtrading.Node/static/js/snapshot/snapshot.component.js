@@ -10,6 +10,8 @@ angular.
                 var self = this;
 
                 self.loading = true;
+                
+                $(".chart").height(0.5 * Chart.helpers.getMaximumWidth($(".chart").get(0)));
 
                 var currentLocation = window.location.href;
 

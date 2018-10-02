@@ -166,7 +166,7 @@ def main(input_path, output_path_buy, output_path_no_buy, output_path_sell, outp
                                                 buy_day = -(meta['Time'] - meta['PreviousBuyDate']).days
                                                 out_file_sell.writelines([str(lines_read) + ';' + line[0:-1] + ';' + str(buy_day) + '\n'])
 
-                                        elif meta['Decision'] == 'wait' or meta['Decision'] == 'autowait':
+                                        elif meta['Decision'] == 'wait' or meta['Decision'] == 'wait1yr' or meta['Decision'] == 'autowait':
 
                                             if out_file_buy:
 
@@ -186,7 +186,7 @@ def main(input_path, output_path_buy, output_path_no_buy, output_path_sell, outp
 
                                             if out_file_buy:
                                                 out_file_buy.writelines([str(lines_read) + ';' + line])
-                                        elif meta['Decision'] == 'wait' or meta['Decision'] == 'autowait':
+                                        elif meta['Decision'] == 'wait' or meta['Decision'] == 'wait1yr' or meta['Decision'] == 'autowait':
 
                                             if out_file_no_buy:
                                                 out_file_no_buy.writelines([str(lines_read) + ';' + line])

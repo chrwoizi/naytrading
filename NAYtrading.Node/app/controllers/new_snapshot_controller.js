@@ -29,7 +29,7 @@ function isEmpty(str) {
     return typeof (str) === 'undefined' || str == null || !str.length;
 }
 
-exports.getNewSnapshotInstruments = async function (endTime, user) {
+exports.getNewSnapshotInstruments = async function (endTime) {
 
     var upToDateFrom = new Date(endTime.getTime() - config.snapshot_valid_seconds * 1000);
 
@@ -48,8 +48,7 @@ exports.getNewSnapshotInstruments = async function (endTime, user) {
         "@boughtOrderWeight": config.bought_order_weight,
         "@capitalizationOrderWeight": config.capitalization_order_weight,
         "@snapshotCountOrderWeight": config.snapshot_count_order_weight,
-        "@staticWeight": config.static_weight,
-        "@user": user ? user : null
+        "@staticWeight": config.static_weight
     };
 
     var rows = await sql.query(rank_instruments, args);
@@ -351,40 +350,6 @@ exports.createNewRandomSnapshot = async function (req, res) {
                 res.json(viewModel);
                 return;
             }
-
-            // if (!isAI) {
-            //     var instrumentIds = await exports.getNewSnapshotInstruments(endTime, req.user.email);
-
-            //     var newSnapshot = null;
-            //     for (var i = 0; i <= config.max_autowait_count; ++i) {
-            //         newSnapshot = await exports.createNewSnapshotFromRandomInstrument(instrumentIds);
-            //         if (newSnapshot != null) {
-
-            //             var k = instrumentIds.indexOf(newSnapshot.Instrument_ID);
-            //             instrumentIds.splice(k, 1);
-
-            //             var previous = await snapshotController.getPreviousDecisionAndBuyRate(newSnapshot.ID, req.user.email);
-            //             var viewModel = snapshotController.getSnapshotViewModel(newSnapshot, previous, req.user.email);
-
-            //             if (i < config.max_autowait_count && exports.isAutoWait(viewModel)) {
-            //                 await model.usersnapshot.create({
-            //                     User: req.user.email,
-            //                     Snapshot_ID: newSnapshot.ID,
-            //                     Decision: "autowait",
-            //                     ModifiedTime: new Date()
-            //                 });
-            //             }
-            //             else {
-            //                 res.json(viewModel);
-            //                 return;
-            //             }
-
-            //         }
-            //         else {
-            //             break;
-            //         }
-            //     }
-            // }
 
             res.status(404);
             res.json({ error: 'no instrument available' });

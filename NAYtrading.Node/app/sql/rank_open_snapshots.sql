@@ -37,6 +37,16 @@ AND NOT EXISTS
 	AND u.User = @userName
 ) 
 AND s.Time >= NOW() - INTERVAL @hours HOUR
+AND CASE (
+		SELECT su.Decision 
+		FROM usersnapshots AS su 
+        INNER JOIN snapshots AS sus ON sus.ID = su.Snapshot_ID
+		WHERE sus.Instrument_ID = s.Instrument_ID AND su.User = @userName
+        ORDER BY su.ModifiedTime DESC LIMIT 1
+	)
+	WHEN 'wait1yr' THEN s.Time < NOW() - INTERVAL 1 YEAR 
+    ELSE TRUE 
+    END
 UNION ALL
 SELECT 
 	1 AS source, 
@@ -77,6 +87,16 @@ AND NOT EXISTS
 	AND u.User = @userName
 ) 
 AND s.Time < NOW() - INTERVAL @hours HOUR 
+AND CASE (
+		SELECT su.Decision 
+		FROM usersnapshots AS su 
+        INNER JOIN snapshots AS sus ON sus.ID = su.Snapshot_ID
+		WHERE sus.Instrument_ID = s.Instrument_ID AND su.User = @userName
+        ORDER BY su.ModifiedTime DESC LIMIT 1
+	)
+	WHEN 'wait1yr' THEN s.Time < NOW() - INTERVAL 1 YEAR 
+    ELSE TRUE 
+    END
 ORDER BY 
 	source ASC, 
 	ageOrder ASC, 
