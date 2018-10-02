@@ -28,7 +28,7 @@
             <div class="col-4">
             </div>
             <div class="col-4">
-                <button ng-click="$ctrl.setDecision('wait1yr')" class="btn btn-info btn-block">WAIT 1YR</button>
+                <button ng-hide="$ctrl.snapshot.PreviousDecision == 'buy'" ng-click="$ctrl.setDecision('wait1yr')" class="btn btn-info btn-block">WAIT 1YR</button>
             </div>
             <div class="col-4">
             </div>
