@@ -104,4 +104,4 @@ python client.py --buy_checkpoint_dir=%1\\checkpoint --sleep=%2 --min_loss=0.1 -
 
 When asked, enter your AI account email address (the one ending on *.ai*) and its password. **Do not** enter your regular N.A.Y.trading account email address (e.g. *john.doe@mailbox.com*) because client.py will decide on snapshots using the given account and you probably don't want your real decisions mixed with the network's decisions.
 
-You can continue deciding on snapshots with your regular account and, from time to time, log in as your AI account to check its performance using the [Stats page](http://naytrading.com/app/#!/stats). The two accounts are independent from each other.
+You can continue deciding on snapshots with your regular account and, from time to time, log in as your AI account to check its performance using the [Stats page](http://naytrading.com/app/#!/stats). If you used the naming convention .ai, as mentioned above, you can switch between accounts using the selection box on the top of the stats page.
