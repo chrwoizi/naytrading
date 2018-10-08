@@ -23,7 +23,7 @@ module.exports = function (app, passport) {
                 else {
                     await instrumentController.addAllInstruments(user.email);
                     await authController.setLastLogin(user.email);
-                    return res.redirect('/app/#!/snapshot/new/random');
+                    return res.redirect('/app/#!/snapshot/new/random_or_confirm');
                 }
             });
         })(req, res, next);
