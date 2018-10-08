@@ -5,8 +5,8 @@ angular.
     module('snapshot').
     component('snapshot', {
         templateUrl: '/static/html/snapshot.template.html',
-        controller: ['$scope', '$routeParams', 'SnapshotService', 'NewSnapshotService', 'SnapshotDecisionService',
-            function SnapshotController($scope, $routeParams, SnapshotService, NewSnapshotService, SnapshotDecisionService) {
+        controller: ['$scope', '$routeParams', 'SnapshotService', 'NewSnapshotService', 'ConfirmSnapshotService', 'SnapshotDecisionService',
+            function SnapshotController($scope, $routeParams, SnapshotService, NewSnapshotService, ConfirmSnapshotService, SnapshotDecisionService) {
                 var self = this;
 
                 self.loading = true;
@@ -20,6 +20,9 @@ angular.
                 if ($routeParams.id == "new") {
                     service = NewSnapshotService;
                     params = { instrumentId: $routeParams.instrumentId };
+                } else if ($routeParams.decision) {
+                    service = ConfirmSnapshotService;
+                    params = { id: $routeParams.id, decision: $routeParams.decision };
                 } else {
                     service = SnapshotService;
                     params = { id: $routeParams.id };
@@ -27,7 +30,12 @@ angular.
 
                 self.snapshot = service.get(params, function (snapshot) {
                     if (currentLocation == window.location.href) {
-                        history.replaceState(null, '', '#!/snapshot/' + snapshot.ID);
+                        if (snapshot.ConfirmDecision && snapshot.ConfirmDecision > 0) {
+                            history.replaceState(null, '', '#!/confirm/' + snapshot.ID + "/" + snapshot.ConfirmDecision);
+                        }
+                        else {
+                            history.replaceState(null, '', '#!/snapshot/' + snapshot.ID);
+                        }
 
                         self.setRates(snapshot);
 
@@ -238,9 +246,9 @@ angular.
 
                 self.setDecision = function setDecision(decision) {
                     self.loading = true;
-                    SnapshotDecisionService.get({ id: self.snapshot.ID, decision: decision }, function () {
+                    SnapshotDecisionService.post({}, { id: self.snapshot.ID, decision: decision, confirm: self.snapshot.ConfirmDecision }, function () {
                         self.loading = false;
-                        window.location.href = '#!/snapshot/new/random';
+                        window.location.href = '#!/snapshot/new/random_or_confirm';
                     }, function (error) {
                         if (typeof (error.data) !== 'undefined' && error.data != null) {
                             console.error('error: ' + JSON.stringify(error.data));

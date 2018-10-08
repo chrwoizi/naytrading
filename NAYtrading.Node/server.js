@@ -111,37 +111,53 @@ var sql = require('./app/sql/sql');
             });
         }
     
-        setTimeout(function () {
-            new Promise(function (resolve, reject) { splitJob.run(); });
-        }, 1000);
+        if (config.job_split_enabled) {
+            setTimeout(function () {
+                new Promise(function (resolve, reject) { splitJob.run(); });
+            }, 1000);
+        }
 
-        setTimeout(function () {
-            new Promise(function (resolve, reject) { instrumentsJob.run(); });
-        }, 2000);
+        if (config.job_instruments_enabled) {
+            setTimeout(function () {
+                new Promise(function (resolve, reject) { instrumentsJob.run(); });
+            }, 2000);
+        }
 
-        setTimeout(function () {
-            new Promise(function (resolve, reject) { sourcesJob.run(); });
-        }, 3000);
+        if (config.job_sources_enabled) {
+            setTimeout(function () {
+                new Promise(function (resolve, reject) { sourcesJob.run(); });
+            }, 3000);
+        }
 
-        setTimeout(function () {
-            new Promise(function (resolve, reject) { cleanupJob.run(); });
-        }, 4000);
+        if (config.job_cleanup_enabled) {
+            setTimeout(function () {
+                new Promise(function (resolve, reject) { cleanupJob.run(); });
+            }, 4000);
+        }
 
-        setTimeout(function () {
-            new Promise(function (resolve, reject) { strikesJob.run(); });
-        }, 6000);
+        if (config.job_strikes_enabled) {
+            setTimeout(function () {
+                new Promise(function (resolve, reject) { strikesJob.run(); });
+            }, 6000);
+        }
     
-        setTimeout(function () {
-            new Promise(function (resolve, reject) { portfoliosJob.run(); });
-        }, 8000);
+        if (config.job_portfolios_enabled) {
+            setTimeout(function () {
+                new Promise(function (resolve, reject) { portfoliosJob.run(); });
+            }, 8000);
+        }
     
-        setTimeout(function () {
-            new Promise(function (resolve, reject) { preloadJob.run(); });
-        }, 10000);
+        if (config.job_preload_enabled) {
+            setTimeout(function () {
+                new Promise(function (resolve, reject) { preloadJob.run(); });
+            }, 10000);
+        }
 
-        setTimeout(function () {
-            new Promise(function (resolve, reject) { processJob.run(); });
-        }, 12000);
+        if (config.job_process_enabled) {
+            setTimeout(function () {
+                new Promise(function (resolve, reject) { processJob.run(); });
+            }, 12000);
+        }
     
     }).catch(function (err) {
 

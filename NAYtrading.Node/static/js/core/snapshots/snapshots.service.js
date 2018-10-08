@@ -12,9 +12,16 @@ angular.
             return $resource('/api/snapshot/:id', {}, {});
         }
     ]).
+    factory('ConfirmSnapshotService', ['$resource',
+        function ($resource) {
+            return $resource('/api/confirm/:id/:decision', {}, {});
+        }
+    ]).
     factory('SnapshotDecisionService', ['$resource',
         function ($resource) {
-            return $resource('/api/snapshot/:id/set/:decision', {}, {});
+            return $resource('/api/decision', {}, {
+                post: { method: 'POST' }
+            });
         }
     ]).
     factory('SnapshotListService', ['$resource',

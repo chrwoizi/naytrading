@@ -17,21 +17,4 @@ angular.
                 }
             });
         }
-    ]).
-    factory('InstrumentAddService', ['$resource',
-        function ($resource) {
-            return $resource('/api/instruments/add/url/:url', {}, {
-                add: { 
-                    method: 'POST',
-                    params: {"url" : "@url"}
-                }
-            });
-        }
-    ]).
-    factory('InstrumentAddIndexService', ['$resource',
-        function ($resource) {
-            return $resource('/api/instruments/add/default', {}, {
-                post: { method: 'POST' }
-            });
-        }
     ]);

@@ -89,7 +89,11 @@ def main(input_path, output_path, days, max_missing_days):
                                     out_file.write(str(snapshot.instrument.ID))
                                     out_file.write(';')
 
-                                    out_file.write(snapshot.Decision)
+                                    decision = snapshot.Decision
+                                    if decision == 'buy' and ('Confirmed' in snapshot.__dict__) and snapshot.Confirmed < 0:
+                                        decision = 'wait'
+
+                                    out_file.write(decision)
                                     out_file.write(';')
 
                                     out_file.write(snapshot_date.strftime('%Y%m%d'))

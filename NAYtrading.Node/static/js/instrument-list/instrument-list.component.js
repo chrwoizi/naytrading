@@ -5,8 +5,8 @@ angular.
     module('instrumentList').
     component('instrumentList', {
         templateUrl: '/static/html/instrument-list.template.html',
-        controller: ['InstrumentListService', 'InstrumentAddIndexService', 'InstrumentAddService', '$routeParams', '$scope',
-            function InstrumentListController(InstrumentListService, InstrumentAddIndexService, InstrumentAddService, $routeParams, $scope) {
+        controller: ['InstrumentListService', '$routeParams', '$scope',
+            function InstrumentListController(InstrumentListService, $routeParams, $scope) {
                 var self = this;
 
                 self.orderProp = "-Capitalization";

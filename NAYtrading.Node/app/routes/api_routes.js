@@ -29,9 +29,13 @@ module.exports = function (app, passport) {
 
     app.get('/api/snapshot/:id', snapshotController.snapshot);
 
-    app.get('/api/snapshot/:id/set/:decision', snapshotController.setDecision);
+    app.get('/api/confirm/:id/:decision', snapshotController.snapshot);
+
+    app.post('/api/decision', snapshotController.setDecision);
 
     app.get('/api/snapshot/new/random', newSnapshotController.createNewRandomSnapshot);
+
+    app.get('/api/snapshot/new/random_or_confirm', newSnapshotController.createNewRandomOrConfirmSnapshot);
 
     app.get('/api/snapshot/new/:instrumentId', newSnapshotController.createNewSnapshotByInstrumentId);
 

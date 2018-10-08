@@ -24,6 +24,12 @@ module.exports = (sequelize, DataTypes) => {
             allowNull: true
         },
 
+        Confirmed: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            defaultValue: 0
+        },
+
         createdAt: {
             allowNull: false,
             type: DataTypes.DATE

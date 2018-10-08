@@ -191,6 +191,7 @@ exports.exportUserSnapshotsGeneric = async function (fromTimeUTC, user, stream, 
         snapshot.DecisionId = usersnapshot.ID;
         snapshot.Decision = usersnapshot.Decision;
         snapshot.DecisionTime = usersnapshot.ModifiedTime;
+        snapshot.Confirmed = usersnapshot.Confirmed;
 
         if (i > 0) {
             stream.write(',');

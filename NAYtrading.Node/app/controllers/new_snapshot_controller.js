@@ -29,6 +29,10 @@ function isEmpty(str) {
     return typeof (str) === 'undefined' || str == null || !str.length;
 }
 
+function parseDate(str) {
+    return new Date("20" + str.substr(0, 2), parseInt(str.substr(2, 2)) - 1, str.substr(4, 2));
+}
+
 exports.getNewSnapshotInstruments = async function (endTime) {
 
     var upToDateFrom = new Date(endTime.getTime() - config.snapshot_valid_seconds * 1000);
@@ -91,27 +95,33 @@ exports.isAutoWait = async function (newSnapshot) {
 
         return false;
     }
-    else {
-        var endTime = new Date();
-        endTime.setHours(0, 0, 0, 0);
-        var startTime = new Date(endTime.getTime() - config.chart_period_seconds * 1000);
-
-        var firstRatesUntil = new Date(startTime.getTime() + 1000 * (config.chart_period_seconds * 0.2));
-        var lastRatesFrom = new Date(endTime.getTime() - 1000 * (config.chart_period_seconds * 0.2));
-
-        var firstRates = newSnapshot.Rates.filter(x => x.Time < firstRatesUntil);
-        var lastRates = newSnapshot.Rates.filter(x => x.Time > lastRatesFrom);
-
-        if (firstRates.length == 0 || lastRates.length == 0) {
-            return false;
+    else if (newSnapshot.PreviousDecision == "wait1yr") {
+        var date = parseDate(newSnapshot.DateSortable);
+        var previousDate = parseDate(newSnapshot.PreviousTime);
+        if (date.getTime() - previousDate.getTime() < 365 * 24 * 60 * 60 * 1000) {
+            return true;
         }
-
-        var firstAverage = firstRates.map(x => x.Close).reduce((a, b) => a + b) / firstRates.length;
-        var lastAverage = lastRates.map(x => x.Close).reduce((a, b) => a + b) / lastRates.length;
-
-        // overall bearish trend
-        return lastAverage < firstAverage;
     }
+
+    var endTime = new Date();
+    endTime.setHours(0, 0, 0, 0);
+    var startTime = new Date(endTime.getTime() - config.chart_period_seconds * 1000);
+
+    var firstRatesUntil = new Date(startTime.getTime() + 1000 * (config.chart_period_seconds * 0.2));
+    var lastRatesFrom = new Date(endTime.getTime() - 1000 * (config.chart_period_seconds * 0.2));
+
+    var firstRates = newSnapshot.Rates.filter(x => x.Time < firstRatesUntil);
+    var lastRates = newSnapshot.Rates.filter(x => x.Time > lastRatesFrom);
+
+    if (firstRates.length == 0 || lastRates.length == 0) {
+        return false;
+    }
+
+    var firstAverage = firstRates.map(x => x.Close).reduce((a, b) => a + b) / firstRates.length;
+    var lastAverage = lastRates.map(x => x.Close).reduce((a, b) => a + b) / lastRates.length;
+
+    // overall bearish trend
+    return lastAverage < firstAverage;
 }
 
 async function handleRateProviderError(instrument, source, error) {
@@ -324,7 +334,7 @@ exports.createNewSnapshotFromRandomInstrument = async function (instrumentIds) {
     return null;
 }
 
-exports.createNewRandomSnapshot = async function (req, res) {
+async function handleNewRandomSnapshot(req, res, allowConfirm) {
     try {
         if (req.isAuthenticated()) {
 
@@ -343,6 +353,21 @@ exports.createNewRandomSnapshot = async function (req, res) {
                 "@hours": hours,
                 "@isAI": isAI ? 1 : 0
             });
+
+            var confirm = Math.random() < config.check_rate;
+            if ((allowConfirm && confirm) || !(forgotten && forgotten.length > 0)) {
+                var toCheck = await sql.query("SELECT ID, Snapshot_ID FROM usersnapshots WHERE User = @userName AND Decision = 'buy' ORDER BY ABS(Confirmed), ModifiedTime", {
+                    "@userName": req.user.email
+                });
+                
+                if (toCheck && toCheck.length > 0) {
+                    var index = getRandomIndex(toCheck.length, config.random_order_weight);
+                    var viewModel = await snapshotController.getSnapshot(toCheck[index].Snapshot_ID, req.user.email);
+                    viewModel.ConfirmDecision = toCheck[index].ID;
+                    res.json(viewModel);
+                    return;
+                }
+            }
 
             if (forgotten && forgotten.length > 0) {
                 // var index = getRandomIndex(forgotten.length, config.random_order_weight);
@@ -363,6 +388,14 @@ exports.createNewRandomSnapshot = async function (req, res) {
         res.status(500);
         res.json({ error: error.message });
     }
+};
+
+exports.createNewRandomSnapshot = async function (req, res) {
+    await handleNewRandomSnapshot(req, res, false);
+};
+
+exports.createNewRandomOrConfirmSnapshot = async function (req, res) {
+    await handleNewRandomSnapshot(req, res, true);
 };
 
 exports.createNewSnapshotByInstrumentId = async function (req, res) {

@@ -152,6 +152,10 @@ exports.snapshot = async function (req, res) {
 
             var viewModel = await exports.getSnapshot(req.params.id, req.user.email);
 
+            if (req.params.decision && req.params.decision > 0) {
+                viewModel.ConfirmDecision = req.params.decision;
+            }
+
             if (viewModel != null) {
                 res.json(viewModel);
             }
@@ -262,30 +266,59 @@ exports.setDecision = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
 
-            if (req.params.decision == "buy" || req.params.decision == "sell") {
-                var previous = await exports.getPreviousDecision(req.params.id, req.user.email);
+            if (req.body.confirm && req.body.confirm > 1) {
+                
+                var toCheck = await sql.query("SELECT ID, Decision, Confirmed FROM usersnapshots WHERE User = @userName AND ID = @id AND Snapshot_ID = @snapshotId", {
+                    "@userName": req.user.email,
+                    "@id": req.body.confirm,
+                    "@snapshotId": req.body.id
+                });
+                
+                if (toCheck && toCheck.length > 0) {
+                    var confirmation = toCheck[0].Decision == req.body.decision ? 1 : -1;
+
+                    await model.usersnapshot.update(
+                        {
+                            Confirmed: toCheck[0].Confirmed + confirmation,
+                            ModifiedTime: new Date()
+                        },
+                        {
+                            where: {
+                                User: req.user.email,
+                                ID: toCheck[0].ID
+                            }
+                        }
+                    );
+                    
+                    res.json({ status: "ok" });
+                    return;
+                }
+            }
+
+            if (req.body.decision == "buy" || req.body.decision == "sell") {
+                var previous = await exports.getPreviousDecision(req.body.id, req.user.email);
                 if (previous.PreviousDecision) {
                     if (previous.PreviousDecision == "buy") {
-                        if (req.params.decision == "buy") {
+                        if (req.body.decision == "buy") {
                             throw { message: "Conflicting buy decision in the past" }
                         }
                     }
                     else if (previous.PreviousDecision == "sell") {
-                        if (req.params.decision == "sell") {
+                        if (req.body.decision == "sell") {
                             throw { message: "Conflicting sell decision in the past" }
                         }
                     }
                 }
 
-                var next = await exports.getNextDecision(req.params.id, req.user.email);
+                var next = await exports.getNextDecision(req.body.id, req.user.email);
                 if (next.NextDecision) {
                     if (next.NextDecision == "buy") {
-                        if (req.params.decision == "buy") {
+                        if (req.body.decision == "buy") {
                             throw { message: "Conflicting buy decision in the future" }
                         }
                     }
                     else if (next.NextDecision == "sell") {
-                        if (req.params.decision == "sell") {
+                        if (req.body.decision == "sell") {
                             throw { message: "Conflicting sell decision in the future" }
                         }
                     }
@@ -295,26 +328,26 @@ exports.setDecision = async function (req, res) {
             var usersnapshot = await model.usersnapshot.find({
                 where: {
                     User: req.user.email,
-                    Snapshot_ID: req.params.id
+                    Snapshot_ID: req.body.id
                 }
             });
 
             var deletePortfolio = false;
 
             if (usersnapshot) {
-                if (usersnapshot.Decision != req.params.decision) {
+                if (usersnapshot.Decision != req.body.decision) {
 
                     deletePortfolio = true;
 
                     await model.usersnapshot.update(
                         {
-                            Decision: req.params.decision,
+                            Decision: req.body.decision,
                             ModifiedTime: new Date()
                         },
                         {
                             where: {
                                 User: req.user.email,
-                                Snapshot_ID: req.params.id
+                                Snapshot_ID: req.body.id
                             }
                         }
                     );
@@ -323,7 +356,7 @@ exports.setDecision = async function (req, res) {
                 if (deletePortfolio) {
                     var snapshot = await model.snapshot.find({
                         where: {
-                            ID: req.params.id
+                            ID: req.body.id
                         }
                     });
 
@@ -362,9 +395,9 @@ exports.setDecision = async function (req, res) {
             }
             else {
                 await model.usersnapshot.create({
-                    Snapshot_ID: req.params.id,
+                    Snapshot_ID: req.body.id,
                     User: req.user.email,
-                    Decision: req.params.decision,
+                    Decision: req.body.decision,
                     ModifiedTime: new Date()
                 });
             }
