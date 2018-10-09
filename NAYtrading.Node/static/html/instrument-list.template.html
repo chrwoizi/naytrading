@@ -3,7 +3,7 @@
 
 <div class="row row-spacer">
     <div class="col-12">
-        <a href="#!/snapshot/new/random_or_confirm" class="btn btn-info btn-block" role="button">New decision on random stock</a>
+        <a href="#!/snapshot?action=random_or_confirm" class="btn btn-info btn-block" role="button">New decision on random stock</a>
     </div>
 </div>
 
@@ -46,7 +46,7 @@
                     <a href="#!/snapshots/{{instrument.InstrumentName}}">{{instrument.InstrumentName}}</a>
                 </div>
                 <div class="col-3 instrument-name" style="text-align: right;">
-                    <a href="#!/snapshot/new/{{instrument.ID}}" class="btn btn-info list-button">NEW DECISION</a>
+                    <a href="#!/snapshot?instrument={{instrument.ID}}" class="btn btn-info list-button">NEW DECISION</a>
                 </div>
                 <div class="col-4 instrument-capitalization">{{instrument.Capitalization}}</div>
             </div>

@@ -41,7 +41,8 @@ function getStatsViewModel(model) {
             DS: dateFormat(model.Time, 'yymmdd'),
             S: model.IsComplete == 1 ? 'c' : 'o',
             R: (Math.floor(model.Return * 10000)) / 10000.0,
-            I: model.InstrumentName
+            I: model.InstrumentName,
+            C: model.Confirmed
         };
     }
 
@@ -129,7 +130,8 @@ async function getStatsForUser(user) {
                     Time: open[0].LatestSnapshotTime,
                     IsComplete: false,
                     Return: (open[0].LatestPrice - trade.Price) / trade.Price,
-                    InstrumentName: trade.InstrumentName
+                    InstrumentName: trade.InstrumentName,
+                    Confirmed: trade.Confirmed
                 });
                 openCount++;
             }
@@ -150,7 +152,8 @@ async function getStatsForUser(user) {
                 Time: trade.Time,
                 IsComplete: true,
                 Return: (trade.Price - buyTrade.Price) / buyTrade.Price,
-                InstrumentName: trade.InstrumentName
+                InstrumentName: trade.InstrumentName,
+                Confirmed: buyTrade.Confirmed
             });
             completeCount++;
         }

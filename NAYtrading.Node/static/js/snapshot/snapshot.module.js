@@ -5,5 +5,6 @@ angular.module('snapshot', [
     'ngRoute',
     'core.snapshots',
     'chart.js',
-    'angularSpinner'
+    'angularSpinner',
+    'ngHistoryReplace'
 ]);

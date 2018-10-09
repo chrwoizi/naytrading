@@ -8,5 +8,6 @@ angular.module('naytradingApp', [
     'snapshotList',
     'instrumentList',
     'stats',
-    'infinite-scroll'
+    'infinite-scroll',
+    'ngHistoryReplace'
 ]);

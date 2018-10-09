@@ -52,8 +52,12 @@ class NAYtrading:
 
 
     def set_decision(self, snapshot_id, decision):
-        url = self.naytrading_url + '/api/snapshot/%d/set/%s'
-        r = self.session.get(url % (snapshot_id, decision), proxies = self.proxies, timeout = 30)
+        url = self.naytrading_url + '/api/decision'
+
+        r = self.session.post(url, {
+            'id': snapshot_id,
+            'decision': decision
+        }, proxies = self.proxies, timeout = 30)
 
         if r.status_code != 200:
             raise Exception('%s returned %d' % (url, r.status_code))
