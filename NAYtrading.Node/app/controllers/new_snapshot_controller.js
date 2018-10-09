@@ -356,7 +356,7 @@ async function handleNewRandomSnapshot(req, res, allowConfirm) {
 
             var confirm = Math.random() < config.check_rate;
             if ((allowConfirm && confirm) || !(forgotten && forgotten.length > 0)) {
-                var toCheck = await sql.query("SELECT ID, Snapshot_ID FROM usersnapshots WHERE User = @userName AND Decision = 'buy' ORDER BY ABS(Confirmed), ModifiedTime", {
+                var toCheck = await sql.query("SELECT ID, Snapshot_ID, Confirmed FROM usersnapshots WHERE User = @userName AND Decision = 'buy' ORDER BY ABS(Confirmed), ModifiedTime", {
                     "@userName": req.user.email
                 });
                 
@@ -364,6 +364,7 @@ async function handleNewRandomSnapshot(req, res, allowConfirm) {
                     var index = getRandomIndex(toCheck.length, config.random_order_weight);
                     var viewModel = await snapshotController.getSnapshot(toCheck[index].Snapshot_ID, req.user.email);
                     viewModel.ConfirmDecision = toCheck[index].ID;
+                    viewModel.Confirmed = toCheck[index].Confirmed;
                     res.json(viewModel);
                     return;
                 }

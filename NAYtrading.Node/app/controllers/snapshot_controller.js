@@ -154,6 +154,7 @@ exports.snapshot = async function (req, res) {
 
             if (req.params.decision && req.params.decision > 0) {
                 viewModel.ConfirmDecision = req.params.decision;
+                viewModel.Confirmed = req.params.confirmed;
             }
 
             if (viewModel != null) {
@@ -279,7 +280,7 @@ exports.setDecision = async function (req, res) {
 
                     await model.usersnapshot.update(
                         {
-                            Confirmed: toCheck[0].Confirmed + confirmation,
+                            Confirmed: parseInt(req.body.confirmed) + confirmation,
                             ModifiedTime: new Date()
                         },
                         {

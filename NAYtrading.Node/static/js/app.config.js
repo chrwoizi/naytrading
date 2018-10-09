@@ -11,13 +11,7 @@ angular.
                 when('/snapshots', {
                     template: '<snapshot-list></snapshot-list>'
                 }).
-                when('/snapshot/:id/:instrumentId', {
-                    template: '<snapshot></snapshot>'
-                }).
-                when('/snapshot/:id', {
-                    template: '<snapshot></snapshot>'
-                }).
-                when('/confirm/:id/:decision', {
+                when('/snapshot', {
                     template: '<snapshot></snapshot>'
                 }).
                 when('/instruments', {

@@ -4,7 +4,7 @@ angular.
     module('core.snapshots').
     factory('NewSnapshotService', ['$resource',
         function ($resource) {
-            return $resource('/api/snapshot/new/:instrumentId', {}, {});
+            return $resource('/api/snapshot/new/:arg', {}, {});
         }
     ]).
     factory('SnapshotService', ['$resource',
@@ -14,7 +14,7 @@ angular.
     ]).
     factory('ConfirmSnapshotService', ['$resource',
         function ($resource) {
-            return $resource('/api/confirm/:id/:decision', {}, {});
+            return $resource('/api/confirm/:id/:decision/:confirmed', {}, {});
         }
     ]).
     factory('SnapshotDecisionService', ['$resource',

@@ -29,7 +29,7 @@ module.exports = function (app, passport) {
 
     app.get('/api/snapshot/:id', snapshotController.snapshot);
 
-    app.get('/api/confirm/:id/:decision', snapshotController.snapshot);
+    app.get('/api/confirm/:id/:decision/:confirmed', snapshotController.snapshot);
 
     app.post('/api/decision', snapshotController.setDecision);
 

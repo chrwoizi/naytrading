@@ -3,7 +3,7 @@
 
 <div class="row row-spacer">
     <div class="col-12">
-        <a href="#!/snapshot/new/random_or_confirm" class="btn btn-info btn-block" role="button">New decision on random stock</a>
+        <a href="#!/snapshot?action=random_or_confirm" class="btn btn-info btn-block" role="button">New decision on random stock</a>
     </div>
 </div>
 
@@ -106,10 +106,12 @@
                         <option value="I">Alphabetical</option>
                         <option value="-DS">Newest</option>
                         <option value="DS">Oldest</option>
-                        <option value="-R">Highest</option>
-                        <option value="R">Lowest</option>
-                        <option value="S">Complete</option>
+                        <option value="-R">Highest Return</option>
+                        <option value="R">Lowest Return</option>
+                        <option value="S">Completed</option>
                         <option value="-S">Open</option>
+                        <option value="-C">Most Confirmed</option>
+                        <option value="C">Least Confirmed</option>
                     </select>
                 </p>
             </div>
@@ -117,16 +119,22 @@
 
         <div infinite-scroll='$ctrl.loadMore()' infinite-scroll-distance='2' infinite-scroll-listen-for-event="list:filtered">
             <div ng-if="!$ctrl.isSignedInUser" ng-repeat="sale in $ctrl.pagedItems" class="row">
-                <div class="col-3 snapshot-time">{{sale.D}}</div>
+                <div class="col-2 snapshot-time">{{sale.D}}</div>
                 <div class="col-6 instrument-name">{{sale.I}}</div>
                 <div class="col-2 sale-return">{{$ctrl.formatPercentage(sale.R)}}%</div>
-                <div class="col-1 sale-status glyphicon" ng-class="sale.S == 'c' ? 'glyphicon-euro' : 'glyphicon-briefcase'"></div>
+                <div class="col-2 sale-status">
+                    <span>{{sale.C > 0 ? '+' + sale.C : sale.C}}</span>
+                    <span class="glyphicon" ng-class="sale.S == 'c' ? 'glyphicon-euro' : 'glyphicon-briefcase'"></span>
+                </div>
             </div>
             <a ng-if="$ctrl.isSignedInUser" ng-repeat="sale in $ctrl.pagedItems" class="row" href="#!/snapshots/{{sale.I}}">
-                <div class="col-3 snapshot-time">{{sale.D}}</div>
+                <div class="col-2 snapshot-time">{{sale.D}}</div>
                 <div class="col-6 instrument-name">{{sale.I}}</div>
                 <div class="col-2 sale-return">{{$ctrl.formatPercentage(sale.R)}}%</div>
-                <div class="col-1 sale-status glyphicon" ng-class="sale.S == 'c' ? 'glyphicon-euro' : 'glyphicon-briefcase'"></div>
+                <div class="col-2 sale-status">
+                    <span>{{sale.C > 0 ? '+' + sale.C : sale.C}}</span>
+                    <span class="glyphicon" ng-class="sale.S == 'c' ? 'glyphicon-euro' : 'glyphicon-briefcase'"></span>
+                </div>
             </a>
         </div>
     </div>

@@ -5,7 +5,8 @@ SELECT
 	trade.Quantity,
 	userSnapshot.Decision,
     instrument.ID AS InstrumentId,
-    instrument.InstrumentName
+    instrument.InstrumentName,
+	userSnapshot.Confirmed
 FROM trades AS trade
 INNER JOIN snapshots AS snapshot ON snapshot.ID = trade.Snapshot_ID
 INNER JOIN usersnapshots AS userSnapshot ON userSnapshot.Snapshot_ID = trade.Snapshot_ID AND userSnapshot.User = @userName

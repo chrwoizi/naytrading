@@ -3,7 +3,7 @@
 
 <div class="row row-spacer">
     <div class="col-12">
-        <a href="#!/snapshot/new/random_or_confirm" class="btn btn-info btn-block" role="button">New decision on random stock</a>
+        <a href="#!/snapshot?action=random_or_confirm" class="btn btn-info btn-block" role="button">New decision on random stock</a>
     </div>
 </div>
 
@@ -36,7 +36,7 @@
         </div>
 
         <div infinite-scroll='$ctrl.loadMore()' infinite-scroll-distance='2' infinite-scroll-listen-for-event="list:filtered">
-            <a ng-repeat="snapshot in $ctrl.pagedItems" class="row" href="#!/snapshot/{{snapshot.ID}}">
+            <a ng-repeat="snapshot in $ctrl.pagedItems" class="row" href="#!/snapshot?id={{snapshot.ID}}">
                 <div class="col-3 snapshot-time">{{snapshot.Date}}</div>
                 <div class="col-6 instrument-name">{{snapshot.Instrument.InstrumentName}}</div>
                 <div class="col-2 snapshot-decision">{{snapshot.Decision}}</div>
