@@ -299,9 +299,13 @@ if __name__ == '__main__':
                 else:
                     print("get snapshot")
                     snapshot = naytrading.new_snapshot(FLAGS.max_age)
-                    if snapshot is None or snapshot['Rates'] is None or len(snapshot['Rates']) == 0:
+                    if snapshot is None or snapshot['ID']:
                         sleep = FLAGS.no_snapshot_sleep
                         print("no snapshot available")
+                    elif snapshot['Rates'] is None or len(snapshot['Rates']) == 0:
+                        print('%s %s on %s (snapshot %d)%s' % (
+                            'wait', snapshot['Instrument']['InstrumentName'], snapshot['Date'], snapshot['ID'], ' because no rates were given'))
+                        naytrading.set_decision(snapshot['ID'], 'wait')
                     else:
                         sleep = FLAGS.sleep
                         print("prepare snapshot")
