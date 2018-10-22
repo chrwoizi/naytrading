@@ -299,7 +299,7 @@ if __name__ == '__main__':
                 else:
                     print("get snapshot")
                     snapshot = naytrading.new_snapshot(FLAGS.max_age)
-                    if snapshot is None or snapshot['ID']:
+                    if snapshot is None or snapshot['ID'] is None:
                         sleep = FLAGS.no_snapshot_sleep
                         print("no snapshot available")
                     elif snapshot['Rates'] is None or len(snapshot['Rates']) == 0:
