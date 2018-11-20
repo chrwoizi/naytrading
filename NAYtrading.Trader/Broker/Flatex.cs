@@ -79,7 +79,7 @@ namespace NAYtrading.Trader
 
             Thread.Sleep(10000);
 
-            var xpath = "//div[@id='accountOverviewForm_accountOverviewTableSmall']/div/div/div[div/text()='Cashkonto']/div[contains(@class,'SimpleBalance')]/span";
+            var xpath = "//div[@id='accountOverviewForm_accountOverviewTableSmall']/div[contains(@class,'Footer')]/div/div[contains(@class,'Right') and contains(@class,'AvailableAmountSum')]/span";
             var quantityElement = WaitForElementByXPath(chrome, xpath, 50, element =>
             {
                 var x = element.GetAttribute("innerText");
