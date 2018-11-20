@@ -284,7 +284,7 @@ namespace NAYtrading.Trader
                 }
             }
 
-            var anyPriceXpath = "//table[@id='paperSearchForm_paperInfoSubComponent_tradingPlaceTable']/tbody/tr/td/table/tbody/tr/td[count(//*[@id='paperSearchForm_paperInfoSubComponent_tradingPlaceTable']/tbody/tr/td/table/thead/tr[1]/td[div/a/text()='Brief']/preceding-sibling::*)+1]/span[text()!='']";
+            var anyPriceXpath = "//table[@id='paperSearchForm_paperInfoSubComponent_tradingPlaceTable']/tbody/tr/td/table/tbody/tr/td[count(//*[@id='paperSearchForm_paperInfoSubComponent_tradingPlaceTable']/tbody/tr/td/table/thead/tr[1]/td[div/a/text()='Brief']/preceding-sibling::*)+1]/div[text()!='']";
             var anyPriceElement = WaitForElementByXPath(chrome, anyPriceXpath, 50, element =>
             {
                 var text = element.GetAttribute("innerText");
@@ -343,7 +343,7 @@ namespace NAYtrading.Trader
             var exchanges = ConfigurationManager.AppSettings["FlatexExchanges"] ?? "flatex Preis";
             foreach (var exchange in exchanges.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
             {
-                var xpath = "//table[@id='paperSearchForm_paperInfoSubComponent_tradingPlaceTable']/tbody/tr/td/table/tbody/tr[contains(td/div/text(),'" + exchange + "')]/td[count(//*[@id='paperSearchForm_paperInfoSubComponent_tradingPlaceTable']/tbody/tr/td/table/thead/tr[1]/td[div/a/text()='" + priceTitle + "']/preceding-sibling::*)+1]/span[text()!='']";
+                var xpath = "//table[@id='paperSearchForm_paperInfoSubComponent_tradingPlaceTable']/tbody/tr/td/table/tbody/tr[contains(td/div/text(),'" + exchange + "')]/td[count(//*[@id='paperSearchForm_paperInfoSubComponent_tradingPlaceTable']/tbody/tr/td/table/thead/tr[1]/td[div/div/a/text()='" + priceTitle + "']/preceding-sibling::*)+1]/span[text()!='']";
 
                 priceElement = WaitForElementByXPath(chrome, xpath, 1, element =>
                 {
