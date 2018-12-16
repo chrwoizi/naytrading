@@ -45,7 +45,7 @@ def main(input_path, output_path, days, max_missing_days):
     output_path_temp = output_path + '.incomplete'
     try:
         with open(output_path_temp, 'w', encoding='utf8') as out_file:
-            out_file.write('id;instrument;decision;time;')
+            out_file.write('id;instrument;decision;confirmed;time;')
             for day in range(-days + 1, 1):
                 out_file.write(str(day))
                 if day < 0:
@@ -89,11 +89,10 @@ def main(input_path, output_path, days, max_missing_days):
                                     out_file.write(str(snapshot.instrument.ID))
                                     out_file.write(';')
 
-                                    decision = snapshot.Decision
-                                    if decision == 'buy' and ('Confirmed' in snapshot.__dict__) and snapshot.Confirmed < 0:
-                                        decision = 'wait'
+                                    out_file.write(snapshot.Decision)
+                                    out_file.write(';')
 
-                                    out_file.write(decision)
+                                    out_file.write(str(snapshot.Confirmed))
                                     out_file.write(';')
 
                                     out_file.write(snapshot_date.strftime('%Y%m%d'))

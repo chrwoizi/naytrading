@@ -45,7 +45,8 @@ def get_metadata(input_path, report_progress):
                         id = split[0]
                         instrument_id = split[1]
                         decision = split[2]
-                        time = datetime.datetime.strptime(split[3], '%Y%m%d').date()
+                        confirmed = int(split[3])
+                        time = datetime.datetime.strptime(split[4], '%Y%m%d').date()
                         last_rate = Decimal(split[len(split)-1])
 
                         meta = dict(
@@ -54,6 +55,7 @@ def get_metadata(input_path, report_progress):
                             InstrumentId = instrument_id,
                             Decision = decision,
                             Time = time,
+                            Confirmed = confirmed,
                             CurrentPrice = last_rate
                         )
 
@@ -71,20 +73,24 @@ def get_metadata(input_path, report_progress):
         invested = False
         previous_buy_rate = Decimal(0)
         previous_buy_date = None
+        previous_buy_confirmed = 0
         (k, v) = group
         by_time = sorted(v, key=lambda x: x['Time'])
         for meta in by_time:
             meta['Invested'] = invested
             meta['PreviousBuyRate'] = previous_buy_rate
             meta['PreviousBuyDate'] = previous_buy_date
+            meta['PreviousBuyConfirmed'] = previous_buy_confirmed
             if meta['Decision'] == 'buy':
                 invested = True
                 previous_buy_rate = meta['CurrentPrice']
                 previous_buy_date = meta['Time']
+                previous_buy_confirmed = meta['Confirmed']
             if meta['Decision'] == 'sell':
                 invested = False
                 previous_buy_rate = Decimal(0)
                 previous_buy_date = None
+                previous_buy_confirmed = 0
 
     return metas
 
@@ -128,7 +134,12 @@ def main(input_path, output_path_buy, output_path_no_buy, output_path_sell, outp
                     with open(output_path_sell_temp, 'w', encoding='utf8') if output_path_sell_temp else None as out_file_sell:
                         with open(output_path_no_sell_temp, 'w', encoding='utf8') if output_path_no_sell_temp else None as out_file_no_sell:
 
-                            header = "index;" + in_file.readline()
+                            line = in_file.readline()
+                            first = line.index(';')
+                            second = line.index(';', first + 1)
+                            third = line.index(';', second + 1)
+                            fourth = line.index(';', third + 1)
+                            header = "index;" + line[0 : third] + line[fourth:]
 
                             if out_file_buy:
                                 out_file_buy.writelines([header])
@@ -158,38 +169,47 @@ def main(input_path, output_path_buy, output_path_no_buy, output_path_sell, outp
                                 lines_read += 1
 
                                 if len(line) > 2:
+
+                                    decision = meta['Decision']
+                                    if decision == 'wait1yr' or decision == 'autowait':
+                                        decision = 'wait'
+                                    elif decision == 'buy' and meta['Confirmed'] < 0:
+                                        decision = 'wait'
+                                    elif decision == 'sell' and meta['PreviousBuyConfirmed'] < 0:
+                                        decision = 'wait'
+
+                                    first = line.index(';')
+                                    second = line.index(';', first + 1)
+                                    third = line.index(';', second + 1)
+                                    fourth = line.index(';', third + 1)
+                                    line_as_decision = line[0 : second + 1] + decision + line[fourth:]
+
                                     if meta['Invested']:
 
-                                        if meta['Decision'] == 'sell':
+                                        if decision == 'sell':
 
                                             if out_file_sell and meta['PreviousBuyDate'] is not None:
                                                 buy_day = -(meta['Time'] - meta['PreviousBuyDate']).days
-                                                out_file_sell.writelines([str(lines_read) + ';' + line[0:-1] + ';' + str(buy_day) + '\n'])
+                                                out_file_sell.writelines([str(lines_read) + ';' + line_as_decision[0:-1] + ';' + str(buy_day) + '\n'])
 
-                                        elif meta['Decision'] == 'wait' or meta['Decision'] == 'wait1yr' or meta['Decision'] == 'autowait':
-
+                                        elif decision == 'wait':
                                             if out_file_buy:
-
                                                 if meta['PreviousBuyRate'] > 0 and meta['PreviousBuyRate'] < meta['CurrentPrice'] * Decimal(1.01):
-                                                    first = line.index(';')
-                                                    second = line.index(';', first + 1)
-                                                    third = line.index(';', second + 1)
-                                                    line_as_buy = line[0 : second + 1] + 'buy' + line[third:]
+                                                    line_as_buy = line_as_decision[0 : second + 1] + 'buy' + line_as_decision[third:]
                                                     out_file_buy.writelines([str(lines_read) + ';' + line_as_buy])
 
                                             if out_file_no_sell and meta['PreviousBuyDate'] is not None:
                                                 buy_day = -(meta['Time'] - meta['PreviousBuyDate']).days
-                                                out_file_no_sell.writelines([str(lines_read) + ';' + line[0:-1] + ';' + str(buy_day) + '\n'])
+                                                out_file_no_sell.writelines([str(lines_read) + ';' + line_as_decision[0:-1] + ';' + str(buy_day) + '\n'])
                                     else:
 
-                                        if meta['Decision'] == 'buy':
-
+                                        if decision == 'buy':
                                             if out_file_buy:
-                                                out_file_buy.writelines([str(lines_read) + ';' + line])
-                                        elif meta['Decision'] == 'wait' or meta['Decision'] == 'wait1yr' or meta['Decision'] == 'autowait':
+                                                out_file_buy.writelines([str(lines_read) + ';' + line_as_decision])
 
+                                        elif decision == 'wait':
                                             if out_file_no_buy:
-                                                out_file_no_buy.writelines([str(lines_read) + ';' + line])
+                                                out_file_no_buy.writelines([str(lines_read) + ';' + line_as_decision])
 
                                 progress.add_item()
                                 progress.maybe_print()
