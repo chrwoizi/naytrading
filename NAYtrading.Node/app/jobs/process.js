@@ -324,7 +324,7 @@ async function processUser(user) {
     var maxMissingDays = config.discard_threshold_missing_workdays;
     var testDataRatio = 0.2;
     var preserveTestIds = true;
-    var augmentFactor = 10;
+    var augmentFactor = 4;
 
     var jsonFiles = files.filter(x => x.endsWith(".json"));
     for (var i = 0; i < jsonFiles.length; ++i) {
