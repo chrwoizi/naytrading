@@ -150,16 +150,17 @@ namespace NAYtrading.Trader
                 throw new Exception("Could not find toggle search button");
             }
 
-            if (toggleSearchButton.GetAttribute("title") == "Suche")
-            {
-                Click(chrome, toggleSearchButton);
-            }
-
             var searchField = WaitForElementById(chrome, "depositStatementForm_tableSearchWidget_searchEditFieldWidget_editField", 5, x => x.Displayed);
             if (searchField == null)
             {
-                SaveScreenshot(chrome);
-                throw new Exception("Could not find search field");
+                Click(chrome, toggleSearchButton);
+
+                searchField = WaitForElementById(chrome, "depositStatementForm_tableSearchWidget_searchEditFieldWidget_editField", 5, x => x.Displayed);
+                if (searchField == null)
+                {
+                    SaveScreenshot(chrome);
+                    throw new Exception("Could not find search field");
+                }
             }
 
             SendKeys(chrome, searchField, !string.IsNullOrEmpty(isin) ? isin : wkn);
