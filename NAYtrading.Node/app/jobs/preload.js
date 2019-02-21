@@ -57,7 +57,7 @@ exports.run = async function () {
 
     }
     catch (error) {
-        console.log("error in preload: " + error);
+        console.log("error in preload: " + error.message + "\n" + error.stack);
     }
 
     setTimeout(exports.run, config.job_preload_interval_seconds * 1000);

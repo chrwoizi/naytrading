@@ -14,7 +14,7 @@ exports.run = async function () {
                 
     }
     catch (error) {
-        console.log("error in strikes job: " + error);
+        console.log("error in strikes job: " + error.message + "\n" + error.stack);
     }
 
     setTimeout(exports.run, config.job_strikes_interval_seconds * 1000);

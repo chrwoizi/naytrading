@@ -10,7 +10,7 @@ exports.invalid_response = "invalid response";
 
 exports.getRates = async function (source, instrumentId, marketId, startTime, endTime) {
     if (source != exports.source)
-        throw "invalid source";
+        throw new Error("invalid source");
 
     var response = {
         "markets": {
@@ -98,10 +98,10 @@ exports.getRates = async function (source, instrumentId, marketId, startTime, en
             };
         }
         else {
-            throw exports.invalid_response + ": " + JSON.stringify(response);
+            throw new Error(exports.invalid_response + ": " + JSON.stringify(response));
         }
     }
     else {
-        throw exports.invalid_response;
+        throw new Error(exports.invalid_response);
     }
 };

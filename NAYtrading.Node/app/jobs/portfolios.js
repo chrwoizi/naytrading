@@ -151,7 +151,7 @@ exports.updateUser = async function(user) {
             });
 
             if (!previousTrades || !previousTrades.length) {
-                throw { message: "could not find previous buy trade for snapshot " + trade.SnapshotId };
+                throw new Error("could not find previous buy trade for snapshot " + trade.SnapshotId);
             }
 
             quantity = -previousTrades[0].Quantity;
@@ -198,13 +198,13 @@ exports.run = async function () {
                 await exports.updateUser(user);
             }
             catch (userError) {
-                console.log("error in portfolios job for user " + user + ": " + userError.message);
+                console.log("error in portfolios job for user " + user + ": " + userError.message + "\n" + userError.stack);
             }
         }
 
     }
     catch (error) {
-        console.log("error in portfolios job: " + error.message);
+        console.log("error in portfolios job: " + error.message + "\n" + error.stack);
     }
 
     setTimeout(exports.run, config.job_portfolios_interval_seconds * 1000);

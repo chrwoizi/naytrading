@@ -161,7 +161,8 @@ var sql = require('./app/sql/sql');
     
     }).catch(function (err) {
 
-        console.log(err, "Something went wrong with the Database Update!")
+        console.log(err.message + "\n" + err.stack);
+        console.log("Something went wrong with the Database Update!");
 
     });
 })();

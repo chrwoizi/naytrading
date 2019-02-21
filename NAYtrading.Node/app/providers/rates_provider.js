@@ -65,7 +65,7 @@ exports.getRates = async function (source, instrumentId, preferredMarketId, star
                 continue;
             }
             else {
-                throw exports.market_not_found;
+                throw new Error(exports.market_not_found);
             }
         }
 

@@ -91,6 +91,6 @@ module.exports = {
         });
     },
     down: (queryInterface, Sequelize) => {
-        throw "not implemented";
+        throw new Error("not implemented");
     }
 };

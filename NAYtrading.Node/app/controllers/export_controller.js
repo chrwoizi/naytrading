@@ -82,7 +82,7 @@ exports.exportInstruments = async function (req, res) {
             res.end();
 
             if (cancel) {
-                throw { message: "client disconnected" }
+                throw new Error("client disconnected");
             }
         }
         else {
@@ -206,7 +206,7 @@ exports.exportSnapshots = async function (req, res) {
             res.end();
 
             if (cancel) {
-                throw { message: "client disconnected" }
+                throw new Error("client disconnected");
             }
         }
         else {

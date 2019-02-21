@@ -50,7 +50,7 @@ exports.download = async function (sourceType, url, isJson, customRequest, form)
             break;
 
         if (new Date().getTime() - start > config.downloader_timeout_milliseconds) {
-            throw new Exception("Could not get request timeslot for " + url);
+            throw new Error("Could not get request timeslot for " + url);
         }
 
         await sleep(500);

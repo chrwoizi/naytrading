@@ -143,7 +143,7 @@ async function getStatsForUser(user) {
 
             var buyTrade = buyTrades[trade.InstrumentId];
             if (typeof (buyTrade) === 'undefined') {
-                throw { message: "could not find buy trade for user " + user + " and instrument " + trade.InstrumentId };
+                throw new Error("could not find buy trade for user " + user + " and instrument " + trade.InstrumentId);
             }
 
             delete buyTrades[trade.InstrumentId];
@@ -168,7 +168,7 @@ async function getStatsForUser(user) {
             "@fromTime": buyTrade.Time,
         });
         if (sellTrades.length == 0) {
-            throw { message: "could not determine sell price for buy trade " + buyTrade.ID };
+            throw new Error("could not determine sell price for buy trade " + buyTrade.ID);
         }
         else {
             var sellTrade = sellTrades[0];
