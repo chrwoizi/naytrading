@@ -135,7 +135,12 @@ async function getHunches() {
     for (var i = 0; i < ids.length; ++i) {
         var id = ids[i].ID;
 
-        await getHunch(id);
+        try {
+            await getHunch(id);
+        }
+        catch (error) {
+            console.log("error in split job getHunches for " + JSON.stringify(ids[i]) + ": " + error);
+        }
 
         logVerbose("split job getHunches: " + (100 * i / ids.length).toFixed(2) + "%");
     }
@@ -257,7 +262,12 @@ async function fixHunches() {
     var items = await sql.query("SELECT s.ID, s.SourceType, s.Instrument_ID, s.StartTime, s.Time FROM snapshots AS s WHERE s.Split = 'HUNCH' ORDER BY s.Time DESC");
 
     for (var i = 0; i < items.length; ++i) {
-        await fixHunch(items[i].ID, items[i].SourceType, items[i].Instrument_ID, parseDate(items[i].StartTime), parseDate(items[i].Time));
+        try {
+            await fixHunch(items[i].ID, items[i].SourceType, items[i].Instrument_ID, parseDate(items[i].StartTime), parseDate(items[i].Time));
+        }
+        catch (error) {
+            console.log("error in split job fixHunches for " + JSON.stringify(items[i]) + ": " + error);
+        }
 
         logVerbose("split job fixHunches: " + (100 * i / items.length).toFixed(2) + "%");
     }
@@ -318,13 +328,24 @@ async function fixPriceDifferences() {
 
         var item = items[i];
 
-        var snapshots = await sql.query("SELECT s.ID, s.StartTime, s.Time FROM snapshots AS s WHERE s.Instrument_ID = @instrumentId", {
-            "@instrumentId": item.Instrument_ID
-        });
+        try {
+            var snapshots = await sql.query("SELECT s.ID, s.StartTime, s.Time FROM snapshots AS s WHERE s.Instrument_ID = @instrumentId", {
+                "@instrumentId": item.Instrument_ID
+            });
 
-        for (var s = 0; s < snapshots.length; ++s) {
-            await refreshRates(snapshots[s].ID, item.NewSourceType, item.NewMarketId, item.Instrument_ID, parseDate(snapshots[s].StartTime), parseDate(snapshots[s].Time));
-            logVerbose("split job fixPriceDifferences: " + (100 * (i + s / snapshots.length) / items.length).toFixed(2) + "%");
+            for (var s = 0; s < snapshots.length; ++s) {
+                try {
+                    await refreshRates(snapshots[s].ID, item.NewSourceType, item.NewMarketId, item.Instrument_ID, parseDate(snapshots[s].StartTime), parseDate(snapshots[s].Time));
+                }
+                catch (error) {
+                    console.log("error in split job fixPriceDifferences for " + JSON.stringify([item, snapshots[s]]) + ": " + error);
+                }
+
+                logVerbose("split job fixPriceDifferences: " + (100 * (i + s / snapshots.length) / items.length).toFixed(2) + "%");
+            }
+        }
+        catch (error) {
+            console.log("error in split job fixPriceDifferences for " + JSON.stringify(item) + ": " + error);
         }
 
         logVerbose("split job fixPriceDifferences: " + (100 * i / items.length).toFixed(2) + "%");
