@@ -9,7 +9,7 @@ exports.invalid_response = "invalid response";
 
 exports.getAllInstruments = async function (source, minCapitalization) {
     if (source != exports.source)
-        throw "invalid source";
+        throw new Error("invalid source");
 
     // TODO load instruments
 
@@ -29,7 +29,7 @@ exports.getAllInstruments = async function (source, minCapitalization) {
 
 exports.getInstrumentByUrl = async function (source, url) {
     if (source != exports.source)
-        throw "invalid source";
+        throw new Error("invalid source");
 
     var doc = await downloader.downloadHtml(source, url);
 
@@ -53,7 +53,7 @@ exports.getInstrumentByUrl = async function (source, url) {
 
 exports.getIsinWkn = async function (source, instrumentId) {
     if (source != exports.source)
-        throw "invalid source";
+        throw new Error("invalid source");
 
     // TODO load values
 
@@ -65,7 +65,7 @@ exports.getIsinWkn = async function (source, instrumentId) {
 
 exports.getInstrumentId = async function (source, isin, wkn) {
     if (source != exports.source)
-        throw "invalid source";
+        throw new Error("invalid source");
 
     // TODO load value
 

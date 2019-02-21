@@ -160,7 +160,7 @@ module.exports = function (passport, user) {
 
             }).catch(function (err) {
 
-                console.log("Error:", err);
+                console.log("Error:" + err.message + "\n" + err.stack);
 
                 return done(null, false, {
                     hasError: true,
@@ -256,7 +256,7 @@ module.exports = function (passport, user) {
 
             }).catch(function (err) {
 
-                console.log("Error:", err);
+                console.log("Error:" + err.message + "\n" + err.stack);
 
                 return done(null, false, {
                     hasError: true,

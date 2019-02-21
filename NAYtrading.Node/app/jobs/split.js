@@ -139,7 +139,7 @@ async function getHunches() {
             await getHunch(id);
         }
         catch (error) {
-            console.log("error in split job getHunches for " + JSON.stringify(ids[i]) + ": " + error);
+            console.log("error in split job getHunches for " + JSON.stringify(ids[i]) + ": " + error.message + "\n" + error.stack);
         }
 
         logVerbose("split job getHunches: " + (100 * i / ids.length).toFixed(2) + "%");
@@ -240,10 +240,10 @@ async function fixHunch(snapshotId, knownSource, instrumentId, startTime, endTim
             }
         }
         catch (e) {
-            if (e == ratesProvider.market_not_found) {
+            if (e.message == ratesProvider.market_not_found) {
                 // expected
             }
-            else if (e == ratesProvider.invalid_response) {
+            else if (e.message == ratesProvider.invalid_response) {
                 // expected
             }
             else {
@@ -266,7 +266,7 @@ async function fixHunches() {
             await fixHunch(items[i].ID, items[i].SourceType, items[i].Instrument_ID, parseDate(items[i].StartTime), parseDate(items[i].Time));
         }
         catch (error) {
-            console.log("error in split job fixHunches for " + JSON.stringify(items[i]) + ": " + error);
+            console.log("error in split job fixHunches for " + JSON.stringify(items[i]) + ": " + error.message + "\n" + error.stack);
         }
 
         logVerbose("split job fixHunches: " + (100 * i / items.length).toFixed(2) + "%");
@@ -301,10 +301,10 @@ async function refreshRates(snapshotId, newSource, newMarketId, instrumentId, st
         }
     }
     catch (e) {
-        if (e == ratesProvider.market_not_found) {
+        if (e.message == ratesProvider.market_not_found) {
             // expected
         }
-        else if (e == ratesProvider.invalid_response) {
+        else if (e.message == ratesProvider.invalid_response) {
             // expected
         }
         else {
@@ -338,14 +338,14 @@ async function fixPriceDifferences() {
                     await refreshRates(snapshots[s].ID, item.NewSourceType, item.NewMarketId, item.Instrument_ID, parseDate(snapshots[s].StartTime), parseDate(snapshots[s].Time));
                 }
                 catch (error) {
-                    console.log("error in split job fixPriceDifferences for " + JSON.stringify([item, snapshots[s]]) + ": " + error);
+                    console.log("error in split job fixPriceDifferences for " + JSON.stringify([item, snapshots[s]]) + ": " + error.message + "\n" + error.stack);
                 }
 
                 logVerbose("split job fixPriceDifferences: " + (100 * (i + s / snapshots.length) / items.length).toFixed(2) + "%");
             }
         }
         catch (error) {
-            console.log("error in split job fixPriceDifferences for " + JSON.stringify(item) + ": " + error);
+            console.log("error in split job fixPriceDifferences for " + JSON.stringify(item) + ": " + error.message + "\n" + error.stack);
         }
 
         logVerbose("split job fixPriceDifferences: " + (100 * i / items.length).toFixed(2) + "%");
@@ -361,7 +361,7 @@ exports.run = async function () {
 
     }
     catch (error) {
-        console.log("error in split job: " + error);
+        console.log("error in split job: " + error.message + "\n" + error.stack);
     }
 
     setTimeout(exports.run, config.job_split_interval_seconds * 1000);

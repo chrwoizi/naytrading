@@ -49,7 +49,7 @@ function run() {
             await update();
         }
         catch (error) {
-            console.log("error in settings: " + error);
+            console.log("error in settings: " + error.message + "\n" + error.stack);
         }
 
         setTimeout(run, config.settings_refresh_interval_seconds * 1000);

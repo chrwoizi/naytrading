@@ -301,12 +301,12 @@ exports.setDecision = async function (req, res) {
                 if (previous.PreviousDecision) {
                     if (previous.PreviousDecision == "buy") {
                         if (req.body.decision == "buy") {
-                            throw { message: "Conflicting buy decision in the past" }
+                            throw new Error("Conflicting buy decision in the past");
                         }
                     }
                     else if (previous.PreviousDecision == "sell") {
                         if (req.body.decision == "sell") {
-                            throw { message: "Conflicting sell decision in the past" }
+                            throw new Error("Conflicting sell decision in the past");
                         }
                     }
                 }
@@ -315,12 +315,12 @@ exports.setDecision = async function (req, res) {
                 if (next.NextDecision) {
                     if (next.NextDecision == "buy") {
                         if (req.body.decision == "buy") {
-                            throw { message: "Conflicting buy decision in the future" }
+                            throw new Error("Conflicting buy decision in the future");
                         }
                     }
                     else if (next.NextDecision == "sell") {
                         if (req.body.decision == "sell") {
-                            throw { message: "Conflicting sell decision in the future" }
+                            throw new Error("Conflicting sell decision in the future");
                         }
                     }
                 }
@@ -602,10 +602,10 @@ exports.refreshSnapshotRates = async function (req, res) {
                 }
             }
             catch (e) {
-                if (e == ratesProvider.market_not_found) {
+                if (e.message == ratesProvider.market_not_found) {
                     res.json({ error: "market not found" });
                 }
-                else if (e == ratesProvider.invalid_response) {
+                else if (e.message == ratesProvider.invalid_response) {
                     res.json({ error: "invalid provider response" });
                 }
                 else {

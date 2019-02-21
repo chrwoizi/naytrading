@@ -285,7 +285,7 @@ async function processUser(user) {
                 await removeFile(incompletes[i]);
             }
             catch (e) {
-                console.log("Error while deleting " + incompletes[i] + ": " + e.message);
+                console.log("Error while deleting " + incompletes[i] + ": " + e.message + "\n" + e.stack);
             }
         }
     }
@@ -442,7 +442,7 @@ exports.run = async function () {
         }
     }
     catch (error) {
-        logError("error in process job: " + error);
+        logError("error in process job: " + error.message + "\n" + error.stack);
     }
 
     setTimeout(exports.run, config.job_process_interval_seconds * 1000);

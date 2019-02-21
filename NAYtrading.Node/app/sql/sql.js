@@ -18,7 +18,7 @@ exports.query = async function (sql, args) {
 
     for (var arg in args) {
         if (!arg.startsWith("@")) {
-            throw { message: "invalid sql argument " + arg };
+            throw new Error("invalid sql argument " + arg);
         }
     }
 

@@ -135,7 +135,7 @@ exports.run = async function () {
 
     }
     catch (error) {
-        console.log("error in cleanup: " + error);
+        console.log("error in cleanup: " + error.message + "\n" + error.stack);
     }
 
     setTimeout(exports.run, config.job_cleanup_interval_seconds * 1000);

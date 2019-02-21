@@ -125,7 +125,7 @@ exports.isAutoWait = async function (newSnapshot) {
 }
 
 async function handleRateProviderError(instrument, source, error) {
-    if (error == ratesProvider.market_not_found) {
+    if (error.message == ratesProvider.market_not_found) {
         var strikes = config.max_strikes + 12;
         console.log("Setting " + strikes + " strikes on instrument " + instrument.InstrumentName + " (" + source.SourceId + " on " + source.SourceType + ") because the market id " + source.MarketId + " does not exist");
         await source.updateAttributes({
@@ -133,7 +133,7 @@ async function handleRateProviderError(instrument, source, error) {
             LastStrikeTime: new Date()
         });
     }
-    else if (error == ratesProvider.invalid_response) {
+    else if (error.message == ratesProvider.invalid_response) {
         console.log("Adding 5 strikes to instrument " + instrument.InstrumentName + " (" + source.SourceId + " on " + source.SourceType + ") because the server returned an unexpected response for market id " + source.MarketId);
         await source.updateAttributes({
             Strikes: source.Strikes + 5,
@@ -141,7 +141,7 @@ async function handleRateProviderError(instrument, source, error) {
         });
     }
     else {
-        console.log(error);
+        console.log(error.message + "\n" + error.stack);
         console.log("Adding 1 strike to instrument " + instrument.InstrumentName + " (" + source.SourceId + " on " + source.SourceType + ") because it caused an exception: " + error);
         await source.updateAttributes({
             Strikes: source.Strikes + 1,
@@ -323,7 +323,7 @@ exports.createNewSnapshotFromRandomInstrument = async function (instrumentIds) {
             }
         }
         catch (error) {
-            console.log(error);
+            console.log(error.message + "\n" + error.stack);
         }
 
         if (lockFlag > 0) {

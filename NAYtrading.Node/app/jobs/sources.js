@@ -33,7 +33,7 @@ exports.run = async function () {
         }
     }
     catch (error) {
-        console.log("error in sources job: " + error);
+        console.log("error in sources job: " + error.message + "\n" + error.stack);
     }
 
     setTimeout(exports.run, config.job_sources_interval_seconds * 1000);
