@@ -49,6 +49,15 @@ namespace NAYtrading.Trader
                 var tan = tanProvider.GetTan(challenge[0], challenge[1], challenge[2]);
                 Console.WriteLine("TAN: " + tan);
             }
+            else if (args.Length == 1 && args[0] == "gettans")
+            {
+                Console.Write("TAN file password: ");
+                var password = ConsoleHelper.ReadPassword('*');
+                var tanProvider = new FlatexTanProvider(password);
+                var tan = tanProvider.GetTans();
+                Console.WriteLine("TANs: " + tan);
+                Console.ReadLine();
+            }
             else if (args.Length == 1 && args[0] == "testbroker")
             {
                 try

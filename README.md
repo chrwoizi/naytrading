@@ -55,7 +55,7 @@ root@host:~$ iptables-save > /etc/iptables/rules.v4
 root@host:~$ adduser naytrading
 [enter secure password]
 [leave details empty]
-naytrading@host:~$ su naytrading
+root@host:~$ su naytrading
 naytrading@host:/root$ cd ~
 
 # setup naytrading

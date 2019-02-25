@@ -20,10 +20,10 @@ namespace NAYtrading.Trader
         {
             chrome.Navigate().GoToUrl("https://www.flatex.de/kunden-login/");
 
-            var userElement = WaitForElementById(chrome, "uname_app", 30, x => true);
+            var userElement = WaitForElementById(chrome, "uname_app", 60, x => true);
             var passwordElement = WaitForElementById(chrome, "password_app", 1, x => true);
             var sessionElement = WaitForElementById(chrome, "sessionpass", 1, x => true);
-            var buttonElement = WaitForElementByXPath(chrome, "//*[@id='webfiliale_login']//div[@title='Anmelden']", 1, x => true);
+            var buttonElement = WaitForElementByXPath(chrome, "//*[@id='webfiliale_login']//div[@title='Anmelden']", 10, x => true);
 
             var closeModalElement = WaitForElementById(chrome, "closeModal", 1, x => true);
             if (closeModalElement != null && closeModalElement.Displayed)

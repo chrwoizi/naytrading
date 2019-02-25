@@ -19,6 +19,25 @@ namespace NAYtrading.Trader
             this.passwordHash = passwordHash;
         }
 
+        public string GetTans()
+        {
+            string cipher;
+
+            try
+            {
+                cipher = File.ReadAllText(ConfigurationManager.AppSettings["TanFilePath"]);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Could not load TAN file", ex);
+            }
+
+            string[] tans;
+
+            var tansStr = StringCipher.Decrypt(cipher, passwordHash);
+            return tansStr;
+        }
+
         public string GetTan(object tanChallenge)
         {
             var flatexTanChallenge = (Flatex.TanChallenge)tanChallenge;
