@@ -71,7 +71,7 @@ exports.download = async function (sourceType, url, isJson, customRequest, form)
 
             usingRequest.post(options, function (err, resp, body) {
                 if (err || resp.statusCode != 200) {
-                    console.log(err);
+                    console.log("Error in downloader: " + err);
                     reject(err);
                 } else {
                     resolve(body);
@@ -80,8 +80,8 @@ exports.download = async function (sourceType, url, isJson, customRequest, form)
         }
         else {
             usingRequest.get(options, function (err, resp, body) {
-                if (err || resp.statusCode != 200) {
-                    console.log(err);
+                if (err || (resp && resp.statusCode != 200)) {
+                    console.log((resp ? "HTTP " + resp.statusCode : "Error") + " in downloader: " + err + " - " + url);
                     reject(err);
                 } else {
                     resolve(body);
