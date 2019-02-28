@@ -164,12 +164,15 @@ exports.exportUserSnapshotsGeneric = async function (fromTimeUTC, user, stream, 
                 model: model.instrument
             }, {
                 model: model.snapshotrate
+            }, {
+                model: model.tradelog
             }],
             where: {
                 ID: usersnapshot.Snapshot_ID
             },
             order: [
-                [model.snapshotrate, "Time", "ASC"]
+                [model.snapshotrate, "Time", "ASC"],
+                [model.tradelog, "Time", "ASC"]
             ]
         });
         snapshot = snapshot.get({ plain: true });
@@ -254,12 +257,84 @@ exports.exportUserTrades = async function (req, res) {
             for (var i = 0; i < trades.length && !cancel; ++i) {
 
                 var trade = trades[i];
+                trade.tradelogs = await sql.query("SELECT * FROM tradelogs l WHERE l.User = @user AND l.Snapshot_ID = @snapshotId ORDER BY l.Time ASC", {
+                    "@user": req.user.email,
+                    "@snapshotId": trade.SnapshotId
+                });
 
                 if (i > 0) {
                     res.write(',');
                 }
 
                 res.write(JSON.stringify(trade));
+            }
+
+            res.write(']');
+            res.end();
+
+            if (cancel) {
+                throw new Error("client disconnected");
+            }
+        }
+        else {
+            res.status(401);
+            res.json({ error: "unauthorized" });
+        }
+    }
+    catch (error) {
+        return500(res, error);
+    }
+}
+
+exports.exportUserTradelogs = async function (req, res) {
+    try {
+        if (req.isAuthenticated()) {
+
+            if (typeof (req.params.fromDate) !== 'string' || !(req.params.fromDate.length == 8 || req.params.fromDate.length == 14)) {
+
+                return500(res, { message: 'invalid date format' });
+                return;
+            }
+
+            var fromDate = new Date(Date.UTC(1970, 0, 1));
+            if (req.params.fromDate.length == 8) {
+                fromDate = parseDateUTC(req.params.fromDate);
+            }
+            else if (req.params.fromDate.length == 14) {
+                fromDate = parseTimeUTC(req.params.fromDate);
+            }
+
+            var cancel = false;
+
+            req.on("close", function () {
+                cancel = true;
+            });
+
+            req.on("end", function () {
+                cancel = true;
+            });
+
+            var tradelogs = await sql.query("SELECT l.*, i.Isin, i.Wkn, s.Time AS SnapshotTime FROM tradelogs l INNER JOIN snapshots s ON s.ID = l.Snapshot_ID INNER JOIN instruments i ON i.ID = s.Instrument_ID \
+                WHERE l.User = @user AND l.Time >= @fromDate ORDER BY l.Time ASC",
+                {
+                    "@user": req.user.email,
+                    "@fromDate": fromDate
+                });
+
+            res.header('Content-disposition', 'attachment; filename=tradelogs.json');
+            res.header('Content-type', 'application/json');
+
+            res.write('[');
+
+            for (var i = 0; i < tradelogs.length && !cancel; ++i) {
+
+                var tradelog = tradelogs[i];
+
+                if (i > 0) {
+                    res.write(',');
+                }
+
+                res.write(JSON.stringify(tradelog));
             }
 
             res.write(']');

@@ -122,3 +122,39 @@ header.masthead {
  .call-to-action .overlay {
      opacity: 0.5;
  }
+ 
+ .suggestion-price {
+    text-align: right;
+ }
+
+ .suggestion-action {
+    padding-left: 0;
+    text-align: left;
+ }
+
+ .suggestion-status {
+     padding-left: 0;
+     text-align: right;
+ }
+ 
+ .log-time {
+     vertical-align: top;
+     padding: 0 0.5em 0 0;
+ }
+ 
+ .log-status {
+     vertical-align: top;
+     padding: 0 0.5em 0 0;
+ }
+ 
+ .log-quantity {
+     vertical-align: top;
+     text-align: right;
+     padding: 0 0.5em 0 0;
+ }
+ 
+ .log-price {
+     vertical-align: top;
+     text-align: right;
+     padding: 0;
+ }

@@ -20,6 +20,12 @@ angular.
                 when('/snapshots/:query', {
                     template: '<snapshot-list></snapshot-list>'
                 }).
+                when('/suggestions', {
+                    template: '<suggestions></suggestions>'
+                }).
+                when('/suggestion/:id', {
+                    template: '<suggestion></suggestion>'
+                }).
                 otherwise('/stats');
         }
     ]);

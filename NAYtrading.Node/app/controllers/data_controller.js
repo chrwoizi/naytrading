@@ -313,4 +313,24 @@ exports.clearDecisions = async function (req, res) {
     catch (error) {
         return500(res, error);
     }
-}
+};
+
+exports.reloadConfig = async function (req, res) {
+
+    try {
+        if (req.isAuthenticated() && req.user.email == config.admin_user) {
+
+            config.reload();
+
+            res.status(200);
+            res.json({});
+        }
+        else {
+            res.status(401);
+            res.json({ error: "unauthorized" });
+        }
+    }
+    catch (error) {
+        return500(res, error);
+    }
+};

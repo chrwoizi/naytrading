@@ -163,6 +163,9 @@
                         <div class="export-button">
                             <a href="/api/export/user/trades/19700101" class="btn btn-secondary" role="button">Export buy/sell decisions with ISIN/WKN</a>
                         </div>
+                        <div class="export-button">
+                            <a href="/api/export/user/tradelogs/19700101" class="btn btn-secondary" role="button">Export Trader logs</a>
+                        </div>
                     </dd>
                     <dt>Import raw data:</dt>
                     <dd>
@@ -190,6 +193,19 @@
                                 </label>
                             </div>
                             <button type="submit" class="btn btn-secondary">Import decisions</button>
+                        </form>
+                        <br/>
+                        <form action="/api/import/user/tradelogs" method="post" enctype="multipart/form-data">
+                            <div class="form-group" style="margin-bottom:0">
+                                <input type="file" name="file" class="form-control-file"></input>
+                            </div>
+                            <div class="form-check">
+                                <label class="form-check-label">
+                                    <input type="checkbox" class="form-check-input" name="delete">
+                                    Delete existing logs
+                                </label>
+                            </div>
+                            <button type="submit" class="btn btn-secondary">Import Trader logs</button>
                         </form>
                     </dd>
                     {{#if isAi}}
