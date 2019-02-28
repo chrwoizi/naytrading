@@ -83,11 +83,20 @@ function addSnapshot(data, instrumentsDict) {
                 delete data.snapshotrates[i].ID;
                 delete data.snapshotrates[i].createdAt;
                 delete data.snapshotrates[i].updatedAt;
+                delete data.snapshotrates[i].Snapshot_ID;
+            }
+            for (var i = 0; i < data.tradelogs.length; ++i) {
+                delete data.tradelogs[i].ID;
+                delete data.tradelogs[i].createdAt;
+                delete data.tradelogs[i].updatedAt;
+                delete data.tradelogs[i].Snapshot_ID;
             }
 
             await model.snapshot.create(data, {
                 include: [{
                     model: model.snapshotrate
+                }, {
+                    model: model.tradelog
                 }]
             });
 
@@ -170,6 +179,10 @@ async function removeSnapshot(dictValue) {
         },
         include: [{
             model: model.snapshotrate
+        }, {
+            model: model.usersnapshot
+        }, {
+            model: model.tradelog
         }]
     });
 }

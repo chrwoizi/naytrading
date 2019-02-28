@@ -18,7 +18,8 @@ exports.importFromFormSubmit = async function (req, res, getExistingEntities, ge
         form.parse(req, async (error, fields, files) => {
 
             if (!(files && files.file && files.file.length == 1 && files.file[0].path && files.file[0].size > 0)) {
-                return500(res, { message: "no file received" });
+                res.status(500);
+                res.json({ message: "no file received" });
                 return;
             }
 
@@ -44,7 +45,7 @@ exports.importFromFormSubmit = async function (req, res, getExistingEntities, ge
                         prepareEntity(data);
                     }
                     var keys = getEntityKeys(data);
-                    console.log("importing " + ", ".join(keys));
+                    console.log("importing " + keys.join(", "));
                     var value = null;
                     for (var k = 0; k < keys.length; ++k) {
                         value = existing[keys[k]];
@@ -84,11 +85,10 @@ exports.importFromFormSubmit = async function (req, res, getExistingEntities, ge
                     try {
                         if (errors.length == 0) {
                             if (fields.delete && fields.delete.length == 1 && fields.delete[0] == "on") {
-                                for (var id in remainingById) {
-                                    if (remaining.hasOwnProperty(id)) {
-                                        console.log("deleting " + id);
-                                        removedCount += await destroyEntity(remainingById[id]);
-                                    }
+                                for (var key in remaining) {
+                                    var item = remaining[key];
+                                    console.log("deleting " + item.ID);
+                                    removedCount += await destroyEntity(item);
                                 }
                             }
                         }
@@ -97,7 +97,8 @@ exports.importFromFormSubmit = async function (req, res, getExistingEntities, ge
                         res.json({ added: addedCount, removed: removedCount, errors: errors });
                     }
                     catch (e) {
-                        return500(res, e);
+                        res.status(500);
+                        res.json(e);
                     }
 
                     try {
@@ -106,7 +107,8 @@ exports.importFromFormSubmit = async function (req, res, getExistingEntities, ge
                     catch (e) { }
                 })
                 .on('error', err => {
-                    return500(res, err);
+                    res.status(500);
+                    res.json(err);
                     try {
                         fs.unlinkSync(filePath);
                     }
@@ -116,7 +118,8 @@ exports.importFromFormSubmit = async function (req, res, getExistingEntities, ge
         });
     }
     catch (error) {
-        return500(res, error);
+        res.status(500);
+        res.json(error);
         if (filePath) {
             try {
                 fs.unlinkSync(filePath);

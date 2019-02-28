@@ -96,6 +96,12 @@
                             <button type="submit" class="btn btn-danger">Refresh Rates</button>
                         </form>
                     </dd>
+                    <dt>Config:</dt>
+                    <dd>
+                        <form action="/api/config/reload" method="post">
+                            <button type="submit" class="btn btn-danger">Reload</button>
+                        </form>
+                    </dd>
                     <dt>Users:</dt>
                     <dd>
                         {{#each users}}

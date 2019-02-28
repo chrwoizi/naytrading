@@ -65,14 +65,14 @@ exports.exportInstruments = async function (req, res) {
                 delete instrument.createdAt;
                 delete instrument.updatedAt;
 
-                for (var i = 0; i < instrument.userinstruments; ++i) {
-                    delete instrument.userinstruments[i].createdAt;
-                    delete instrument.userinstruments[i].updatedAt;
+                for (var k = 0; k < instrument.userinstruments; ++k) {
+                    delete instrument.userinstruments[k].createdAt;
+                    delete instrument.userinstruments[k].updatedAt;
                 }
 
-                for (var i = 0; i < instrument.sources; ++i) {
-                    delete instrument.sources[i].createdAt;
-                    delete instrument.sources[i].updatedAt;
+                for (var k = 0; k < instrument.sources; ++k) {
+                    delete instrument.sources[k].createdAt;
+                    delete instrument.sources[k].updatedAt;
                 }
 
                 res.write(JSON.stringify(instrument));
@@ -149,13 +149,16 @@ exports.exportSnapshots = async function (req, res) {
                         model: model.snapshotrate
                     }, {
                         model: model.usersnapshot
+                    }, {
+                        model: model.tradelog
                     }],
                     where: {
                         ID: ids[i].ID
                     },
                     order: [
                         [model.snapshotrate, "Time", "ASC"],
-                        [model.usersnapshot, "ModifiedTime", "ASC"]
+                        [model.usersnapshot, "ModifiedTime", "ASC"],
+                        [model.tradelog, "Time", "ASC"]
                     ]
                 });
 

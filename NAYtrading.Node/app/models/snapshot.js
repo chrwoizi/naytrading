@@ -76,6 +76,7 @@ module.exports = (sequelize, DataTypes) => {
         snapshot.belongsTo(models.instrument, { foreignKey: 'Instrument_ID', allowNull: false });
         snapshot.hasMany(models.snapshotrate, { foreignKey: 'Snapshot_ID', onDelete: 'CASCADE', hooks: true });
         snapshot.hasMany(models.usersnapshot, { foreignKey: 'Snapshot_ID', onDelete: 'CASCADE', hooks: true });
+        snapshot.hasMany(models.tradelog, { foreignKey: 'Snapshot_ID', onDelete: 'CASCADE', hooks: true });
     };
     return snapshot;
 };

@@ -62,6 +62,8 @@
     "snapshot_valid_seconds": 604800,
     "static_weight" : 1,
     "strikes_order_weight": 0.1,
+    "trader_max_retry_count": 100,
+    "trader_max_suggestion_age_seconds": 604800,
     "whitelist": false
   },
   "production": {
@@ -127,6 +129,8 @@
     "static_weight" : 1,
     "settings_refresh_interval_seconds": 10,
     "strikes_order_weight": 0.1,
+    "trader_max_retry_count": 100,
+    "trader_max_suggestion_age_seconds": 604800,
     "whitelist": true
   }
 }
