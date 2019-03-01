@@ -344,7 +344,7 @@ async function runActually() {
         exports.cancel = false;
         var users = brokerStore.getUsers();
         for (var userIndex = 0; userIndex < users.length; ++userIndex) {
-            var user = users[userIndex].email;
+            var user = users[userIndex];
             try {
                 var day = new Date().getDay();
                 if (day >= config.broker_open_day && day <= config.broker_close_day) {
