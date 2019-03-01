@@ -9,7 +9,6 @@ var bodyParser = require('body-parser');
 var env = require('dotenv').load();
 var exphbs = require('express-handlebars');
 
-require('sequelize'); // must be loaded before envconfig
 var config = require('./app/config/envconfig');
 
 var mainJob = require('./app/jobs/main');
