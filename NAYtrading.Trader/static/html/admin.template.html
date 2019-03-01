@@ -1,0 +1,38 @@
+﻿<div class="row row-spacer">
+</div>
+
+<span us-spinner spinner-on="$ctrl.loading" class="spinner">
+    <div ng-hide="$ctrl.loading">
+                
+        <div class="row row-spacer">
+            <div class="col-12">
+                <form>
+                    <div class="form-group">
+                        <label for="tanlist">Job: 
+                            <span ng-show="$ctrl.isJobStarted">STARTED</span>
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <button class="btn btn-danger" ng-click="$ctrl.runJob()">Start</button>
+                    </div>
+                    <div class="form-group">
+                        <button class="btn btn-danger" ng-click="$ctrl.cancelJob()">Stop</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="row row-spacer">
+            <div class="col-12">
+                <form>
+                    <div class="form-group">
+                        <label for="tanlist">Config:</label>
+                    </div>
+                    <div class="form-group">
+                        <button class="btn btn-danger" ng-click="$ctrl.reloadConfig()">Reload</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</span>

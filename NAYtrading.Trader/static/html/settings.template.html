@@ -1,0 +1,93 @@
+﻿<div class="row row-spacer">
+</div>
+
+<span us-spinner spinner-on="$ctrl.loading" class="spinner">
+    <div ng-hide="$ctrl.loading">
+      
+        <div class="row row-spacer">
+            <div class="col-12">
+                <span ng-show="$ctrl.isBrokerUnlocked && $ctrl.isTanListUnlocked" class="green">
+                    Your trading decisions will be sent to the broker periodically. 
+                    The next run is 
+                    <span ng-show="$ctrl.isRunning">NOW!</span>
+                    <span ng-hide="$ctrl.isRunning">at {{$ctrl.nextRun}}.</span>
+                </span>
+                <span ng-hide="$ctrl.isBrokerUnlocked && $ctrl.isTanListUnlocked" class="red">Please enter the passwords below to activate automatic trading.</span>
+            </div>
+        </div>
+                  
+        <div class="row row-spacer">
+            <div class="col-12">
+                <form>
+                    <div class="form-group">
+                        <label for="tanlist">Broker login details: 
+                            <span ng-show="$ctrl.isBrokerUnlocked" class="green">UNLOCKED</span>
+                            <span ng-show="!$ctrl.isBrokerUnlocked" class="red">LOCKED</span>
+                        </label>
+                    </div>
+                    <div class="form-group" ng-show="!$ctrl.isBrokerUnlocked">
+                        <label for="brokerUser">User:</label>
+                        <input type="text" name="brokerUser" id="brokerUser" ng-model="$ctrl.brokerUser" />
+                    </div>
+                    <div class="form-group" ng-show="!$ctrl.isBrokerUnlocked">
+                        <label for="brokerPassword">Password:</label>
+                        <input type="password" name="brokerPassword" id="brokerPassword" ng-model="$ctrl.brokerPassword" />
+                    </div>
+                    <div class="form-group" ng-show="!$ctrl.isBrokerUnlocked">
+                        <button class="btn btn-danger" ng-click="$ctrl.unlockBroker()">Unlock</button>
+                    </div>
+                    <div class="form-group">
+                        <button class="btn btn-default" ng-click="$ctrl.editBroker()">Edit</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+                    
+        <div class="row row-spacer" ng-show="$ctrl.isTanListSet">
+            <div class="col-12">
+                <form>
+                    <div class="form-group">
+                        <label for="tanlist">TANs: 
+                            <span ng-show="$ctrl.isTanListUnlocked" class="green">UNLOCKED</span>
+                            <span ng-show="!$ctrl.isTanListUnlocked" class="red">LOCKED</span>
+                        </label>
+                    </div>
+                    <div class="form-group" ng-show="!$ctrl.isTanListUnlocked">
+                        <label for="tanListPassword">Password:</label>
+                        <input type="password" name="tanListPassword" id="tanListPassword" ng-model="$ctrl.tanListPassword" />
+                    </div>
+                    <div class="form-group" ng-show="!$ctrl.isTanListUnlocked">
+                        <button class="btn btn-danger" ng-click="$ctrl.unlockTanList()">Unlock</button>
+                    </div>
+                    <div class="form-group">
+                        <button class="btn btn-default" ng-click="$ctrl.editTanList()">Edit</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+                    
+        <div class="row row-spacer" ng-show="!$ctrl.isTanListSet">
+            <div class="col-12">
+                <form>
+                    <div class="form-group">
+                        <label for="tanlist">TANs: 
+                            <span ng-show="!$ctrl.isTanListSet">NOT SET</span>
+                        </label>
+                        <table id="tanlist">
+                            <tr ng-repeat="row in $ctrl.tanListRows">
+                                <td ng-repeat="col in $ctrl.tanListColumns"><input type="text" class="tanlist-cell" id="tan{{row}}{{col}}" ng-model="$ctrl.tans['' + row + col]" /></td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="form-group">
+                        <label for="tanListPassword">Password:</label>
+                        <input type="password" name="tanListPassword" id="tanListPassword" ng-model="$ctrl.tanListPassword" />
+                    </div>
+                    <div class="form-group">
+                        <button class="btn btn-danger" ng-click="$ctrl.saveTanList()">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</span>

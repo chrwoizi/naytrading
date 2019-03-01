@@ -11,7 +11,7 @@ The website [NAYtrading.Node](NAYtrading.Node) presents a stock price chart to t
 <details>
 <summary>How to install</summary>
 
-NAYtrading.Node needs a stock data provider to work as expected. This repository includes an example plugin in [NAYtrading.Node.Providers](NAYtrading.Node.Providers) that can be used to quick start the development of such a provider.
+NAYtrading.Node needs a custom stock data provider implementation. This repository includes an example plugin in [NAYtrading.Node.Plugin](NAYtrading.Node.Plugin) that can be used to quick start the development of such a provider.
 
 ```sh
 # install tools
@@ -71,8 +71,8 @@ naytrading@host:~/naytrading/NAYtrading.Node/app/config$ vi config.json
 [set production.import_token to a secret value of your choice]
 [set production.admin_user to your email address]
 [set production.proxy if you access the web through a proxy]
-[set python to your python executable, e.g. python3]
-[add your custom stock data provider envconfig to the include array, e.g. "../../../NAYtrading.Node.Providers/config/envconfig"]
+[set production.python to your python executable, e.g. python3]
+[add your custom stock data provider envconfig to the include array, e.g. "../../../NAYtrading.Node.Plugin/config/envconfig"]
 :wq
 naytrading@host:~/naytrading/NAYtrading.Node/app/config$ cd ../..
 naytrading@host:~/naytrading/NAYtrading.Node$ chmod +x dbmigrate.sh
@@ -137,7 +137,7 @@ Statistics about the portfolio:
 
 ## :telephone: Forwarding the simulated trades to a broker ##
 
-The console application [NAYtrading.Trader](NAYtrading.Trader) can be used to actually buy or sell the stocks based on the recorded user decisions.
+The web application [NAYtrading.Trader](NAYtrading.Trader) can be used to actually buy or sell the stocks based on the recorded user decisions.
 
 ## :mortar_board: Training a Convolutional Neural Network on the recorded data ##
 
