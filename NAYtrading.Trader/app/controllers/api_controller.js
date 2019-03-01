@@ -1,6 +1,5 @@
 var exports = module.exports = {}
 
-require('sequelize'); // must be loaded before envconfig
 var config = require('../config/envconfig');
 var tanStore = require('../stores/tan_store');
 var brokerStore = require('../stores/broker_store');
