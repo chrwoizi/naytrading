@@ -22,7 +22,6 @@ root@host:~$ curl -sL https://deb.nodesource.com/setup_8.x | bash
 root@host:~$ apt-get install -y nodejs
 root@host:~$ apt-get install -y build-essential
 root@host:~$ npm i -g npm
-root@host:~$ npm i -g sequelize-cli
 root@host:~$ npm i -g node-autostart
 
 # install chromium-driver
