@@ -44,7 +44,7 @@ exports.createDriver = async function () {
         .withCapabilities(webdriver.Capabilities.chrome())
         .setChromeOptions(options)
         .build();
-    driver.dispose = async function() { 
+    driver.cleanup = async function() { 
         await driver.quit();
         await service.kill(); 
     };
