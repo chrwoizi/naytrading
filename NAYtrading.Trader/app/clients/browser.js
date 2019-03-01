@@ -40,16 +40,20 @@ exports.createDriver = async function () {
     }
     options = options.windowSize({ width, height });
 
-    var driver = new webdriver.Builder()
+    return new Promise((resolve, reject) => {
+        new webdriver.Builder()
         .withCapabilities(webdriver.Capabilities.chrome())
         .setChromeOptions(options)
-        .build();
-    driver.cleanup = async function() { 
-        await driver.quit();
-        await service.kill(); 
-    };
-    return driver;
-}
+        .build()
+        .then(driver => {
+            driver.cleanup = async function() { 
+                await driver.quit();
+                await service.kill(); 
+            };
+            resolve(driver);
+        });
+    });
+};
 
 exports.waitForId = async function (driver, id, timeoutSeconds, predicate) {
 
