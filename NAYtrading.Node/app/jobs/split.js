@@ -240,10 +240,10 @@ async function fixHunch(snapshotId, knownSource, instrumentId, startTime, endTim
             }
         }
         catch (e) {
-            if (e.message == ratesProvider.market_not_found) {
+            if (e.message && e.message == ratesProvider.market_not_found) {
                 // expected
             }
-            else if (e.message == ratesProvider.invalid_response) {
+            else if (e.message && e.message == ratesProvider.invalid_response) {
                 // expected
             }
             else {
