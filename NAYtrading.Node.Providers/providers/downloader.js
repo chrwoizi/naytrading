@@ -59,7 +59,8 @@ exports.download = async function (sourceType, url, isJson, customRequest, form)
     var options = {
         url: url,
         proxy: config.proxy,
-        timeout: config.downloader_timeout_milliseconds
+        timeout: config.downloader_timeout_milliseconds,
+        followAllRedirects: true
     };
 
     var doc = await new Promise(function (resolve, reject) {
