@@ -4,7 +4,13 @@
 			"path": "NAYtrading.Node"
 		},
 		{
-			"path": "NAYtrading.Node.Providers"
+			"path": "NAYtrading.Node.Plugin"
+		},
+		{
+			"path": "NAYtrading.Trader"
+		},
+		{
+			"path": "NAYtrading.Trader.Plugin"
 		}
 	],
 	"settings": {}

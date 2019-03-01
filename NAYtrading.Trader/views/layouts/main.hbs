@@ -1,0 +1,135 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{title}}</title>
+    <meta name="description" content="Automated stock exchange trading module for N.A.Y.trading" />
+    <meta property="og:title" content="{{title}}" />
+    <meta property="og:url" content="http://naytrading.com/" />
+    <meta property="og:description" content="Automated stock exchange trading module for N.A.Y.trading" />
+    <meta property="og:image" content="/static/images/logo.png" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="en_US" />
+    <link rel="shortcut icon" href="/static/images/favicon/favicon.ico">
+	<link rel="icon" sizes="16x16 32x32 64x64" href="/static/images/favicon/favicon.ico">
+	<link rel="icon" type="image/png" sizes="196x196" href="/static/images/favicon/favicon-192.png">
+	<link rel="icon" type="image/png" sizes="160x160" href="/static/images/favicon/favicon-160.png">
+	<link rel="icon" type="image/png" sizes="96x96" href="/static/images/favicon/favicon-96.png">
+	<link rel="icon" type="image/png" sizes="64x64" href="/static/images/favicon/favicon-64.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="/static/images/favicon/favicon-32.png">
+	<link rel="icon" type="image/png" sizes="16x16" href="/static/images/favicon/favicon-16.png">
+	<link rel="apple-touch-icon" href="/static/images/favicon/favicon-57.png">
+	<link rel="apple-touch-icon" sizes="114x114" href="/static/images/favicon/favicon-114.png">
+	<link rel="apple-touch-icon" sizes="72x72" href="/static/images/favicon/favicon-72.png">
+	<link rel="apple-touch-icon" sizes="144x144" href="/static/images/favicon/favicon-144.png">
+	<link rel="apple-touch-icon" sizes="60x60" href="/static/images/favicon/favicon-60.png">
+	<link rel="apple-touch-icon" sizes="120x120" href="/static/images/favicon/favicon-120.png">
+	<link rel="apple-touch-icon" sizes="76x76" href="/static/images/favicon/favicon-76.png">
+	<link rel="apple-touch-icon" sizes="152x152" href="/static/images/favicon/favicon-152.png">
+	<link rel="apple-touch-icon" sizes="180x180" href="/static/images/favicon/favicon-180.png">
+	<meta name="msapplication-TileColor" content="#FFFFFF">
+	<meta name="msapplication-TileImage" content="/static/images/favicon/favicon-144.png">
+	<meta name="msapplication-config" content="/static/images/favicon/browserconfig.xml">
+
+    <!-- <link rel="stylesheet" href="/bootstrap/css/bootstrap.min.css"> -->
+    <link rel="stylesheet" href="/startbootstrap-landing-page/vendor/bootstrap/css/bootstrap.min.css">
+    <link href="/startbootstrap-landing-page/vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+    <link href="/startbootstrap-landing-page/vendor/simple-line-icons/css/simple-line-icons.css" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Lato:300,400,700,300italic,400italic,700italic" rel="stylesheet" type="text/css">
+    <link rel="stylesheet" href="/startbootstrap-landing-page/css/landing-page.min.css">
+
+    <link rel="stylesheet" href="/glyphicons-only-bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/css/naytrading.css">
+    <script src="/angular/angular.min.js"></script>
+    <script src="/angular-resource/angular-resource.min.js"></script>
+    <script src="/angular-route/angular-route.min.js"></script>
+    <script src="/angular-spinner/angular-spinner.min.js"></script>
+    <script src="/ng-infinite-scroll/ng-infinite-scroll.min.js"></script>
+    <script src="/chart.js/Chart.bundle.min.js"></script>
+    <script src="/angular-chart.js/angular-chart.min.js"></script>
+</head>
+<body>
+    <nav class="navbar navbar-expand-md navbar-light bg-light static-top">
+        <div class="container">
+            <a class="navbar-brand" href="/">N.A.Y.trading Trader<span class="naytrading-beta">BETA</span></a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsDefault" aria-controls="navbarsDefault" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarsDefault">
+                <ul class="navbar-nav mr-auto">
+                    {{#if isAuthenticated}}
+                    {{#if isAdmin}}
+                    <li class="nav-item"><a class="nav-link" href="/app/#!/admin">Admin</a></li>
+                    {{/if}}
+                    {{/if}}
+                    <li class="nav-item"><a class="nav-link" href="/about">About</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/faq">FAQ</a></li>
+                </ul>
+                <ul class="nav navbar-nav navbar-right">
+                    {{#if isAuthenticated}}
+                    <li class="nav-item"><a class="nav-link" href="/app/#!/settings" title="Manage">{{username}}</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/logout">Logoff</a></li>
+                    {{else}}
+                    <li class="nav-item"><a class="nav-link" href="/signin" id="loginLink">Login</a></li>
+                    {{/if}}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main role="main" class="body-content">
+        {{{body}}}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer bg-light">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 h-100 text-center text-lg-left my-auto">
+                    <ul class="list-inline mb-2">
+                    </ul>
+                    <p class="text-muted small mb-4 mb-lg-0">&copy; N.A.Y.trading 2018. All Rights Reserved.</p>
+                </div>
+                <div class="col-lg-4 h-100 text-center text-lg-right my-auto">
+                    <ul class="list-inline mb-0">
+                        <li class="list-inline-item mr-3">
+                            <a href="https://github.com/chrwoizi/naytrading">
+                                <i class="fa fa-github fa-2x fa-fw"></i>
+                            </a>
+                        </li>
+                        <!-- 
+                        <li class="list-inline-item mr-3">
+                            <a href="#">
+                                <i class="fa fa-facebook fa-2x fa-fw"></i>
+                            </a>
+                        </li>
+                        <li class="list-inline-item mr-3">
+                            <a href="#">
+                                <i class="fa fa-twitter fa-2x fa-fw"></i>
+                            </a>
+                        </li>
+                        <li class="list-inline-item">
+                            <a href="#">
+                                <i class="fa fa-instagram fa-2x fa-fw"></i>
+                            </a>
+                        </li>
+                        -->
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/jquery/jquery.min.js"></script>
+    <!-- <script src="/bootstrap/js/bootstrap.min.js"></script> -->
+    <script src="/startbootstrap-landing-page/vendor/bootstrap/js/bootstrap.min.js"></script>
+    <script type="text/javascript">
+        $("a.nav-link").click(function() {
+            $('#navbarsDefault').collapse('hide');
+        });
+    </script>
+</body>
+</html>

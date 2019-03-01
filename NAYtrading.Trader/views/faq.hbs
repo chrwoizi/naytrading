@@ -1,0 +1,70 @@
+<section class="policy bg-light">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <h2>What is N.A.Y.trading Trader?</h2>
+                <p>
+                    N.A.Y.trading (short for <i>neurally automate your trading</i>) is a practice stock portfolio that is optimized for making quick trade decisions based on the historical price chart of a stock. 
+                    N.A.Y.trading Trader is the automated trading client that sends the trading decision to a broker.
+                </p>
+                <br/>
+            </div>
+        </div>
+		
+        <div class="row">
+            <div class="col-12">
+                <h2>How does it communicate with the broker?</h2>
+                <p>
+                    Currently, the supported way to place orders on the stock market is to simulate a web browser. The application automatically starts an invisible browser window and navigates to the online broker web page. It enters the user credentials, searches for the company stocks, enters a TAN, repeats the process for other trades, and finally closes the browser. The open source code contains a framework to navigate the web pages. The actual implementation of where to click and what to enter in text fields must be provided by the hoster of NAYtrading.Trader.
+                </p>
+                <br/>
+            </div>
+        </div>
+		
+        <div class="row">
+            <div class="col-12">
+                <h2>Where are my broker login details stored?</h2>
+                <p>
+                    The broker username and password are stored in the server memory (RAM). They will not be stored in a persistent storage such as the hard drive or a database. Thus, if the NAYtrading.Trader server restarts, you need to enter your username and password again.
+                </p>
+                <br/>
+            </div>
+        </div>
+		
+        <div class="row">
+            <div class="col-12">
+                <h2>Where are my TANs stored?</h2>
+                <p>
+                    The TAN list is stored on the hard drive in an encrypted file. The password used to encrypt and decrypt this file is stored in the server memory (RAM). The password will not be stored in a persistent storage such as the hard drive or a database. Thus, if the NAYtrading.Trader server restarts, you need to enter your TAN list password again.
+                </p>
+                <br/>
+            </div>
+        </div>
+		
+        <div class="row">
+            <div class="col-12">
+                <h2>What are the rules for cancelling an order?</h2>
+                <p>
+                    <ul>
+                        <li>Trading decisions are ignored if a newer trading decision exists for the stock.</li>
+                        <li>A buying order will be cancelled and retried later if the current stock price is above the expected price (within 1% margin).</li>
+                        <li>A selling order will be cancelled and retried later if the current stock price is below the expected price (within 1% margin).</li>
+                        <li>A buying order will only be placed within a 7 days period after the trading decision was made. Selling orders will be retried indefinitely</li>
+                        <li>Buying orders with a minimum volume greated than the configured maximum of 350€ will be cancelled.</li>
+                    </ul>
+                </p>
+                <br/>
+            </div>
+        </div>
+		
+        <div class="row">
+            <div class="col-12">
+                <h2>How many stocks does it buy?</h2>
+                <p>
+                    The maximum cost of a buying trade is guaranteed to be within the configured range of 250-350€ (+fee). The number of stocks is calculated accordingly.
+                </p>
+                <br/>
+            </div>
+        </div>
+    </div>
+</section>

@@ -1,0 +1,18 @@
+{
+  "development": {
+    "naytrading_trader": "../../../naytrading/NAYtrading.Trader",
+    "brokers": {
+      "mybroker": "../brokers/example_broker"
+    },
+    "tan_columns": ["1", "2", "3"],
+    "tan_rows": ["A", "B", "C"]
+  },
+  "production": {
+    "naytrading_trader": "../../../naytrading/NAYtrading.Node",
+    "brokers": {
+      "mybroker": "../brokers/example_broker"
+    },
+    "tan_columns": ["1", "2", "3"],
+    "tan_rows": ["A", "B", "C"]
+  }
+}
