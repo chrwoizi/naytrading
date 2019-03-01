@@ -316,7 +316,7 @@ async function processSuggestions(user) {
                         finally {
                             try {
                                 console.log("Closing browser...");
-                                await driver.dispose();
+                                await driver.cleanup();
                                 console.log("Browser closed.");
                             }
                             catch (e) {
