@@ -6,7 +6,7 @@
 
         <div ng-show="$ctrl.suggestion">
             <h1>{{$ctrl.suggestion.Action}} {{$ctrl.suggestion.InstrumentName}} for {{$ctrl.formatCurrency($ctrl.suggestion.Price)}}€ on {{$ctrl.suggestion.Time}}</h1>
-            <small>ISIN: {{$ctrl.suggestion.Isin}}, WKN: {{$ctrl.suggestion.Wkn}}, Suggestion: #{{$ctrl.suggestion.id}}, Snapshot: #{{$ctrl.suggestion.SnapshotId}}</small>
+            <small>ISIN: {{$ctrl.suggestion.Isin}}, WKN: {{$ctrl.suggestion.Wkn}}, <a href="#!/snapshot?id={{$ctrl.suggestion.ID}}">Snapshot: #{{$ctrl.suggestion.ID}}</a></small>
         </div>
 
         <br/>
