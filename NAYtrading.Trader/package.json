@@ -26,7 +26,7 @@
     "express-handlebars": "^3.0.0",
     "express-session": "^1.15.6",
     "glyphicons-only-bootstrap": "^1.0.1",
-    "gulp": "^3.9.1",
+    "gulp": "^4.0.0",
     "gulp-sass": "^3.2.1",
     "gulp-sourcemaps": "^2.6.4",
     "http": "0.0.0",
