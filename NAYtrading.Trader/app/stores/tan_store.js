@@ -8,8 +8,8 @@ var crypto = require('crypto');
 
 var tanListsByUser = {};
 
-exports.setTanList = function (userName, tans) {
-    exports.validateTanList(tans);
+exports.setTanList = async function (userName, tans) {
+    await exports.validateTanList(tans);
     tanListsByUser[userName] = tans;
 };
 
@@ -31,13 +31,13 @@ exports.isTanListSet = function (userName) {
     }
 };
 
-exports.validateTanList = function (tans) {
+exports.validateTanList = async function (tans) {
 
     if (!(tans)) {
         throw new Error("tan list is empty");
     }
 
-    broker.validateTanList(config.broker_name, tans);
+    await broker.validateTanList(config.broker_name, tans);
 };
 
 exports.setPassword = async function (userName, password) {
@@ -47,13 +47,13 @@ exports.setPassword = async function (userName, password) {
     }
     var tan = new Cryptr(password).decrypt(cipher);
     try {
-        exports.validateTanList(tan);
+        await exports.validateTanList(tan);
     }
     catch (e) {
         throw new Error("password is invalid");
     }
 
-    exports.setTanList(userName, tan);
+    await exports.setTanList(userName, tan);
 }
 
 exports.getEncryptedTanList = async function (user) {
