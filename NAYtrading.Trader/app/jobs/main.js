@@ -201,7 +201,6 @@ async function processSuggestion(driver, user, suggestion, availableFunds, jar) 
         if (log.Status == "Complete") {
             logger.log("Error after processing suggestion " + suggestion.ID + " was already complete: " + e.message + "\n" + e.stack);
             logger.log("Suggestion is processed completely");
-            throw e;
         }
         else if (e instanceof CancelOrderTemporaryError) {
             log.Status = "TemporaryError";
@@ -217,7 +216,6 @@ async function processSuggestion(driver, user, suggestion, availableFunds, jar) 
             log.Status = "TemporaryError";
             logger.log("Unexpected error: " + e.message + "\n" + e.stack);
             logger.log("Suggestion may be processed again");
-            throw e;
         }
     }
     finally {

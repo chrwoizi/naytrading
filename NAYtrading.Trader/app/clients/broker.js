@@ -36,7 +36,7 @@ exports.getOwnedQuantity = async function (brokerName, driver, isin, wkn) {
 }
 
 exports.getPrice = async function (brokerName, driver, isinOrWkn, action) {
-    return await brokers[brokerName].getPrice(brokerName, driver, isinOrWkn, action);
+    return await brokers[brokerName].getPrice(driver, isinOrWkn, action);
 };
 
 exports.getTanChallenge = async function (brokerName, driver, quantity, action) {
