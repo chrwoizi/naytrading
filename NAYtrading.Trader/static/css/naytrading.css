@@ -106,3 +106,9 @@ header.masthead {
  .green {
      color: green;
  }
+
+ .job-log {
+     width: 100%;
+     height: 500px;
+     max-width: none;
+ }

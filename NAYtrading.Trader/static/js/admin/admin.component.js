@@ -4,8 +4,8 @@ angular.
     module('admin').
     component('admin', {
         templateUrl: '/static/html/admin.template.html',
-        controller: ['RunJobService', 'CancelJobService', 'ReloadConfigService', '$routeParams', '$scope',
-            function StatsController(RunJobService, CancelJobService, ReloadConfigService, $routeParams, $scope) {
+        controller: ['RunJobService', 'CancelJobService', 'SuspendJobService', 'ContinueJobService', 'GetJobStatusService', 'ReloadConfigService', '$routeParams', '$scope',
+            function StatsController(RunJobService, CancelJobService, SuspendJobService, ContinueJobService, GetJobStatusService, ReloadConfigService, $routeParams, $scope) {
                 var self = this;
 
                 function handleError(error) {
@@ -19,16 +19,25 @@ angular.
                     }
                 }
 
+                self.loading = true;
+                GetJobStatusService.get({}, function(status) {
+                    self.loading = false;
+                    self.isRunning = status.isRunning;
+                    self.isSuspended = status.isSuspended;
+                    self.log = status.log;
+                    $scope.$apply();
+                }, function (error) {
+                    self.loading = false;
+                    handleError(error);
+                });
+
                 self.runJob = function () {
 
                     self.loading = true;
                     RunJobService.post({}, {}, function (result) {
                         self.loading = false;
                         if (result.started) {
-                            alert("Job was started.");
-                        }
-                        else {
-                            alert("Job is already running");
+                            self.isRunning = true;
                         }
                         $scope.$apply();
                     }, function (error) {
@@ -43,10 +52,38 @@ angular.
                     CancelJobService.post({}, {}, function (result) {
                         self.loading = false;
                         if (result.stopped) {
-                            alert("Job was stopped.");
+                            self.isRunning = false;
                         }
-                        else {
-                            alert("Job was not running");
+                        $scope.$apply();
+                    }, function (error) {
+                        self.loading = false;
+                        handleError(error);
+                    });
+                };
+
+                self.suspendJob = function () {
+
+                    self.loading = true;
+                    SuspendJobService.post({}, {}, function (result) {
+                        self.loading = false;
+                        if (result.suspended) {
+                            self.isRunning = false;
+                            self.isSuspended = true;
+                        }
+                        $scope.$apply();
+                    }, function (error) {
+                        self.loading = false;
+                        handleError(error);
+                    });
+                };
+
+                self.continueJob = function () {
+
+                    self.loading = true;
+                    ContinueJobService.post({}, {}, function (result) {
+                        self.loading = false;
+                        if (!result.suspended) {
+                            self.isSuspended = false;
                         }
                         $scope.$apply();
                     }, function (error) {

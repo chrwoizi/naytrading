@@ -9,16 +9,21 @@
                 <form>
                     <div class="form-group">
                         <label for="tanlist">Job: 
-                            <span ng-show="$ctrl.isJobStarted">STARTED</span>
+                            <span ng-show="$ctrl.isRunning && !$ctrl.isSuspended">RUNNING</span>
+                            <span ng-show="!$ctrl.isRunning && !$ctrl.isSuspended">IDLE</span>
+                            <span ng-show="$ctrl.isSuspended">SUSPENDED</span>
                         </label>
                     </div>
                     <div class="form-group">
-                        <button class="btn btn-danger" ng-click="$ctrl.runJob()">Start</button>
+                        <button class="btn btn-danger" ng-show="!$ctrl.isRunning" ng-click="$ctrl.runJob()">Start</button>
+                        <button class="btn btn-danger" ng-show="$ctrl.isRunning" ng-click="$ctrl.cancelJob()">Stop</button>
                     </div>
                     <div class="form-group">
-                        <button class="btn btn-danger" ng-click="$ctrl.cancelJob()">Stop</button>
+                        <button class="btn btn-danger" ng-show="!$ctrl.isSuspended" ng-click="$ctrl.suspendJob()">Suspend</button>
+                        <button class="btn btn-danger" ng-show="$ctrl.isSuspended" ng-click="$ctrl.continueJob()">Continue</button>
                     </div>
                 </form>
+                <textarea class="job-log">{{$ctrl.log}}</textarea>
             </div>
         </div>
 

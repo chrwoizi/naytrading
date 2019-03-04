@@ -16,6 +16,27 @@ angular.
             });
         }
     ]).
+    factory('SuspendJobService', ['$resource',
+        function ($resource) {
+            return $resource('/api/job/suspend', {}, {
+                post: { method: 'POST' }
+            });
+        }
+    ]).
+    factory('ContinueJobService', ['$resource',
+        function ($resource) {
+            return $resource('/api/job/continue', {}, {
+                post: { method: 'POST' }
+            });
+        }
+    ]).
+    factory('GetJobStatusService', ['$resource',
+        function ($resource) {
+            return $resource('/api/job/status', {}, {
+                get: { method: 'GET' }
+            });
+        }
+    ]).
     factory('ReloadConfigService', ['$resource',
         function ($resource) {
             return $resource('/api/config/reload', {}, {
