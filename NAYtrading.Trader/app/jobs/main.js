@@ -63,6 +63,7 @@ async function prepareBuy(driver, suggestion, log, logger, availableFunds) {
     logger.log("Available funds: " + availableFunds + " EUR");
 
     var currentPrice = await broker.getPrice(config.broker_name, driver, suggestion.Isin || suggestion.Wkn, log.Action);
+    log.Price = currentPrice;
     if (currentPrice > suggestion.Price) {
         throw new CancelOrderTemporaryError("Too expensive to buy at " + currentPrice + ". Expected price to be " + suggestion.Price + " EUR or less");
     }
