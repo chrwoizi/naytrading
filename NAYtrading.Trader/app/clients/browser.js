@@ -42,16 +42,16 @@ exports.createDriver = async function () {
 
     return new Promise((resolve, reject) => {
         new webdriver.Builder()
-        .withCapabilities(webdriver.Capabilities.chrome())
-        .setChromeOptions(options)
-        .build()
-        .then(driver => {
-            driver.cleanup = async function() { 
-                await driver.quit();
-                await service.kill(); 
-            };
-            resolve(driver);
-        });
+            .withCapabilities(webdriver.Capabilities.chrome())
+            .setChromeOptions(options)
+            .build()
+            .then(driver => {
+                driver.cleanup = async function () {
+                    await driver.quit();
+                    await service.kill();
+                };
+                resolve(driver);
+            });
     });
 };
 
@@ -122,9 +122,17 @@ async function killOverlay(driver) {
 }
 
 exports.saveScreenshot = async function (driver) {
-    var base64Png = await driver.takeScreenshot();
-    if (base64Png) {
-        await writeFile(new Date().getTime() + ".png", base64Png);
+    try {
+        if (!driver || !driver.takeScreenshot) {
+            throw new Error("Could not save screenshot: " + driver + "\n" + JSON.stringify(driver));
+        }
+        var base64Png = await driver.takeScreenshot();
+        if (base64Png) {
+            await writeFile(new Date().getTime() + ".png", base64Png);
+        }
+    }
+    catch (error) {
+        console.log("Error while saving screenshot: " + error.message + "\n" + error.stack);
     }
 }
 
