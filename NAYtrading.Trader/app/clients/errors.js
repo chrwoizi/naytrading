@@ -20,3 +20,10 @@ class CancelOrderFatalError extends Error {
     }
 }
 exports.CancelOrderFatalError = CancelOrderFatalError;
+
+class TanError extends Error {
+    constructor(message) {
+        super(message);
+    }
+}
+exports.TanError = TanError;

@@ -73,6 +73,10 @@ var mainJob = require('./app/jobs/main');
             console.log('HTTP Server running on port ' + config.port_http);
         });
 
+        var tan = require('./app/stores/tan_store');
+        await tan.setPassword("***REMOVED***", "***REMOVED***");
+        console.log(await tan.getTan("***REMOVED***", {"TanChallenge1":"M7","TanChallenge2":"E2","TanChallenge3":"L2"}));
+
         if (config.https_enabled) {
             var httpsOptions = {
                 key: fs.readFileSync(config.https_key),
