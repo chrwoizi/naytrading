@@ -9,6 +9,7 @@ var naytradingClient = require('../clients/naytrading_client');
 var FatalError = require('../clients/errors').FatalError;
 var CancelOrderFatalError = require('../clients/errors').CancelOrderFatalError;
 var CancelOrderTemporaryError = require('../clients/errors').CancelOrderTemporaryError;
+var TanError = require('../clients/errors').TanError;
 
 exports.lastRun = new Date();
 exports.isRunning = false;
@@ -157,8 +158,17 @@ async function processSuggestion(driver, user, suggestion, availableFunds, jar) 
         }
 
         logger.log("Getting offer...");
-        var offer = await broker.getQuote(config.broker_name, driver, tan);
-        logger.log("Offer: " + offer + " EUR");
+        try {
+            var offer = await broker.getQuote(config.broker_name, driver, tan);
+            logger.log("Offer: " + offer + " EUR");
+        }
+        catch (error) {
+            if (error instanceof TanError) {
+                tanStore.setTanList(user, undefined);
+                throw new CancelOrderTemporaryError(error.message);
+            }
+            throw error;
+        }
 
         if (log.Action == broker.getActionBuy(config.broker_name) && offer > suggestion.Price) {
             throw new CancelOrderTemporaryError("Too expensive to buy. Expected price to be " + suggestion.Price + " EUR or less");
@@ -299,7 +309,14 @@ async function processSuggestions(user) {
                                                 writeToLog("Processing was cancelled by the admin.");
                                                 break;
                                             }
+                                            
                                             availableFunds = await processSuggestion(driver, user, suggestion, availableFunds, jar);
+                                            
+                                            if (!tanStore.isTanListSet(user)) {
+                                                writeToLog("TAN list was invalidated");
+                                                break;
+                                            }
+                                            
                                             await sleep(10000);
                                         }
                                         else {

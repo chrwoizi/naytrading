@@ -44,7 +44,7 @@ exports.getTanChallenge = async function (brokerName, driver, quantity, action) 
 };
 
 exports.getQuote = async function (brokerName, driver, tan) {
-    return await brokers[brokerName].getQuote(driver, driver, tan);
+    return await brokers[brokerName].getQuote(driver, tan);
 };
 
 exports.placeOrder = async function (brokerName, driver) {
