@@ -51,7 +51,7 @@ exports.getTan = async function (tans, challenge) {
     return tans.split(',')[challenge.CustomProperty1] + tans.split(',')[challenge.CustomProperty2] + tans.split(',')[challenge.CustomProperty3];
 };
 
-exports.validateTanList = function (tans) {
+exports.validateTanList = async function (tans) {
     if (tans.split(',').length != 99) {
         throw new Error("tan list is invalid");
     }

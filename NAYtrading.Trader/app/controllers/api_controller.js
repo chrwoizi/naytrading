@@ -60,7 +60,7 @@ exports.setTanList = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
 
-            tanStore.validateTanList(req.body.tanList);
+            await tanStore.validateTanList(req.body.tanList);
 
             if (!(req.body.password) || req.body.password.length < 8) {
                 throw new Error("password must be at least 8 characters");
@@ -69,7 +69,7 @@ exports.setTanList = async function (req, res) {
             var cipher = new Cryptr(req.body.password).encrypt(req.body.tanList);
             await tanStore.setEncryptedTanList(req.user.email, cipher);
 
-            tanStore.setTanList(req.user.email, req.body.tanList);
+            await tanStore.setTanList(req.user.email, req.body.tanList);
 
             res.status(200);
             res.json({ status: "ok" });

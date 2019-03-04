@@ -165,7 +165,7 @@ async function processSuggestion(driver, user, suggestion, availableFunds, jar) 
         }
         catch (error) {
             if (error instanceof TanError) {
-                tanStore.setTanList(user, undefined);
+                await tanStore.setTanList(user, undefined);
                 throw new CancelOrderTemporaryError(error.message);
             }
             throw error;
