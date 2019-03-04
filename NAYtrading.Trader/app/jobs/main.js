@@ -214,9 +214,9 @@ async function processSuggestion(driver, user, suggestion, availableFunds, jar) 
             logger.log("Suggestion will not be processed again");
         }
         else {
-            log.Status = "FatalError";
+            log.Status = "TemporaryError";
             logger.log("Unexpected error: " + e.message + "\n" + e.stack);
-            logger.log("Suggestion will not be processed again");
+            logger.log("Suggestion may be processed again");
             throw e;
         }
     }
@@ -337,17 +337,17 @@ async function processSuggestions(user) {
                             }
                         }
                     }
+                    else {
+                        writeToLog("No tan list set for user " + user);
+                    }
                 }
                 else {
-                    writeToLog("No tan list set for user " + user);
+                    writeToLog("No broker password set for user " + user);
                 }
             }
             else {
-                writeToLog("No broker password set for user " + user);
+                writeToLog("No broker user available for user " + user);
             }
-        }
-        else {
-            writeToLog("No broker user available for user " + user);
         }
     }
 }
