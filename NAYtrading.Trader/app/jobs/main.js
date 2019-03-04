@@ -10,10 +10,23 @@ var FatalError = require('../clients/errors').FatalError;
 var CancelOrderFatalError = require('../clients/errors').CancelOrderFatalError;
 var CancelOrderTemporaryError = require('../clients/errors').CancelOrderTemporaryError;
 
+exports.lastRun = new Date();
+exports.isRunning = false;
+exports.isSuspended = false;
+exports.cancel = false;
+exports.log = "";
+
 async function sleep(ms) {
     return new Promise((resolve) => {
         setTimeout(resolve, ms);
     });
+}
+
+function writeToLog(message) {
+    exports.log = message + "\n" + exports.log;
+    if (exports.log.length > config.max_log_length) {
+        exports.log = exports.log.substr(0, config.max_log_length);
+    }
 }
 
 class Logger {
@@ -30,7 +43,7 @@ class Logger {
 
         this.History += message;
 
-        console.log("User " + this.user + " and suggestion " + this.suggestionId + ": " + message);
+        writeToLog("User " + this.user + " and suggestion " + this.suggestionId + ": " + message);
     }
 }
 
@@ -138,7 +151,7 @@ async function processSuggestion(driver, user, suggestion, availableFunds, jar) 
         var tan = await tanStore.getTan(user, tanChallenge);
 
         await sleep(2000 + Math.random() * 1000);
-        
+
         if (exports.cancel) {
             throw new CancelOrderTemporaryError("Processing was cancelled by the admin.");
         }
@@ -226,24 +239,24 @@ async function processSuggestions(user) {
 
         var jar = null;
         try {
-            console.log("Logging in at naytrading with user " + user + "...");
+            writeToLog("Logging in at naytrading with user " + user + "...");
             jar = await naytradingStore.login(async (password) => await naytradingClient.login(user, password), user);
-            console.log("Logged in at naytrading.");
+            writeToLog("Logged in at naytrading.");
         }
         catch (e) {
-            console.log("Login failed at naytrading: " + e.message);
+            writeToLog("Login failed at naytrading: " + e.message);
             naytradingStore.setPassword(user, null);
             throw e;
         }
 
         var suggestions = [];
         try {
-            console.log("Loading suggestions from naytrading for user " + user + "...");
+            writeToLog("Loading suggestions from naytrading for user " + user + "...");
             suggestions = await naytradingClient.getOpenSuggestions(jar);
-            console.log("Received " + suggestions.length + " suggestions.");
+            writeToLog("Received " + suggestions.length + " suggestions.");
         }
         catch (e) {
-            console.log("Could not get suggestions from naytrading: " + e.message);
+            writeToLog("Could not get suggestions from naytrading: " + e.message);
             throw e;
         }
 
@@ -255,18 +268,18 @@ async function processSuggestions(user) {
 
                     if (tanStore.isTanListSet(user)) {
 
-                        console.log("Starting browser for user " + user + "...");
+                        writeToLog("Starting browser for user " + user + "...");
                         var driver = await browser.createDriver();
-                        console.log("Browser started.");
+                        writeToLog("Browser started.");
 
                         try {
                             try {
-                                console.log("Logging in at broker with user " + user + "...");
+                                writeToLog("Logging in at broker with user " + user + "...");
                                 await brokerStore.login(async (u, p) => await broker.login(config.broker_name, driver, u, p), user);
-                                console.log("Logged in at broker.");
+                                writeToLog("Logged in at broker.");
                             }
                             catch (e) {
-                                console.log("Login at broker failed with user " + user);
+                                writeToLog("Login at broker failed with user " + user);
                                 if (e instanceof FatalError) {
                                     brokerStore.setPassword(user, undefined);
                                 }
@@ -274,67 +287,67 @@ async function processSuggestions(user) {
                             }
 
                             try {
-                                console.log("Getting available funds of user " + user + "...");
+                                writeToLog("Getting available funds of user " + user + "...");
                                 var availableFunds = await broker.getAvailableFunds(config.broker_name, driver);
-                                console.log("Abvailable funds: " + availableFunds);
+                                writeToLog("Abvailable funds: " + availableFunds);
 
-                                console.log("Processing " + suggestions.length + " suggestions of user " + user + "...");
+                                writeToLog("Processing " + suggestions.length + " suggestions of user " + user + "...");
                                 for (var suggestion of suggestions) {
                                     var day = new Date().getDay();
                                     if (day >= config.broker_open_day && day <= config.broker_close_day) {
                                         var hour = new Date().getHours() + (new Date().getMinutes() / 60.0);
                                         if (hour >= config.broker_open_hours && hour < config.broker_close_hours) {
                                             if (exports.cancel) {
-                                                console.log("Processing was cancelled by the admin.");
+                                                writeToLog("Processing was cancelled by the admin.");
                                                 break;
                                             }
                                             availableFunds = await processSuggestion(driver, user, suggestion, availableFunds, jar);
                                             await sleep(10000);
                                         }
                                         else {
-                                            console.log("Stopping processing because the time is out of range.");
+                                            writeToLog("Stopping processing because the time is out of range.");
                                             break;
                                         }
                                     }
                                     else {
-                                        console.log("Stopping processing because the day is out of range.");
+                                        writeToLog("Stopping processing because the day is out of range.");
                                         break;
                                     }
                                 }
-                                console.log("All suggestions of user " + user + " processed.");
+                                writeToLog("All suggestions of user " + user + " processed.");
                             }
                             catch (e) {
-                                console.log("Error while processing suggestion " + suggestion.ID + " for user " + user + ": " + e.message + "\n" + e.stack);
+                                writeToLog("Error while processing suggestion " + suggestion.ID + " for user " + user + ": " + e.message + "\n" + e.stack);
                                 throw e;
                             }
                             finally {
-                                console.log("Logging out at broker...");
+                                writeToLog("Logging out at broker...");
                                 await broker.logout(config.broker_name, driver);
-                                console.log("Logged out at broker.");
+                                writeToLog("Logged out at broker.");
                             }
                         }
                         finally {
                             try {
-                                console.log("Closing browser...");
+                                writeToLog("Closing browser...");
                                 await driver.cleanup();
-                                console.log("Browser closed.");
+                                writeToLog("Browser closed.");
                             }
                             catch (e) {
-                                console.log("Error while closing browser: " + e.message);
+                                writeToLog("Error while closing browser: " + e.message);
                             }
                         }
                     }
                 }
                 else {
-                    console.log("No tan list set for user " + user);
+                    writeToLog("No tan list set for user " + user);
                 }
             }
             else {
-                console.log("No broker password set for user " + user);
+                writeToLog("No broker password set for user " + user);
             }
         }
         else {
-            console.log("No broker user available for user " + user);
+            writeToLog("No broker user available for user " + user);
         }
     }
 }
@@ -351,34 +364,38 @@ async function runActually() {
                     var hour = new Date().getHours() + (new Date().getMinutes() / 60.0);
                     if (hour >= config.broker_open_hours && hour < config.broker_close_hours) {
                         if (exports.cancel) {
-                            console.log("Processing was cancelled by the admin.");
+                            writeToLog("Processing was cancelled by the admin.");
                             break;
                         }
                         await processSuggestions(user);
                     }
                     else {
-                        console.log("Stopping processing because the time is out of range.");
+                        writeToLog("Stopping processing because the time is out of range.");
                         break;
                     }
                 }
                 else {
-                    console.log("Stopping processing because the day is out of range.");
+                    writeToLog("Stopping processing because the day is out of range.");
                     break;
                 }
             }
             catch (err) {
-                console.log("error while processing suggestions for user " + user + ": " + err.message + "\n" + err.stack);
+                writeToLog("error while processing suggestions for user " + user + ": " + err.message + "\n" + err.stack);
             }
         }
     }
     catch (error) {
-        console.log("error in main job: " + error.message + "\n" + error.stack);
+        writeToLog("error in main job: " + error.message + "\n" + error.stack);
     }
     exports.lastRun = new Date();
 };
 
 var isRunning = false;
 async function runWithGuard() {
+    if (exports.isSuspended) {
+        writeToLog("Job was not started because it is suspended.");
+        return;
+    }
     if (!isRunning) {
         isRunning = true;
         exports.isRunning = true;
@@ -403,6 +420,3 @@ exports.runManually = async function () {
 
 exports.processSuggestions = processSuggestions;
 exports.processSuggestion = processSuggestion;
-exports.lastRun = new Date();
-exports.isRunning = false;
-exports.cancel = false;

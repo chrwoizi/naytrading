@@ -173,6 +173,84 @@ exports.cancelJob = async function (req, res) {
     }
 };
 
+exports.suspendJob = async function (req, res) {
+
+    try {
+        if (req.isAuthenticated() && req.user.email == config.admin_user) {
+
+            result = {};
+
+            mainJob.isSuspended = true;
+            result.suspended = true;
+            
+            if (mainJob.isRunning) {
+                mainJob.cancel = true;
+                result.stopped = true;
+            }
+            else {
+                result.stopped = false;
+            }
+
+            res.status(200);
+            res.json(result);
+        }
+        else {
+            res.status(401);
+            res.json({ error: "unauthorized" });
+        }
+    }
+    catch (error) {
+        return500(res, error);
+    }
+};
+
+exports.continueJob = async function (req, res) {
+
+    try {
+        if (req.isAuthenticated() && req.user.email == config.admin_user) {
+
+            result = {};
+
+            mainJob.isSuspended = false;
+            result.suspended = false;
+            
+            res.status(200);
+            res.json(result);
+        }
+        else {
+            res.status(401);
+            res.json({ error: "unauthorized" });
+        }
+    }
+    catch (error) {
+        return500(res, error);
+    }
+};
+
+exports.getJobStatus = async function (req, res) {
+
+    try {
+        if (req.isAuthenticated() && req.user.email == config.admin_user) {
+
+            result = {};
+
+            result.isRunning = mainJob.isRunning;
+            result.isSuspended = mainJob.isSuspended;
+            result.log = mainJob.log;
+            
+            res.status(200);
+            res.json(result);
+        }
+        else {
+            res.status(401);
+            res.json({ error: "unauthorized" });
+        }
+    }
+    catch (error) {
+        return500(res, error);
+    }
+};
+
 exports.reloadConfig = async function (req, res) {
 
     try {
