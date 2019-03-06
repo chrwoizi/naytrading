@@ -31,7 +31,7 @@ exports.getAllInstruments = async function (source, minCapitalization) {
         for (var i = 0; i < sources.length; ++i) {
             var instruments = await providers[sources[i]].getAllInstruments(sources[i], minCapitalization);
             if (instruments && instruments.length > 0) {
-                for (var k = 0; k < sources.length; ++k) {
+                for (var k = 0; k < instruments.length; ++k) {
                     result.push(instruments[k]);
                 }
             }

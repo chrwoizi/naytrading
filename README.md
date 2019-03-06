@@ -70,7 +70,7 @@ naytrading@host:~/naytrading/NAYtrading.Node/app/config$ vi config.json
 [set production.admin_user to your email address]
 [set production.proxy if you access the web through a proxy]
 [set production.python to your python executable, e.g. python3]
-[add your custom stock data provider envconfig to the include array, e.g. "../../../NAYtrading.Node.Plugin/config/envconfig"]
+[set the instruments_providers and rates_providers to your custom implementation, e.g. "instruments_providers":{"e": "../../../NAYtrading.Node.Plugin/providers/example/example_instruments_provider"}]
 :wq
 naytrading@host:~/naytrading/NAYtrading.Node/app/config$ cd ../..
 naytrading@host:~/naytrading/NAYtrading.Node$ chmod +x dbmigrate.sh

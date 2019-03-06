@@ -21,14 +21,20 @@ exports.run = async function () {
             for (var i = 0; i < instruments.length && i < config.job_sources_batch_size; ++i) {
                 var instrument = instruments[i];
                 var sourceId = await instrumentsProvider.getInstrumentId(sourceType, instrument.Isin, instrument.Wkn);
-                await model.source.create({
+                var newSource = {
                     Instrument_ID: instrument.ID,
                     SourceType: sourceType,
                     SourceId: sourceId || '',
                     Strikes: 0,
                     LastStrikeTime: new Date(),
                     Status: (sourceId && sourceId.length > 0) ? 'ACTIVE' : 'NOTFOUND'
-                });
+                };
+                try {
+                    await model.source.create(newSource);
+                }
+                catch (error) {
+                    console.log("Error while adding instrument source: " + error.message + "\n" + error.stack + "\n" + JSON.stringify(newSource));
+                }
             }
         }
     }
