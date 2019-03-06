@@ -10,7 +10,7 @@ var settings = require('../config/settings');
 async function updateGlobalInstruments() {
     var allInstruments = await instrumentsProvider.getAllInstruments(null, config.job_instruments_min_capitalization);
 
-    var knownInstruments = await model.instrument.findAll({});
+    var knownInstruments = await model.instrument.findAll({ include: [{ model: model.source }] });
 
     function getKey(source) {
         return source.SourceType + "/" + source.SourceId;
@@ -24,17 +24,28 @@ async function updateGlobalInstruments() {
         }
     }
 
-    var knownKeys = knownInstruments.map(i => i.sources.map(getKey));
+    var knownKeys = knownInstruments.map(i => i.sources.map(getKey)).reduce(function (a, b) { return a.concat(b); });
 
     var newInstruments = allInstruments.filter(i => !containsAny(knownKeys, i.sources.map(getKey)));
 
+    var totalCount = 0;
     for (var i = 0; i < newInstruments.length; ++i) {
         var instrument = newInstruments[i];
-        await model.instrument.create(instrument, {
-            include: [{
-                model: model.source
-            }]
-        });
+        try {
+            await model.instrument.create(instrument, {
+                include: [{
+                    model: model.source
+                }]
+            });
+            totalCount++;
+        }
+        catch (error) {
+            console.log("Error while adding instrument: " + error.message + "\n" + error.stack + "\n" + JSON.stringify(instrument));
+        }
+    }
+
+    if (totalCount > 0) {
+        console.log("Added " + totalCount + " instruments.");
     }
 }
 

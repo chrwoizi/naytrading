@@ -41,7 +41,7 @@ config.env = env;
 
 config.require = function (name) {
     return require(config.naytrading + '/node_modules/' + name);
-}
+};
 
 module.exports = config;
 
