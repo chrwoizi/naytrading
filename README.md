@@ -67,8 +67,6 @@ naytrading@host:~/naytrading/NAYtrading.Node$ cd app/config
 naytrading@host:~/naytrading/NAYtrading.Node/app/config$ cp config.mandatory.json config.json
 naytrading@host:~/naytrading/NAYtrading.Node/app/config$ cp database.mandatory.json database.json
 naytrading@host:~/naytrading/NAYtrading.Node/app/config$ vi config.json
-[set production.export_token to a secret value of your choice]
-[set production.import_token to a secret value of your choice]
 [set production.admin_user to your email address]
 [set production.proxy if you access the web through a proxy]
 [set production.python to your python executable, e.g. python3]

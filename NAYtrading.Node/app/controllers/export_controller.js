@@ -25,7 +25,7 @@ function return500(res, e) {
 
 exports.exportInstruments = async function (req, res) {
     try {
-        if (req.params.exportSecret == config.export_secret) {
+        if (req.isAuthenticated() && req.user.email == config.admin_user) {
 
             var cancel = false;
 
@@ -97,7 +97,7 @@ exports.exportInstruments = async function (req, res) {
 
 exports.exportSnapshots = async function (req, res) {
     try {
-        if (req.params.exportSecret == config.export_secret) {
+        if (req.isAuthenticated() && req.user.email == config.admin_user) {
 
             if (typeof (req.params.fromDate) !== 'string' || !(req.params.fromDate.length == 8 || req.params.fromDate.length == 14)) {
 

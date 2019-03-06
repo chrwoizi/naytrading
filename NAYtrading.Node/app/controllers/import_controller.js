@@ -295,7 +295,7 @@ async function removeInstrument(dictValue) {
 
 exports.importInstruments = async function (req, res) {
 
-    if (req.body.import_secret == config.import_secret) {
+    if (req.isAuthenticated() && req.user.email == config.admin_user) {
 
         async function getExistingInstruments() {
             var existing = await sql.query('SELECT i.ID, c.SourceType, c.SourceId FROM instruments AS i INNER JOIN sources AS c ON c.Instrument_ID = i.ID');
@@ -319,7 +319,7 @@ exports.importInstruments = async function (req, res) {
 
 exports.importSnapshots = async function (req, res) {
 
-    if (req.body.import_secret == config.import_secret) {
+    if (req.isAuthenticated() && req.user.email == config.admin_user) {
 
         async function getExistingInstruments() {
             var existing = await sql.query('SELECT i.ID, c.SourceType, c.SourceId FROM instruments AS i INNER JOIN sources AS c ON c.Instrument_ID = i.ID');
