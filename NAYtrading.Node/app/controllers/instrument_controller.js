@@ -53,7 +53,7 @@ exports.addDefault = async function (req, res) {
 
 exports.addUrl = async function (req, res) {
     try {
-        if (req.isAuthenticated() && req.body.import_secret == config.import_secret) {
+        if (req.isAuthenticated() && req.user.email == config.admin_user) {
 
             var instrument = await instrumentsProvider.getInstrumentByUrl(null, req.body.url);
 
@@ -294,7 +294,7 @@ exports.setWeight = async function (req, res) {
 exports.updateInstruments = async function (req, res) {
     try {
 
-        if (req.isAuthenticated() && req.body.import_secret == config.import_secret) {
+        if (req.isAuthenticated() && req.user.email == config.admin_user) {
 
             await settings.set("update_instruments", "true");
 

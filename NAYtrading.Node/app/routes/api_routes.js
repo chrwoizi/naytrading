@@ -37,9 +37,9 @@ module.exports = function (app, passport) {
 
     app.post('/api/clear/decisions', dataController.clearDecisions);
 
-    app.get('/api/export/instruments/:exportSecret', exportController.exportInstruments);
+    app.get('/api/export/instruments', exportController.exportInstruments);
     app.get('/api/export/user/instruments', exportUserController.exportUserInstruments);
-    app.get('/api/export/snapshots/:fromDate/:exportSecret', exportController.exportSnapshots);
+    app.get('/api/export/snapshots/:fromDate', exportController.exportSnapshots);
     app.get('/api/export/user/snapshots/:fromDate', exportUserController.exportUserSnapshots);
     app.get('/api/export/user/trades/:fromDate', exportUserController.exportUserTrades);
     app.get('/api/export/user/tradelogs/:fromDate', exportUserController.exportUserTradelogs);

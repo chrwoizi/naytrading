@@ -138,8 +138,6 @@ exports.admin = async function (req, res) {
 
     var args = get_default_args(req, "Admin");
     if (args.isAdmin) {
-        args.export_secret = config.export_secret;
-        args.import_secret = config.import_secret;
         args.sources = ratesProvider.sources.map(function (x) { return { source: x } });
         args.markets = [];
         for (var i = 0; i < ratesProvider.sources.length; ++i) {

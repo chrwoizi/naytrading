@@ -12,14 +12,13 @@
                     </dd>
                     <dt>Export:</dt>
                     <dd>
-                        <a href="/api/export/instruments/{{export_secret}}" class="btn btn-secondary" role="button">All Instruments</a>
-                        <a href="/api/export/snapshots/19700101/{{export_secret}}" class="btn btn-secondary" role="button">All Snapshots</a>
+                        <a href="/api/export/instruments" class="btn btn-secondary" role="button">All Instruments</a>
+                        <a href="/api/export/snapshots/19700101" class="btn btn-secondary" role="button">All Snapshots</a>
                         <a href="/api/export/log" class="btn btn-secondary" role="button">Log</a>
                     </dd>
                     <dt>Import All Instruments:</dt>
                     <dd>
                         <form action="/api/import/instruments" method="post" enctype="multipart/form-data">
-                            <input type="hidden" name="import_secret" value="{{import_secret}}"></input>                        
                             <div class="form-group">
                                 <input type="file" name="file" class="form-control-file"></input>
                             </div>
@@ -35,7 +34,6 @@
                     <dt>Import All Snapshots:</dt>
                     <dd>
                         <form action="/api/import/snapshots" method="post" enctype="multipart/form-data">
-                            <input type="hidden" name="import_secret" value="{{import_secret}}"></input>
                             <div class="form-group">
                                 <input type="file" name="file" class="form-control-file"></input>
                             </div>
@@ -51,13 +49,11 @@
                     <dt>Instruments:</dt>
                     <dd>
                         <form action="/api/instruments/update" method="post" enctype="multipart/form-data">
-                            <input type="hidden" name="import_secret" value="{{import_secret}}"></input>
                             <button type="submit" class="btn btn-danger">Refresh Default Instruments</button>
                         </form>
                         <br/>
                         <br/>
                         <form action="/api/instruments/add/url" method="POST">
-                            <input type="hidden" name="import_secret" value="{{import_secret}}"></input>
                             <div class="form-group">
                                 <label for="url">URL</label>
                                 <input type="text" name="url" id="url" class="form-control">
@@ -70,7 +66,6 @@
                     <dt>Refresh Rates:</dt>
                     <dd>
                         <form action="/api/snapshot/refresh" method="post">
-                            <input type="hidden" name="import_secret" value="{{import_secret}}"></input>
                             <div class="form-group">
                                 <label for="id">Snapshot ID</label>
                                 <input type="number" class="form-control" id="id" name="id">
