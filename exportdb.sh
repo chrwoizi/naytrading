@@ -12,6 +12,11 @@ mysqldump --user="$dbuser" --password="$dbpass" "$dbname" snapshotrates > snapsh
 mysqldump --user="$dbuser" --password="$dbpass" "$dbname" sources > sources.sql
 mysqldump --user="$dbuser" --password="$dbpass" "$dbname" trades > trades.sql
 mysqldump --user="$dbuser" --password="$dbpass" "$dbname" tradelogs > tradelogs.sql
+mysqldump --user="$dbuser" --password="$dbpass" "$dbname" users > users.sql
+mysqldump --user="$dbuser" --password="$dbpass" "$dbname" userinstruments > userinstruments.sql
+mysqldump --user="$dbuser" --password="$dbpass" "$dbname" usersnapshots > usersnapshots.sql
+mysqldump --user="$dbuser" --password="$dbpass" "$dbname" weights > weights.sql
+mysqldump --user="$dbuser" --password="$dbpass" "$dbname" whitelists > whitelists.sql
 tar czf dump.tar.gz *
 rm *.sql
 mv -f dump.tar.gz ../
