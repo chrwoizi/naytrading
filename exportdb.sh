@@ -1,6 +1,7 @@
 dbuser=naytrading
 dbpass=naytrading
 dbname=naytrading
+cd ..
 rm -r dump
 mkdir dump
 cd dump
