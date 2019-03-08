@@ -438,7 +438,9 @@ exports.run = async function () {
 
         var users = await sql.query("SELECT DISTINCT(User) FROM usersnapshots");
         for (var i = 0; i < users.length; ++i) {
-            await processUser(users[i].User);
+            if (!users[i].User.endsWith(".ai")) {
+                await processUser(users[i].User);
+            }
         }
     }
     catch (error) {
