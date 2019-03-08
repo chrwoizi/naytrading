@@ -7,6 +7,9 @@ var config = require('../config/envconfig');
 var ratesProvider = require('../providers/rates_provider');
 var newSnapshotController = require('../controllers/new_snapshot_controller');
 var snapshotController = require('../controllers/snapshot_controller');
+var instrumentController = require('../controllers/instrument_controller');
+var consolidateJob = require('./consolidate');
+var cleanupJob = require('./cleanup');
 
 var split_adjust_sql = "";
 try {
@@ -27,7 +30,21 @@ function logVerbose(message) {
     }
 }
 
+function sleep(ms) {
+    return new Promise((resolve, reject) => {
+        try {
+            setTimeout(resolve, ms);
+        }
+        catch (e) {
+            reject(e);
+        }
+    });
+}
+
 function parseDate(dateString) {
+    if (dateString instanceof Date) {
+        return dateString;
+    }
     return new Date(Date.UTC(
         dateString.substr(0, 4),
         dateString.substr(5, 2) - 1,
@@ -37,6 +54,59 @@ function parseDate(dateString) {
         dateString.substr(17, 2)
     ));
 }
+
+function daysBetween(one, another) {
+    return Math.abs((+one) - (+another)) / 8.64e7;
+}
+
+function addDays(date, days) {
+    return new Date(date.getTime() + days * 8.64e7);
+}
+
+function getDay(date) {
+    var day = new Date(date.getTime());
+    day.setHours(0, 0, 0, 0);
+    return day;
+}
+
+exports.getError = function (rates1, rates2, getMedian) {
+    var factors = [];
+    var errorSum = 0;
+    var errorCount = 0;
+    var i = 0;
+    for (var s = 0; s < rates1.length; ++s) {
+        var rate1 = rates1[s];
+        var rate1Time = parseDate(rate1.Time);
+        while (i < rates2.length && parseDate(rates2[i].Time) < rate1Time) {
+            i++;
+        }
+        if (i >= rates2.length) {
+            break;
+        }
+        if (daysBetween(parseDate(rates2[i].Time), rate1Time) >= 1) {
+            continue;
+        }
+        var error = (rates2[i].Close - rate1.Close) / rate1.Close;
+        errorSum += Math.abs(error);
+        errorCount++;
+        if (getMedian) {
+            factors.push(rates2[i].Close / rate1.Close);
+        }
+    }
+
+    let median;
+    if (getMedian) {
+        factors.sort();
+        median = factors[Math.floor(factors.length / 2)];
+    }
+
+    return {
+        count: errorCount,
+        errorSum: errorSum,
+        errorAvg: errorSum / errorCount,
+        factorMedian: median
+    }
+};
 
 function isBigChange(ratio) {
     if (ratio > 1.9 || (1 / ratio) > 1.9) {
@@ -88,55 +158,59 @@ function getDistinctFindings(findings, days) {
     return distinct;
 }
 
-async function getHunch(snapshotId) {
-    var rates = await sql.query("SELECT r.Time, r.Open, r.Close FROM snapshotrates AS r WHERE r.Snapshot_ID = @snapshotId", {
-        "@snapshotId": snapshotId
-    });
-
+function getHunchFromRates(rates) {
     var status = "NO";
-    var findings = [];
 
-    var prePre = rates[0];
-    var pre = rates[0];
-    for (var r = 0; r < rates.length; ++r) {
-        var rate = rates[r];
-        rate.Time = parseDate(rate.Time);
+    if (rates && rates.length) {
+        var findings = [];
 
-        var candidates = getCandidates(prePre, pre, rate);
-        for (var c = 0; c < candidates.length; ++c) {
-            var candidate = candidates[c];
-            if (isBigChange(candidate.ratio)) {
-                findings.push(candidate);
-                break;
+        var prePre = rates[0];
+        var pre = rates[0];
+        for (var r = 0; r < rates.length; ++r) {
+            var rate = rates[r];
+            rate.Time = parseDate(rate.Time);
+
+            var candidates = getCandidates(prePre, pre, rate);
+            for (var c = 0; c < candidates.length; ++c) {
+                var candidate = candidates[c];
+                if (isBigChange(candidate.ratio)) {
+                    findings.push(candidate);
+                    break;
+                }
             }
+
+            var prePre = pre;
+            var pre = rate;
         }
 
-        var prePre = pre;
-        var pre = rate;
+        var detections = getDistinctFindings(findings, 5);
+        if (detections.length > 0) {
+            status = "HUNCH";
+        }
     }
 
-    var detections = getDistinctFindings(findings, 5);
-    if (detections.length > 0) {
-        status = "HUNCH";
-        //console.log("split job HUNCH at " + snapshotId + ": " + JSON.stringify(detections));
-    }
-
-    await sql.query("UPDATE snapshots AS s SET s.Split = @status, s.updatedAt = NOW() WHERE s.ID = @snapshotId", {
-        "@snapshotId": snapshotId,
-        "@status": status
-    });
+    return status;
 }
 
-async function getHunches() {
+async function getSnapshotHunches() {
     var ids = await sql.query("SELECT s.ID FROM snapshots AS s WHERE s.Split IS NULL OR (s.Split IN ('NODIFF', 'NOSOURCE', 'FIXED') AND s.updatedAt < NOW() - INTERVAL @minDaysSinceRefresh DAY)", {
         "@minDaysSinceRefresh": config.job_split_hunch_min_days_since_refresh
     });
 
     for (var i = 0; i < ids.length; ++i) {
-        var id = ids[i].ID;
+        var snapshotId = ids[i].ID;
 
         try {
-            await getHunch(id);
+            var rates = await sql.query("SELECT r.Time, r.Open, r.Close FROM snapshotrates AS r WHERE r.Snapshot_ID = @snapshotId", {
+                "@snapshotId": snapshotId
+            });
+
+            var status = getHunchFromRates(rates);
+
+            await sql.query("UPDATE snapshots AS s SET s.Split = @status WHERE s.ID = @snapshotId", {
+                "@snapshotId": snapshotId,
+                "@status": status
+            });
         }
         catch (error) {
             console.log("error in split job getHunches for " + JSON.stringify(ids[i]) + ": " + error.message + "\n" + error.stack);
@@ -146,13 +220,151 @@ async function getHunches() {
     }
 }
 
-function getDay(date) {
-    var day = new Date(date.getTime());
-    day.setHours(0, 0, 0, 0);
-    return day;
+async function getInstrumentHunches() {
+    var ids = await sql.query("SELECT i.ID FROM instruments AS i WHERE i.Split IS NULL OR (i.Split IN ('NODIFF', 'NOSOURCE', 'FIXED') AND i.SplitUpdatedAt < NOW() - INTERVAL @minDaysSinceRefresh DAY)", {
+        "@minDaysSinceRefresh": config.job_split_hunch_min_days_since_refresh
+    });
+
+    for (var i = 0; i < ids.length; ++i) {
+        var instrumentId = ids[i].ID;
+
+        try {
+            var rates = await sql.query("SELECT r.Time, r.Open, r.Close FROM instrumentrates AS r WHERE r.Instrument_ID = @instrumentId", {
+                "@instrumentId": instrumentId
+            });
+
+            var status = getHunchFromRates(rates);
+
+            if (status == "HUNCH") {
+                await sql.query("UPDATE instruments AS i SET i.Split = @status WHERE i.ID = @instrumentId", {
+                    "@instrumentId": instrumentId,
+                    "@status": status
+                });
+            }
+            else {
+                await sql.query("UPDATE instruments AS i SET i.Split = 'NODIFF', i.SplitUpdatedAt = NOW() WHERE i.ID = @instrumentId", {
+                    "@instrumentId": instrumentId
+                });
+            }
+        }
+        catch (error) {
+            console.log("error in split job getInstrumentHunches for " + JSON.stringify(ids[i]) + ": " + error.message + "\n" + error.stack);
+        }
+
+        logVerbose("split job getInstrumentHunches: " + (100 * i / ids.length).toFixed(2) + "%");
+    }
 }
 
-async function fixHunch(snapshotId, knownSource, instrumentId, startTime, endTime) {
+async function fixSnapshotHunches() {
+    var items = await sql.query("SELECT s.ID, s.SourceType, s.Instrument_ID, s.StartTime, s.Time FROM snapshots AS s WHERE s.Split = 'HUNCH' ORDER BY s.Time DESC");
+
+    for (var i = 0; i < items.length; ++i) {
+        try {
+            await fixSnapshotSplit(items[i].ID, items[i].SourceType, items[i].Instrument_ID, parseDate(items[i].StartTime), parseDate(items[i].Time));
+        }
+        catch (error) {
+            console.log("error in split job fixHunches for " + JSON.stringify(items[i]) + ": " + error.message + "\n" + error.stack);
+        }
+
+        logVerbose("split job fixHunches: " + (100 * i / items.length).toFixed(2) + "%");
+    }
+}
+
+async function fixInstrumentHunchesAndDiffs() {
+    var items = await sql.query("SELECT i.ID FROM instruments AS i WHERE i.Split = 'HUNCH' OR i.Split = 'DIFF' ORDER BY i.SplitUpdatedAt ASC");
+
+    for (var i = 0; i < items.length; ++i) {
+        try {
+            await exports.fixInstrumentSplit(items[i].ID);
+        }
+        catch (error) {
+            console.log("error in split job fixInstrumentHunches for " + JSON.stringify(items[i]) + ": " + error.message + "\n" + error.stack);
+        }
+
+        logVerbose("split job fixInstrumentHunches: " + (100 * i / items.length).toFixed(2) + "%");
+    }
+}
+
+async function refreshRates(snapshotId, newSource, newMarketId, instrumentId, startTime, endTime) {
+
+    async function checkRatesCallback(rates) {
+        problem = newSnapshotController.checkRates(rates, startTime, endTime, newSource);
+        return problem == null;
+    }
+
+    var sources = await model.source.findAll({
+        where: {
+            Instrument_ID: instrumentId,
+            SourceType: newSource
+        }
+    });
+
+    var sourceInfo = sources[0];
+
+    var status = "NOSOURCE";
+
+    try {
+        var ratesResponse = await ratesProvider.getRates(newSource, sourceInfo.SourceId, newMarketId, startTime, endTime, checkRatesCallback);
+        if (ratesResponse && ratesResponse.Rates) {
+            var newRates = ratesResponse.Rates;
+
+            status = "FIXED";
+            await snapshotController.setRates(snapshotId, ratesResponse.Source, ratesResponse.MarketId, newRates, endTime);
+        }
+    }
+    catch (e) {
+        if (e.message == ratesProvider.market_not_found) {
+            // expected
+        }
+        else if (e.message == ratesProvider.invalid_response) {
+            // expected
+        }
+        else {
+            throw e;
+        }
+    }
+
+    await sql.query("UPDATE snapshots AS s SET s.Split = @status, s.updatedAt = NOW() WHERE s.ID = @snapshotId", {
+        "@status": status,
+        "@snapshotId": snapshotId
+    });
+}
+
+async function fixPriceDifferences() {
+    var items = await sql.query(split_adjust_sql, {
+        "@minDiffRatio": config.job_split_min_diff_ratio,
+        "@minDaysSinceRefresh": config.job_split_diff_min_days_since_refresh
+    });
+
+    for (var i = 0; i < items.length; ++i) {
+
+        var item = items[i];
+
+        try {
+            var snapshots = await sql.query("SELECT s.ID, s.StartTime, s.Time FROM snapshots AS s WHERE s.Instrument_ID = @instrumentId AND EXISTS (SELECT 1 FROM snapshotrates AS r WHERE r.Snapshot_ID = s.ID)", {
+                "@instrumentId": item.Instrument_ID
+            });
+
+            for (var s = 0; s < snapshots.length; ++s) {
+                try {
+                    await refreshRates(snapshots[s].ID, item.NewSourceType, item.NewMarketId, item.Instrument_ID, parseDate(snapshots[s].StartTime), parseDate(snapshots[s].Time));
+                }
+                catch (error) {
+                    console.log("error in split job fixPriceDifferences for " + JSON.stringify([item, snapshots[s]]) + ": " + error.message + "\n" + error.stack);
+                }
+
+                logVerbose("split job fixPriceDifferences: " + (100 * (i + s / snapshots.length) / items.length).toFixed(2) + "%");
+            }
+        }
+        catch (error) {
+            console.log("error in split job fixPriceDifferences for " + JSON.stringify(item) + ": " + error.message + "\n" + error.stack);
+        }
+
+        logVerbose("split job fixPriceDifferences: " + (100 * i / items.length).toFixed(2) + "%");
+    }
+}
+
+async function fixSnapshotSplit(snapshotId, knownSource, instrumentId, startTime, endTime) {
     var knownRates = await model.snapshotrate.findAll({
         where: {
             Snapshot_ID: snapshotId
@@ -161,6 +373,13 @@ async function fixHunch(snapshotId, knownSource, instrumentId, startTime, endTim
             ['Time', 'ASC']
         ]
     });
+
+    if (!knownRates || !knownRates.length) {
+        await sql.query("UPDATE snapshots AS s SET s.Split = 'NO', s.updatedAt = NOW() WHERE s.ID = @snapshotId", {
+            "@snapshotId": snapshotId
+        });
+        return;
+    }
 
     var newSources = ratesProvider.sources.slice();
 
@@ -258,110 +477,173 @@ async function fixHunch(snapshotId, knownSource, instrumentId, startTime, endTim
     });
 }
 
-async function fixHunches() {
-    var items = await sql.query("SELECT s.ID, s.SourceType, s.Instrument_ID, s.StartTime, s.Time FROM snapshots AS s WHERE s.Split = 'HUNCH' ORDER BY s.Time DESC");
+exports.fixInstrumentSplit = async function (instrumentId) {
 
-    for (var i = 0; i < items.length; ++i) {
-        try {
-            await fixHunch(items[i].ID, items[i].SourceType, items[i].Instrument_ID, parseDate(items[i].StartTime), parseDate(items[i].Time));
-        }
-        catch (error) {
-            console.log("error in split job fixHunches for " + JSON.stringify(items[i]) + ": " + error.message + "\n" + error.stack);
-        }
-
-        logVerbose("split job fixHunches: " + (100 * i / items.length).toFixed(2) + "%");
+    var instrument = await model.instrument.find({ where: { ID: instrumentId } });
+    if (!instrument) {
+        return;
     }
-}
 
-async function refreshRates(snapshotId, newSource, newMarketId, instrumentId, startTime, endTime) {
-
-    async function checkRatesCallback(rates) {
-        problem = newSnapshotController.checkRates(rates, startTime, endTime, newSource);
-        return problem == null;
+    if (instrument.SplitUpdatedAt != null && daysBetween(parseDate(instrument.SplitUpdatedAt), new Date()) < config.job_split_hunch_min_days_since_refresh) {
+        return;
     }
+
+    var rateTimes = await sql.query("SELECT MIN(r.Time) AS startTime, MAX(r.Time) AS endTime FROM instrumentrates r WHERE r.Instrument_ID = @instrumentId GROUP BY r.Instrument_ID", {
+        "@instrumentId": instrumentId
+    });
+
+    if (!rateTimes || !rateTimes.length) {
+        return;
+    }
+
+    var oldRates = await model.instrumentrate.findAll({ where: { Instrument_ID: instrumentId }, orderBy: [["Time", "ASC"]] }).map(x => x.get({ plain: true }));
+
+    var startTime = parseDate(rateTimes[0].startTime);
+    var endTime = parseDate(rateTimes[0].endTime);
+
+    var getStartTime = new Date(endTime.getTime() - config.chart_period_seconds * 1000);
 
     var sources = await model.source.findAll({
         where: {
-            Instrument_ID: instrumentId,
-            SourceType: newSource
+            Instrument_ID: instrumentId
         }
     });
-
-    var sourceInfo = sources[0];
 
     var status = "NOSOURCE";
 
-    try {
-        var ratesResponse = await ratesProvider.getRates(newSource, sourceInfo.SourceId, newMarketId, startTime, endTime, checkRatesCallback);
-        if (ratesResponse && ratesResponse.Rates) {
-            var newRates = ratesResponse.Rates;
+    if (sources && sources.length) {
+        for (var sourceInfo of sources) {
 
-            status = "FIXED";
-            await snapshotController.setRates(snapshotId, ratesResponse.Source, ratesResponse.MarketId, newRates, endTime);
-        }
-    }
-    catch (e) {
-        if (e.message == ratesProvider.market_not_found) {
-            // expected
-        }
-        else if (e.message == ratesProvider.invalid_response) {
-            // expected
-        }
-        else {
-            throw e;
-        }
-    }
-
-    await sql.query("UPDATE snapshots AS s SET s.Split = @status, s.updatedAt = NOW() WHERE s.ID = @snapshotId", {
-        "@status": status,
-        "@snapshotId": snapshotId
-    });
-}
-
-async function fixPriceDifferences() {
-    var items = await sql.query(split_adjust_sql, {
-        "@minDiffRatio": config.job_split_min_diff_ratio,
-        "@minDaysSinceRefresh": config.job_split_diff_min_days_since_refresh
-    });
-
-    for (var i = 0; i < items.length; ++i) {
-
-        var item = items[i];
-
-        try {
-            var snapshots = await sql.query("SELECT s.ID, s.StartTime, s.Time FROM snapshots AS s WHERE s.Instrument_ID = @instrumentId", {
-                "@instrumentId": item.Instrument_ID
-            });
-
-            for (var s = 0; s < snapshots.length; ++s) {
-                try {
-                    await refreshRates(snapshots[s].ID, item.NewSourceType, item.NewMarketId, item.Instrument_ID, parseDate(snapshots[s].StartTime), parseDate(snapshots[s].Time));
-                }
-                catch (error) {
-                    console.log("error in split job fixPriceDifferences for " + JSON.stringify([item, snapshots[s]]) + ": " + error.message + "\n" + error.stack);
+            async function checkRatesCallback(rates) {
+                if (rates.length < newSnapshotController.minDays) {
+                    return false;
                 }
 
-                logVerbose("split job fixPriceDifferences: " + (100 * (i + s / snapshots.length) / items.length).toFixed(2) + "%");
+                var firstRate = parseDate(rates[0].Time);
+                var lastRate = parseDate(rates[rates.length - 1].Time);
+
+                if (lastRate < endTime) {
+                    return false;
+                }
+
+                if (firstRate > getStartTime) {
+                    return false;
+                }
+
+                return true;
+            }
+
+            let ratesResponse;
+            try {
+                ratesResponse = await ratesProvider.getRates(sourceInfo.SourceType, sourceInfo.SourceId, sourceInfo.MarketId, addDays(startTime, -1), addDays(endTime, 1), checkRatesCallback);
+            }
+            catch (e) {
+                if (e.message == ratesProvider.market_not_found) {
+                    // expected
+                }
+                else if (e.message == ratesProvider.invalid_response) {
+                    // expected
+                }
+                else {
+                    throw e;
+                }
+            }
+
+            if (ratesResponse && ratesResponse.Rates) {
+                var newRates = ratesResponse.Rates;
+
+                var firstRate = parseDate(newRates[0].Time);
+                var lastRate = parseDate(newRates[newRates.length - 1].Time);
+
+                if (lastRate < endTime) {
+                    continue;
+                }
+
+                if (firstRate > getStartTime) {
+                    continue;
+                }
+
+                var error = exports.getError(oldRates, newRates, firstRate > startTime);
+                if (error.count < newSnapshotController.minDays * config.job_consolidate_min_match) {
+                    continue;
+                }
+
+                if (error.errorAvg < config.job_consolidate_max_error) {
+                    status = "NODIFF";
+                    break;
+                }
+
+                let rates;
+                if (firstRate > startTime) {
+                    // modify old rates and replace new rates
+
+                    var factor = error.factorMedian;
+                    if (Math.abs(factor - Math.round(factor)) < 0.01) {
+                        factor = Math.round(factor);
+                    }
+
+                    for (var rate of oldRates) {
+                        if (rate.Open) {
+                            rate.Open *= error.errorMedian;
+                        }
+                        if (rate.Close) {
+                            rate.Close *= error.errorMedian;
+                        }
+                        if (rate.High) {
+                            rate.High *= error.errorMedian;
+                        }
+                        if (rate.Low) {
+                            rate.Low *= error.errorMedian;
+                        }
+                    }
+
+                    rates = oldRates.filter(x => parseDate(x.Time) < firstRate).concat(newRates);
+                }
+                else {
+                    // use new rates
+                    rates = newRates;
+                }
+
+                await instrumentController.setInstrumentRates(instrumentId, rates);
             }
         }
-        catch (error) {
-            console.log("error in split job fixPriceDifferences for " + JSON.stringify(item) + ": " + error.message + "\n" + error.stack);
-        }
-
-        logVerbose("split job fixPriceDifferences: " + (100 * i / items.length).toFixed(2) + "%");
     }
-}
+
+    await model.instrument.update(
+        {
+            Split: status,
+            SplitUpdatedAt: new Date()
+        },
+        {
+            where: {
+                ID: instrumentId
+            }
+        });
+};
 
 exports.run = async function () {
     try {
 
-        await getHunches();
-        await fixHunches();
+        while (consolidateJob.isRunning || cleanupJob.isRunning) {
+            await sleep(1000);
+        }
+
+        exports.isRunning = true;
+
+        await getSnapshotHunches();
+        await fixSnapshotHunches();
+
         await fixPriceDifferences();
+
+        await getInstrumentHunches();
+        await fixInstrumentHunchesAndDiffs();
 
     }
     catch (error) {
         console.log("error in split job: " + error.message + "\n" + error.stack);
+    }
+    finally {
+        exports.isRunning = false;
     }
 
     setTimeout(exports.run, config.job_split_interval_seconds * 1000);

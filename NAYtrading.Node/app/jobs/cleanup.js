@@ -4,6 +4,8 @@ var sequelize = require('sequelize');
 var sql = require('../sql/sql');
 var fs = require('fs');
 var config = require('../config/envconfig');
+var splitJob = require('./split');
+var consolidateJob = require('./consolidate');
 var newSnapshotController = require('../controllers/new_snapshot_controller');
 
 var duplicates_sql = "";
@@ -27,6 +29,17 @@ try {
     console.log('Error:', e.stack);
 }
 
+
+function sleep(ms) {
+    return new Promise((resolve, reject) => {
+        try {
+            setTimeout(resolve, ms);
+        }
+        catch (e) {
+            reject(e);
+        }
+    });
+}
 
 function groupBy(xs, key, equals) {
     return xs.reduce(function (rv, x) {
@@ -128,6 +141,11 @@ async function cleanupOldUnseen() {
 exports.run = async function () {
     try {
 
+        while (consolidateJob.isRunning || splitJob.isRunning) {
+            await sleep(1000);
+        }
+
+        exports.isRunning = true;
         await cleanupDuplicates();
         await cleanupMissingRates();
         await cleanupLateBegin();
@@ -136,6 +154,9 @@ exports.run = async function () {
     }
     catch (error) {
         console.log("error in cleanup: " + error.message + "\n" + error.stack);
+    }
+    finally {
+        exports.isRunning = false;
     }
 
     setTimeout(exports.run, config.job_cleanup_interval_seconds * 1000);

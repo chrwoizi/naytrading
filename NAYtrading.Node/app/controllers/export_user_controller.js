@@ -2,9 +2,11 @@ var exports = module.exports = {}
 var fs = require('fs');
 var path = require('path');
 var model = require('../models/index');
+var sequelize = require('sequelize');
 var sql = require('../sql/sql');
 var fs = require('fs');
 var config = require('../config/envconfig');
+var snapshotController = require('./snapshot_controller');
 
 var trades_sql = "";
 try {
@@ -72,6 +74,8 @@ exports.exportUserInstruments = async function (req, res) {
 
                 delete instrument.createdAt;
                 delete instrument.updatedAt;
+                delete instrument.FirstRateDate;
+                delete instrument.LastRateDate;
 
                 res.write(JSON.stringify(instrument));
             }
@@ -126,7 +130,7 @@ exports.exportUserSnapshots = async function (req, res) {
             res.header('Content-disposition', 'attachment; filename=usersnapshots.json');
             res.header('Content-type', 'application/json');
 
-            await exports.exportUserSnapshotsGeneric(fromDate, user, res, () => cancel, x => {});
+            await exports.exportUserSnapshotsGeneric(fromDate, user, res, () => cancel, x => { });
         }
         else {
             res.status(401);
@@ -177,12 +181,15 @@ exports.exportUserSnapshotsGeneric = async function (fromTimeUTC, user, stream, 
         });
         snapshot = snapshot.get({ plain: true });
 
+        await snapshotController.ensureRates(snapshot);
+
         for (var r = 0; r < snapshot.snapshotrates.length; ++r) {
             var rate = snapshot.snapshotrates[r];
             delete rate.ID;
             delete rate.createdAt;
             delete rate.updatedAt;
             delete rate.Snapshot_ID;
+            delete rate.Instrument_ID;
         }
 
         delete snapshot.instrument.createdAt;
