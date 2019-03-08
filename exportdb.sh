@@ -1,25 +1,44 @@
+#!/bin/sh
+
 dbuser=naytrading
 dbpass=naytrading
 dbname=naytrading
-cd ..
-rm -r dump
-mkdir dump
-cd dump
-mysqldump --user="$dbuser" --password="$dbpass" "$dbname" instruments > instruments.sql
-mysqldump --user="$dbuser" --password="$dbpass" "$dbname" portfolios > portfolios.sql
-mysqldump --user="$dbuser" --password="$dbpass" "$dbname" settings > settings.sql
-mysqldump --user="$dbuser" --password="$dbpass" "$dbname" snapshots > snapshots.sql
-mysqldump --user="$dbuser" --password="$dbpass" "$dbname" snapshotrates > snapshotrates.sql
-mysqldump --user="$dbuser" --password="$dbpass" "$dbname" sources > sources.sql
-mysqldump --user="$dbuser" --password="$dbpass" "$dbname" trades > trades.sql
-mysqldump --user="$dbuser" --password="$dbpass" "$dbname" tradelogs > tradelogs.sql
-mysqldump --user="$dbuser" --password="$dbpass" "$dbname" users > users.sql
-mysqldump --user="$dbuser" --password="$dbpass" "$dbname" userinstruments > userinstruments.sql
-mysqldump --user="$dbuser" --password="$dbpass" "$dbname" usersnapshots > usersnapshots.sql
-mysqldump --user="$dbuser" --password="$dbpass" "$dbname" weights > weights.sql
-mysqldump --user="$dbuser" --password="$dbpass" "$dbname" whitelists > whitelists.sql
-tar czf dump.tar.gz *
+processdir="$(dirname $0)/../dumping"
+outdir="$(dirname $0)/.."
+initdir="$(PWD)"
+
+mkdir "$processdir"
+cd "$processdir"
+
+echo cleanup..
 rm *.sql
-mv -f dump.tar.gz ../
-cd ..
-rmdir dump
+rm *.tar.gz
+
+backup_table()
+{
+  echo "exporting $1..."
+  mysqldump --user="$dbuser" --password="$dbpass" "$dbname" $1 > $2.sql
+}
+
+backup_table instruments
+backup_table instrumentrates
+backup_table settings
+backup_table snapshots
+backup_table snapshotrates
+backup_table sources
+backup_table trades
+backup_table tradelogs
+backup_table users
+backup_table userinstruments
+backup_table usersnapshots
+backup_table weights
+backup_table whitelists
+
+echo compressing...
+tar czf dump.tar.gz *.sql
+
+echo cleanup...
+rm *.sql
+mv -f dump.tar.gz "../$outdir/dump.tar.gz"
+cd "$initdir"
+echo done.
