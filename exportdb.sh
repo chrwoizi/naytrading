@@ -39,6 +39,8 @@ tar czf dump.tar.gz *.sql
 
 echo cleanup...
 rm *.sql
+mkdir "$outdir"
 mv -f dump.tar.gz "$outdir/dump.tar.gz"
 cd "$initdir"
+rmdir "$processdir"
 echo done.
