@@ -17,7 +17,7 @@ rm *.tar.gz
 backup_table()
 {
   echo "exporting $1..."
-  mysqldump --user="$dbuser" --password="$dbpass" "$dbname" $1 > $2.sql
+  mysqldump --user="$dbuser" --password="$dbpass" "$dbname" $1 > $1.sql
 }
 
 backup_table instruments
