@@ -21,6 +21,7 @@ var strikesJob = require('./app/jobs/strikes');
 var portfoliosJob = require('./app/jobs/portfolios');
 var processJob = require('./app/jobs/process');
 var sourcesJob = require('./app/jobs/sources');
+var consolidateJob = require('./app/jobs/consolidate');
 
 var sql = require('./app/sql/sql');
 
@@ -111,9 +112,9 @@ var sql = require('./app/sql/sql');
             });
         }
     
-        if (config.job_split_enabled) {
+        if (config.job_consolidate_enabled) {
             setTimeout(function () {
-                new Promise(function (resolve, reject) { splitJob.run(); });
+                new Promise(function (resolve, reject) { consolidateJob.run(); });
             }, 1000);
         }
 
@@ -133,6 +134,12 @@ var sql = require('./app/sql/sql');
             setTimeout(function () {
                 new Promise(function (resolve, reject) { cleanupJob.run(); });
             }, 4000);
+        }
+
+        if (config.job_split_enabled) {
+            setTimeout(function () {
+                new Promise(function (resolve, reject) { splitJob.run(); });
+            }, 5000);
         }
 
         if (config.job_strikes_enabled) {

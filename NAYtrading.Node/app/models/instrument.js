@@ -29,6 +29,26 @@ module.exports = (sequelize, DataTypes) => {
             allowNull: true
         },
 
+        FirstRateDate: {
+            type: DataTypes.DATE,
+            allowNull: true
+        },
+
+        LastRateDate: {
+            type: DataTypes.DATE,
+            allowNull: true
+        },
+
+        Split: {
+            allowNull: true,
+            type: DataTypes.STRING(30)
+        },
+
+        SplitUpdatedAt: {
+            allowNull: true,
+            type: DataTypes.DATE
+        },
+
         createdAt: {
             allowNull: false,
             type: DataTypes.DATE
@@ -44,13 +64,16 @@ module.exports = (sequelize, DataTypes) => {
         indexes: [
             { fields: ['Capitalization'] },
             { fields: ['Isin'] },
-            { fields: ['Wkn'] }
+            { fields: ['Wkn'] },
+            { fields: ['Split'] },
+            { fields: ['SplitUpdatedAt'] }
         ]
     });
     instrument.associate = function (models) {
         instrument.hasMany(models.snapshot, { foreignKey: 'Instrument_ID', onDelete: 'CASCADE', hooks: true });
         instrument.hasMany(models.userinstrument, { foreignKey: 'Instrument_ID', onDelete: 'CASCADE', hooks: true });
         instrument.hasMany(models.source, { foreignKey: 'Instrument_ID', onDelete: 'CASCADE', hooks: true });
+        instrument.hasMany(models.instrumentrate, { foreignKey: 'Instrument_ID', onDelete: 'CASCADE', hooks: true });
     };
     return instrument;
 };

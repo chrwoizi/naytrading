@@ -311,4 +311,53 @@ exports.updateInstruments = async function (req, res) {
         res.status(500);
         res.json({ error: error.message });
     }
-}
+};
+
+exports.setInstrumentRates = async function (instrumentId, rates) {
+    let transaction;
+
+    try {
+        transaction = await model.sequelize.transaction();
+
+        await model.instrumentrate.destroy({
+            where: {
+                Instrument_ID: instrumentId
+            },
+            transaction: transaction
+        });
+
+        await model.instrumentrate.bulkCreate(
+            rates.map(function (r) {
+                return {
+                    Instrument_ID: instrumentId,
+                    Open: r.Open,
+                    Close: r.Close,
+                    High: r.High,
+                    Low: r.Low,
+                    Time: r.Time
+                };
+            }), {
+                transaction: transaction
+            });
+
+        await model.instrument.update(
+            {
+                LastRateDate: rates[rates.length - 1].Time,
+                FirstRateDate: rates[0].Time,
+                Split: "FIXED",
+                SplitUpdatedAt: new Date()
+            },
+            {
+                where: {
+                    ID: instrumentId
+                },
+                transaction: transaction
+            });
+
+        await transaction.commit();
+
+    } catch (err) {
+        await transaction.rollback();
+        throw err;
+    }
+};

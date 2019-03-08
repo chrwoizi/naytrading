@@ -51,6 +51,8 @@ exports.exportInstruments = async function (req, res) {
                         model: model.userinstrument
                     }, {
                         model: model.source
+                    }, {
+                        model: model.instrumentrate
                     }],
                     where: {
                         ID: ids[i].ID
@@ -73,6 +75,11 @@ exports.exportInstruments = async function (req, res) {
                 for (var k = 0; k < instrument.sources; ++k) {
                     delete instrument.sources[k].createdAt;
                     delete instrument.sources[k].updatedAt;
+                }
+
+                for (var k = 0; k < instrument.instrumentrate; ++k) {
+                    delete instrument.instrumentrate[k].createdAt;
+                    delete instrument.instrumentrate[k].updatedAt;
                 }
 
                 res.write(JSON.stringify(instrument));

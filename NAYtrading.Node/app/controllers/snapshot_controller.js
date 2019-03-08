@@ -55,6 +55,26 @@ exports.getSnapshotListViewModel = function (snapshot) {
     };
 };
 
+exports.ensureRates = async function (snapshot) {
+    if (!snapshot.snapshotrates || !snapshot.snapshotrates.length) {
+        snapshot.snapshotrates = await model.instrumentrate.findAll({
+            where: {
+                Instrument_ID: snapshot.Instrument_ID,
+                Time: {
+                    [sequelize.Op.gte]: snapshot.FirstPriceTime
+                },
+                Time: {
+                    [sequelize.Op.lte]: snapshot.PriceTime
+                }
+            },
+            orderBy: [
+                ["Time", "ASC"]
+            ]
+        });
+        snapshot.snapshotrates = snapshot.snapshotrates.map(x => x.get({ plain: true }));
+    }
+}
+
 exports.countSnapshots = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
@@ -123,19 +143,29 @@ exports.snapshots = async function (req, res) {
 
 exports.getSnapshot = async function (id, user) {
 
-    var snapshots = await sql.query("SELECT s.ID, s.Time, s.Instrument_ID, i.InstrumentName FROM snapshots AS s INNER JOIN instruments AS i ON i.ID = s.Instrument_ID WHERE s.ID = @id", {
+    var snapshots = await sql.query("SELECT s.ID, s.Time, s.Instrument_ID, i.InstrumentName, s.FirstPriceTime, s.PriceTime FROM snapshots AS s INNER JOIN instruments AS i ON i.ID = s.Instrument_ID WHERE s.ID = @id", {
         "@id": id,
         "@user": user
     });
 
     if (snapshots && snapshots.length == 1) {
         var snapshot = snapshots[0];
+
         snapshot.instrument = {
             InstrumentName: snapshot.InstrumentName
         };
+        
         snapshot.snapshotrates = await sql.query("SELECT r.Time, r.Close FROM snapshotrates AS r WHERE r.Snapshot_ID = @id ORDER BY r.Time ASC", {
             "@id": id
         });
+
+        if (!snapshot.snapshotrates || !snapshot.snapshotrates.length) {
+            snapshot.snapshotrates = await sql.query("SELECT r.Time, r.Close FROM instrumentrates AS r WHERE r.Instrument_ID = @id AND r.Time >= @fromTime AND r.Time <= @toTime ORDER BY r.Time ASC", {
+                "@id": snapshot.Instrument_ID,
+                "@fromTime": snapshot.FirstPriceTime,
+                "@toTime": snapshot.PriceTime
+            });
+        }
 
         var previous = await exports.getPreviousDecisionAndBuyRate(snapshot.ID, user);
         var viewModel = exports.getSnapshotViewModel(snapshot, previous, user);
@@ -202,7 +232,7 @@ exports.getPreviousDecision = async function (snapshotId, user) {
 
 exports.getPreviousDecisionAndBuyRate = async function (snapshotId, user) {
 
-    var previous = await sql.query("SELECT s.ID, u.Decision \
+    var previous = await sql.query("SELECT s.ID, u.Decision, s.Price, s.PriceTime \
         FROM usersnapshots AS u\
         INNER JOIN snapshots AS s ON u.Snapshot_ID = s.ID\
         INNER JOIN snapshots AS cs ON cs.ID = @snapshotId\
@@ -220,19 +250,8 @@ exports.getPreviousDecisionAndBuyRate = async function (snapshotId, user) {
     if (previous && previous.length == 1) {
         result.PreviousDecision = previous[0].Decision;
         if (result.PreviousDecision == 'buy') {
-
-            var lastRates = await model.snapshotrate.findAll({
-                limit: 1,
-                where: {
-                    Snapshot_ID: previous[0].ID
-                },
-                order: [['Time', 'DESC']]
-            });
-
-            if (lastRates && lastRates.length == 1) {
-                result.PreviousBuyRate = lastRates[0].Close;
-                result.PreviousTime = dateFormat(lastRates[0].Time, 'yymmdd');
-            }
+            result.PreviousBuyRate = previous[0].Price;
+            result.PreviousTime = dateFormat(previous[0].PriceTime, 'yymmdd');
         }
     }
 
@@ -268,13 +287,13 @@ exports.setDecision = async function (req, res) {
         if (req.isAuthenticated()) {
 
             if (req.body.confirm && req.body.confirm > 1) {
-                
+
                 var toCheck = await sql.query("SELECT ID, Decision, Confirmed FROM usersnapshots WHERE User = @userName AND ID = @id AND Snapshot_ID = @snapshotId", {
                     "@userName": req.user.email,
                     "@id": req.body.confirm,
                     "@snapshotId": req.body.id
                 });
-                
+
                 if (toCheck && toCheck.length > 0) {
                     var confirmation = toCheck[0].Decision == req.body.decision ? 1 : -1;
 
@@ -290,7 +309,7 @@ exports.setDecision = async function (req, res) {
                             }
                         }
                     );
-                    
+
                     res.json({ status: "ok" });
                     return;
                 }

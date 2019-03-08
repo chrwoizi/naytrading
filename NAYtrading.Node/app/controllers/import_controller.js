@@ -206,9 +206,18 @@ function addInstrument(data) {
                 delete data.userinstruments[i].updatedAt;
             }
 
+            for (var i = 0; i < data.instrumentrates.length; ++i) {
+                delete data.instrumentrates[i].ID;
+                delete data.instrumentrates[i].createdAt;
+                delete data.instrumentrates[i].updatedAt;
+                delete data.instrumentrates[i].Instrument_ID;
+            }
+
             await model.instrument.create(data, {
                 include: [{
                     model: model.userinstrument
+                },{
+                    model: model.instrumentrate
                 },{
                     model: model.source
                 }]
@@ -289,7 +298,14 @@ async function removeInstrument(dictValue) {
     return await model.instrument.destroy({
         where: {
             ID: dictValue.ID
-        }
+        },
+        include: [{
+            model: model.instrumentrate
+        }, {
+            model: model.userinstrument
+        }, {
+            model: model.source
+        }]
     });
 }
 

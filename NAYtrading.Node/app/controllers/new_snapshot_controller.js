@@ -206,7 +206,7 @@ async function updateMarket(source, marketId) {
 }
 
 async function findSimilarSnapshot(instrumentId, startTime, endDate) {
-    return await model.snapshot.findAll({
+    var snapshot = await model.snapshot.findAll({
         include: [{
             model: model.instrument
         }, {
@@ -226,6 +226,10 @@ async function findSimilarSnapshot(instrumentId, startTime, endDate) {
         ],
         limit: 1
     });
+    
+    if (snapshot) {
+        await snapshotController.ensureRates(snapshot);
+    }
 }
 
 exports.createNewSnapshotFromRandomInstrument = async function (instrumentIds) {
@@ -359,7 +363,7 @@ async function handleNewRandomSnapshot(req, res, allowConfirm) {
                 var toCheck = await sql.query("SELECT ID, Snapshot_ID, Confirmed FROM usersnapshots WHERE User = @userName AND Decision = 'buy' ORDER BY ABS(Confirmed), ModifiedTime", {
                     "@userName": req.user.email
                 });
-                
+
                 if (toCheck && toCheck.length > 0) {
                     var index = getRandomIndex(toCheck.length, config.random_order_weight);
                     var viewModel = await snapshotController.getSnapshot(toCheck[index].Snapshot_ID, req.user.email);
@@ -410,10 +414,10 @@ exports.createNewSnapshotByInstrumentId = async function (req, res) {
                     INNER JOIN usersnapshots AS nu ON nu.Snapshot_ID = ns.ID AND nu.User = @user \
                     WHERE ns.Instrument_ID = s.Instrument_ID AND ns.Time > s.Time) \
                 ORDER BY s.Time ASC", {
-                "@instrumentId": req.params.instrumentId,
-                "@time": upToDateFrom,
-                "@user": req.user.email
-            });
+                    "@instrumentId": req.params.instrumentId,
+                    "@time": upToDateFrom,
+                    "@user": req.user.email
+                });
 
             if (existing && existing.length > 0) {
                 var viewModel = await snapshotController.getSnapshot(existing[0].ID, req.user.email);
