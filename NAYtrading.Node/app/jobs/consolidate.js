@@ -103,38 +103,40 @@ async function processSnapshots() {
             newRates = snapshotRates;
         }
 
-        var newFirstRateDate = parseDate(newRates[0].Time);
-        var newLastRateDate = parseDate(newRates[newRates.length - 1].Time);
-
-        var rateTimes = await sql.query("SELECT MIN(r.Time) AS startTime, MAX(r.Time) AS endTime FROM instrumentrates r WHERE r.Instrument_ID = @instrumentId GROUP BY r.Instrument_ID", {
-            "@instrumentId": row.Instrument_ID
-        });
-        if (rateTimes && rateTimes.length) {
-            var firstRateDate = parseDate(rateTimes[0].startTime);
-            var lastRateDate = parseDate(rateTimes[0].endTime);
-
-            firstRateDate = firstRateDate < newFirstRateDate ? firstRateDate : newFirstRateDate;
-            lastRateDate = lastRateDate < newLastRateDate ? lastRateDate : newLastRateDate;
-        }
-
         let transaction;
 
         try {
             transaction = await model.sequelize.transaction();
 
-            await model.instrumentrate.bulkCreate(newRates, {
-                transaction: transaction
-            });
-
-            await model.instrument.update({
-                FirstRateDate: firstRateDate,
-                LastRateDate: lastRateDate
-            }, {
-                    where: {
-                        ID: row.Instrument_ID
-                    },
+            if (newRates.length) {
+                await model.instrumentrate.bulkCreate(newRates, {
                     transaction: transaction
                 });
+
+                var firstRateDate = parseDate(newRates[0].Time);
+                var lastRateDate = parseDate(newRates[newRates.length - 1].Time);
+        
+                var rateTimes = await sql.query("SELECT MIN(r.Time) AS startTime, MAX(r.Time) AS endTime FROM instrumentrates r WHERE r.Instrument_ID = @instrumentId GROUP BY r.Instrument_ID", {
+                    "@instrumentId": row.Instrument_ID
+                });
+                if (rateTimes && rateTimes.length) {
+                    var existingFirst = parseDate(rateTimes[0].startTime);
+                    var existingLast = parseDate(rateTimes[0].endTime);
+        
+                    firstRateDate = firstRateDate < existingFirst ? firstRateDate : existingFirst;
+                    lastRateDate = lastRateDate < existingLast ? lastRateDate : existingLast;
+                }
+        
+                await model.instrument.update({
+                    FirstRateDate: firstRateDate,
+                    LastRateDate: lastRateDate
+                }, {
+                        where: {
+                            ID: row.Instrument_ID
+                        },
+                        transaction: transaction
+                    });
+            }
 
             await model.snapshotrate.destroy({
                 where: {
