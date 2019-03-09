@@ -233,7 +233,7 @@ async function removeTradelog(dictValue) {
 
 exports.importUserInstruments = async function (req, res) {
 
-    if (req.isAuthenticated()) {
+    if (req.isAuthenticated() && req.user.email == config.admin_user) {
 
         async function getExistingInstruments() {
             var existing = await sql.query('SELECT u.User, i.ID, c.SourceType, c.SourceId FROM instruments AS i INNER JOIN userinstruments AS u ON u.Instrument_ID = i.ID INNER JOIN sources AS c ON c.Instrument_ID = i.ID WHERE u.User = @userName',
@@ -263,7 +263,7 @@ exports.importUserInstruments = async function (req, res) {
 
 exports.importUserSnapshots = async function (req, res) {
 
-    if (req.isAuthenticated()) {
+    if (req.isAuthenticated() && req.user.email == config.admin_user) {
 
         async function getExistingInstruments() {
             var existing = await sql.query('SELECT u.User, i.ID, c.SourceType, c.SourceId FROM instruments AS i INNER JOIN userinstruments AS u ON u.Instrument_ID = i.ID INNER JOIN sources AS c ON c.Instrument_ID = i.ID WHERE u.User = @userName',
