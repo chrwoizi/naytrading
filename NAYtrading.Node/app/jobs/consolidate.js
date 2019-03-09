@@ -131,7 +131,7 @@ async function processSnapshots() {
                 LastRateDate: lastRateDate
             }, {
                     where: {
-                        Instrument_ID: row.Instrument_ID
+                        ID: row.Instrument_ID
                     },
                     transaction: transaction
                 });
