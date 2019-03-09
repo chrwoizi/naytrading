@@ -103,21 +103,19 @@ async function processSnapshots() {
             newRates = snapshotRates;
         }
 
-        var rateTimes = await sql.query("SELECT MIN(r.Time) AS startTime, MAX(r.Time) AS endTime FROM instrumentrates r WHERE r.Instrument_ID = @instrumentId GROUP BY r.Instrument_ID", {
-            "@instrumentId": row.Instrument_ID
-        });
-        if (!rateTimes || !rateTimes.length) {
-            continue;
-        }
-
-        var firstRateDate = parseDate(rateTimes[0].startTime);
-        var lastRateDate = parseDate(rateTimes[0].endTime);
-
         var newFirstRateDate = parseDate(newRates[0].Time);
         var newLastRateDate = parseDate(newRates[newRates.length - 1].Time);
 
-        firstRateDate = firstRateDate < newFirstRateDate ? firstRateDate : newFirstRateDate;
-        lastRateDate = lastRateDate < newLastRateDate ? lastRateDate : newLastRateDate;
+        var rateTimes = await sql.query("SELECT MIN(r.Time) AS startTime, MAX(r.Time) AS endTime FROM instrumentrates r WHERE r.Instrument_ID = @instrumentId GROUP BY r.Instrument_ID", {
+            "@instrumentId": row.Instrument_ID
+        });
+        if (rateTimes && rateTimes.length) {
+            var firstRateDate = parseDate(rateTimes[0].startTime);
+            var lastRateDate = parseDate(rateTimes[0].endTime);
+
+            firstRateDate = firstRateDate < newFirstRateDate ? firstRateDate : newFirstRateDate;
+            lastRateDate = lastRateDate < newLastRateDate ? lastRateDate : newLastRateDate;
+        }
 
         let transaction;
 
