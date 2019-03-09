@@ -154,12 +154,14 @@
                     </dd>
                     <dt>Export raw data:</dt>
                     <dd>
+                        {{#if isAdmin}}
                         <div class="export-button">
                             <a href="/api/export/user/instruments" class="btn btn-secondary" role="button">Export stocks</a>
                         </div>
                         <div class="export-button">
                             <a href="/api/export/user/snapshots/19700101" class="btn btn-secondary" role="button">Export decisions with price history</a>
                         </div>
+                        {{/if}}
                         <div class="export-button">
                             <a href="/api/export/user/trades/19700101" class="btn btn-secondary" role="button">Export buy/sell decisions with ISIN/WKN</a>
                         </div>
@@ -169,6 +171,7 @@
                     </dd>
                     <dt>Import raw data:</dt>
                     <dd>
+                        {{#if isAdmin}}
                         <form action="/api/import/user/instruments" method="post" enctype="multipart/form-data">
                             <div class="form-group" style="margin-bottom:0">
                                 <input type="file" name="file" class="form-control-file"></input>
@@ -195,6 +198,7 @@
                             <button type="submit" class="btn btn-secondary">Import decisions</button>
                         </form>
                         <br/>
+                        {{/if}}
                         <form action="/api/import/user/tradelogs" method="post" enctype="multipart/form-data">
                             <div class="form-group" style="margin-bottom:0">
                                 <input type="file" name="file" class="form-control-file"></input>
