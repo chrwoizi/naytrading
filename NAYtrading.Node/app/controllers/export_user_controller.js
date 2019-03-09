@@ -37,7 +37,7 @@ function parseTimeUTC(str) {
 
 exports.exportUserInstruments = async function (req, res) {
     try {
-        if (req.isAuthenticated()) {
+        if (req.isAuthenticated() && req.user.email == config.admin_user) {
 
             var cancel = false;
 
@@ -99,7 +99,7 @@ exports.exportUserInstruments = async function (req, res) {
 
 exports.exportUserSnapshots = async function (req, res) {
     try {
-        if (req.isAuthenticated()) {
+        if (req.isAuthenticated() && req.user.email == config.admin_user) {
 
             if (typeof (req.params.fromDate) !== 'string' || !(req.params.fromDate.length == 8 || req.params.fromDate.length == 14)) {
 
