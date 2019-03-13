@@ -9,14 +9,14 @@
             "request": "launch",
             "name": "Chrome",
             "url": "http://localhost:5000",
-            "webRoot": "${workspaceFolder}/NAYtrading.Node"
+            "webRoot": "${workspaceFolder}/NAYtrading"
         },
         {
             "type": "node",
             "request": "launch",
             "name": "server.js",
-            "program": "${workspaceFolder}/NAYtrading.Node\\server.js",
-            "cwd": "${workspaceFolder}/NAYtrading.Node"
+            "program": "${workspaceFolder}/NAYtrading\\server.js",
+            "cwd": "${workspaceFolder}/NAYtrading"
         }
     ]
 }

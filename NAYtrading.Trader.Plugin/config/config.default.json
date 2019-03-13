@@ -8,7 +8,7 @@
     "tan_rows": ["A", "B", "C"]
   },
   "production": {
-    "naytrading_trader": "../../../naytrading/NAYtrading.Node",
+    "naytrading_trader": "../../../naytrading/NAYtrading.Trader",
     "brokers": {
       "mybroker": "../brokers/example_broker"
     },

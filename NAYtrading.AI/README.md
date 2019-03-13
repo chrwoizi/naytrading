@@ -15,13 +15,13 @@ Download the sources of [NAYtrading.AI](/NAYtrading.AI) and [NAYtrading.Common](
 Go to your N.A.Y.trading [account page](http://naytrading.com/manage) and download your processed trade decisions as CSV files using the download buttons in the *Export preprocessed training data for artifical intelligence training* section.
 Save the files in the NAYtrading.AI folder.
 
-Run [main_buying_train_norm.bat](main_buying_train_norm.bat) or [main_selling_train_norm.bat](main_selling_train_norm.bat) from the NAYtrading.AI folder.
+Run [train_buying.bat](train_buying.bat) or [train_selling.bat](train_selling.bat) from the NAYtrading.AI folder.
 
 A folder with the name modelXXX will be created where XXX is the current time. Open that folder and run *tensorboard.bat*. Go to [Tensorboard](http://localhost:6006/#scalars&run=log%5Ctrain&_smoothingWeight=0&tagFilter=%5Eloss%24%7C%5Eloss%2Fcombined%7C(buy%7Csell)s_detected%7C(buy%7Csell)s_correct&_ignoreYOutliers=false) to monitor the training progress.
 
 In the top section of Tensorboard it will show three red graphs. 
 
-![loss](../Documentation/training_loss.png "loss graph") ![buys_correct](../Documentation/training_correct.png "buys correct graph") ![buys_detected](../Documentation/training_detected.png "buys detected graph")
+![loss](docs/training_loss.png "loss graph") ![buys_correct](docs/training_correct.png "buys correct graph") ![buys_detected](docs/training_detected.png "buys detected graph")
 
 These are the statistics of how well your trained network performs on the training data.
 - The graph containing the word *loss* in its title (e.g. *loss/combined/value*) shows a metric about how different the network's current decision making is from the given training data. This will go down over time. 0 meaning that the trained network reproduces all given decisions correctly.
@@ -30,7 +30,7 @@ These are the statistics of how well your trained network performs on the traini
 
 Later, when the first evaluation of the trained model occurs (automatically), three blue graphs will appear. 
 
-![loss](../Documentation/evaluation_loss.png "loss graph") ![buys_correct](../Documentation/evaluation_correct.png "buys correct graph") ![buys_detected](../Documentation/evaluation_detected.png "buys detected graph")
+![loss](docs/evaluation_loss.png "loss graph") ![buys_correct](docs/evaluation_correct.png "buys correct graph") ![buys_detected](docs/evaluation_detected.png "buys detected graph")
 
 These are the statistics of how well your trained network performs on unseen data (the evaluation CSV file). You want this to be as good as possible. If your network performs poorly, you need more training data.
 
@@ -40,7 +40,7 @@ Training is a hardware demanding process. If you are using a graphics card, it c
 
 ## :moneybag: Using the trained network ##
 
-Once you have a trained network for buying (and preferably another network for selling), you can run client.py to act as a user on N.A.Y.trading using the trained network(s) to decide on snapshots automatically. 
+Once you have a trained network for buying (and preferably another network for selling), you can run predict.py to act as a user on N.A.Y.trading using the trained network(s) to decide on snapshots automatically. 
 
 Go to [http://naytrading.com](http://naytrading.com) and register a new account for your AI. A recommended account email address is your real email address followed by *.ai*, e.g. *john.doe@mailbox.com.ai*. That email address doesn't need to actually exist. Consider it an account "name". Using that convention is optional, but it automatically enables some convenient features.
 
@@ -55,21 +55,21 @@ pi@raspberrypi:~/naytrading/NAYtrading.AI $ ./install.sh
 
 ```
 
-Run client.py with trained buying and selling models:
+Run predict.py with trained buying and selling models:
 
 ```sh
 # replace %1 with your buying model directory path, e.g. model20180629121604
 # replace %2 with your selling model directory path, e.g. model20180703114329
 # replace %3 with the number of seconds the AI should wait between snapshots, e.g. 30
-python3.4 client.py --buy_checkpoint_dir=%1\\checkpoint --sell_checkpoint_dir=%2\\checkpoint --sleep=%3
+python3.4 predict.py --buy_checkpoint_dir=%1\\checkpoint --sell_checkpoint_dir=%2\\checkpoint --sleep=%3
 ```
 
 Having a selling network is optional. If you don't have enough training data yet to achieve a satisfying ratio of sells_correct (see Tensorboard above), you can remove the sell_checkpoint_dir option and use thresholds to make sell decisions.
 ```sh
 # replace %1 with your buying model directory path, e.g. model20180629121604
 # replace %2 with the number of seconds the AI should wait between snapshots, e.g. 30
-# see client.py for help on the threshold parameters.
-python3.4 client.py --buy_checkpoint_dir=%1\\checkpoint --sleep=%2 --min_loss=0.1 --min_gain=0.04 --max_loss=0.3 --max_gain=0.15 --sell_at_max_factor=1
+# see predict.py for help on the threshold parameters.
+python3.4 predict.py --buy_checkpoint_dir=%1\\checkpoint --sleep=%2 --min_loss=0.1 --min_gain=0.04 --max_loss=0.3 --max_gain=0.15 --sell_at_max_factor=1
 ```
 
 </details><p></p>
@@ -79,7 +79,7 @@ python3.4 client.py --buy_checkpoint_dir=%1\\checkpoint --sleep=%2 --min_loss=0.
 
 Download Python 3.x from https://www.python.org/downloads/ and run the installer.
 
-Drag your model folder(s) onto client_on_dropped_models.bat or run client.py from the console:
+Drag your model folder(s) onto predict_dropped.bat or run predict.py from the console:
 
 ```sh
 # replace %1 with your buying model directory path, e.g. model20180629121604
@@ -87,21 +87,21 @@ Drag your model folder(s) onto client_on_dropped_models.bat or run client.py fro
 # replace %3 with the number of seconds the AI should wait between snapshots, e.g. 30
 pip install requests
 pip install tensorflow
-python client.py --buy_checkpoint_dir=%1\\checkpoint --sell_checkpoint_dir=%2\\checkpoint --sleep=%3
+python predict.py --buy_checkpoint_dir=%1\\checkpoint --sell_checkpoint_dir=%2\\checkpoint --sleep=%3
 ```
 
-Having a selling network is optional. If you don't have enough training data yet to achieve a satisfying ratio of sells_correct (see Tensorboard above), you can remove the sell_checkpoint_dir option and use thresholds to make sell decisions. Drag your buying model directory onto client_on_dropped_models.bat or run client.py from the console:
+Having a selling network is optional. If you don't have enough training data yet to achieve a satisfying ratio of sells_correct (see Tensorboard above), you can remove the sell_checkpoint_dir option and use thresholds to make sell decisions. Drag your buying model directory onto predict_dropped.bat or run predict.py from the console:
 ```sh
 # replace %1 with your buying model directory path, e.g. model20180629121604
 # replace %2 with the number of seconds the AI should wait between snapshots, e.g. 30
-# see client.py for help on the threshold parameters.
+# see predict.py for help on the threshold parameters.
 pip install requests
 pip install tensorflow
-python client.py --buy_checkpoint_dir=%1\\checkpoint --sleep=%2 --min_loss=0.1 --min_gain=0.04 --max_loss=0.3 --max_gain=0.15 --sell_at_max_factor=1
+python predict.py --buy_checkpoint_dir=%1\\checkpoint --sleep=%2 --min_loss=0.1 --min_gain=0.04 --max_loss=0.3 --max_gain=0.15 --sell_at_max_factor=1
 ```
 
 </details><p></p>
 
-When asked, enter your AI account email address (the one ending on *.ai*) and its password. **Do not** enter your regular N.A.Y.trading account email address (e.g. *john.doe@mailbox.com*) because client.py will decide on snapshots using the given account and you probably don't want your real decisions mixed with the network's decisions.
+When asked, enter your AI account email address (the one ending on *.ai*) and its password. **Do not** enter your regular N.A.Y.trading account email address (e.g. *john.doe@mailbox.com*) because predict.py will decide on snapshots using the given account and you probably don't want your real decisions mixed with the network's decisions.
 
 You can continue deciding on snapshots with your regular account and, from time to time, log in as your AI account to check its performance using the [Stats page](http://naytrading.com/app/#!/stats). If you used the naming convention .ai, as mentioned above, you can switch between accounts using the selection box on the top of the stats page.
