@@ -1,10 +1,10 @@
 {
 	"folders": [
 		{
-			"path": "NAYtrading.Node"
+			"path": "NAYtrading"
 		},
 		{
-			"path": "NAYtrading.Node.Plugin"
+			"path": "NAYtrading.Plugin"
 		},
 		{
 			"path": "NAYtrading.Trader"

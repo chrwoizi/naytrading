@@ -3,7 +3,7 @@ This is the broker connector of [naytrading.com](http://naytrading.com).
 
 ## :telephone: Forwarding the simulated trades to a broker ##
 
-This web application can be used to actually buy or sell the stocks based on the recorded user decisions. It currently works only with a specific german online broker.
+This web application can be used to actually buy or sell the stocks based on the recorded user decisions.
 
 <details>
 <summary>How to install</summary>

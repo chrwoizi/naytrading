@@ -1,0 +1,16 @@
+{
+  "development": {
+    "naytrading": "../../NAYtrading",
+    "downloader_throttle_requests": 3,
+    "downloader_throttle_seconds": 10,
+    "downloader_timeout_milliseconds": 120000,
+    "example_markets": ["1", "2", "3"]
+  },
+  "production": {
+    "naytrading": "../../NAYtrading",
+    "downloader_throttle_requests": 3,
+    "downloader_throttle_seconds": 10,
+    "downloader_timeout_milliseconds": 120000,
+    "example_markets": ["1", "2", "3"]
+  }
+}
