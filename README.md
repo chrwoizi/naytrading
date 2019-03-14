@@ -139,7 +139,7 @@ The web application [NAYtrading.Trader](https://github.com/chrwoizi/naytrading-t
 
 ## :mortar_board: Training a Convolutional Neural Network on the recorded data ##
 
-The web site periodically processes the recorded data using [NAYtrading.Data](NAYtrading.Data) and provides CSV file downloads which are optimized for a neural network.
+The web site periodically processes the recorded data and provides CSV file downloads which are optimized for a neural network.
 
 With [NAYtrading.AI](https://github.com/chrwoizi/naytrading-ai), a convolutional neural network is trained on the processed data, using the price history as input and the user decision as desired output. 
 
