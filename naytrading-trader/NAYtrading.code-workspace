@@ -1,0 +1,11 @@
+{
+	"folders": [
+		{
+			"path": "NAYtrading.Trader"
+		},
+		{
+			"path": "NAYtrading.Trader.Plugin"
+		}
+	],
+	"settings": {}
+}

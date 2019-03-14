@@ -1,0 +1,8 @@
+/.vs
+/NAYtrading.Trader/.vs
+/NAYtrading.Trader/node_modules
+/NAYtrading.Trader/chromedriver.exe
+/NAYtrading.Trader/app/config/config.json
+/NAYtrading.Trader/app/config/database.json
+/NAYtrading.Trader/chrome-profile
+/NAYtrading.Trader/tans
