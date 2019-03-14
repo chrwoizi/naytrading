@@ -135,14 +135,14 @@ Statistics about the portfolio:
 
 ## :telephone: Forwarding the simulated trades to a broker ##
 
-The web application [NAYtrading.Trader](NAYtrading.Trader) can be used to actually buy or sell the stocks based on the recorded user decisions.
+The web application [NAYtrading.Trader](https://github.com/chrwoizi/naytrading-trader) can be used to actually buy or sell the stocks based on the recorded user decisions.
 
 ## :mortar_board: Training a Convolutional Neural Network on the recorded data ##
 
 The web site periodically processes the recorded data using [NAYtrading.Data](NAYtrading.Data) and provides CSV file downloads which are optimized for a neural network.
 
-With [NAYtrading.AI](NAYtrading.AI), a convolutional neural network is trained on the processed data, using the price history as input and the user decision as desired output. 
+With [NAYtrading.AI](https://github.com/chrwoizi/naytrading-ai), a convolutional neural network is trained on the processed data, using the price history as input and the user decision as desired output. 
 
 ## :moneybag: Using the trained network ##
 
-With [NAYtrading.AI](NAYtrading.AI), current stock prices are fed into the trained network periodically to find stocks that can be bought or sold based on the user's analysis pattern. The application acts as a user on [NAYtrading](NAYtrading), so the gains and losses can be evaluated by logging in on [NAYtrading](NAYtrading). Also, the trade decisions can be forwarded to a broker using [NAYtrading.Trader](NAYtrading.Trader), making N.A.Y.trading an **automated stock trading system**. 
+With [NAYtrading.AI](https://github.com/chrwoizi/naytrading-ai), current stock prices are fed into the trained network periodically to find stocks that can be bought or sold based on the user's analysis pattern. The application acts as a user on [NAYtrading](NAYtrading), so the gains and losses can be evaluated by logging in on [NAYtrading](NAYtrading). Also, the trade decisions can be forwarded to a broker using [NAYtrading.Trader](https://github.com/chrwoizi/naytrading-trader), making N.A.Y.trading an **automated stock trading system**. 

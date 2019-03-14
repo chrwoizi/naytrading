@@ -1,8 +1,0 @@
-{
-  "development": {
-    "admin_user": "enter admin user email here"
-  },
-  "production": {
-    "admin_user": "enter admin user email here"
-  }
-}

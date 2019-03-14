@@ -1,13 +1,6 @@
-__pycache__
-/.vs
-/.idea/workspace.xml
-/NAYtrading.AI/model*
-/NAYtrading.AI/buying*
-/NAYtrading.AI/selling*
 /NAYtrading/.env
 /NAYtrading/*.log
 /NAYtrading/app/config/config.json
 /NAYtrading/app/config/database.json
 /NAYtrading/node_modules
 /NAYtrading/processing
-/NAYtrading.AI/Archive
