@@ -310,10 +310,10 @@ async function processUser(user) {
     }
 
     var latestSnapshotDate = getMaxDate(files);
-    if (isUpToDate(processingDir + "/buying_train.csv", latestSnapshotDate)
-        && isUpToDate(processingDir + "/buying_test.csv", latestSnapshotDate)
-        && isUpToDate(processingDir + "/selling_train.csv", latestSnapshotDate)
-        && isUpToDate(processingDir + "/selling_test.csv", latestSnapshotDate)) {
+    if (isUpToDate(processingDir + "/buying_train_norm.csv", latestSnapshotDate)
+        && isUpToDate(processingDir + "/buying_test_norm.csv", latestSnapshotDate)
+        && isUpToDate(processingDir + "/selling_train_norm.csv", latestSnapshotDate)
+        && isUpToDate(processingDir + "/selling_test_norm.csv", latestSnapshotDate)) {
         logVerbose("done processing " + user);
         return;
     }

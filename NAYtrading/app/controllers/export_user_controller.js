@@ -365,7 +365,7 @@ function downloadFile(req, res, filename) {
     try {
         if (req.isAuthenticated()) {
 
-            var filePath = path.resolve(config.processing_dir + "/" + req.user.email + "/" + filename);
+            var filePath = path.resolve(config.processing_dir + "/" + req.user.email + "/" + filename + "_norm.csv");
 
             if (fs.existsSync(filePath)) {
                 if (typeof (req.params.time) === 'string' && req.params.time.length == 14) {
@@ -378,7 +378,7 @@ function downloadFile(req, res, filename) {
                     }
                 }
 
-                res.download(filePath);
+                res.download(filePath, filename + ".csv");
             }
             else {
                 res.status(404);
@@ -396,17 +396,17 @@ function downloadFile(req, res, filename) {
 }
 
 exports.downloadBuyingTrain = async function (req, res) {
-    downloadFile(req, res, "buying_train.csv");
+    downloadFile(req, res, "buying_train");
 }
 
 exports.downloadBuyingTest = async function (req, res) {
-    downloadFile(req, res, "buying_test.csv");
+    downloadFile(req, res, "buying_test");
 }
 
 exports.downloadSellingTrain = async function (req, res) {
-    downloadFile(req, res, "selling_train.csv");
+    downloadFile(req, res, "selling_train");
 }
 
 exports.downloadSellingTest = async function (req, res) {
-    downloadFile(req, res, "selling_test.csv");
+    downloadFile(req, res, "selling_test");
 }
