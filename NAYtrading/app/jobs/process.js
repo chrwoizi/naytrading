@@ -401,7 +401,7 @@ async function processUser(user) {
                 "--output_path=" + processingDir + "/" + action + "ing_" + dataset + ".csv"
             ]);
 
-            var outputPath = processingDir + "/" + action + "ing_" + dataset + ".csv";
+            var outputPath = processingDir + "/" + action + "ing_" + dataset + "_norm.csv";
             await runProcess(config.python, processorsDir, [
                 "normalize.py",
                 "--input_path=" + processingDir + "/" + action + "ing_" + dataset + ".csv",
@@ -411,7 +411,7 @@ async function processUser(user) {
             var lines = await countLines(outputPath);
 
             await writeMeta(
-                processingDir + "/" + action + "ing_" + dataset + ".csv.meta",
+                processingDir + "/" + action + "ing_" + dataset + "_norm.csv.meta",
                 now,
                 days,
                 maxMissingDays,
