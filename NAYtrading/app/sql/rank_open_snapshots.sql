@@ -45,6 +45,7 @@ AND CASE (
         ORDER BY su.ModifiedTime DESC LIMIT 1
 	)
 	WHEN 'wait1yr' THEN s.Time < NOW() - INTERVAL 1 YEAR 
+	WHEN 'wait2mo' THEN s.Time < NOW() - INTERVAL 2 MONTH 
     ELSE TRUE 
     END
 UNION ALL
@@ -95,6 +96,7 @@ AND CASE (
         ORDER BY su.ModifiedTime DESC LIMIT 1
 	)
 	WHEN 'wait1yr' THEN s.Time < NOW() - INTERVAL 1 YEAR 
+	WHEN 'wait2mo' THEN s.Time < NOW() - INTERVAL 2 MONTH 
     ELSE TRUE 
     END
 ORDER BY 

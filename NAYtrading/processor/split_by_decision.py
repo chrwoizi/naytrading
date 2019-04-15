@@ -169,7 +169,7 @@ def main(input_path, output_path_buy, output_path_no_buy, output_path_sell, outp
                                 if len(line) > 2:
 
                                     decision = meta['Decision']
-                                    if decision == 'wait1yr' or decision == 'autowait':
+                                    if decision == 'wait1yr' or decision == 'wait2mo' or decision == 'autowait':
                                         decision = 'wait'
                                     elif decision == 'buy' and meta['Confirmed'] < 0:
                                         decision = 'wait'

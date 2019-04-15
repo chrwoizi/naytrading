@@ -17,7 +17,7 @@
                 <button ng-hide="$ctrl.snapshot.PreviousDecision == 'buy'" ng-click="$ctrl.setDecision('buy')" class="btn btn-info btn-block">BUY</button>
             </div>
             <div class="col-4">
-                <button ng-click="$ctrl.setDecision('wait')" class="btn btn-info btn-block">WAIT</button>
+                <button ng-click="$ctrl.setDecision('wait')" class="btn btn-info btn-block">WAIT 1WK</button>
             </div>
             <div class="col-4">
                 <button ng-show="$ctrl.snapshot.PreviousDecision == 'buy'" ng-click="$ctrl.setDecision('sell')" class="btn btn-info btn-block">SELL</button>
@@ -27,8 +27,11 @@
         <div class="row" style="margin-top: 30px">
             <div class="col-4">
             </div>
-            <div class="col-4">
-                <button ng-hide="$ctrl.snapshot.PreviousDecision == 'buy'" ng-click="$ctrl.setDecision('wait1yr')" class="btn btn-info btn-block">WAIT 1YR</button>
+            <div class="col-2">
+                <button ng-click="$ctrl.setDecision('wait2mo')" class="btn btn-info btn-block">2MO</button>
+            </div>
+            <div class="col-2">
+                <button ng-hide="$ctrl.snapshot.PreviousDecision == 'buy'" ng-click="$ctrl.setDecision('wait1yr')" class="btn btn-info btn-block">1YR</button>
             </div>
             <div class="col-4">
             </div>
