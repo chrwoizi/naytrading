@@ -16,7 +16,7 @@ angular.
                     return function (value, index, array) {
                         if (query == "") {
                             return true;
-                        } else if (query == "buy" || query == "wait" || query == "wait1yr" || query == "autowait" || query == "sell") {
+                        } else if (query == "buy" || query == "wait" || query == "wait1yr" || query == "wait2mo" || query == "autowait" || query == "sell") {
                             return value.Decision == query;
                         } else if (query == $routeParams.query) {
                             return value.Instrument.InstrumentName == query;
