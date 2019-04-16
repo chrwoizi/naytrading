@@ -147,7 +147,8 @@ exports.updateUser = async function(user) {
         if (trade.Decision == "sell") {
             var previousTrades = await sql.query(previous_trade_sql, {
                 "@refSnapshotId": trade.SnapshotId,
-                "@refTime": trade.DecisionTime
+                "@refTime": trade.DecisionTime,
+                "@userName": user
             });
 
             if (!previousTrades || !previousTrades.length) {

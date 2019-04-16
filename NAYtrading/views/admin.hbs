@@ -91,6 +91,12 @@
                             <button type="submit" class="btn btn-danger">Refresh Rates</button>
                         </form>
                     </dd>
+                    <dt>Clear stats:</dt>
+                    <dd>
+                        <form action="/api/clear/stats" class="form-horizontal" method="post" role="form">
+                            <input type="submit" value="Delete all stats" class="btn btn-danger" />
+                        </form>
+                    </dd>
                     <dt>Config:</dt>
                     <dd>
                         <form action="/api/config/reload" method="post">

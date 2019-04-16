@@ -7,5 +7,6 @@ WHERE snapshot.Instrument_ID = refSnapshot.Instrument_ID
 AND snapshot.ID <> refSnapshot.ID
 AND trade.Time <= @refTime
 AND userSnapshot.Decision = 'buy'
+AND userSnapshot.User = @userName
 ORDER BY trade.Time DESC
 LIMIT 1
