@@ -139,7 +139,7 @@ async function getStatsForUser(user) {
                 buyTrades[trade.InstrumentId] = trade;
             }
         }
-        else {
+        else if (trade.Decision == "sell") {
 
             var buyTrade = buyTrades[trade.InstrumentId];
             if (typeof (buyTrade) === 'undefined') {
@@ -214,7 +214,7 @@ exports.getStats = async function (req, res) {
         if (req.isAuthenticated()) {
 
             var users = [req.user.email];
-            
+
             var otherUser = null;
             if (req.user.email.endsWith(".ai")) {
                 otherUser = req.user.email.substr(0, req.user.email.length - 3);
@@ -303,6 +303,26 @@ exports.clearDecisions = async function (req, res) {
                 res.status(404);
                 res.json({ error: "action not applicable" });
             }
+
+        }
+        else {
+            res.status(401);
+            res.json({ error: "unauthorized" });
+        }
+    }
+    catch (error) {
+        return500(res, error);
+    }
+};
+
+exports.clearStats = async function (req, res) {
+    try {
+        if (req.isAuthenticated() && req.user.email == config.admin_user) {
+
+            await sql.query("DELETE FROM trades");
+            await sql.query("DELETE FROM portfolios");
+            
+            res.render('clear_stats', viewsController.get_default_args(req, "Delete stats"));
 
         }
         else {

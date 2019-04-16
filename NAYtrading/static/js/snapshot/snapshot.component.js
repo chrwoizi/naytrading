@@ -19,7 +19,7 @@ angular.
                 var params = undefined;
                 if ($routeParams.instrument) {
                     service = NewSnapshotService;
-                    params = { arg: $routeParams.instrumentId };
+                    params = { arg: $routeParams.instrument };
                 } else if ($routeParams.action) {
                     service = NewSnapshotService;
                     params = { arg: $routeParams.action };

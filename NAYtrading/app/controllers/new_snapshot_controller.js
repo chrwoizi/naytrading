@@ -417,9 +417,7 @@ exports.createNewSnapshotByInstrumentId = async function (req, res) {
             var upToDateFrom = new Date(new Date().getTime() - config.snapshot_valid_seconds * 1000);
             var existing = await sql.query("SELECT s.ID FROM snapshots AS s \
                 WHERE s.Instrument_ID = @instrumentId AND s.Time >= @time \
-                AND NOT EXISTS (SELECT 1 FROM snapshots AS ns \
-                    INNER JOIN usersnapshots AS nu ON nu.Snapshot_ID = ns.ID AND nu.User = @user \
-                    WHERE ns.Instrument_ID = s.Instrument_ID AND ns.Time > s.Time) \
+                AND NOT EXISTS (SELECT 1 FROM usersnapshots AS nu WHERE nu.Snapshot_ID = s.ID AND nu.User = @user) \
                 ORDER BY s.Time ASC", {
                     "@instrumentId": req.params.instrumentId,
                     "@time": upToDateFrom,
