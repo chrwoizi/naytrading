@@ -6,7 +6,7 @@
                 <p>
                     N.A.Y.trading (short for <i>neurally automate your trading</i>) is a practice stock portfolio that is optimized for making quick trade decisions based on the historical price chart of a stock.
                     <br/>
-                    An experimental feature uses machine learning techniques (neural network) to detect patterns in the user's trading characteristic and builds an artificial intelligence (AI) that can mimic the user.
+                    An experimental feature uses machine learning techniques (neural network) to detect patterns in the user's trading characteristic and generates an artificial intelligence (AI) that can mimic the user.
                 </p>
                 <br/>
                 <a id="trade"><h2>Does N.A.Y.trading actually buy and sell stocks?</h2></a>
@@ -16,15 +16,15 @@
                     However, if you like to use N.A.Y.trading to find interesting stocks to actually buy,
                     you can export your trade decisions along with the ISIN/WKN and the current price from <a href="http://naytrading.com/manage">your account page</a>.
                     An automatic tool that downloads the decisions 
-                    and sends them to a broker is available on github at <a href="https://github.com/chrwoizi/naytrading/tree/master/NAYtrading.Trader">NAYtrading.Trader</a>. 
-                    Advanced computer skills are required. This reference implementation works with a specific german online broker only.
+                    and sends them to a broker is available on github at <a href="https://github.com/chrwoizi/naytrading-trader">naytrading-trader</a>. 
+                    Programming skills are required to implement an interface for your specific broker.
                 </p>
                 <br/>
                 <h2>Is N.A.Y.trading free?</h2>
                 <p>
                     Creating and using a practicing portfolio on naytrading.com is free. 
                     <br/>
-                    You can export all your data on <a href="http://naytrading.com/manage">your account page</a>.
+                    You can export your data on <a href="http://naytrading.com/manage">your account page</a>.
                     <br/>
                     The machine learning component of N.A.Y.trading is currently available as source code only and is only suitable for people with advanced computer skills.
                     In the future, this website may integrate it at the user's cost.
@@ -45,8 +45,8 @@
                     The top chart shows the daily closing prices of the past five years.
                     The bottom chart shows the past year magnified (which is also included in the top chart).
                     <br/>
-                    Decide whether to buy the stock at the current price or wait another week to look at it again.
-                    Click the according button.
+                    Decide whether to buy the stock at the current price or ignore it now and see it another time.
+                    Click the according button. If you decide to ignore it now, there are three options to select: wait one week, wait two months, or wait one year until the stock is shown again. The buttons are labeled "WAIT 1W", "WAIT 2M", and "WAIT 1Y" respectively.
                     <br/>
                     The next random stock will be shown. Repeat.
                 </p>
@@ -58,7 +58,7 @@
                     The long answer: N.A.Y.trading is designed around technical analysis.
                     Seeing the stock name might induce associations with news and public or personal opinions about the company and influence your decision.
                     <br/>
-                    Plus, the experimental machine learning needs simple data to work correctly.
+                    Plus, the machine learning algorithm needs simple data to work correctly.
                     Your decisions and the according stock price histories are fed to an AI.
                     The AI learns to match the price history to your decision.
                     If you base your decision on more than just the price history, the AI can't learn properly.
@@ -110,14 +110,14 @@
                     Optimal accuracy is expected at 30000+ decisions. 
                     <br/>
                     These may take a while to produce, even if you are using N.A.Y.trading daily.
-                    That's why, in the meantime, it is recommended to actually send your <a href="http://naytrading.com/manage">recorded trades</a> to a broker and trade these stocks for real (at your own investment risk).
-                    See <a href="#trade"><i>Does N.A.Y.trading actually buy and sell stocks?</i></a> on how to do that automatically. Advanced computer skills are required.
+                    In the meantime, you can use N.A.Y.trading as a quick way to actually trade these stocks for real by sending them to your broker (at your own investment risk).
+                    See <a href="#trade"><i>Does N.A.Y.trading actually buy and sell stocks?</i></a> on how to do that automatically. Programming skills are required.
                 </p>
                 <br/>
                 <h2>How can I train the AI?</h2>
                 <p>
-                    Your data is processed daily and available for download on <a href="http://naytrading.com/manage">your account page</a>.
-                    The source code of the AI is publicly available on github at <a href="https://github.com/chrwoizi/naytrading/tree/master/NAYtrading.AI">NAYtrading.AI</a>. 
+                    Your data is processed daily and available to download on <a href="http://naytrading.com/manage">your account page</a>.
+                    The source code of the AI is publicly available on github at <a href="https://github.com/chrwoizi/naytrading-ai">naytrading-ai</a>. 
                     There you'll also find a readme page which explains how to install and run the training.
                     Advanced computer skills are required.
                     <br/>

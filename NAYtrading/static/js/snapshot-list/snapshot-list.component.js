@@ -37,6 +37,7 @@ angular.
 
                 if (typeof ($routeParams.query) == 'string' && $routeParams.query.length > 0) {
                     self.query = $routeParams.query;
+                    self.orderProp = "-DateSortable";
                 }
 
                 self.loading = true;
