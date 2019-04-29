@@ -171,10 +171,12 @@ def main(input_path, output_path_buy, output_path_no_buy, output_path_sell, outp
                                     decision = meta['Decision']
                                     if decision == 'wait1yr' or decision == 'wait2mo' or decision == 'autowait':
                                         decision = 'wait'
-                                    elif decision == 'buy' and meta['Confirmed'] < 0:
-                                        decision = 'wait'
-                                    elif decision == 'sell' and meta['PreviousBuyConfirmed'] < 0:
-                                        decision = 'wait'
+
+                                    if decision == 'buy' and meta['Confirmed'] < 0:
+                                        continue
+
+                                    if meta['PreviousBuyConfirmed'] < 0:
+                                        continue
 
                                     first = line.index(';')
                                     second = line.index(';', first + 1)
