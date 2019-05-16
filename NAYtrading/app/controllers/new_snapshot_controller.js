@@ -22,6 +22,13 @@ try {
     console.log('Error:', e.stack);
 }
 
+var get_open_snapshots = "";
+try {
+    get_open_snapshots = fs.readFileSync(__dirname + '/../sql/get_open_snapshots.sql', 'utf8');
+} catch (e) {
+    console.log('Error:', e.stack);
+}
+
 var lockFlag = 0;
 
 
@@ -233,7 +240,7 @@ async function findSimilarSnapshot(instrumentId, startTime, endDate) {
         ],
         limit: 1
     });
-    
+
     if (snapshot) {
         await snapshotController.ensureRates(snapshot);
     }
@@ -402,12 +409,59 @@ async function handleNewRandomSnapshot(req, res, allowConfirm) {
     }
 };
 
+async function handleGetOpenSnapshots(req, res) {
+    try {
+        if (req.isAuthenticated()) {
+
+            var endTime = new Date();
+            endTime.setHours(0, 0, 0, 0);
+
+            var isAI = req.user.email.endsWith(".ai");
+
+            var count = 1;
+            if (req.query.count) {
+                count = parseInt(req.query.count);
+            }
+
+            var forgotten = await sql.query(get_open_snapshots, {
+                "@userName": req.user.email,
+                "@isAI": isAI ? 1 : 0
+            });
+
+            if (forgotten && forgotten.length > 0) {
+                var results = [];
+                for (var i = 0; i < count; ++i) {
+                    var viewModel = await snapshotController.getSnapshot(forgotten[i].ID, req.user.email);
+                    results.push(viewModel);
+                }
+                res.json(results);
+                return;
+            }
+
+            res.status(404);
+            res.json({ error: 'no snapshot available' });
+        }
+        else {
+            res.status(401);
+            res.json({ error: "unauthorized" });
+        }
+    }
+    catch (error) {
+        res.status(500);
+        res.json({ error: error.message });
+    }
+};
+
 exports.createNewRandomSnapshot = async function (req, res) {
     await handleNewRandomSnapshot(req, res, false);
 };
 
 exports.createNewRandomOrConfirmSnapshot = async function (req, res) {
     await handleNewRandomSnapshot(req, res, true);
+};
+
+exports.getOpenSnapshots = async function (req, res) {
+    await handleGetOpenSnapshots(req, res);
 };
 
 exports.createNewSnapshotByInstrumentId = async function (req, res) {
