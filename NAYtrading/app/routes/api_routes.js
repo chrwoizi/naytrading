@@ -30,6 +30,7 @@ module.exports = function (app, passport) {
 
     app.get('/api/snapshot/new/random', newSnapshotController.createNewRandomSnapshot);
     app.get('/api/snapshot/new/random_or_confirm', newSnapshotController.createNewRandomOrConfirmSnapshot);
+    app.get('/api/snapshot/new/open', newSnapshotController.getOpenSnapshots);
     app.get('/api/snapshot/new/:instrumentId', newSnapshotController.createNewSnapshotByInstrumentId);
 
     app.get('/api/stats', dataController.getStats);
