@@ -8,6 +8,9 @@ angular.
                 when('/stats', {
                     template: '<stats></stats>'
                 }).
+                when('/monitor', {
+                    template: '<monitor></monitor>'
+                }).
                 when('/snapshots', {
                     template: '<snapshot-list></snapshot-list>'
                 }).

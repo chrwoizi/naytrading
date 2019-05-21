@@ -4,6 +4,7 @@
 angular.module('naytradingApp', [
     'ngRoute',
     'core',
+    'monitor',
     'snapshot',
     'snapshotList',
     'instrumentList',

@@ -29,6 +29,17 @@ try {
 }
 
 
+function parseDate(dateString) {
+    return new Date(Date.UTC(
+        dateString.substr(0, 4),
+        dateString.substr(5, 2) - 1,
+        dateString.substr(8, 2),
+        dateString.substr(11, 2),
+        dateString.substr(14, 2),
+        dateString.substr(17, 2)
+    ));
+}
+
 function return500(res, e) {
     res.status(500);
     res.json({ error: e.message });
@@ -321,7 +332,7 @@ exports.clearStats = async function (req, res) {
 
             await sql.query("DELETE FROM trades");
             await sql.query("DELETE FROM portfolios");
-            
+
             res.render('clear_stats', viewsController.get_default_args(req, "Delete stats"));
 
         }
@@ -344,6 +355,60 @@ exports.reloadConfig = async function (req, res) {
 
             res.status(200);
             res.json({});
+        }
+        else {
+            res.status(401);
+            res.json({ error: "unauthorized" });
+        }
+    }
+    catch (error) {
+        return500(res, error);
+    }
+};
+
+exports.monitor = async function (req, res) {
+    try {
+        if (req.isAuthenticated() && req.user.email == config.admin_user) {
+
+            var monitors = await sql.query("select `key`, `value`, createdAt from monitors");
+
+            var result = {};
+            for (var monitor of monitors) {
+                var date = dateFormat(parseDate(monitor.createdAt), "yymmdd");
+                if (!result[date]) {
+                    result[date] = {};
+                }
+                result[date][monitor.key] = JSON.parse(monitor.value);
+            }
+
+            var list = [];
+            for (var date of Object.getOwnPropertyNames(result)) {
+                var day = result[date];
+                day.T = date;
+                list.push(day);
+                for (var key of Object.getOwnPropertyNames(day)) {
+                    var item = day[key];
+                    item.sum = 0;
+                    if (item.sources) {
+                        for (var sourceType of Object.getOwnPropertyNames(item.sources)) {
+                            var source = item.sources[sourceType];
+                            if (typeof (source) === 'number') {
+                                item.sum += source;
+                            }
+                            else if (source.markets) {
+                                for (var marketId of Object.getOwnPropertyNames(source.markets)) {
+                                    var market = source.markets[marketId];
+                                    item.sum += market;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            list.sort((a, b) => a.T - b.T);
+
+            res.json({ days: list });
         }
         else {
             res.status(401);
