@@ -146,6 +146,8 @@ async function handleRateProviderError(instrument, source, error) {
             Strikes: strikes,
             LastStrikeTime: new Date()
         });
+
+        await increaseMonitor("preload_missing", source.SourceType, source.MarketId || 'null');
     }
     else if (error.message == ratesProvider.invalid_response) {
         console.log("Adding 5 strikes to instrument " + instrument.InstrumentName + " (" + source.SourceId + " on " + source.SourceType + ") because the server returned an unexpected response for market id " + source.MarketId);
@@ -153,6 +155,8 @@ async function handleRateProviderError(instrument, source, error) {
             Strikes: source.Strikes + 5,
             LastStrikeTime: new Date()
         });
+
+        await increaseMonitor("preload_invalid", source.SourceType, source.MarketId || 'null');
     }
     else {
         console.log(error.message + "\n" + error.stack);
@@ -161,6 +165,8 @@ async function handleRateProviderError(instrument, source, error) {
             Strikes: source.Strikes + 1,
             LastStrikeTime: new Date()
         });
+
+        await increaseMonitor("preload_exception", source.SourceType, undefined);
     }
 }
 
@@ -304,6 +310,8 @@ exports.createNewSnapshotFromRandomInstrument = async function (instrumentIds) {
                             return similar[0];
                         }
 
+                        await increaseMonitor("preload_ok", source.SourceType, ratesResponse.MarketId || 'null');
+
                         var snapshot = await model.snapshot.create(
                             {
                                 StartTime: startTime,
@@ -333,6 +341,8 @@ exports.createNewSnapshotFromRandomInstrument = async function (instrumentIds) {
                             Strikes: problem.Strikes,
                             LastStrikeTime: new Date()
                         });
+
+                        await increaseMonitor("preload_rates", source.SourceType, source.MarketId || 'null');
                     }
                 }
                 catch (error) {
@@ -350,6 +360,66 @@ exports.createNewSnapshotFromRandomInstrument = async function (instrumentIds) {
     }
 
     return null;
+}
+
+async function increaseMonitor(name, sourceType, marketId) {
+    var monitors = await sql.query("select id, value from monitors as m where m.`key` = @key and m.createdAt > CURDATE()",
+        {
+            "@key": name
+        });
+
+    let monitor;
+    if (monitors.length > 0) {
+        monitor = JSON.parse(monitors[0].value || "{}");
+    }
+    else {
+        monitor = {};
+    }
+
+    if (!monitor.sources) {
+        monitor.sources = {};
+    }
+
+    if (typeof (marketId) !== 'undefined') {
+        if (!monitor.sources[sourceType]) {
+            monitor.sources[sourceType] = {};
+        }
+
+        if (!monitor.sources[sourceType].markets) {
+            monitor.sources[sourceType].markets = {};
+        }
+
+        if (!monitor.sources[sourceType].markets[marketId]) {
+            monitor.sources[sourceType].markets[marketId] = 0;
+        }
+
+        monitor.sources[sourceType].markets[marketId]++;
+    }
+    else {
+        if (!monitor.sources[sourceType]) {
+            monitor.sources[sourceType] = 0;
+        }
+
+        monitor.sources[sourceType]++;
+    }
+
+    if (monitors.length == 0) {
+        await model.monitor.create({
+            key: name,
+            value: JSON.stringify(monitor)
+        });
+    }
+    else {
+        await model.monitor.update(
+            {
+                value: JSON.stringify(monitor)
+            },
+            {
+                where: {
+                    id: monitors[0].id
+                }
+            });
+    }
 }
 
 async function handleNewRandomSnapshot(req, res, allowConfirm) {

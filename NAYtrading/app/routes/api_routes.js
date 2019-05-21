@@ -18,6 +18,8 @@ module.exports = function (app, passport) {
 
     app.get('/api/weight/:instrumentId/:type', instrumentController.getWeight);
     app.post('/api/weight/:instrumentId/:type/:weight', instrumentController.setWeight);
+    
+    app.get('/api/monitor', dataController.monitor);
 
     app.get('/api/count/snapshots/:fromDate', snapshotController.countSnapshots);
 
