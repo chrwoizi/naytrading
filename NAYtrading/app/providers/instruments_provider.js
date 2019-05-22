@@ -76,3 +76,9 @@ exports.getInstrumentId = async function (source, isin, wkn) {
         return null;
     }
 };
+
+exports.updateInstruments = async function (source, sql) {
+    if (providers[source]) {
+        return await providers[source].updateInstruments(source, sql);
+    }
+};

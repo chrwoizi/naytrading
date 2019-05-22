@@ -36,6 +36,8 @@ exports.run = async function () {
                     console.log("Error while adding instrument source: " + error.message + "\n" + error.stack + "\n" + JSON.stringify(newSource));
                 }
             }
+
+            await instrumentsProvider.updateInstruments(sourceType, sql);
         }
     }
     catch (error) {
