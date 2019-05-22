@@ -71,3 +71,10 @@ exports.getInstrumentId = async function (source, isin, wkn) {
 
     return "example";
 };
+
+exports.updateInstruments = async function (source, sql) {
+    if (source != exports.source)
+        throw new Error("invalid source");
+
+    // TODO cleanup the instrument sources
+};
