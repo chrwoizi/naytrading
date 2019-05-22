@@ -6,12 +6,10 @@ angular.
     component('monitor', {
         templateUrl: '/static/html/monitor.template.html',
         controller: ['$scope', '$routeParams', 'MonitorService', '$location',
-            function SnapshotController($scope, $routeParams, MonitorService, $location) {
+            function MonitorController($scope, $routeParams, MonitorService, $location) {
                 var self = this;
 
                 self.loading = true;
-
-                $(".chart").height(0.5 * Chart.helpers.getMaximumWidth($(".chart").get(0)));
 
                 var currentLocation = window.location.href;
 
@@ -126,23 +124,57 @@ angular.
                         return v.T.substr(4, 2) + "." + v.T.substr(2, 2) + "." + v.T.substr(0, 2);
                     });
 
-                    $scope.data = [
-                        monitors.map(function (v, i) {
-                            return v.preload_ok ? v.preload_ok.sum : 0;
-                        }),
-                        monitors.map(function (v, i) {
-                            return v.preload_rates ? v.preload_rates.sum : 0;
-                        }),
-                        monitors.map(function (v, i) {
-                            return v.preload_missing ? v.preload_missing.sum : 0;
-                        }),
-                        monitors.map(function (v, i) {
-                            return v.preload_invalid ? v.preload_invalid.sum : 0;
-                        }),
-                        monitors.map(function (v, i) {
-                            return v.preload_exception ? v.preload_exception.sum : 0;
-                        })
-                    ];
+                    var sourceTypes = [];
+                    for (var monitor of monitors) {
+                        function collect(key) {
+                            if (key) {
+                                for (var sourceType of Object.getOwnPropertyNames(key.sources)) {
+                                    if (sourceTypes.indexOf(sourceType) == -1) {
+                                        sourceTypes.push(sourceType);
+                                    }
+                                }
+                            }
+                        }
+                        collect(monitor.preload_ok);
+                        collect(monitor.preload_rates);
+                        collect(monitor.preload_missing);
+                        collect(monitor.preload_invalid);
+                        collect(monitor.preload_exception);
+                    }
+
+                    function getSum(key, sourceType) {
+                        if (key && key.sources[sourceType]) {
+                            if (typeof (key.sources[sourceType]) == 'number') {
+                                return key.sources[sourceType] || 0;
+                            }
+                            else {
+                                return key.sources[sourceType].sum || 0;
+                            }
+                        }
+                    }
+
+                    $scope.data = sourceTypes.map(sourceType => {
+                        return {
+                            sourceType: sourceType,
+                            data: [
+                                monitors.map(function (v, i) {
+                                    return getSum(v.preload_ok, sourceType);
+                                }),
+                                monitors.map(function (v, i) {
+                                    return getSum(v.preload_rates, sourceType);
+                                }),
+                                monitors.map(function (v, i) {
+                                    return getSum(v.preload_missing, sourceType);
+                                }),
+                                monitors.map(function (v, i) {
+                                    return getSum(v.preload_invalid, sourceType);
+                                }),
+                                monitors.map(function (v, i) {
+                                    return getSum(v.preload_exception, sourceType);
+                                })
+                            ]
+                        };
+                    });
                 };
             }
         ]
