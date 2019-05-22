@@ -396,9 +396,11 @@ exports.monitor = async function (req, res) {
                                 item.sum += source;
                             }
                             else if (source.markets) {
+                                source.sum = 0;
                                 for (var marketId of Object.getOwnPropertyNames(source.markets)) {
                                     var market = source.markets[marketId];
                                     item.sum += market;
+                                    source.sum += market;
                                 }
                             }
                         }
