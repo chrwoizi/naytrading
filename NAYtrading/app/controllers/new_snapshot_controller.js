@@ -500,7 +500,7 @@ async function handleGetOpenSnapshots(req, res) {
 
             if (forgotten && forgotten.length > 0) {
                 var results = [];
-                for (var i = 0; i < count; ++i) {
+                for (var i = 0; i < count && i < forgotten.length; ++i) {
                     var viewModel = await snapshotController.getSnapshot(forgotten[i].ID, req.user.email);
                     results.push(viewModel);
                 }
