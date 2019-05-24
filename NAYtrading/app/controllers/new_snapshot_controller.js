@@ -345,7 +345,7 @@ exports.createNewSnapshotFromRandomInstrument = async function (instrumentIds) {
                         await increaseMonitor("preload_rates", source.SourceType, source.MarketId || 'null');
                     }
                     else {
-                        await handleRateProviderError(instrument, source, ratesProvider.market_not_found);
+                        await handleRateProviderError(instrument, source, new Error(ratesProvider.market_not_found));
                     }
                 }
                 catch (error) {
