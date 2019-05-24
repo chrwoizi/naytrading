@@ -33,6 +33,8 @@ exports.getRates = async function (source, instrumentId, preferredMarketId, star
             marketIds.unshift(preferredMarketId);
         }
 
+        var ratesResponse = null;
+
         for (var m = 0; m < marketIds.length; ++m) {
             var marketId = marketIds[m];
 
@@ -54,19 +56,17 @@ exports.getRates = async function (source, instrumentId, preferredMarketId, star
                 break;
             }
 
+            ratesResponse.Rates = null;
+
             if (ratesResponse.MarketIds) {
                 // remove markets that dont exist
                 marketIds = marketIds.filter(x => ratesResponse.MarketIds.indexOf(x) > -1);
                 m = marketIds.indexOf(marketId);
             }
+        }
 
-            // try next market or abort if none left
-            if (m < marketIds.length - 1) {
-                continue;
-            }
-            else {
-                throw new Error(exports.market_not_found);
-            }
+        if (marketIds.length == 0) {
+            throw new Error(exports.market_not_found);
         }
 
         return ratesResponse;
