@@ -16,16 +16,6 @@ AND EXISTS
 	WHERE u.Instrument_ID = s.Instrument_ID 
 	AND u.User = @userName
 ) 
-AND (
-	@isAI = 0 OR 
-	EXISTS 
-	(
-		SELECT 1 
-		FROM usersnapshots AS u 
-		WHERE u.Snapshot_ID = s.ID 
-		AND u.User <> @userName
-	) 
-)
 AND NOT EXISTS 
 (
 	SELECT 1 
