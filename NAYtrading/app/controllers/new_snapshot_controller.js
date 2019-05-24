@@ -432,8 +432,6 @@ async function handleNewRandomSnapshot(req, res, allowConfirm) {
             var endTime = new Date();
             endTime.setHours(0, 0, 0, 0);
 
-            var isAI = req.user.email.endsWith(".ai");
-
             var hours = config.max_unused_snapshot_age_hours;
             if (req.query.max_age) {
                 hours = parseFloat(req.query.max_age);
@@ -441,8 +439,7 @@ async function handleNewRandomSnapshot(req, res, allowConfirm) {
 
             var forgotten = await sql.query(rank_open_snapshots, {
                 "@userName": req.user.email,
-                "@hours": hours,
-                "@isAI": isAI ? 1 : 0
+                "@hours": hours
             });
 
             var confirm = Math.random() < config.check_rate;
@@ -489,16 +486,13 @@ async function handleGetOpenSnapshots(req, res) {
             var endTime = new Date();
             endTime.setHours(0, 0, 0, 0);
 
-            var isAI = req.user.email.endsWith(".ai");
-
             var count = 1;
             if (req.query.count) {
                 count = parseInt(req.query.count);
             }
 
             var forgotten = await sql.query(get_open_snapshots, {
-                "@userName": req.user.email,
-                "@isAI": isAI ? 1 : 0
+                "@userName": req.user.email
             });
 
             if (forgotten && forgotten.length > 0) {
