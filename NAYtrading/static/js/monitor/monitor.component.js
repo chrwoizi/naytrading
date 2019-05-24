@@ -151,6 +151,9 @@ angular.
                                 return key.sources[sourceType].sum || 0;
                             }
                         }
+                        else {
+                            return 0;
+                        }
                     }
 
                     $scope.data = sourceTypes.map(sourceType => {
