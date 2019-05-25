@@ -39,6 +39,11 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.STRING(10)
         },
 
+        StrikeReason: {
+            allowNull: true,
+            type: DataTypes.STRING(200)
+        },
+
         createdAt: {
             allowNull: false,
             type: DataTypes.DATE
