@@ -138,6 +138,47 @@ async function cleanupOldUnseen() {
     }
 }
 
+async function cleanupDuplicateInstruments() {
+    var items = await sql.select('select i.ID as dup, i2.ID as orig, i.InstrumentName \
+        from instruments i \
+        inner join instruments i2 on i2.ID<i.ID \
+        inner join sources s on s.Instrument_ID=i.ID and s.SourceType=\'w\' \
+        inner join sources s2 on s2.Instrument_ID=i2.ID and s2.SourceType=\'w\' \
+        and i2.InstrumentName=i.InstrumentName \
+        and s.SourceId=s2.SourceId');
+        
+    console.log("Cleanup job will delete " + items.length + " duplicate instruments...");
+
+    for(var item of items) {
+        await sql.select('delete from userinstruments u where u.Instrument_ID = @oldId', {
+            '@oldId': item.dup
+        });
+        
+        await sql.select('update snapshots s set s.Instrument_ID = @newId where s.Instrument_ID = @oldId', {
+            '@newId': item.orig,
+            '@oldId': item.dup
+        });
+        
+        await sql.select('delete from instrumentrates r where r.Instrument_ID = @oldId', {
+            '@oldId': item.dup
+        });
+        
+        await sql.select('delete from sources s where s.Instrument_ID = @oldId', {
+            '@oldId': item.dup
+        });
+        
+        await sql.select('delete from weights w where w.Instrument_ID = @oldId', {
+            '@oldId': item.dup
+        });
+        
+        await sql.select('delete from instruments i where i.ID = @oldId', {
+            '@oldId': item.dup
+        });
+    }
+    
+    console.log("Cleanup job deleted " + items.length + " duplicate instruments.");
+}
+
 exports.run = async function () {
     try {
 
@@ -150,6 +191,7 @@ exports.run = async function () {
         await cleanupMissingRates();
         await cleanupLateBegin();
         await cleanupOldUnseen();
+        await cleanupDuplicateInstruments();
 
     }
     catch (error) {
