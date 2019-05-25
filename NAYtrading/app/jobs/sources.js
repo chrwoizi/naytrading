@@ -27,6 +27,7 @@ exports.run = async function () {
                     SourceId: sourceId || '',
                     Strikes: 0,
                     LastStrikeTime: new Date(),
+                    StrikeReason: '',
                     Status: (sourceId && sourceId.length > 0) ? 'ACTIVE' : 'NOTFOUND'
                 };
                 try {

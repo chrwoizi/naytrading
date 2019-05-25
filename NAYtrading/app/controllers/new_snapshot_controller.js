@@ -141,29 +141,35 @@ exports.isAutoWait = async function (newSnapshot) {
 async function handleRateProviderError(instrument, source, error) {
     if (error.message == ratesProvider.market_not_found) {
         var strikes = config.max_strikes + 12;
-        console.log("Setting " + strikes + " strikes on instrument " + instrument.InstrumentName + " (" + source.SourceId + " on " + source.SourceType + ") because the market id " + source.MarketId + " does not exist");
+        var reason = "the market id " + source.MarketId + " does not exist";
+        console.log("Setting " + strikes + " strikes on instrument " + instrument.InstrumentName + " (" + source.SourceId + " on " + source.SourceType + ") because " + reason);
         await source.updateAttributes({
             Strikes: strikes,
-            LastStrikeTime: new Date()
+            LastStrikeTime: new Date(),
+            StrikeReason: (reason || '').substr(0, 200)
         });
 
         await increaseMonitor("preload_missing", source.SourceType, source.MarketId || 'null');
     }
     else if (error.message == ratesProvider.invalid_response) {
-        console.log("Adding 5 strikes to instrument " + instrument.InstrumentName + " (" + source.SourceId + " on " + source.SourceType + ") because the server returned an unexpected response for market id " + source.MarketId);
+        var reason = "the server returned an unexpected response for market id " + source.MarketId;
+        console.log("Adding 5 strikes to instrument " + instrument.InstrumentName + " (" + source.SourceId + " on " + source.SourceType + ") because " + reason);
         await source.updateAttributes({
             Strikes: source.Strikes + 5,
-            LastStrikeTime: new Date()
+            LastStrikeTime: new Date(),
+            StrikeReason: (reason || '').substr(0, 200)
         });
 
         await increaseMonitor("preload_invalid", source.SourceType, source.MarketId || 'null');
     }
     else {
         console.log(error.message + "\n" + error.stack);
-        console.log("Adding 1 strike to instrument " + instrument.InstrumentName + " (" + source.SourceId + " on " + source.SourceType + ") because it caused an exception: " + error);
+        var reason = "it caused an exception: " + error;
+        console.log("Adding 1 strike to instrument " + instrument.InstrumentName + " (" + source.SourceId + " on " + source.SourceType + ") because " + reason);
         await source.updateAttributes({
             Strikes: source.Strikes + 1,
-            LastStrikeTime: new Date()
+            LastStrikeTime: new Date(),
+            StrikeReason: (reason || '').substr(0, 200)
         });
 
         await increaseMonitor("preload_exception", source.SourceType, undefined);
@@ -339,7 +345,8 @@ exports.createNewSnapshotFromRandomInstrument = async function (instrumentIds) {
                         console.log("Changing strikes on instrument " + instrument.InstrumentName + " from " + source.Strikes + " to " + problem.Strikes + " because " + problem.Reason);
                         await source.updateAttributes({
                             Strikes: problem.Strikes,
-                            LastStrikeTime: new Date()
+                            LastStrikeTime: new Date(),
+                            StrikeReason: (problem.Reason || '').substr(0, 200)
                         });
 
                         await increaseMonitor("preload_rates", source.SourceType, source.MarketId || 'null');
