@@ -152,7 +152,7 @@ async function cleanupDuplicateInstruments() {
     console.log("Cleanup job will delete " + items.length + " duplicate instruments...");
 
     for(var item of items) {
-        await sql.query('delete from userinstruments u where u.Instrument_ID = @oldId', {
+        await sql.query('delete from userinstruments where Instrument_ID = @oldId', {
             '@oldId': item.dup
         });
         
@@ -168,19 +168,19 @@ async function cleanupDuplicateInstruments() {
             '@oldId': item.dup
         });
         
-        await sql.query('delete from instrumentrates r where r.Instrument_ID = @oldId', {
+        await sql.query('delete from instrumentrates where Instrument_ID = @oldId', {
             '@oldId': item.dup
         });
         
-        await sql.query('delete from sources s where s.Instrument_ID = @oldId', {
+        await sql.query('delete from sources where Instrument_ID = @oldId', {
             '@oldId': item.dup
         });
         
-        await sql.query('delete from weights w where w.Instrument_ID = @oldId', {
+        await sql.query('delete from weights where Instrument_ID = @oldId', {
             '@oldId': item.dup
         });
         
-        await sql.query('delete from instruments i where i.ID = @oldId', {
+        await sql.query('delete from instruments where ID = @oldId', {
             '@oldId': item.dup
         });
     }
@@ -196,12 +196,11 @@ exports.run = async function () {
         }
 
         exports.isRunning = true;
+        await cleanupDuplicateInstruments();
         await cleanupDuplicates();
         await cleanupMissingRates();
         await cleanupLateBegin();
         await cleanupOldUnseen();
-        await cleanupDuplicateInstruments();
-
     }
     catch (error) {
         console.log("error in cleanup: " + error.message + "\n" + error.stack);
