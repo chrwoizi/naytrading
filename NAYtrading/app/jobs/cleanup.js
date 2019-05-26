@@ -160,6 +160,13 @@ async function cleanupDuplicateInstruments() {
             '@newId': item.orig,
             '@oldId': item.dup
         });
+
+        await sql.select('update instrumentrates r \
+            left outer join instrumentrates r2 on r2.Time=r.Time and r2.Instrument_ID=@newId \
+            set r.Instrument_ID=@newId where r.Instrument_ID=@oldId and r2.ID is null;', {
+            '@newId': item.orig,
+            '@oldId': item.dup
+        });
         
         await sql.select('delete from instrumentrates r where r.Instrument_ID = @oldId', {
             '@oldId': item.dup
