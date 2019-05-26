@@ -99,6 +99,7 @@ async function cleanupDuplicates() {
 }
 
 async function cleanupMissingRates() {
+    return;
     var rows = await sql.query(missing_rates_sql, {
         "@minRates": newSnapshotController.minDays - 1
     });
@@ -114,6 +115,7 @@ async function cleanupMissingRates() {
 }
 
 async function cleanupLateBegin() {
+    return;
     var rows = await sql.query(late_rates_sql, {
         "@minDays": (config.chart_period_seconds - config.discard_threshold_seconds) / 60 / 60 / 24 - 1
     });
