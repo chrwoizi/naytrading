@@ -32,7 +32,7 @@ AND CASE (
 		FROM usersnapshots AS su 
         INNER JOIN snapshots AS sus ON sus.ID = su.Snapshot_ID
 		WHERE sus.Instrument_ID = s.Instrument_ID AND su.User = @userName
-        ORDER BY su.ModifiedTime DESC LIMIT 1
+        ORDER BY sus.Time DESC LIMIT 1
 	)
 	WHEN 'wait1yr' THEN s.Time < NOW() - INTERVAL 1 YEAR 
 	WHEN 'wait2mo' THEN s.Time < NOW() - INTERVAL 2 MONTH 
