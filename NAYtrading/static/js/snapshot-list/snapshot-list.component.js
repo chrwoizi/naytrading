@@ -35,13 +35,12 @@ angular.
                     self.updateList();
                 }
 
-                if (typeof ($routeParams.query) == 'string' && $routeParams.query.length > 0) {
-                    self.query = $routeParams.query;
+                if (typeof ($routeParams.instrument) == 'string' && $routeParams.instrument.length > 0) {
                     self.orderProp = "-DateSortable";
                 }
 
                 self.loading = true;
-                self.snapshots = SnapshotListService.query({}, function () {
+                self.snapshots = SnapshotListService.query({ instrument: $routeParams.instrument }, function () {
                     self.loading = false;
                     self.updateList();
                     self.viewCount = Math.min(100, self.filteredItems.length);
