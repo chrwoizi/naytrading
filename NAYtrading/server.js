@@ -115,7 +115,7 @@ var sql = require('./app/sql/sql');
         if (config.job_consolidate_enabled) {
             setTimeout(function () {
                 new Promise(function (resolve, reject) { consolidateJob.run(); });
-            }, 1000);
+            }, 60000);
         }
 
         if (config.job_instruments_enabled) {
