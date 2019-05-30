@@ -31,6 +31,7 @@ exports.getSnapshotViewModel = function (snapshot, previous) {
     return {
         ID: snapshot.ID,
         Instrument: {
+            ID: snapshot.Instrument_ID,
             InstrumentName: snapshot.InstrumentName
         },
         Date: dateFormat(snapshot.Time, 'dd.mm.yy'),
@@ -121,10 +122,22 @@ exports.snapshots = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
 
-            var snapshots = await sql.query("SELECT s.ID, s.Time, i.InstrumentName, u.Decision, u.ModifiedTime FROM snapshots AS s \
-            INNER JOIN instruments AS i ON i.ID = s.Instrument_ID INNER JOIN usersnapshots AS u ON u.Snapshot_ID = s.ID WHERE u.User = @user", {
-                    "@user": req.user.email
-                });
+            let snapshots;
+
+            if (req.params.instrument) {
+                var instrumentId = parseInt(req.params.instrument);
+                snapshots = await sql.query("SELECT s.ID, s.Time, i.InstrumentName, u.Decision, u.ModifiedTime FROM snapshots AS s \
+                        INNER JOIN instruments AS i ON i.ID = s.Instrument_ID INNER JOIN usersnapshots AS u ON u.Snapshot_ID = s.ID WHERE u.User = @user AND s.Instrument_ID = @instrument", {
+                        "@user": req.user.email,
+                        "@instrument": instrumentId
+                    });
+            }
+            else {
+                snapshots = await sql.query("SELECT s.ID, s.Time, i.InstrumentName, u.Decision, u.ModifiedTime FROM snapshots AS s \
+                    INNER JOIN instruments AS i ON i.ID = s.Instrument_ID INNER JOIN usersnapshots AS u ON u.Snapshot_ID = s.ID WHERE u.User = @user", {
+                        "@user": req.user.email
+                    });
+            }
 
             var viewModels = snapshots.map(snapshot => exports.getSnapshotListViewModel(snapshot));
             res.json(viewModels);
@@ -152,9 +165,10 @@ exports.getSnapshot = async function (id, user) {
         var snapshot = snapshots[0];
 
         snapshot.instrument = {
+            ID: snapshot.Instrument_ID,
             InstrumentName: snapshot.InstrumentName
         };
-        
+
         snapshot.snapshotrates = await sql.query("SELECT r.Time, r.Close FROM snapshotrates AS r WHERE r.Snapshot_ID = @id ORDER BY r.Time ASC", {
             "@id": id
         });

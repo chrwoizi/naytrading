@@ -141,7 +141,7 @@ async function cleanupOldUnseen() {
 }
 
 async function cleanupDuplicateInstruments() {
-    var items = await sql.select('select i.ID as dup, i2.ID as orig, i.InstrumentName \
+    var items = await sql.select('select i.ID as dup, i2.ID as orig \
         from instruments i \
         inner join instruments i2 on i2.ID<i.ID \
         inner join sources s on s.Instrument_ID=i.ID and s.SourceType=\'w\' \

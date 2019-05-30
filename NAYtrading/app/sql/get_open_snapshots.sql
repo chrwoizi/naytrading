@@ -26,4 +26,5 @@ AND NOT EXISTS
 )
 ORDER BY  
 	SnapshotTime ASC, 
-	ID ASC;
+	ID ASC
+LIMIT @maxCount;

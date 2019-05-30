@@ -20,7 +20,7 @@ angular.
                 when('/instruments', {
                     template: '<instrument-list></instrument-list>'
                 }).
-                when('/snapshots/:query', {
+                when('/snapshots/:instrument', {
                     template: '<snapshot-list></snapshot-list>'
                 }).
                 when('/suggestions', {

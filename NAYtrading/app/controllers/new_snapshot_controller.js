@@ -499,7 +499,8 @@ async function handleGetOpenSnapshots(req, res) {
             }
 
             var forgotten = await sql.query(get_open_snapshots, {
-                "@userName": req.user.email
+                "@userName": req.user.email,
+                "@maxCount": count
             });
 
             if (forgotten && forgotten.length > 0) {

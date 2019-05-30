@@ -23,7 +23,8 @@ module.exports = function (app, passport) {
 
     app.get('/api/count/snapshots/:fromDate', snapshotController.countSnapshots);
 
-    app.get('/api/snapshot', snapshotController.snapshots);
+    app.get('/api/snapshots', snapshotController.snapshots);
+    app.get('/api/snapshots/:instrument', snapshotController.snapshots);
     app.get('/api/snapshot/:id', snapshotController.snapshot);
 
     app.get('/api/confirm/:id/:decision/:confirmed', snapshotController.snapshot);

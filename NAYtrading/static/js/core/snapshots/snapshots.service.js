@@ -26,7 +26,7 @@ angular.
     ]).
     factory('SnapshotListService', ['$resource',
         function ($resource) {
-            return $resource('/api/snapshot', {}, {
+            return $resource('/api/snapshots/:instrument', {}, {
                 query: {
                     method: 'GET',
                     params: {},

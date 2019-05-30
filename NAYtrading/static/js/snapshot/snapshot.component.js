@@ -48,7 +48,7 @@ angular.
                     if (currentLocation == window.location.href) {
                         self.loading = false;
 
-                        window.location.href = '#!/snapshots';
+                        window.location.href = '#!/stats';
 
                         if (typeof (error.data) !== 'undefined' && error.data != null) {
                             console.error('error: ' + JSON.stringify(error.data));
