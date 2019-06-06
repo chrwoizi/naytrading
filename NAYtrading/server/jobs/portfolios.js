@@ -40,7 +40,7 @@ exports.updatingUser = null;
 exports.updateUser = async function (user) {
     exports.updatingUser = user;
 
-    var latest = await model.portfolio.find({
+    var latest = await model.portfolio.findOne({
         where: {
             User: user
         },
@@ -63,7 +63,7 @@ exports.updateUser = async function (user) {
         }
     });
 
-    latest = await model.portfolio.find({
+    latest = await model.portfolio.findOne({
         where: {
             User: user
         },

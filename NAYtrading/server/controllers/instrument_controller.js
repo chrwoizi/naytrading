@@ -60,7 +60,7 @@ exports.addUrl = async function (req, res) {
 
                 var knownSource = null;
                 for (var i = 0; i < instrument.sources.length; ++i) {
-                    knownSource = await model.source.find({
+                    knownSource = await model.source.findOne({
                         where: {
                             SourceType: instrument.sources[i].SourceType,
                             SourceId: instrument.sources[i].SourceId
@@ -72,7 +72,7 @@ exports.addUrl = async function (req, res) {
                 }
 
                 if (knownSource) {
-                    var existing = await model.userinstrument.find({
+                    var existing = await model.userinstrument.findOne({
                         where: {
                             Instrument_ID: knownSource.Instrument_ID,
                             User: req.user.email
@@ -145,7 +145,7 @@ exports.instrument = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
 
-            var instrument = await model.instrument.find({
+            var instrument = await model.instrument.findOne({
                 where: {
                     ID: req.params.id
                 }
@@ -174,7 +174,7 @@ exports.getWeight = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
 
-            var instrument = await model.instrument.find({
+            var instrument = await model.instrument.findOne({
                 where: {
                     [sequelize.Op.or]: [
                         { Isin: req.params.instrumentId },
@@ -185,7 +185,7 @@ exports.getWeight = async function (req, res) {
 
             if (instrument) {
 
-                var weight = await model.weight.find({
+                var weight = await model.weight.findOne({
                     where: {
                         User: req.user.email,
                         Instrument_ID: instrument.ID,
@@ -221,7 +221,7 @@ exports.setWeight = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
 
-            var instrument = await model.instrument.find({
+            var instrument = await model.instrument.findOne({
                 where: {
                     [sequelize.Op.or]: [
                         { Isin: req.params.instrumentId },
@@ -232,7 +232,7 @@ exports.setWeight = async function (req, res) {
 
             if (instrument) {
 
-                var weight = await model.weight.find({
+                var weight = await model.weight.findOne({
                     where: {
                         User: req.user.email,
                         Instrument_ID: instrument.ID,

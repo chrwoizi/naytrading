@@ -359,7 +359,7 @@ exports.setDecision = async function (req, res) {
                 }
             }
 
-            var usersnapshot = await model.usersnapshot.find({
+            var usersnapshot = await model.usersnapshot.findOne({
                 where: {
                     User: req.user.email,
                     Snapshot_ID: req.body.id
@@ -388,7 +388,7 @@ exports.setDecision = async function (req, res) {
                 }
 
                 if (deletePortfolio) {
-                    var snapshot = await model.snapshot.find({
+                    var snapshot = await model.snapshot.findOne({
                         where: {
                             ID: req.body.id
                         }
@@ -405,7 +405,7 @@ exports.setDecision = async function (req, res) {
                         }
                     });
 
-                    var latest = await model.portfolio.find({
+                    var latest = await model.portfolio.findOne({
                         where: {
                             User: req.user.email
                         },
@@ -467,7 +467,7 @@ exports.resetStats = async function (snapshotId, endTime) {
             }
         });
 
-        var latest = await model.portfolio.find({
+        var latest = await model.portfolio.findOne({
             where: {
                 User: users[u].User
             },
