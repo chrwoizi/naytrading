@@ -1,4 +1,4 @@
 #!/bin/sh
-cd app
+cd server
 export NODE_ENV=production
 sequelize db:migrate --config config/database.json
