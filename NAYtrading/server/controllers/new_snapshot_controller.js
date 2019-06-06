@@ -141,7 +141,7 @@ async function handleRateProviderError(instrument, source, error) {
     if (error.message == ratesProvider.market_not_found) {
         var strikes = config.max_strikes + 12;
         var reason = "the market id " + source.MarketId + " does not exist";
-        console.log("Setting " + strikes + " strikes on instrument " + instrument.InstrumentName + " (" + source.SourceId + " on " + source.SourceType + ") because " + reason);
+        //console.log("Setting " + strikes + " strikes on instrument " + instrument.InstrumentName + " (" + source.SourceId + " on " + source.SourceType + ") because " + reason);
         await source.update({
             Strikes: strikes,
             LastStrikeTime: new Date(),
@@ -152,7 +152,7 @@ async function handleRateProviderError(instrument, source, error) {
     }
     else if (error.message == ratesProvider.invalid_response) {
         var reason = "the server returned an unexpected response for market id " + source.MarketId;
-        console.log("Adding 5 strikes to instrument " + instrument.InstrumentName + " (" + source.SourceId + " on " + source.SourceType + ") because " + reason);
+        //console.log("Adding 5 strikes to instrument " + instrument.InstrumentName + " (" + source.SourceId + " on " + source.SourceType + ") because " + reason);
         await source.update({
             Strikes: source.Strikes + 5,
             LastStrikeTime: new Date(),
@@ -164,7 +164,7 @@ async function handleRateProviderError(instrument, source, error) {
     else {
         console.log(error.message + "\n" + error.stack);
         var reason = "it caused an exception: " + error;
-        console.log("Adding 1 strike to instrument " + instrument.InstrumentName + " (" + source.SourceId + " on " + source.SourceType + ") because " + reason);
+        //console.log("Adding 1 strike to instrument " + instrument.InstrumentName + " (" + source.SourceId + " on " + source.SourceType + ") because " + reason);
         await source.update({
             Strikes: source.Strikes + 1,
             LastStrikeTime: new Date(),
