@@ -7,3 +7,7 @@
 /NAYtrading/dist
 /NAYtrading/server/config/database.json
 /NAYtrading/server/config/config.json
+/NAYtrading/package-lock.json
+/NAYtrading/keys
+/NAYtrading/letsencrypt
+/NAYtrading/processor/__pycache__

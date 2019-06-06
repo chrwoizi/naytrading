@@ -8,8 +8,8 @@
 
         <div class="collapse navbar-collapse" id="navbarsDefault">
             <ul class="navbar-nav mr-auto">
-                <li *ngIf="currentUser" class="nav-item"><a class="nav-link"
-                        routerLink="/snapshot" [queryParams]="{action:'random_or_confirm'}">New Decision</a></li>
+                <li *ngIf="currentUser" class="nav-item"><a class="nav-link" routerLink="/snapshot"
+                        [queryParams]="{action:'random_or_confirm'}">New Decision</a></li>
                 <li *ngIf="currentUser" class="nav-item"><a class="nav-link" routerLink="/snapshots">Decisions</a></li>
                 <li *ngIf="currentUser" class="nav-item"><a class="nav-link" routerLink="/suggestions">Trades</a></li>
                 <li *ngIf="currentUser" class="nav-item"><a class="nav-link" routerLink="/instruments">Stocks</a></li>
@@ -33,7 +33,7 @@
     </div>
 </nav>
 
-<main role="main" class="body-content">
+<main role="main" class="body-content bg-light">
     <ngx-spinner></ngx-spinner>
     <app-alert></app-alert>
     <router-outlet></router-outlet>
