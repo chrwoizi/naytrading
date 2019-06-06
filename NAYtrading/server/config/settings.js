@@ -10,7 +10,7 @@ exports.get = function (key) {
 };
 
 exports.set = async function (key, value) {
-    var existing = await model.setting.find({
+    var existing = await model.setting.findOne({
         where: {
             key: key
         }

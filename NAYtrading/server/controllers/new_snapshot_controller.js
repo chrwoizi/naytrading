@@ -142,7 +142,7 @@ async function handleRateProviderError(instrument, source, error) {
         var strikes = config.max_strikes + 12;
         var reason = "the market id " + source.MarketId + " does not exist";
         console.log("Setting " + strikes + " strikes on instrument " + instrument.InstrumentName + " (" + source.SourceId + " on " + source.SourceType + ") because " + reason);
-        await source.updateAttributes({
+        await source.update({
             Strikes: strikes,
             LastStrikeTime: new Date(),
             StrikeReason: (reason || '').substr(0, 200)
@@ -153,7 +153,7 @@ async function handleRateProviderError(instrument, source, error) {
     else if (error.message == ratesProvider.invalid_response) {
         var reason = "the server returned an unexpected response for market id " + source.MarketId;
         console.log("Adding 5 strikes to instrument " + instrument.InstrumentName + " (" + source.SourceId + " on " + source.SourceType + ") because " + reason);
-        await source.updateAttributes({
+        await source.update({
             Strikes: source.Strikes + 5,
             LastStrikeTime: new Date(),
             StrikeReason: (reason || '').substr(0, 200)
@@ -165,7 +165,7 @@ async function handleRateProviderError(instrument, source, error) {
         console.log(error.message + "\n" + error.stack);
         var reason = "it caused an exception: " + error;
         console.log("Adding 1 strike to instrument " + instrument.InstrumentName + " (" + source.SourceId + " on " + source.SourceType + ") because " + reason);
-        await source.updateAttributes({
+        await source.update({
             Strikes: source.Strikes + 1,
             LastStrikeTime: new Date(),
             StrikeReason: (reason || '').substr(0, 200)
@@ -187,7 +187,7 @@ async function updateIsinWkn(instrument, isin, wkn) {
         updated = true;
     }
     if (updated) {
-        await instrument.updateAttributes(fields);
+        await instrument.update(fields);
         instrument.Isin = isin;
         instrument.Wkn = wkn;
     }
@@ -224,7 +224,7 @@ async function updateMarket(source, marketId) {
     if (marketId != source.MarketId) {
         // change preferred market id for source
         source.MarketId = marketId;
-        await source.updateAttributes({
+        await source.update({
             MarketId: marketId
         });
     }
@@ -341,8 +341,8 @@ exports.createNewSnapshotFromRandomInstrument = async function (instrumentIds) {
                         return snapshot;
                     }
                     else if (problem != null) {
-                        console.log("Changing strikes on instrument " + instrument.InstrumentName + " from " + source.Strikes + " to " + problem.Strikes + " because " + problem.Reason);
-                        await source.updateAttributes({
+                        //console.log("Changing strikes on instrument " + instrument.InstrumentName + " from " + source.Strikes + " to " + problem.Strikes + " because " + problem.Reason);
+                        await source.update({
                             Strikes: problem.Strikes,
                             LastStrikeTime: new Date(),
                             StrikeReason: (problem.Reason || '').substr(0, 200)

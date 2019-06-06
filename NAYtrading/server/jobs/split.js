@@ -478,7 +478,7 @@ async function fixSnapshotSplit(snapshotId, knownSource, instrumentId, startTime
 
 exports.fixInstrumentSplit = async function (instrumentId) {
 
-    var instrument = await model.instrument.find({ where: { ID: instrumentId } });
+    var instrument = await model.instrument.findOne({ where: { ID: instrumentId } });
     if (!instrument) {
         return;
     }

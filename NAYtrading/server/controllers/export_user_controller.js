@@ -48,13 +48,13 @@ exports.exportUserSnapshotsGeneric = async function (fromTimeUTC, user, stream, 
 
         reportProgress(i / ids.length);
 
-        var usersnapshot = await model.usersnapshot.find({
+        var usersnapshot = await model.usersnapshot.findOne({
             where: {
                 ID: ids[i].ID
             }
         });
 
-        var snapshot = await model.snapshot.find({
+        var snapshot = await model.snapshot.findOne({
             include: [{
                 model: model.instrument
             }, {
