@@ -1,0 +1,60 @@
+﻿html {
+    font-size: 12px;
+}
+
+body {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.dl-horizontal dt {
+    white-space: normal;
+}
+
+input,
+select,
+textarea {
+    max-width: 280px;
+}
+
+.row-spacer {
+    margin-bottom: 10px;
+}
+
+.list-button {
+    font-size: 0.5em; 
+    padding: 0.5em 0.5em 0.2em 0.5em; 
+    margin-top: -0.5em;
+}
+
+a.github-logo {
+    font-size: 3rem;
+}
+
+img.github-logo {
+    height: 3rem;
+}
+
+dt {
+    margin-top: 2em;
+    margin-bottom: 1em;
+    font-size: 1.2em;
+}
+
+.app {
+    max-width: 40em;
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+}
+
+ngx-spinner > div.overlay {
+    position: fixed !important;
+}
+
+header.masthead .overlay {
+    opacity: 0.5;
+}
+
+header.masthead {
+    background: url("/assets/pattern.jpg") repeat center center;
+}

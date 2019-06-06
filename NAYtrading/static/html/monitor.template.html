@@ -1,9 +1,0 @@
-﻿<span us-spinner spinner-on="$ctrl.loading" class="spinner">
-    <div ng-hide="$ctrl.loading">
-        <div class="row" ng-repeat="item in data">
-            <h2>{{item.sourceType}}:</h2>
-            <canvas class="chart chart-line" chart-data="item.data" chart-labels="labels" chart-click="onClick"
-                chart-series="series" chart-options="options" chart-dataset-override="datasetOverride"></canvas>
-        </div>
-    </div>
-</span>

@@ -1,4 +1,4 @@
-var path = require('path');
+const path = require('path');
 
 var env = process.env.NODE_ENV || 'development';
 
@@ -50,7 +50,7 @@ function include(config, path) {
     addProperties(included, config);
 }
 
-include(config, config.naytrading + "/app/config/envconfig");
+include(config, config.naytrading + "/server/config/envconfig");
 if (config.include) {
     for(var i = 0; i < config.include.length; ++i) {
         include(config, config.include[i]);

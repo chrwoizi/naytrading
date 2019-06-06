@@ -1,0 +1,61 @@
+<section class="policy bg-light">
+    <div class="container">
+        <div class="row row-spacer">
+        </div>
+
+        <div class="row row-spacer">
+            <div class="col-12">
+                <a routerLink="/snapshot" [queryParams]="{action:'random_or_confirm'}" class="btn btn-info btn-block"
+                    role="button">New decision on
+                    random stock</a>
+            </div>
+        </div>
+
+        <div *ngIf="!loading">
+            <div class="row">
+                <div class="col-2">
+                    <p>Search:</p>
+                </div>
+                <div class="col-7">
+                    <input [(ngModel)]="query" (ngModelChange)="onQueryChanged()">
+                </div>
+                <div class="col-3"></div>
+            </div>
+
+            <div class="row">
+                <div class="col-2">
+                    <p>Sort&nbsp;by:</p>
+                </div>
+                <div class="col-7">
+                    <select [(ngModel)]="orderProp" (ngModelChange)="onOrderChanged()">
+                        <option value="InstrumentName">Alphabetical</option>
+                        <option value="-Capitalization">Capitalization</option>
+                    </select>
+                </div>
+                <div class="col-3"></div>
+            </div>
+
+            <div class="row">
+                <div class="col-12">
+                    <p>
+                        Count: {{items.length}}
+                    </p>
+                </div>
+            </div>
+
+            <div infiniteScroll [infiniteScrollDistance]="2" [infiniteScrollThrottle]="50" (scrolled)="loadMore()">
+                <div *ngFor="let instrument of pagedItems" class="row">
+                    <div class="col-5 instrument-name">
+                        <a routerLink="/snapshots"
+                            [queryParams]="{instrument:instrument.ID}">{{instrument.InstrumentName}}</a>
+                    </div>
+                    <div class="col-3 instrument-name" style="text-align: right;">
+                        <a routerLink="/snapshot" [queryParams]="{instrument:instrument.ID}"
+                            class="btn btn-info list-button">NEW DECISION</a>
+                    </div>
+                    <div class="col-4 instrument-capitalization">{{instrument.Capitalization}}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
