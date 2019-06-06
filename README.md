@@ -63,6 +63,7 @@ naytrading@host:~$ git clone https://github.com/chrwoizi/naytrading.git
 naytrading@host:~$ cd naytrading
 naytrading@host:~/naytrading$ cd NAYtrading
 naytrading@host:~/naytrading/NAYtrading$ npm install
+naytrading@host:~/naytrading/NAYtrading$ npm run build
 naytrading@host:~/naytrading/NAYtrading$ cd app/config
 naytrading@host:~/naytrading/NAYtrading/app/config$ cp config.mandatory.json config.json
 naytrading@host:~/naytrading/NAYtrading/app/config$ cp database.mandatory.json database.json

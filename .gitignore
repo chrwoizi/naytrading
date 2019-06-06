@@ -5,3 +5,5 @@
 /NAYtrading/node_modules
 /NAYtrading/processing
 /NAYtrading/dist
+/NAYtrading/server/config/database.json
+/NAYtrading/server/config/config.json
