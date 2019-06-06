@@ -1,0 +1,49 @@
+{
+  "development": {
+    "admin_user": "christian@woizischke.de",
+    "python": "C:\\Program Files\\Python\\Python36\\python.exe",
+    "port_http": 5000,
+    "instruments_providers": {
+        "w": "../../../../naytrading-private/NAYtrading.Plugin/providers/wo/wo_instruments_provider",
+        "f": "../../../../naytrading-private/NAYtrading.Plugin/providers/fn/fn_instruments_provider"
+    },
+    "job_split_sources": ["f"],    
+    "job_cleanup_enabled": false,
+    "job_consolidate_enabled": false,
+    "job_instruments_enabled": false,
+    "job_portfolios_enabled": false,
+    "job_preload_enabled": false,
+    "job_process_enabled": false,
+    "job_sources_enabled" : false,
+    "job_split_enabled": false,
+    "job_strikes_enabled": false,
+    "jwt_secret": "naytrading",
+    "rates_providers": {                                            
+        "w": "../../../../naytrading-private/NAYtrading.Plugin/providers/wo/wo_rates_provider",                                          
+        "f": "../../../../naytrading-private/NAYtrading.Plugin/providers/fn/fn_rates_provider"                                           
+    }
+  },
+  "production": {
+    "admin_user": "christian@woizischke.de",
+    "python": "C:\\Program Files\\Python\\Python36\\python.exe",
+    "instruments_providers": {
+        "w": "../../../../naytrading-private/NAYtrading.Plugin/providers/wo/wo_instruments_provider",
+        "f": "../../../../naytrading-private/NAYtrading.Plugin/providers/fn/fn_instruments_provider"
+    },
+    "job_split_sources": ["f"],    
+    "job_cleanup_enabled": false,
+    "job_consolidate_enabled": false,
+    "job_instruments_enabled": false,
+    "job_portfolios_enabled": false,
+    "job_preload_enabled": false,
+    "job_process_enabled": false,
+    "job_sources_enabled" : false,
+    "job_split_enabled": false,
+    "job_strikes_enabled": false,
+    "jwt_secret": "naytrading",
+    "rates_providers": {                                            
+        "w": "../../../../naytrading-private/NAYtrading.Plugin/providers/wo/wo_rates_provider",                                          
+        "f": "../../../../naytrading-private/NAYtrading.Plugin/providers/fn/fn_rates_provider"                                           
+    }
+  }
+}

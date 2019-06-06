@@ -1,0 +1,103 @@
+{
+  "$schema": "node_modules/@angular/cli/lib/config/schema.json",
+  "version": 1,
+  "newProjectRoot": "projects",
+  "projects": {
+    "naytrading": {
+      "root": "",
+      "sourceRoot": "client",
+      "projectType": "application",
+      "prefix": "app",
+      "schematics": {
+        "@schematics/angular:component": {
+          "styleext": "scss"
+        }
+      },
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-angular:browser",
+          "options": {
+            "outputPath": "dist",
+            "index": "client/index.html",
+            "main": "client/main.ts",
+            "polyfills": "client/polyfills.ts",
+            "tsConfig": "tsconfig.json",
+            "assets": [
+              "client/favicon.ico",
+              "client/assets"
+            ],
+            "styles": [
+              "./node_modules/startbootstrap-landing-page/vendor/bootstrap/css/bootstrap.min.css",
+              "./node_modules/startbootstrap-landing-page/vendor/font-awesome/css/font-awesome.min.css",
+              "./node_modules/startbootstrap-landing-page/vendor/simple-line-icons/css/simple-line-icons.css",
+              "./node_modules/startbootstrap-landing-page/css/landing-page.min.css",
+              "./node_modules/glyphicons-only-bootstrap/css/bootstrap.min.css",
+              "client/styles.scss"
+            ],
+            "scripts": [
+              "./node_modules/jquery/dist/jquery.min.js",
+              "./node_modules/startbootstrap-landing-page/vendor/bootstrap/js/bootstrap.min.js",
+              "./node_modules/phaser/dist/phaser-arcade-physics.js"
+            ]
+          },
+          "configurations": {
+            "production": {
+              "fileReplacements": [
+                {
+                  "replace": "client/environments/environment.ts",
+                  "with": "client/environments/environment.prod.ts"
+                }
+              ],
+              "optimization": true,
+              "outputHashing": "all",
+              "sourceMap": false,
+              "extractCss": true,
+              "namedChunks": false,
+              "aot": true,
+              "extractLicenses": true,
+              "vendorChunk": false,
+              "buildOptimizer": true,
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "2mb",
+                  "maximumError": "5mb"
+                }
+              ]
+            }
+          }
+        },
+        "serve": {
+          "builder": "@angular-devkit/build-angular:dev-server",
+          "options": {
+            "browserTarget": "naytrading:build",
+            "proxyConfig": "proxy.conf.json"
+          },
+          "configurations": {
+            "production": {
+              "browserTarget": "naytrading:build:production"
+            }
+          }
+        },
+        "extract-i18n": {
+          "builder": "@angular-devkit/build-angular:extract-i18n",
+          "options": {
+            "browserTarget": "naytrading:build"
+          }
+        },
+        "lint": {
+          "builder": "@angular-devkit/build-angular:tslint",
+          "options": {
+            "tsConfig": [
+              "tsconfig.json"
+            ],
+            "exclude": [
+              "**/node_modules/**"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "defaultProject": "naytrading"
+}

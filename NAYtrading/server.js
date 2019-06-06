@@ -1,100 +1,63 @@
-var express = require('express');
-var https = require('https');
-var http = require('http');
-var fs = require('fs');
-var app = express();
-var passport = require('passport');
-var session = require('express-session');
-var MySQLStore = require('express-mysql-session')(session);
-var bodyParser = require('body-parser');
-var env = require('dotenv').load();
-var exphbs = require('express-handlebars');
+const express = require('express');
+const https = require('https');
+const http = require('http');
+const fs = require('fs');
+const app = express();
+const passport = require('passport');
+const session = require('express-session');
+require('express-mysql-session')(session);
+const bodyParser = require('body-parser');
+require('dotenv').load();
 
 require('sequelize'); // must be loaded before envconfig
-var config = require('./app/config/envconfig');
+const config = require('./server/config/envconfig');
 
-var splitJob = require('./app/jobs/split');
-var instrumentsJob = require('./app/jobs/instruments');
-var cleanupJob = require('./app/jobs/cleanup');
-var preloadJob = require('./app/jobs/preload');
-var strikesJob = require('./app/jobs/strikes');
-var portfoliosJob = require('./app/jobs/portfolios');
-var processJob = require('./app/jobs/process');
-var sourcesJob = require('./app/jobs/sources');
-var consolidateJob = require('./app/jobs/consolidate');
-
-var sql = require('./app/sql/sql');
+const splitJob = require('./server/jobs/split');
+const instrumentsJob = require('./server/jobs/instruments');
+const cleanupJob = require('./server/jobs/cleanup');
+const preloadJob = require('./server/jobs/preload');
+const strikesJob = require('./server/jobs/strikes');
+const portfoliosJob = require('./server/jobs/portfolios');
+const processJob = require('./server/jobs/process');
+const sourcesJob = require('./server/jobs/sources');
+const consolidateJob = require('./server/jobs/consolidate');
 
 (async () => {
 
-    // For BodyParser
+    // BodyParser
     app.use(bodyParser.urlencoded({
         extended: true
     }));
     app.use(bodyParser.json());
 
-
-    // For Passport
-    await sql.query("CREATE TABLE IF NOT EXISTS `sessions` (\
-        `session_id` varchar(128) COLLATE utf8mb4_bin NOT NULL,\
-        `expires` int(11) unsigned NOT NULL,\
-        `data` text COLLATE utf8mb4_bin,\
-        PRIMARY KEY (`session_id`)\
-    ) ENGINE=InnoDB");
-    var sessionStore = new MySQLStore(config.session);
-    app.use(session({
-        key: 'session',
-        secret: 'naytrading',
-        store: sessionStore,
-        resave: false,
-        saveUninitialized: false
-    }));
+    // Passport
     app.use(passport.initialize());
-    app.use(passport.session());
 
+    // static files
+    app.use('/', express.static('./dist', { index: false }));
+    app.use('/.well-known', express.static('./.well-known'));
 
-    // For static files
-    app.use('/static', express.static('./static/'));
-    app.use('/.well-known', express.static('./static/.well-known'));
-    app.use('/angular', express.static('./node_modules/angular/'));
-    app.use('/angular-chart.js', express.static('./node_modules/angular-chart.js/dist/'));
-    app.use('/angular-resource', express.static('./node_modules/angular-resource/'));
-    app.use('/angular-route', express.static('./node_modules/angular-route/'));
-    app.use('/angular-spinner', express.static('./node_modules/angular-spinner/dist/'));
-    app.use('/bootstrap', express.static('./node_modules/bootstrap/dist/'));
-    app.use('/glyphicons-only-bootstrap', express.static('./node_modules/glyphicons-only-bootstrap/'));
-    app.use('/startbootstrap-landing-page', express.static('./node_modules/startbootstrap-landing-page/'));
-    app.use('/chart.js', express.static('./node_modules/chart.js/dist/'));
-    app.use('/jquery', express.static('./node_modules/jquery/dist/'));
-    app.use('/ng-infinite-scroll', express.static('./node_modules/ng-infinite-scroll/build/'));
-
-
-    // For Handlebars
-    app.set('views', './views');
-    app.engine('hbs', exphbs({
-        defaultLayout: 'main',
-        extname: '.hbs',
-        layoutsDir: './views/layouts'
-    }));
-    app.set('view engine', '.hbs');
-
+    // Html
+    app.engine('html', require('ejs').renderFile);
+    app.set('view engine', 'html');
+    app.set('views', './dist');
 
     // Models
-    var models = require("./app/models/index");
+    var models = require("./server/models/index");
 
     // Routes
-    var authRoute = require('./app/routes/auth_routes.js')(app, passport);
-    var viewsRoute = require('./app/routes/views_routes.js')(app, passport);
-    var apiRoute = require('./app/routes/api_routes.js')(app, passport);
+    require('./server/routes/auth_routes.js')(app, passport);
+    require('./server/routes/api_routes.js')(app, passport);
+    app.get('/*', (req, res) => {
+        res.render('./index.html', { req, res });
+    });
 
-    // load passport strategies
-    require('./app/passport/passport.js')(passport, models.user);
+    // passport strategies
+    require('./server/passport/passport.js')(passport, models.user);
 
-
-    // Sync Database
+    // Database
     models.sequelize.sync().then(function () {
-
-        console.log('Database initialized')
+        console.log('Database initialized');
 
         http.createServer(app).listen(config.port_http, () => {
             console.log('HTTP Server running on port ' + config.port_http);
@@ -106,70 +69,68 @@ var sql = require('./app/sql/sql');
                 cert: fs.readFileSync(config.https_cert),
                 ca: fs.readFileSync(config.https_ca)
             };
-        
+
             https.createServer(httpsOptions, app).listen(config.port_https, () => {
                 console.log('HTTPS Server running on port ' + config.port_https);
             });
         }
-    
+
         if (config.job_consolidate_enabled) {
             setTimeout(function () {
-                new Promise(function (resolve, reject) { consolidateJob.run(); });
+                new Promise(function () { consolidateJob.run(); });
             }, 60000);
         }
 
         if (config.job_instruments_enabled) {
             setTimeout(function () {
-                new Promise(function (resolve, reject) { instrumentsJob.run(); });
+                new Promise(function () { instrumentsJob.run(); });
             }, 2000);
         }
 
         if (config.job_sources_enabled) {
             setTimeout(function () {
-                new Promise(function (resolve, reject) { sourcesJob.run(); });
+                new Promise(function () { sourcesJob.run(); });
             }, 3000);
         }
 
         if (config.job_cleanup_enabled) {
             setTimeout(function () {
-                new Promise(function (resolve, reject) { cleanupJob.run(); });
+                new Promise(function () { cleanupJob.run(); });
             }, 4000);
         }
 
         if (config.job_split_enabled) {
             setTimeout(function () {
-                new Promise(function (resolve, reject) { splitJob.run(); });
+                new Promise(function () { splitJob.run(); });
             }, 5000);
         }
 
         if (config.job_strikes_enabled) {
             setTimeout(function () {
-                new Promise(function (resolve, reject) { strikesJob.run(); });
+                new Promise(function () { strikesJob.run(); });
             }, 6000);
         }
-    
+
         if (config.job_portfolios_enabled) {
             setTimeout(function () {
-                new Promise(function (resolve, reject) { portfoliosJob.run(); });
+                new Promise(function () { portfoliosJob.run(); });
             }, 8000);
         }
-    
+
         if (config.job_preload_enabled) {
             setTimeout(function () {
-                new Promise(function (resolve, reject) { preloadJob.run(); });
+                new Promise(function () { preloadJob.run(); });
             }, 10000);
         }
 
         if (config.job_process_enabled) {
             setTimeout(function () {
-                new Promise(function (resolve, reject) { processJob.run(); });
+                new Promise(function () { processJob.run(); });
             }, 12000);
         }
-    
-    }).catch(function (err) {
 
+    }).catch(function (err) {
         console.log(err.message + "\n" + err.stack);
         console.log("Something went wrong with the Database Update!");
-
     });
 })();

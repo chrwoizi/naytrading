@@ -1,7 +1,7 @@
 var exports = module.exports = {}
 
-var config = require('../../config/envconfig');
-var downloader = require('../downloader');
+const config = require('../../config/envconfig');
+const downloader = require('../downloader');
 
 exports.source = "e";
 exports.market_not_found = "market not found";

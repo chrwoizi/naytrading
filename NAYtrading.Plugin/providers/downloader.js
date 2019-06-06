@@ -1,10 +1,10 @@
 var exports = module.exports = {}
 
-var config = require('../config/envconfig');
-var request = config.require('request');
-var parse5 = config.require('parse5');
-var xmlser = config.require('xmlserializer');
-var dom = config.require('xmldom').DOMParser;
+const config = require('../config/envconfig');
+const request = config.require('request');
+const parse5 = config.require('parse5');
+const xmlser = config.require('xmlserializer');
+const dom = config.require('xmldom').DOMParser;
 
 var requestTimes = {};
 
