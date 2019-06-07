@@ -22,6 +22,9 @@ backup_table()
 
 backup_table instruments
 backup_table instrumentrates
+backup_table monitors
+backup_table portfolios
+backup_table SequelizeMeta
 backup_table settings
 backup_table snapshots
 backup_table snapshotrates
