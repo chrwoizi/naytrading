@@ -82,4 +82,5 @@ AND CASE (
 ORDER BY 
 	source ASC, 
 	ageOrder ASC, 
-	idOrder ASC;
+	idOrder ASC
+LIMIT 50;
