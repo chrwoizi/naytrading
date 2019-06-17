@@ -61,4 +61,4 @@ ORDER BY
 	source ASC, 
 	ageOrder ASC, 
 	idOrder ASC
-LIMIT 50;
+LIMIT 1;
