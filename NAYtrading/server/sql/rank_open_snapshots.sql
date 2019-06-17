@@ -60,4 +60,5 @@ AND s.Time < NOW() - INTERVAL @hours HOUR
 ORDER BY 
 	source ASC, 
 	ageOrder ASC, 
-	idOrder ASC;
+	idOrder ASC
+LIMIT 50;
