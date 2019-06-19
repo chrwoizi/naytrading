@@ -47,7 +47,7 @@ export class SuggestionComponent extends ListBase<SuggestionLog> implements OnIn
                 },
                 error => {
                     self.spinner.hide();
-                    self.alertService.error(error ? error.error : "");
+                    self.alertService.error(error);
                 });
     }
 

@@ -60,17 +60,17 @@ export class AdminComponent implements OnInit, OnDestroy {
         },
           error => {
             self.spinner.hide();
-            self.alertService.error(error ? error.error : "");
+            self.alertService.error(error);
           });
       },
         error => {
           self.spinner.hide();
-          self.alertService.error(error ? error.error : "");
+          self.alertService.error(error);
         });
     },
       error => {
         self.spinner.hide();
-        self.alertService.error(error ? error.error : "");
+        self.alertService.error(error);
       });
   }
 
@@ -93,7 +93,7 @@ export class AdminComponent implements OnInit, OnDestroy {
       },
       error => {
         self.spinner.hide();
-        self.alertService.error(error ? error.error : "");
+        self.alertService.error(error);
       });
   }
 
@@ -112,7 +112,7 @@ export class AdminComponent implements OnInit, OnDestroy {
       },
       error => {
         self.spinner.hide();
-        self.alertService.error(error ? error.error : "");
+        self.alertService.error(error);
       });
   }
 
@@ -131,7 +131,7 @@ export class AdminComponent implements OnInit, OnDestroy {
       },
       error => {
         self.spinner.hide();
-        self.alertService.error(error ? error.error : "");
+        self.alertService.error(error);
       });
   }
 
@@ -150,7 +150,7 @@ export class AdminComponent implements OnInit, OnDestroy {
       },
       error => {
         self.spinner.hide();
-        self.alertService.error(error ? error.error : "");
+        self.alertService.error(error);
       });
   }
 
@@ -169,7 +169,7 @@ export class AdminComponent implements OnInit, OnDestroy {
       },
       error => {
         self.spinner.hide();
-        self.alertService.error(error ? error.error : "");
+        self.alertService.error(error);
       });
   }
 

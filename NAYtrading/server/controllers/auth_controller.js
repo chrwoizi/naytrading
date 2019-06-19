@@ -106,7 +106,7 @@ exports.login = function (req, res, next, passport) {
     passport.authenticate('local-signin', function (err, user, info) {
         if (info && info.hasError) {
             res.json({
-                error: info.message
+                error: "Could not verify login details. Please check email and password."
             });
             return;
         }
@@ -114,7 +114,7 @@ exports.login = function (req, res, next, passport) {
         req.login(user, {}, async function (err) {
             if (err) {
                 res.json({
-                    error: err
+                    error: "Could not verify login details. Please check email and password."
                 });
             }
             else {

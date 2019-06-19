@@ -108,7 +108,7 @@ export class MonitorComponent implements OnInit {
     },
       error => {
         self.spinner.hide();
-        self.alertService.error(error ? error.error : "");
+        self.alertService.error(error);
       });
   }
 
