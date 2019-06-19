@@ -6,6 +6,7 @@ import { Observable, Subject } from 'rxjs';
 export class AlertService {
     private subject = new Subject<any>();
     private keepAfterNavigationChange = false;
+    private timeout: NodeJS.Timer;
 
     constructor(private router: Router) {
         // clear alert message on route change
@@ -25,13 +26,38 @@ export class AlertService {
     success(message: string, keepAfterNavigationChange = false) {
         this.keepAfterNavigationChange = keepAfterNavigationChange;
         this.subject.next({ type: 'success', text: message });
-        setTimeout(() => this.subject.next(), 10000);
+        
+        if (this.timeout) {
+            clearTimeout(this.timeout);
+            this.timeout = undefined;
+        }
+        this.timeout = setTimeout(() => this.subject.next(), 10000);
     }
 
-    error(message: string, keepAfterNavigationChange = false) {
+    getText(error: any): string {
+        if (typeof (error) === 'string') {
+            return error;
+        }
+        else if (error && error.message) {
+            return error.message;
+        }
+        else if (error && error.data) {
+            return error.data;
+        }
+
+        return "unknown error";
+    }
+
+    error(error: any, keepAfterNavigationChange = false) {
+        var message = this.getText(error);
         this.keepAfterNavigationChange = keepAfterNavigationChange;
         this.subject.next({ type: 'error', text: message });
-        setTimeout(() => this.subject.next(), 10000);
+
+        if (this.timeout) {
+            clearTimeout(this.timeout);
+            this.timeout = undefined;
+        }
+        this.timeout = setTimeout(() => this.subject.next(), 10000);
     }
 
     getMessage(): Observable<any> {

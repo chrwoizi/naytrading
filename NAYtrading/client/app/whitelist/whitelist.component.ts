@@ -64,7 +64,7 @@ export class WhitelistComponent implements OnInit {
                 error => {
                     self.spinner.hide();
                     self.loading = false;
-                    self.alertService.error(error ? error.error : "");
+                    self.alertService.error(error);
                 });
     }
 
@@ -89,7 +89,7 @@ export class WhitelistComponent implements OnInit {
                 error => {
                     self.spinner.hide();
                     self.loading = false;
-                    self.alertService.error(error ? error.error : "");
+                    self.alertService.error(error);
                 });
     }
 
@@ -109,7 +109,7 @@ export class WhitelistComponent implements OnInit {
                 },
                 error => {
                     self.loading = false;
-                    self.alertService.error(error ? error.error : "");
+                    self.alertService.error(error);
                 });
     }
 }
