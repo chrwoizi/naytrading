@@ -22,7 +22,7 @@
                     <button (click)="setDecision('wait')" class="btn btn-info btn-block">WAIT 1W</button>
                 </div>
                 <div class="col-4">
-                    <button ng-show="snapshot.PreviousDecision == 'buy'" (click)="setDecision('sell')"
+                    <button [hidden]="!(snapshot.PreviousDecision == 'buy')" (click)="setDecision('sell')"
                         class="btn btn-info btn-block">SELL</button>
                 </div>
             </div>
