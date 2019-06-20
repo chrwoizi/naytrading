@@ -13,7 +13,7 @@
 
         <div *ngIf="!loading">
 
-            <div class="row" ng-show="hasOtherUser">
+            <div class="row" [hidden]="!hasOtherUser">
                 <div class="col-12">
                     <p>
                         Account:
