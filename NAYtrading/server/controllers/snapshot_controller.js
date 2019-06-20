@@ -272,6 +272,29 @@ exports.getPreviousDecisionAndBuyRate = async function (snapshotId, user) {
     return result;
 };
 
+exports.isLongWait = async function (snapshotId, user) {
+
+    var previous = await sql.query("SELECT s.ID, u.Decision, s.Price, s.PriceTime \
+        FROM usersnapshots AS u\
+        INNER JOIN snapshots AS s ON u.Snapshot_ID = s.ID\
+        INNER JOIN snapshots AS cs ON cs.ID = @snapshotId\
+        WHERE u.User = @userName \
+        AND s.Time < cs.Time AND s.Instrument_ID = cs.Instrument_ID \
+        AND ((u.Decision = 'wait1yr' AND s.Time > cs.Time - INTERVAL 1 YEAR) OR \
+             (u.Decision = 'wait2mo' AND s.Time > cs.Time - INTERVAL 2 MONTH))",
+        {
+            "@userName": user,
+            "@snapshotId": snapshotId
+        });
+
+    if (previous && previous.length > 0) {
+        return true;
+    }
+    else {
+        return false;
+    }
+};
+
 exports.getNextDecision = async function (snapshotId, user) {
 
     var next = await sql.query("SELECT s.ID, u.Decision \

@@ -32,22 +32,33 @@ exports.run = async function () {
             var newSnapshot = await newSnapshotController.createNewSnapshotFromRandomInstrument(instrumentIds);
             if (newSnapshot != null) {
 
-                var users = await sql.query("SELECT DISTINCT(u.User) FROM userinstruments AS u WHERE u.Instrument_ID = @instrumentId AND EXISTS (SELECT 1 FROM usersnapshots AS us WHERE us.Decision <> 'autowait' AND us.ModifiedTime > NOW() - INTERVAL @days DAY)",
+                var users = await sql.query("SELECT DISTINCT(u.User) FROM userinstruments AS u WHERE u.Instrument_ID = @instrumentId AND EXISTS (SELECT 1 FROM usersnapshots AS us WHERE us.User = u.User AND us.Decision <> 'autowait' AND us.ModifiedTime > NOW() - INTERVAL @days DAY)",
                     {
                         "@instrumentId": newSnapshot.Instrument_ID,
                         "@days": config.job_preload_autowait_active_user_days
                     });
                 for (var i = 0; i < users.length; ++i) {
-                    var previous = await snapshotController.getPreviousDecisionAndBuyRate(newSnapshot.ID, users[i].User);
-                    var viewModel = snapshotController.getSnapshotViewModel(newSnapshot, previous);
-
-                    if (await newSnapshotController.isAutoWait(viewModel)) {
+                    var isLongWait = await snapshotController.isLongWait(newSnapshot.ID, users[i].User);
+                    if (isLongWait) {
                         await model.usersnapshot.create({
                             Snapshot_ID: newSnapshot.ID,
                             User: users[i].User,
                             Decision: "autowait",
                             ModifiedTime: new Date()
                         });
+                    }
+                    else {
+                        var previous = await snapshotController.getPreviousDecisionAndBuyRate(newSnapshot.ID, users[i].User);
+                        var viewModel = snapshotController.getSnapshotViewModel(newSnapshot, previous);
+
+                        if (await newSnapshotController.isAutoWait(viewModel)) {
+                            await model.usersnapshot.create({
+                                Snapshot_ID: newSnapshot.ID,
+                                User: users[i].User,
+                                Decision: "autowait",
+                                ModifiedTime: new Date()
+                            });
+                        }
                     }
                 }
             }
