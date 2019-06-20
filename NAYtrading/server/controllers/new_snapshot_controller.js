@@ -101,20 +101,6 @@ exports.isAutoWait = async function (newSnapshot) {
 
         return false;
     }
-    else if (newSnapshot.PreviousDecision == "wait1yr") {
-        var date = parseDate(newSnapshot.DateSortable);
-        var previousDate = parseDate(newSnapshot.PreviousTime);
-        if (date.getTime() - previousDate.getTime() < 365 * 24 * 60 * 60 * 1000) {
-            return true;
-        }
-    }
-    else if (newSnapshot.PreviousDecision == "wait2mo") {
-        var date = parseDate(newSnapshot.DateSortable);
-        var previousDate = parseDate(newSnapshot.PreviousTime);
-        if (date.getTime() - previousDate.getTime() < 60 * 24 * 60 * 60 * 1000) {
-            return true;
-        }
-    }
 
     var endTime = new Date();
     endTime.setHours(0, 0, 0, 0);
