@@ -45,12 +45,6 @@ root@host:~$ pip3 install datetime
 root@host:~$ pip3 install noise
 root@host:~$ pip3 install numpy
 
-# redirect port 80 to 5000 and 443 to 5001 (or setup a reverse proxy)
-root@host:~$ apt-get install iptables-persistent
-root@host:~$ iptables -t nat -I PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 5000
-root@host:~$ iptables -t nat -I PREROUTING -p tcp --dport 443 -j REDIRECT --to-port 5001
-root@host:~$ iptables-save > /etc/iptables/rules.v4
-
 # create user
 root@host:~$ adduser naytrading
 [enter secure password]
@@ -86,22 +80,51 @@ naytrading@host:~/naytrading/NAYtrading$ ./production.sh &
 # back to root
 naytrading@host:~/naytrading/NAYtrading$ exit
 
-# optional: activate HTTPS using letsencrypt.org
+# ROUTING OPTION A: redirect port 80 to 5000
+root@host:~$ apt-get install iptables-persistent
+root@host:~$ iptables -t nat -I PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 5000
+root@host:~$ iptables-save > /etc/iptables/rules.v4
 
-# if using Debian 8 (otherwise follow the instructions on https://certbot.eff.org)
+# ROUTING OPTION B: using nginx
+root@host:~$ apt-get install nginx
+root@host:~$ vi /etc/nginx/sites-available/reverse-proxy
+limit_req_zone $binary_remote_addr zone=one:10m rate=30r/m;
+limit_req_zone $binary_remote_addr zone=two:10m rate=10r/m;
+server {
+    listen       80;
+    server_name  [YOUR DOMAIN];
+    location /api/login {
+        proxy_pass http://127.0.0.1:5000;
+        limit_req zone=one;
+    }
+    location /api/register {
+        proxy_pass http://127.0.0.1:5000;
+        limit_req zone=two;
+    }
+    location / {
+        proxy_pass http://127.0.0.1:5000;
+    }
+    proxy_connect_timeout       600;
+    proxy_send_timeout          600;
+    proxy_read_timeout          600;
+    send_timeout                600;
+}
+[save and exit]
+root@host:~$ ln -s /etc/nginx/sites-available/reverse-proxy /etc/nginx/sites-enabled/reverse-proxy
+root@host:~$ nginx -t
+root@host:~$ service nginx restart
+
+# OPTIONAL: activate HTTPS using letsencrypt.org
+
+# if using Debian 8:
 root@host:~$ echo deb http://ftp.debian.org/debian jessie-backports main>/etc/apt/sources.list.d/jessie-backports.list
-root@host:~$ apt-get update
 root@host:~$ apt-get install certbot -t jessie-backports
+# else:
+root@host:~$ apt-get install certbot
 
 # register with letsencrypt
 root@host:~$ su naytrading
-naytrading@host:~/naytrading/NAYtrading$ certbot certonly --config-dir=./letsencrypt/config --logs-dir=./letsencrypt/logs --work-dir=./letsencrypt/work-dir
-[select the webroot method]
-[enter your email address]
-[read and agree to the terms of service]
-[enter your domain name]
-[select enter a new webroot]
-[enter the web root /home/naytrading/naytrading/NAYtrading/static]
+naytrading@host:~/naytrading/NAYtrading$ certbot certonly --config-dir=./letsencrypt/config --logs-dir=./letsencrypt/logs --work-dir=./letsencrypt/work-dir -n --webroot --agree-tos --domains "[YOUR DOMAIN]" --webroot-path /home/naytrading/naytrading/NAYtrading
 
 # link the certificate
 naytrading@host:~/naytrading/NAYtrading$ ln -s ../letsencrypt/config/live/[YOUR DOMAIN]/privkey.pem ./keys/privkey.pem
@@ -110,11 +133,45 @@ naytrading@host:~/naytrading/NAYtrading$ ln -s ../letsencrypt/config/live/[YOUR 
 
 # enable https
 naytrading@host:~/naytrading/NAYtrading$ vi app/config/config.json
-[add a new line] "https_enabled": true
-:wq
+[add the following line to the production section]
+"https_enabled": true
+[save and exit]
 naytrading@host:~/naytrading/NAYtrading$ killall production.sh
 naytrading@host:~/naytrading/NAYtrading$ killall node
 naytrading@host:~/naytrading/NAYtrading$ ./production.sh &
+
+# ROUTING OPTION A: redirect port 443 to 5001
+root@host:~$ iptables -t nat -I PREROUTING -p tcp --dport 443 -j REDIRECT --to-port 5001
+root@host:~$ iptables-save > /etc/iptables/rules.v4
+
+# ROUTING OPTION B: using nginx
+root@host:~$ vi /etc/nginx/sites-available/reverse-proxy
+[append the following text]
+server {
+    listen       443 ssl;
+    server_name  [YOUR DOMAIN];
+    ssl_certificate /home/naytrading/naytrading/NAYtrading/letsencrypt/config/live/[YOUR DOMAIN]/fullchain.pem;
+    ssl_certificate_key /home/naytrading/naytrading/NAYtrading/letsencrypt/config/live/[YOUR DOMAIN]/privkey.pem;
+    location /api/login {
+        proxy_pass http://127.0.0.1:5000;
+        limit_req zone=one;
+    }
+    location /api/register {
+        proxy_pass http://127.0.0.1:5000;
+        limit_req zone=two;
+    }
+    location / {
+        proxy_pass http://127.0.0.1:5000;
+    }
+    proxy_connect_timeout       600;
+    proxy_send_timeout          600;
+    proxy_read_timeout          600;
+    send_timeout                600;
+}
+[save and exit]
+root@host:~$ ln -s /etc/nginx/sites-available/reverse-proxy /etc/nginx/sites-enabled/reverse-proxy
+root@host:~$ nginx -t
+root@host:~$ service nginx restart
 ```
 </details><p></p>
 
