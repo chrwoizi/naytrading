@@ -6,6 +6,12 @@ const sequelize = require('sequelize');
 const fs = require('fs');
 const config = require('../config/envconfig');
 
+function logVerbose(message) {
+    if (config.env == "development") {
+        console.log(message);
+    }
+}
+
 let rank_instruments = "";
 try {
     rank_instruments = fs.readFileSync(__dirname + '/../sql/rank_instruments.sql', 'utf8');
@@ -126,7 +132,7 @@ async function handleRateProviderError(instrument, source, error) {
     if (error.message == ratesProvider.market_not_found) {
         const strikes = config.max_strikes + 12;
         const reason = "the market id " + source.MarketId + " does not exist";
-        //console.log("Setting " + strikes + " strikes on instrument " + instrument.InstrumentName + " (" + source.SourceId + " on " + source.SourceType + ") because " + reason);
+        logVerbose("Setting " + strikes + " strikes on instrument " + instrument.InstrumentName + " (" + source.SourceId + " on " + source.SourceType + ") because " + reason);
         await source.update({
             Strikes: strikes,
             LastStrikeTime: new Date(),
@@ -137,7 +143,7 @@ async function handleRateProviderError(instrument, source, error) {
     }
     else if (error.message == ratesProvider.invalid_response) {
         const reason = "the server returned an unexpected response for market id " + source.MarketId;
-        //console.log("Adding 5 strikes to instrument " + instrument.InstrumentName + " (" + source.SourceId + " on " + source.SourceType + ") because " + reason);
+        logVerbose("Adding 5 strikes to instrument " + instrument.InstrumentName + " (" + source.SourceId + " on " + source.SourceType + ") because " + reason);
         await source.update({
             Strikes: source.Strikes + 5,
             LastStrikeTime: new Date(),
@@ -149,9 +155,13 @@ async function handleRateProviderError(instrument, source, error) {
     else {
         console.log(error.message + "\n" + error.stack);
         const reason = "it caused an exception: " + error;
-        //console.log("Adding 1 strike to instrument " + instrument.InstrumentName + " (" + source.SourceId + " on " + source.SourceType + ") because " + reason);
+        let inc = 1;
+        if (error.message.contains("HTTP 410")) {
+            inc = 5;
+        }
+        logVerbose("Adding " + inc + " strike to instrument " + instrument.InstrumentName + " (" + source.SourceId + " on " + source.SourceType + ") because " + reason);
         await source.update({
-            Strikes: source.Strikes + 1,
+            Strikes: source.Strikes + inc,
             LastStrikeTime: new Date(),
             StrikeReason: (reason || '').substr(0, 200)
         });
