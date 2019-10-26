@@ -1,15 +1,15 @@
 const path = require('path');
 
-var env = process.env.NODE_ENV || 'development';
+const env = process.env.NODE_ENV || 'development';
 
-var default_config = require('./config.default.json')[env];
-var config = require('./config.json')[env];
+const default_config = require('./config.default.json')[env];
+const config = require('./config.json')[env];
 
 function addProperties(from, to) {
-    var fromProperties = Object.keys(from);
-    var toProperties = Object.keys(to);
-    for(var i = 0; i < fromProperties.length; ++i) {
-        var property = fromProperties[i];
+    const fromProperties = Object.keys(from);
+    const toProperties = Object.keys(to);
+    for(let i = 0; i < fromProperties.length; ++i) {
+        const property = fromProperties[i];
         if (toProperties.indexOf(property) == -1) {
             to[property] = from[property];
         }
@@ -22,10 +22,10 @@ function addProperties(from, to) {
 addProperties(default_config, config);
 
 function resolvePaths(obj) {
-    var properties = Object.keys(obj);
-    for(var i = 0; i < properties.length; ++i) {
-        var property = properties[i];
-        var value = obj[property];
+    const properties = Object.keys(obj);
+    for(let i = 0; i < properties.length; ++i) {
+        const property = properties[i];
+        const value = obj[property];
         if(typeof(value) === 'string' && (value.startsWith("../") || value.startsWith("./"))) {
             obj[property] = path.resolve(__dirname + "/" + value);
         }
@@ -46,13 +46,13 @@ config.require = function (name) {
 module.exports = config;
 
 function include(config, path) {
-    var included = require(path);
+    const included = require(path);
     addProperties(included, config);
 }
 
 include(config, config.naytrading + "/server/config/envconfig");
 if (config.include) {
-    for(var i = 0; i < config.include.length; ++i) {
+    for(let i = 0; i < config.include.length; ++i) {
         include(config, config.include[i]);
     }
 }

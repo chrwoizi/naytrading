@@ -27,7 +27,7 @@ export class SuggestionComponent extends ListBase<SuggestionLog> implements OnIn
     }
 
     ngOnInit() {
-        var self = this;
+        const self = this;
 
         self.loading = true;
         self.spinner.show();
@@ -54,8 +54,9 @@ export class SuggestionComponent extends ListBase<SuggestionLog> implements OnIn
     formatCurrency(n) {
         if (typeof (n) === 'undefined')
             return undefined;
-        var abbrv = ["", "T", "M"];
-        for (var i = 0; i < abbrv.length - 1 && Math.abs(n) >= 1000; ++i) {
+        const abbrv = ["", "T", "M"];
+        let i;
+        for (i = 0; i < abbrv.length - 1 && Math.abs(n) >= 1000; ++i) {
             n /= 1000.0;
         }
         return n.toFixed(2) + abbrv[i];

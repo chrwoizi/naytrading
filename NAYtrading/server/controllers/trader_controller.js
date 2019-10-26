@@ -1,4 +1,3 @@
-var exports = module.exports = {}
 const model = require('../models/index');
 const sql = require('../sql/sql');
 const config = require('../config/envconfig');
@@ -8,9 +7,9 @@ exports.getOpenSuggestions = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
 
-            var oldestSuggestionTime = new Date(new Date().getTime() - config.trader_max_suggestion_age_seconds * 1000);
+            const oldestSuggestionTime = new Date(new Date().getTime() - config.trader_max_suggestion_age_seconds * 1000);
 
-            var suggestions = await sql.query("SELECT s.ID, u.Decision AS Action, i.InstrumentName, i.Isin, i.Wkn, s.Price FROM snapshots s \
+            const suggestions = await sql.query("SELECT s.ID, u.Decision AS Action, i.InstrumentName, i.Isin, i.Wkn, s.Price FROM snapshots s \
                 INNER JOIN usersnapshots u ON u.Snapshot_ID = s.ID \
                 INNER JOIN instruments i ON i.ID = s.Instrument_ID \
                 WHERE u.User = @user AND (u.Decision = 'buy' OR u.Decision = 'sell') \
@@ -25,7 +24,7 @@ exports.getOpenSuggestions = async function (req, res) {
                     "@maxRetryCount": config.trader_max_retry_count
                 });
 
-            var viewModels = suggestions;
+            const viewModels = suggestions;
             res.json(viewModels);
 
         }
@@ -44,7 +43,7 @@ exports.hasNewerSuggestion = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
 
-            var suggestions = await sql.query("SELECT s.Instrument_ID, s.Time FROM snapshots s \
+            const suggestions = await sql.query("SELECT s.Instrument_ID, s.Time FROM snapshots s \
                 INNER JOIN usersnapshots u ON s.ID = u.Snapshot_ID \
                 WHERE u.User = @user AND s.ID = @id", {
                     "@user": req.user.email,
@@ -52,9 +51,9 @@ exports.hasNewerSuggestion = async function (req, res) {
                 });
 
             if (suggestions && suggestions.length) {
-                var suggestion = suggestions[0];
+                const suggestion = suggestions[0];
 
-                var newerSuggestions = await sql.query("SELECT count(1) AS c FROM snapshots s \
+                const newerSuggestions = await sql.query("SELECT count(1) AS c FROM snapshots s \
                     INNER JOIN usersnapshots u ON s.ID = u.Snapshot_ID \
                     WHERE s.Instrument_ID = @instrumentId \
                     AND s.Time > @time AND s.ID <> @id \
@@ -65,7 +64,7 @@ exports.hasNewerSuggestion = async function (req, res) {
                         "@user": req.user.email
                     });
 
-                var viewModel = {};
+                const viewModel = {};
                 viewModel.hasNewerSuggestion = (newerSuggestions && newerSuggestions.length && newerSuggestions[0].c) ? true : false;
 
                 res.json(viewModel);
@@ -90,9 +89,9 @@ exports.saveTradeLog = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
 
-            var log = req.body;
+            const log = req.body;
 
-            var suggestions = await sql.query("SELECT s.ID FROM snapshots s \
+            const suggestions = await sql.query("SELECT s.ID FROM snapshots s \
                 INNER JOIN usersnapshots u ON u.Snapshot_ID = s.ID \
                 WHERE u.User = @user AND s.ID = @id", {
                     "@user": req.user.email,
@@ -116,13 +115,13 @@ exports.saveTradeLog = async function (req, res) {
                             }
                         });
 
-                    var viewModel = {
+                    const viewModel = {
                         ID: log.ID
                     };
                     res.json(viewModel);
                 }
                 else {
-                    var newLog = await model.tradelog.create({
+                    const newLog = await model.tradelog.create({
                         Snapshot_ID: log.Snapshot_ID,
                         Time: log.Time,
                         Quantity: log.Quantity,
@@ -132,7 +131,7 @@ exports.saveTradeLog = async function (req, res) {
                         User: req.user.email
                     });
 
-                    var viewModel = {
+                    const viewModel = {
                         ID: newLog.ID
                     };
                     res.json(viewModel);
@@ -160,7 +159,7 @@ exports.getSuggestions = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
 
-            var rows = await sql.query("SELECT s.ID, s.Time, i.InstrumentName, u.Decision AS Action, s.Price, \
+            const rows = await sql.query("SELECT s.ID, s.Time, i.InstrumentName, u.Decision AS Action, s.Price, \
                 (SELECT l.Status FROM tradelogs AS l WHERE l.Snapshot_ID = s.ID ORDER BY l.Time DESC LIMIT 1) AS Status \
                 FROM snapshots s \
                 INNER JOIN usersnapshots u ON s.ID = u.Snapshot_ID \
@@ -169,7 +168,7 @@ exports.getSuggestions = async function (req, res) {
                     "@user": req.user.email
                 });
 
-            var result = rows.map(item => {
+            const result = rows.map(item => {
                 return {
                     id: item.ID,
                     T: dateFormat(item.Time, 'dd.mm.yy'),
@@ -208,7 +207,7 @@ exports.getSuggestion = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
 
-            var rows = await sql.query("SELECT s.ID, s.Time, i.InstrumentName, i.Isin, i.Wkn, u.Decision AS Action, s.Price, \
+            const rows = await sql.query("SELECT s.ID, s.Time, i.InstrumentName, i.Isin, i.Wkn, u.Decision AS Action, s.Price, \
                 (SELECT l.Status FROM tradelogs AS l WHERE l.Snapshot_ID = s.ID ORDER BY l.Time DESC LIMIT 1) AS Status \
                 FROM snapshots s \
                 INNER JOIN usersnapshots u ON s.ID = u.Snapshot_ID \
@@ -218,9 +217,9 @@ exports.getSuggestion = async function (req, res) {
                     "@id": req.params.id
                 });
             if (rows && rows.length) {
-                var suggestion = rows[0];
+                const suggestion = rows[0];
 
-                var logs = await model.tradelog.findAll({
+                const logs = await model.tradelog.findAll({
                     where: {
                         Snapshot_ID: suggestion.ID,
                         User: req.user.email
@@ -229,7 +228,7 @@ exports.getSuggestion = async function (req, res) {
 
                 suggestion.logs = logs.map(x => x.get({ plain: true }));
 
-                var t = dateFormat(suggestion.Time, 'dd.mm.yy');
+                const t = dateFormat(suggestion.Time, 'dd.mm.yy');
                 suggestion.Time = t;
 
                 res.status(200);

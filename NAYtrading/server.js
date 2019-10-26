@@ -43,7 +43,7 @@ const consolidateJob = require('./server/jobs/consolidate');
     app.set('views', './dist');
 
     // Models
-    var models = require("./server/models/index");
+    const models = require("./server/models/index");
 
     // Routes
     require('./server/routes/auth_routes.js')(app, passport);
@@ -64,7 +64,7 @@ const consolidateJob = require('./server/jobs/consolidate');
         });
 
         if (config.https_enabled) {
-            var httpsOptions = {
+            const httpsOptions = {
                 key: fs.readFileSync(config.https_key),
                 cert: fs.readFileSync(config.https_cert),
                 ca: fs.readFileSync(config.https_ca)

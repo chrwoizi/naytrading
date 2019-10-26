@@ -17,7 +17,7 @@ export class AppComponent implements OnInit, OnDestroy {
   constructor(
     private authenticationService: AuthenticationService
   ) {
-    var self = this;
+    const self = this;
     self.subscription = self.authenticationService.currentUser.subscribe(x => {
       self.currentUser = x;
     });

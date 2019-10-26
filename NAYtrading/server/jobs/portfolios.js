@@ -1,25 +1,24 @@
-var exports = module.exports = {}
 const model = require('../models/index');
 const sequelize = require('sequelize');
 const sql = require('../sql/sql');
 const fs = require('fs');
 const config = require('../config/envconfig');
 
-var trades_sql = "";
+let trades_sql = "";
 try {
     trades_sql = fs.readFileSync(__dirname + '/../sql/trades.sql', 'utf8');
 } catch (e) {
     console.log('Error:', e.stack);
 }
 
-var previous_trade_sql = "";
+let previous_trade_sql = "";
 try {
     previous_trade_sql = fs.readFileSync(__dirname + '/../sql/previous_trade.sql', 'utf8');
 } catch (e) {
     console.log('Error:', e.stack);
 }
 
-var open_trade_values_sum_sql = "";
+let open_trade_values_sum_sql = "";
 try {
     open_trade_values_sum_sql = fs.readFileSync(__dirname + '/../sql/open_trade_values_sum.sql', 'utf8');
 } catch (e) {
@@ -28,7 +27,7 @@ try {
 
 
 async function getOpenValues(user, fromTime) {
-    var openTradeValuesSum = await sql.query(open_trade_values_sum_sql, {
+    const openTradeValuesSum = await sql.query(open_trade_values_sum_sql, {
         "@userName": user,
         "@toDate": fromTime
     });
@@ -40,7 +39,7 @@ exports.updatingUser = null;
 exports.updateUser = async function (user) {
     exports.updatingUser = user;
 
-    var latest = await model.portfolio.findOne({
+    let latest = await model.portfolio.findOne({
         where: {
             User: user
         },
@@ -48,7 +47,7 @@ exports.updateUser = async function (user) {
         limit: 1
     });
 
-    var fromTime = new Date(1970, 0, 1);
+    let fromTime = new Date(1970, 0, 1);
     if (latest) {
         fromTime = new Date(latest.Time);
         fromTime.setHours(0, 0, 0, 0);
@@ -71,10 +70,10 @@ exports.updateUser = async function (user) {
         limit: 1
     });
 
-    var deposit = 0;
-    var balance = 0;
-    var open = 0;
-    var complete = 0;
+    let deposit = 0;
+    let balance = 0;
+    let open = 0;
+    let complete = 0;
     if (latest) {
         deposit = latest.Deposit;
         balance = latest.Balance;
@@ -93,21 +92,21 @@ exports.updateUser = async function (user) {
         }
     });
 
-    var trades = await sql.query(trades_sql, {
+    const trades = await sql.query(trades_sql, {
         "@userName": user,
         "@fromDate": fromTime
     });
 
-    for (var t = 0; t < trades.length; ++t) {
-        var trade = trades[t];
+    for (let t = 0; t < trades.length; ++t) {
+        const trade = trades[t];
 
-        var tradeDay = new Date(trade.DecisionTime);
+        const tradeDay = new Date(trade.DecisionTime);
         tradeDay.setHours(0, 0, 0, 0);
         if (tradeDay > fromTime) {
             if (open + complete > 0) {
                 fromTime.setHours(23, 59, 59);
 
-                var fromDay = new Date(fromTime.getTime());
+                const fromDay = new Date(fromTime.getTime());
                 fromDay.setHours(0, 0, 0, 0);
                 await model.portfolio.destroy({
                     where: {
@@ -118,7 +117,7 @@ exports.updateUser = async function (user) {
                     }
                 });
 
-                var value = balance + await getOpenValues(user, fromTime);
+                const value = balance + await getOpenValues(user, fromTime);
                 await model.portfolio.create({
                     User: user,
                     Time: fromTime,
@@ -133,7 +132,7 @@ exports.updateUser = async function (user) {
 
         fromTime = tradeDay;
 
-        var quantity = 0;
+        let quantity = 0;
         if (trade.Decision == "buy") {
             quantity = Math.floor(config.job_portfolios_trade_volume / trade.Price);
             balance -= quantity * trade.Price;
@@ -145,7 +144,7 @@ exports.updateUser = async function (user) {
         }
 
         if (trade.Decision == "sell") {
-            var previousTrades = await sql.query(previous_trade_sql, {
+            const previousTrades = await sql.query(previous_trade_sql, {
                 "@refSnapshotId": trade.SnapshotId,
                 "@refTime": trade.DecisionTime,
                 "@userName": user
@@ -173,7 +172,7 @@ exports.updateUser = async function (user) {
 
     fromTime.setHours(23, 59, 59);
 
-    var value = balance + await getOpenValues(user, fromTime);
+    const value = balance + await getOpenValues(user, fromTime);
     await model.portfolio.create({
         User: user,
         Time: fromTime,
@@ -190,10 +189,10 @@ exports.updateUser = async function (user) {
 exports.run = async function () {
     try {
 
-        var users = await sql.query('SELECT DISTINCT(u.User) FROM usersnapshots AS u');
+        const users = await sql.query('SELECT DISTINCT(u.User) FROM usersnapshots AS u');
 
-        for (var i = 0; i < users.length; ++i) {
-            var user = users[i].User;
+        for (let i = 0; i < users.length; ++i) {
+            const user = users[i].User;
 
             try {
                 await exports.updateUser(user);

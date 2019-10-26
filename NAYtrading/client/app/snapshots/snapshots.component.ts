@@ -26,13 +26,13 @@ export class SnapshotsComponent extends ListBase<Snapshot> implements OnInit {
 
   ngOnInit() {
 
-    var self = this;
+    const self = this;
 
     self.orderProp = "-ModifiedDateSortable";
 
     super.parseQueryParam();
 
-    var instrument = undefined;
+    let instrument = undefined;
     if (self.route.snapshot.queryParamMap.has('instrument')) {
       self.orderProp = "-DateSortable";
       instrument = self.route.snapshot.queryParamMap.get('instrument');

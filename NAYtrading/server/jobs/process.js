@@ -1,4 +1,3 @@
-var exports = module.exports = {}
 const fs = require('fs');
 const path = require('path');
 const process = require('process');
@@ -18,8 +17,8 @@ class IntervalCall {
 
     maybeCall(callback) {
         if ((new Date().getTime() - this.last_time.getTime()) / 1000 > this.seconds) {
-            var now = new Date();
-            var duration = now - this.last_time;
+            const now = new Date();
+            const duration = now - this.last_time;
             this.last_time = now;
             callback(duration);
         }
@@ -40,16 +39,16 @@ function logError(message) {
 
 
 async function download(user, fromDateUTC, filePath, cancel) {
-    var stream = fs.createWriteStream(filePath + ".incomplete");
+    const stream = fs.createWriteStream(filePath + ".incomplete");
 
-    var intervalCall = new IntervalCall(1);
+    const intervalCall = new IntervalCall(1);
     function reportProgress(progress) {
         intervalCall.maybeCall(() => {
             logVerbose("" + (100 * progress).toFixed(2) + "% of snapshots exported to " + filePath + ".incomplete");
         });
     }
 
-    var count = await exportUserController.exportUserSnapshotsGeneric(fromDateUTC, user, stream, cancel, reportProgress);
+    const count = await exportUserController.exportUserSnapshotsGeneric(fromDateUTC, user, stream, cancel, reportProgress);
 
     if (count > 0) {
         return new Promise((resolve, reject) => {
@@ -78,20 +77,20 @@ async function download(user, fromDateUTC, filePath, cancel) {
 function runProcess(executable, cwd, args) {
     return new Promise((resolve, reject) => {
         try {
-            var env = Object.create(process.env);
+            const env = Object.create(process.env);
             env.PYTHONIOENCODING = 'utf-8';
-            var proc = spawn(executable, args, { cwd: cwd, env: env });
+            const proc = spawn(executable, args, { cwd: cwd, env: env });
 
             proc.stdout.setEncoding("utf8");
             proc.stderr.setEncoding("utf8");
 
             proc.stdout.on('data', (data) => {
-                var message = "" + data;
+                const message = "" + data;
                 logVerbose(message.substr(0, data.length - 2));
             });
 
             proc.stderr.on('data', (data) => {
-                var message = "" + data;
+                const message = "" + data;
                 logError(message.substr(0, data.length - 2));
             });
 
@@ -154,7 +153,7 @@ function removeFile(filePath) {
 
 
 async function writeMeta(filePath, now, days, maxMissingDays, testDataRatio, preserveTestIds, augmentFactor, lines) {
-    var meta = {
+    const meta = {
         time: dateFormat(now, "yyyymmddHHMMss"),
         days: days,
         max_missing_days: maxMissingDays,
@@ -173,10 +172,10 @@ function getFiles(mask, regex) {
         try {
             glob(mask, {}, function (er, files) {
                 if (er == null) {
-                    var result = []
-                    for (var i = 0; i < files.length; ++i) {
-                        var file = files[i];
-                        var match = regex.exec(file);
+                    const result = []
+                    for (let i = 0; i < files.length; ++i) {
+                        const file = files[i];
+                        const match = regex.exec(file);
                         if (match) {
                             result.push(file);
                         }
@@ -202,14 +201,14 @@ function parseDateUTC(str) {
 
 
 function getMaxDate(files) {
-    var regex = /[^\d]+(\d+).json(\.csv)?$/;
+    const regex = /[^\d]+(\d+).json(\.csv)?$/;
 
-    var maxDate = "19700101000000";
-    for (var i = 0; i < files.length; ++i) {
-        var file = files[i];
-        var match = regex.exec(file);
+    let maxDate = "19700101000000";
+    for (let i = 0; i < files.length; ++i) {
+        const file = files[i];
+        const match = regex.exec(file);
         if (match) {
-            var date = match[1];
+            const date = match[1];
             if (date > maxDate) {
                 maxDate = date;
             }
@@ -233,7 +232,7 @@ function sleep(milliseconds) {
 
 function isUpToDate(filePath, latestSnapshotDate) {
     if (fs.existsSync(filePath) && fs.existsSync(filePath + ".meta")) {
-        var lastMeta = JSON.parse(fs.readFileSync(filePath + ".meta", 'utf8'));
+        const lastMeta = JSON.parse(fs.readFileSync(filePath + ".meta", 'utf8'));
         if (lastMeta.time >= latestSnapshotDate) {
             return true;
         }
@@ -245,8 +244,8 @@ function isUpToDate(filePath, latestSnapshotDate) {
 function countLines(filePath) {
     return new Promise((resolve, reject) => {
         try {
-            var i;
-            var count = 0;
+            let i;
+            let count = 0;
             fs.createReadStream(filePath)
                 .on('data', function (chunk) {
                     for (i = 0; i < chunk.length; ++i)
@@ -264,21 +263,21 @@ function countLines(filePath) {
 
 
 async function processUser(user) {
-    var processingDir = path.resolve(config.processing_dir + "/" + user);
+    const processingDir = path.resolve(config.processing_dir + "/" + user);
 
     if (!fs.existsSync(processingDir)) {
         fs.mkdirSync(processingDir);
     }
     else {
-        var killfile = processingDir + "/kill";
+        const killfile = processingDir + "/kill";
         await writeFile(killfile, "");
         await sleep(10000);
         if (fs.existsSync(killfile)) {
             await removeFile(killfile);
         }
 
-        var incompletes = await getFiles(processingDir + "/*.incomplete", /\.incomplete$/);
-        for (var i = 0; i < incompletes.length; ++i) {
+        const incompletes = await getFiles(processingDir + "/*.incomplete", /\.incomplete$/);
+        for (let i = 0; i < incompletes.length; ++i) {
             try {
                 await removeFile(incompletes[i]);
             }
@@ -292,11 +291,11 @@ async function processUser(user) {
         return false;
     }
 
-    var files = await getFiles(processingDir + "/*.*", /[^\d]+(\d+)\.json(\.csv)?$/);
-    var fromDate = getMaxDate(files);
+    let files = await getFiles(processingDir + "/*.*", /[^\d]+(\d+)\.json(\.csv)?$/);
+    const fromDate = getMaxDate(files);
 
-    var now = new Date();
-    var filePath = processingDir + "/" + dateFormat(now, "yyyymmddHHMMss") + ".json";
+    const now = new Date();
+    const filePath = processingDir + "/" + dateFormat(now, "yyyymmddHHMMss") + ".json";
 
     await download(user, parseDateUTC(fromDate), filePath, cancel);
 
@@ -307,7 +306,7 @@ async function processUser(user) {
         return;
     }
 
-    var latestSnapshotDate = getMaxDate(files);
+    const latestSnapshotDate = getMaxDate(files);
     if (isUpToDate(processingDir + "/buying_train_norm.csv", latestSnapshotDate)
         && isUpToDate(processingDir + "/buying_test_norm.csv", latestSnapshotDate)
         && isUpToDate(processingDir + "/selling_train_norm.csv", latestSnapshotDate)
@@ -316,16 +315,16 @@ async function processUser(user) {
         return;
     }
 
-    var processorsDir = path.resolve(config.processors_dir);
+    const processorsDir = path.resolve(config.processors_dir);
 
-    var days = config.chart_period_seconds / 60 / 60 / 24;
-    var maxMissingDays = config.discard_threshold_missing_workdays;
-    var testDataRatio = 0.2;
-    var preserveTestIds = true;
-    var augmentFactor = 4;
+    const days = config.chart_period_seconds / 60 / 60 / 24;
+    const maxMissingDays = config.discard_threshold_missing_workdays;
+    const testDataRatio = 0.2;
+    const preserveTestIds = true;
+    const augmentFactor = 4;
 
-    var jsonFiles = files.filter(x => x.endsWith(".json"));
-    for (var i = 0; i < jsonFiles.length; ++i) {
+    const jsonFiles = files.filter(x => x.endsWith(".json"));
+    for (let i = 0; i < jsonFiles.length; ++i) {
         if (!fs.existsSync(jsonFiles[i] + ".csv")) {
             await runProcess(config.python, processorsDir, [
                 "flatten.py",
@@ -359,7 +358,7 @@ async function processUser(user) {
     async function processAction(action) {
 
         async function split(file) {
-            var args = [
+            const args = [
                 "split_train_test.py",
                 "--input_path=" + processingDir + "/" + file + ".csv",
                 "--output_path_train=" + processingDir + "/" + file + "_train.csv",
@@ -376,7 +375,7 @@ async function processUser(user) {
 
         async function processDataset(dataset, should_augment) {
 
-            var input_suffix = "";
+            let input_suffix = "";
             if (should_augment) {
                 async function augment(file) {
                     await runProcess(config.python, processorsDir, [
@@ -399,14 +398,14 @@ async function processUser(user) {
                 "--output_path=" + processingDir + "/" + action + "ing_" + dataset + ".csv"
             ]);
 
-            var outputPath = processingDir + "/" + action + "ing_" + dataset + "_norm.csv";
+            const outputPath = processingDir + "/" + action + "ing_" + dataset + "_norm.csv";
             await runProcess(config.python, processorsDir, [
                 "normalize.py",
                 "--input_path=" + processingDir + "/" + action + "ing_" + dataset + ".csv",
                 "--output_path=" + outputPath
             ]);
 
-            var lines = await countLines(outputPath);
+            const lines = await countLines(outputPath);
 
             await writeMeta(
                 processingDir + "/" + action + "ing_" + dataset + "_norm.csv.meta",
@@ -434,8 +433,8 @@ exports.run = async function () {
             fs.mkdirSync(config.processing_dir);
         }
 
-        var users = await sql.query("SELECT DISTINCT(User) FROM usersnapshots");
-        for (var i = 0; i < users.length; ++i) {
+        const users = await sql.query("SELECT DISTINCT(User) FROM usersnapshots");
+        for (let i = 0; i < users.length; ++i) {
             if (!users[i].User.endsWith(".ai")) {
                 await processUser(users[i].User);
             }

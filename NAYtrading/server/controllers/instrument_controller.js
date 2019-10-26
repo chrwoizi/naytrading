@@ -1,4 +1,3 @@
-var exports = module.exports = {}
 const model = require('../models/index');
 const sequelize = require('sequelize');
 const instrumentsProvider = require('../providers/instruments_provider');
@@ -7,7 +6,7 @@ const fs = require('fs');
 const config = require('../config/envconfig');
 const settings = require('../config/settings');
 
-var copy_sql = "";
+let copy_sql = "";
 try {
     copy_sql = fs.readFileSync(__dirname + '/../sql/copy_instruments.sql', 'utf8');
 } catch (e) {
@@ -24,7 +23,7 @@ function getInstrumentViewModel(instrument) {
 }
 
 exports.addAllInstruments = async function (userName) {
-    var result = await sql.query(copy_sql, {
+    const result = await sql.query(copy_sql, {
         "@userName": userName
     });
 
@@ -35,7 +34,7 @@ exports.addDefault = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
 
-            var affectedRows = await addAllInstruments(req.user.email);
+            const affectedRows = await exports.addAllInstruments(req.user.email);
 
             res.json({ added: affectedRows });
         }
@@ -54,12 +53,12 @@ exports.addUrl = async function (req, res) {
     try {
         if (req.isAuthenticated() && req.user.email == config.admin_user) {
 
-            var instrument = await instrumentsProvider.getInstrumentByUrl(null, req.body.url);
+            const instrument = await instrumentsProvider.getInstrumentByUrl(null, req.body.url);
 
             if (instrument && instrument.sources && instrument.sources.length > 0) {
 
-                var knownSource = null;
-                for (var i = 0; i < instrument.sources.length; ++i) {
+                let knownSource = null;
+                for (let i = 0; i < instrument.sources.length; ++i) {
                     knownSource = await model.source.findOne({
                         where: {
                             SourceType: instrument.sources[i].SourceType,
@@ -72,7 +71,7 @@ exports.addUrl = async function (req, res) {
                 }
 
                 if (knownSource) {
-                    var existing = await model.userinstrument.findOne({
+                    const existing = await model.userinstrument.findOne({
                         where: {
                             Instrument_ID: knownSource.Instrument_ID,
                             User: req.user.email
@@ -90,7 +89,7 @@ exports.addUrl = async function (req, res) {
                     }
                 }
                 else {
-                    var instrument = await model.instrument.create(instrument, {
+                    const instrument = await model.instrument.create(instrument, {
                         include: [{
                             model: model.source
                         }]
@@ -121,7 +120,7 @@ exports.instruments = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
 
-            var instruments = await sql.query("SELECT i.ID, i.InstrumentName, i.Capitalization FROM instruments AS i INNER JOIN userinstruments AS u ON u.Instrument_ID = i.ID WHERE u.User = @userName AND EXISTS (SELECT 1 FROM sources AS s WHERE s.Instrument_ID = i.ID AND s.Strikes <= @maxStrikes) ORDER BY i.Capitalization DESC",
+            const instruments = await sql.query("SELECT i.ID, i.InstrumentName, i.Capitalization FROM instruments AS i INNER JOIN userinstruments AS u ON u.Instrument_ID = i.ID WHERE u.User = @userName AND EXISTS (SELECT 1 FROM sources AS s WHERE s.Instrument_ID = i.ID AND s.Strikes <= @maxStrikes) ORDER BY i.Capitalization DESC",
                 {
                     "@userName": req.user.email,
                     "@maxStrikes": config.max_strikes
@@ -145,7 +144,7 @@ exports.instrument = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
 
-            var instrument = await model.instrument.findOne({
+            const instrument = await model.instrument.findOne({
                 where: {
                     ID: req.params.id
                 }
@@ -174,7 +173,7 @@ exports.getWeight = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
 
-            var instrument = await model.instrument.findOne({
+            const instrument = await model.instrument.findOne({
                 where: {
                     [sequelize.Op.or]: [
                         { Isin: req.params.instrumentId },
@@ -185,7 +184,7 @@ exports.getWeight = async function (req, res) {
 
             if (instrument) {
 
-                var weight = await model.weight.findOne({
+                const weight = await model.weight.findOne({
                     where: {
                         User: req.user.email,
                         Instrument_ID: instrument.ID,
@@ -221,7 +220,7 @@ exports.setWeight = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
 
-            var instrument = await model.instrument.findOne({
+            const instrument = await model.instrument.findOne({
                 where: {
                     [sequelize.Op.or]: [
                         { Isin: req.params.instrumentId },
@@ -232,7 +231,7 @@ exports.setWeight = async function (req, res) {
 
             if (instrument) {
 
-                var weight = await model.weight.findOne({
+                const weight = await model.weight.findOne({
                     where: {
                         User: req.user.email,
                         Instrument_ID: instrument.ID,
@@ -240,7 +239,7 @@ exports.setWeight = async function (req, res) {
                     }
                 });
 
-                var value = parseFloat(req.params.weight);
+                const value = parseFloat(req.params.weight);
 
                 if (weight) {
 

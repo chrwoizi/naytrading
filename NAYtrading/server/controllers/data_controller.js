@@ -1,4 +1,3 @@
-var exports = module.exports = {}
 const model = require('../models/index');
 const sql = require('../sql/sql');
 const dateFormat = require('dateformat');
@@ -8,21 +7,21 @@ const portfoliosJob = require('../jobs/portfolios.js');
 const config = require('../config/envconfig.js');
 const path = require('path');
 
-var stats_sql = "";
+let stats_sql = "";
 try {
     stats_sql = fs.readFileSync(__dirname + '/../sql/stats.sql', 'utf8');
 } catch (e) {
     console.log('Error:', e.stack);
 }
 
-var open_trade_values_sql = "";
+let open_trade_values_sql = "";
 try {
     open_trade_values_sql = fs.readFileSync(__dirname + '/../sql/open_trade_values.sql', 'utf8');
 } catch (e) {
     console.log('Error:', e.stack);
 }
 
-var next_sell_trade_sql = "";
+let next_sell_trade_sql = "";
 try {
     next_sell_trade_sql = fs.readFileSync(__dirname + '/../sql/next_sell_trade.sql', 'utf8');
 } catch (e) {
@@ -59,23 +58,23 @@ function getStatsViewModel(model) {
         };
     }
 
-    var valueHistory = [];
+    let valueHistory = [];
     if (model.portfolios && model.portfolios.length > 0) {
 
-        var history = model.portfolios.map(x => {
+        const history = model.portfolios.map(x => {
             return {
                 Time: new Date(x.Time),
                 Return: (x.Value - x.Deposit) / x.Deposit
             };
         });
 
-        var day = 24 * 60 * 60 * 1000;
-        var previousItem = history[0];
-        var dailyHistory = [];
+        const day = 24 * 60 * 60 * 1000;
+        let previousItem = history[0];
+        const dailyHistory = [];
 
-        for (var i = 0; i < history.length; ++i) {
-            var item = history[i];
-            var previousTime = previousItem.Time;
+        for (let i = 0; i < history.length; ++i) {
+            const item = history[i];
+            let previousTime = previousItem.Time;
             while (item.Time.getTime() - previousTime.getTime() >= 1.5 * day) {
                 previousTime = new Date(previousTime.getTime() + day);
                 dailyHistory.push({
@@ -106,7 +105,7 @@ function getStatsViewModel(model) {
 }
 
 async function getStatsForUser(user) {
-    var stats = {};
+    const stats = {};
     stats.Sales = [];
 
     stats.portfolios = await model.portfolio.findAll({
@@ -120,24 +119,24 @@ async function getStatsForUser(user) {
         stats.portfolio = stats.portfolios[stats.portfolios.length - 1];
     }
 
-    var trades = await sql.query(stats_sql, {
+    const trades = await sql.query(stats_sql, {
         "@userName": user
     });
 
-    var openTradeValues = await sql.query(open_trade_values_sql, {
+    const openTradeValues = await sql.query(open_trade_values_sql, {
         "@userName": user
     });
 
-    var openCount = 0;
-    var completeCount = 0;
+    let openCount = 0;
+    let completeCount = 0;
 
-    var buyTrades = {};
-    for (var i = 0; i < trades.length; ++i) {
-        var trade = trades[i];
+    const buyTrades = {};
+    for (let i = 0; i < trades.length; ++i) {
+        const trade = trades[i];
 
         if (trade.Decision == "buy") {
 
-            var open = openTradeValues.filter(x => x.ID == trade.ID);
+            const open = openTradeValues.filter(x => x.ID == trade.ID);
             if (open.length == 1) {
                 stats.Sales.push({
                     Time: open[0].LatestSnapshotTime,
@@ -155,7 +154,7 @@ async function getStatsForUser(user) {
         }
         else if (trade.Decision == "sell") {
 
-            var buyTrade = buyTrades[trade.InstrumentId];
+            const buyTrade = buyTrades[trade.InstrumentId];
             if (typeof (buyTrade) === 'undefined') {
                 throw new Error("could not find buy trade for user " + user + " and instrument " + trade.InstrumentId);
             }
@@ -173,10 +172,10 @@ async function getStatsForUser(user) {
         }
     }
 
-    var missing = Object.keys(buyTrades);
-    for (var i = 0; i < missing.length; ++i) {
-        var buyTrade = buyTrades[missing[i]];
-        var sellTrades = await sql.query(next_sell_trade_sql, {
+    const missing = Object.keys(buyTrades);
+    for (let i = 0; i < missing.length; ++i) {
+        const buyTrade = buyTrades[missing[i]];
+        const sellTrades = await sql.query(next_sell_trade_sql, {
             "@userName": user,
             "@instrumentId": buyTrade.InstrumentId,
             "@fromTime": buyTrade.Time,
@@ -185,7 +184,7 @@ async function getStatsForUser(user) {
             throw new Error("could not determine sell price for buy trade " + buyTrade.ID);
         }
         else {
-            var sellTrade = sellTrades[0];
+            const sellTrade = sellTrades[0];
             stats.Sales.push({
                 Time: sellTrade.Time,
                 IsComplete: true,
@@ -204,7 +203,7 @@ async function getStatsForUser(user) {
 
 function getErrors(stats) {
 
-    var errors = "";
+    let errors = "";
 
     if (stats.portfolio) {
 
@@ -227,9 +226,9 @@ exports.getStats = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
 
-            var users = [req.user.email];
+            let users = [req.user.email];
 
-            var otherUser = null;
+            let otherUser = null;
             if (req.user.email.endsWith(".ai")) {
                 otherUser = req.user.email.substr(0, req.user.email.length - 3);
             }
@@ -237,7 +236,7 @@ exports.getStats = async function (req, res) {
                 otherUser = req.user.email + ".ai";
             }
 
-            var count = await sql.query("SELECT COUNT(1) as c FROM users WHERE email = @user", {
+            const count = await sql.query("SELECT COUNT(1) as c FROM users WHERE email = @user", {
                 "@user": otherUser
             });
 
@@ -246,22 +245,22 @@ exports.getStats = async function (req, res) {
             }
 
             if (req.user.email == config.admin_user) {
-                var all_users = await sql.query("SELECT email FROM users order by email");
+                const all_users = await sql.query("SELECT email FROM users order by email");
                 users = users.concat(all_users.filter(x => users.indexOf(x.email) == -1).map(x => x.email));
             }
 
-            var user = req.params.user || req.user.email;
+            const user = req.params.user || req.user.email;
 
             if (users.indexOf(user) != -1) {
-                var stats = await getStatsForUser(user);
+                const stats = await getStatsForUser(user);
 
-                var errors = getErrors(stats);
+                const errors = getErrors(stats);
 
                 if (errors.length > 0) {
                     console.log("Error in stats for user " + req.user.email + ": " + errors);
                 }
 
-                var viewModel = getStatsViewModel(stats);
+                const viewModel = getStatsViewModel(stats);
 
                 viewModel.Users = users;
 
@@ -370,35 +369,35 @@ exports.monitor = async function (req, res) {
     try {
         if (req.isAuthenticated() && req.user.email == config.admin_user) {
 
-            var monitors = await sql.query("select `key`, `value`, createdAt from monitors");
+            const monitors = await sql.query("select `key`, `value`, createdAt from monitors");
 
-            var result = {};
-            for (var monitor of monitors) {
-                var date = dateFormat(parseDate(monitor.createdAt), "yymmdd");
+            const result = {};
+            for (const monitor of monitors) {
+                const date = dateFormat(parseDate(monitor.createdAt), "yymmdd");
                 if (!result[date]) {
                     result[date] = {};
                 }
                 result[date][monitor.key] = JSON.parse(monitor.value);
             }
 
-            var list = [];
-            for (var date of Object.getOwnPropertyNames(result)) {
-                var day = result[date];
+            const list = [];
+            for (const date of Object.getOwnPropertyNames(result)) {
+                const day = result[date];
                 day.T = date;
                 list.push(day);
-                for (var key of Object.getOwnPropertyNames(day)) {
-                    var item = day[key];
+                for (const key of Object.getOwnPropertyNames(day)) {
+                    const item = day[key];
                     item.sum = 0;
                     if (item.sources) {
-                        for (var sourceType of Object.getOwnPropertyNames(item.sources)) {
-                            var source = item.sources[sourceType];
+                        for (const sourceType of Object.getOwnPropertyNames(item.sources)) {
+                            const source = item.sources[sourceType];
                             if (typeof (source) === 'number') {
                                 item.sum += source;
                             }
                             else if (source.markets) {
                                 source.sum = 0;
-                                for (var marketId of Object.getOwnPropertyNames(source.markets)) {
-                                    var market = source.markets[marketId];
+                                for (const marketId of Object.getOwnPropertyNames(source.markets)) {
+                                    const market = source.markets[marketId];
                                     item.sum += market;
                                     source.sum += market;
                                 }
@@ -425,10 +424,10 @@ exports.monitor = async function (req, res) {
 exports.getProviders = async function (req, res) {
     try {
         if (req.isAuthenticated() && req.user.email == config.admin_user) {
-            var sources = ratesProvider.sources.map(function (x) { return { source: x } });
-            var markets = [];
-            for (var i = 0; i < ratesProvider.sources.length; ++i) {
-                var markets = ratesProvider.providers[ratesProvider.sources[i]].markets.map(function (x) { return { market: x } });
+            const sources = ratesProvider.sources.map(function (x) { return { source: x } });
+            let markets = [];
+            for (let i = 0; i < ratesProvider.sources.length; ++i) {
+                markets = ratesProvider.providers[ratesProvider.sources[i]].markets.map(function (x) { return { market: x } });
                 markets = markets.concat(markets);
             }
             res.json({ markets: markets, sources: sources });
@@ -445,8 +444,8 @@ exports.getProviders = async function (req, res) {
 };
 
 function formatTime(obj) {
-    var str = obj.time;
-    var date = new Date(str.substr(0, 4), parseInt(str.substr(4, 2)) - 1, str.substr(6, 2), str.substr(8, 2), parseInt(str.substr(10, 2)), str.substr(12, 2));
+    const str = obj.time;
+    const date = new Date(str.substr(0, 4), parseInt(str.substr(4, 2)) - 1, str.substr(6, 2), str.substr(8, 2), parseInt(str.substr(10, 2)), str.substr(12, 2));
     obj.timeStr = dateFormat(date, 'dd.mm.yyyy HH:mm:ss');
 }
 
@@ -462,9 +461,9 @@ exports.getProcessings = function (req, res) {
     try {
         if (req.isAuthenticated()) {
 
-            var result = {};
+            const result = {};
 
-            var filePath = path.resolve(config.processing_dir + "/" + req.user.email + "/buying_train_norm.csv");
+            let filePath = path.resolve(config.processing_dir + "/" + req.user.email + "/buying_train_norm.csv");
             if (fs.existsSync(filePath) && fs.existsSync(filePath + ".meta")) {
                 result.buyingTrain = JSON.parse(fs.readFileSync(filePath + ".meta", 'utf8'));
                 formatTime(result.buyingTrain);

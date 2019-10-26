@@ -12,7 +12,7 @@ export class AuthenticationService {
     public currentUser: Observable<User>;
 
     constructor(private http: HttpClient) {
-        var fromStorage = localStorage.getItem('currentUser');
+        const fromStorage = localStorage.getItem('currentUser');
         this.currentUserSubject = new BehaviorSubject<User>(fromStorage ? JSON.parse(fromStorage) : null);
         this.currentUser = this.currentUserSubject.asObservable();
     }

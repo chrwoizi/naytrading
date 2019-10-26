@@ -1,4 +1,3 @@
-var exports = module.exports = {}
 const fs = require('fs');
 const path = require('path');
 const model = require('../models/index');
@@ -7,7 +6,7 @@ const config = require('../config/envconfig');
 const snapshotController = require('./snapshot_controller');
 const authController = require('./auth_controller');
 
-var trades_sql = "";
+let trades_sql = "";
 try {
     trades_sql = fs.readFileSync(__dirname + '/../sql/trades.sql', 'utf8');
 } catch (e) {
@@ -36,7 +35,7 @@ function parseTimeUTC(str) {
 exports.exportUserSnapshotsGeneric = async function (fromTimeUTC, user, stream, cancel, reportProgress) {
     reportProgress(0);
 
-    var ids = await sql.query('SELECT userSnapshot.ID FROM usersnapshots AS userSnapshot WHERE userSnapshot.User = @userName AND userSnapshot.ModifiedTime >= @fromTime ORDER BY userSnapshot.ModifiedTime',
+    const ids = await sql.query('SELECT userSnapshot.ID FROM usersnapshots AS userSnapshot WHERE userSnapshot.User = @userName AND userSnapshot.ModifiedTime >= @fromTime ORDER BY userSnapshot.ModifiedTime',
         {
             "@userName": user,
             "@fromTime": fromTimeUTC
@@ -44,17 +43,17 @@ exports.exportUserSnapshotsGeneric = async function (fromTimeUTC, user, stream, 
 
     stream.write('[');
 
-    for (var i = 0; i < ids.length && !cancel(); ++i) {
+    for (let i = 0; i < ids.length && !cancel(); ++i) {
 
         reportProgress(i / ids.length);
 
-        var usersnapshot = await model.usersnapshot.findOne({
+        const usersnapshot = await model.usersnapshot.findOne({
             where: {
                 ID: ids[i].ID
             }
         });
 
-        var snapshot = await model.snapshot.findOne({
+        let snapshot = await model.snapshot.findOne({
             include: [{
                 model: model.instrument
             }, {
@@ -74,8 +73,8 @@ exports.exportUserSnapshotsGeneric = async function (fromTimeUTC, user, stream, 
 
         await snapshotController.ensureRates(snapshot);
 
-        for (var r = 0; r < snapshot.snapshotrates.length; ++r) {
-            var rate = snapshot.snapshotrates[r];
+        for (let r = 0; r < snapshot.snapshotrates.length; ++r) {
+            const rate = snapshot.snapshotrates[r];
             delete rate.ID;
             delete rate.createdAt;
             delete rate.updatedAt;
@@ -115,7 +114,7 @@ exports.exportUserSnapshotsGeneric = async function (fromTimeUTC, user, stream, 
 
 exports.exportUserTrades = async function (req, res) {
     try {
-        var tokenUser = authController.getTokenUser(req.query.token);
+        const tokenUser = authController.getTokenUser(req.query.token);
         if (tokenUser) {
 
             if (typeof (req.params.fromDate) !== 'string' || !(req.params.fromDate.length == 8 || req.params.fromDate.length == 14)) {
@@ -124,7 +123,7 @@ exports.exportUserTrades = async function (req, res) {
                 return;
             }
 
-            var fromDate = new Date(Date.UTC(1970, 0, 1));
+            let fromDate = new Date(Date.UTC(1970, 0, 1));
             if (req.params.fromDate.length == 8) {
                 fromDate = parseDateUTC(req.params.fromDate);
             }
@@ -132,7 +131,7 @@ exports.exportUserTrades = async function (req, res) {
                 fromDate = parseTimeUTC(req.params.fromDate);
             }
 
-            var cancel = false;
+            let cancel = false;
 
             req.on("close", function () {
                 cancel = true;
@@ -142,7 +141,7 @@ exports.exportUserTrades = async function (req, res) {
                 cancel = true;
             });
 
-            var trades = await sql.query(trades_sql,
+            const trades = await sql.query(trades_sql,
                 {
                     "@userName": tokenUser,
                     "@fromDate": fromDate
@@ -153,9 +152,9 @@ exports.exportUserTrades = async function (req, res) {
 
             res.write('[');
 
-            for (var i = 0; i < trades.length && !cancel; ++i) {
+            for (let i = 0; i < trades.length && !cancel; ++i) {
 
-                var trade = trades[i];
+                const trade = trades[i];
                 trade.tradelogs = await sql.query("SELECT * FROM tradelogs l WHERE l.User = @user AND l.Snapshot_ID = @snapshotId ORDER BY l.Time ASC", {
                     "@user": tokenUser,
                     "@snapshotId": trade.SnapshotId
@@ -187,7 +186,7 @@ exports.exportUserTrades = async function (req, res) {
 
 exports.exportUserTradelogs = async function (req, res) {
     try {
-        var tokenUser = authController.getTokenUser(req.query.token);
+        const tokenUser = authController.getTokenUser(req.query.token);
         if (tokenUser) {
 
             if (typeof (req.params.fromDate) !== 'string' || !(req.params.fromDate.length == 8 || req.params.fromDate.length == 14)) {
@@ -196,7 +195,7 @@ exports.exportUserTradelogs = async function (req, res) {
                 return;
             }
 
-            var fromDate = new Date(Date.UTC(1970, 0, 1));
+            let fromDate = new Date(Date.UTC(1970, 0, 1));
             if (req.params.fromDate.length == 8) {
                 fromDate = parseDateUTC(req.params.fromDate);
             }
@@ -204,7 +203,7 @@ exports.exportUserTradelogs = async function (req, res) {
                 fromDate = parseTimeUTC(req.params.fromDate);
             }
 
-            var cancel = false;
+            let cancel = false;
 
             req.on("close", function () {
                 cancel = true;
@@ -214,7 +213,7 @@ exports.exportUserTradelogs = async function (req, res) {
                 cancel = true;
             });
 
-            var tradelogs = await sql.query("SELECT l.*, i.Isin, i.Wkn, s.Time AS SnapshotTime FROM tradelogs l INNER JOIN snapshots s ON s.ID = l.Snapshot_ID INNER JOIN instruments i ON i.ID = s.Instrument_ID \
+            const tradelogs = await sql.query("SELECT l.*, i.Isin, i.Wkn, s.Time AS SnapshotTime FROM tradelogs l INNER JOIN snapshots s ON s.ID = l.Snapshot_ID INNER JOIN instruments i ON i.ID = s.Instrument_ID \
                 WHERE l.User = @user AND l.Time >= @fromDate ORDER BY l.Time ASC",
                 {
                     "@user": tokenUser,
@@ -226,9 +225,9 @@ exports.exportUserTradelogs = async function (req, res) {
 
             res.write('[');
 
-            for (var i = 0; i < tradelogs.length && !cancel; ++i) {
+            for (let i = 0; i < tradelogs.length && !cancel; ++i) {
 
-                var tradelog = tradelogs[i];
+                const tradelog = tradelogs[i];
 
                 if (i > 0) {
                     res.write(',');
@@ -256,15 +255,15 @@ exports.exportUserTradelogs = async function (req, res) {
 
 function downloadFile(req, res, filename) {
     try {
-        var tokenUser = authController.getTokenUser(req.query.token);
+        const tokenUser = authController.getTokenUser(req.query.token);
         if (tokenUser) {
 
-            var filePath = path.resolve(config.processing_dir + "/" + tokenUser + "/" + filename + "_norm.csv");
+            const filePath = path.resolve(config.processing_dir + "/" + tokenUser + "/" + filename + "_norm.csv");
 
             if (fs.existsSync(filePath)) {
                 if (typeof (req.params.time) === 'string' && req.params.time.length == 14) {
                     if (fs.existsSync(filePath + ".meta")) {
-                        var meta = JSON.parse(fs.readFileSync(filePath + ".meta", 'utf8'));
+                        const meta = JSON.parse(fs.readFileSync(filePath + ".meta", 'utf8'));
                         if (req.params.time != meta.time) {
                             res.redirect("/manage");
                             return;

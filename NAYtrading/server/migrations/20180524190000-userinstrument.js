@@ -1,22 +1,22 @@
 'use strict';
 
-var fs = require('fs');
+const fs = require('fs');
 
-var insert_sql = "";
+let insert_sql = "";
 try {
     insert_sql = fs.readFileSync(__dirname + '/sql/insert_userinstruments.sql', 'utf8');
 } catch (e) {
     console.log('Error:', e.stack);
 }
 
-var update_snapshots_sql = "";
+let update_snapshots_sql = "";
 try {
     update_snapshots_sql = fs.readFileSync(__dirname + '/sql/update_snapshots_to_userinstruments.sql', 'utf8');
 } catch (e) {
     console.log('Error:', e.stack);
 }
 
-var update_weights_sql = "";
+let update_weights_sql = "";
 try {
     update_weights_sql = fs.readFileSync(__dirname + '/sql/update_weights_to_userinstruments.sql', 'utf8');
 } catch (e) {

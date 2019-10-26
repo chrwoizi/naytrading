@@ -33,7 +33,7 @@ export class AdminComponent implements OnInit, OnDestroy {
     private alertService: AlertService,
     private spinner: NgxSpinnerService
   ) {
-    var self = this;
+    const self = this;
 
     self.currentUserSubscription = self.authenticationService.currentUser.subscribe(user => {
       self.currentUser = user;
@@ -41,7 +41,7 @@ export class AdminComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    var self = this;
+    const self = this;
 
     self.spinner.show();
     self.loading = true;
@@ -79,7 +79,7 @@ export class AdminComponent implements OnInit, OnDestroy {
   }
 
   reloadConfig() {
-    var self = this;
+    const self = this;
     self.spinner.show();
     self.adminService.reloadConfig().pipe(first()).subscribe(
       data => {
@@ -98,7 +98,7 @@ export class AdminComponent implements OnInit, OnDestroy {
   }
 
   clearStats() {
-    var self = this;
+    const self = this;
     self.spinner.show();
     self.adminService.clearStats().pipe(first()).subscribe(
       data => {
@@ -117,7 +117,7 @@ export class AdminComponent implements OnInit, OnDestroy {
   }
 
   refreshRates() {
-    var self = this;
+    const self = this;
     self.spinner.show();
     self.adminService.refreshRates(self.refreshId, self.refreshSource, self.refreshMarket).pipe(first()).subscribe(
       data => {
@@ -136,7 +136,7 @@ export class AdminComponent implements OnInit, OnDestroy {
   }
 
   addInstrument() {
-    var self = this;
+    const self = this;
     self.spinner.show();
     self.adminService.addInstrument(self.addInstrumentUrl).pipe(first()).subscribe(
       data => {
@@ -155,7 +155,7 @@ export class AdminComponent implements OnInit, OnDestroy {
   }
 
   updateInstruments() {
-    var self = this;
+    const self = this;
     self.spinner.show();
     self.adminService.updateInstruments().pipe(first()).subscribe(
       data => {

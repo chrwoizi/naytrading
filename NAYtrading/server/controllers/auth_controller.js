@@ -1,5 +1,3 @@
-var exports = module.exports = {}
-
 const config = require('../config/envconfig');
 const model = require('../models/index');
 const sql = require('../sql/sql');
@@ -8,8 +6,13 @@ const crypto = require('crypto');
 
 const instrumentController = require('../controllers/instrument_controller');
 
-var tokensByUser = {};
-var tokensByValue = {};
+const tokensByUser = {};
+const tokensByValue = {};
+
+function return500(res, e) {
+    res.status(500);
+    res.json({ error: e.message });
+}
 
 exports.setLastLogin = async function (userName) {
     await sql.query("UPDATE users SET last_login = NOW() WHERE email = @userName", {
@@ -33,9 +36,9 @@ function createJwt(user) {
 exports.createToken = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
-            var time = new Date().getTime();
+            const time = new Date().getTime();
 
-            var token = tokensByUser[req.user.email];
+            let token = tokensByUser[req.user.email];
             if (token) {
                 token.validFrom = new Date();
             }
@@ -49,8 +52,8 @@ exports.createToken = async function (req, res) {
                 tokensByValue[token.value] = token;
             }
 
-            for (var user of Object.getOwnPropertyNames(tokensByUser)) {
-                var token = tokensByUser[user];
+            for (const user of Object.getOwnPropertyNames(tokensByUser)) {
+                const token = tokensByUser[user];
                 if (time - token.validFrom > config.max_token_age_milliseconds) {
                     delete tokensByUser[token.user];
                     delete tokensByValue[token.value];
@@ -70,7 +73,7 @@ exports.createToken = async function (req, res) {
 }
 
 exports.getTokenUser = function (value) {
-    var token = tokensByValue[value];
+    const token = tokensByValue[value];
     if (token) {
         return tokensByValue[value].user;
     }
@@ -179,7 +182,7 @@ exports.getUser = async function (req, res, next, passport) {
 exports.getUsers = async function (req, res) {
     try {
         if (req.isAuthenticated() && req.user.email == config.admin_user) {
-            var users = await sql.query("SELECT email, last_login FROM users ORDER BY last_login DESC");
+            const users = await sql.query("SELECT email, last_login FROM users ORDER BY last_login DESC");
             res.json(users.map(user => { return { username: user.email, last_login: user.last_login }; }));
         }
         else {
@@ -196,7 +199,7 @@ exports.getUsers = async function (req, res) {
 exports.whitelist = async function (req, res) {
     try {
         if (req.isAuthenticated() && req.user.email == config.admin_user) {
-            var whitelists = await model.whitelist.findAll({});
+            const whitelists = await model.whitelist.findAll({});
             res.json(whitelists.map(whitelist => { return { username: whitelist.email }; }));
         }
         else {

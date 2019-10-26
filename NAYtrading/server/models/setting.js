@@ -1,6 +1,6 @@
 'use strict';
 module.exports = (sequelize, DataTypes) => {
-    var Setting = sequelize.define('setting', {
+    const Setting = sequelize.define('setting', {
 
         id: {
             allowNull: false,

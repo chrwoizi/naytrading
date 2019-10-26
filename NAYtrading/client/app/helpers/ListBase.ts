@@ -39,7 +39,7 @@ export class ListBase<TItem> {
             return;
         }
 
-        var message = "unknown error";
+        let message = "unknown error";
         if (typeof (error) === 'string') {
             message = error;
         }
@@ -54,12 +54,12 @@ export class ListBase<TItem> {
     }
 
     filter(query) {
-        var self = this;
+        const self = this;
         return function (value) {
             if (query == "") {
                 return true;
             } else {
-                var result = self.filterItem(value, query);
+                const result = self.filterItem(value, query);
                 if (result) {
                     return result.value;
                 }
@@ -90,8 +90,10 @@ export class ListBase<TItem> {
     }
 
     getValue(obj, path) {
-        for (var i = 0, path = path.split('.'), len = path.length; i < len; i++) {
-            obj = obj[path[i]];
+        const pathArray = path.split('.');
+        let len = pathArray.length;
+        for (let i = 0; i < len; i++) {
+            obj = obj[pathArray[i]];
         };
         return obj;
     }
@@ -101,19 +103,19 @@ export class ListBase<TItem> {
     }
 
     updateList() {
-        var self = this;
+        const self = this;
         self.filteredItems = self.items.filter(item => self.filter(self.query)(item));
         self.filteredItems.sort(function (a, b) {
             if (self.orderProp.indexOf("-") == 0) {
-                var va = self.getValue(a, self.orderProp.substr(1));
-                var vb = self.getValue(b, self.orderProp.substr(1));
+                const va = self.getValue(a, self.orderProp.substr(1));
+                const vb = self.getValue(b, self.orderProp.substr(1));
                 if (va == vb) {
                     return self.getId(a) <= self.getId(b) ? 1 : -1;
                 }
                 return va <= vb ? 1 : -1;
             } else {
-                var va = self.getValue(a, self.orderProp);
-                var vb = self.getValue(b, self.orderProp);
+                const va = self.getValue(a, self.orderProp);
+                const vb = self.getValue(b, self.orderProp);
                 if (va == vb) {
                     return self.getId(a) > self.getId(b) ? 1 : -1;
                 }

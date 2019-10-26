@@ -1,6 +1,6 @@
 'use strict';
 module.exports = (sequelize, DataTypes) => {
-    var snapshotrate = sequelize.define('snapshotrate', {
+    const snapshotrate = sequelize.define('snapshotrate', {
 
         ID: {
             allowNull: false,

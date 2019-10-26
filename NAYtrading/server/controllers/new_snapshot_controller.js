@@ -1,4 +1,3 @@
-var exports = module.exports = {}
 const model = require('../models/index');
 const sql = require('../sql/sql');
 const ratesProvider = require('../providers/rates_provider');
@@ -7,28 +6,28 @@ const sequelize = require('sequelize');
 const fs = require('fs');
 const config = require('../config/envconfig');
 
-var rank_instruments = "";
+let rank_instruments = "";
 try {
     rank_instruments = fs.readFileSync(__dirname + '/../sql/rank_instruments.sql', 'utf8');
 } catch (e) {
     console.log('Error:', e.stack);
 }
 
-var rank_open_snapshots = "";
+let rank_open_snapshots = "";
 try {
     rank_open_snapshots = fs.readFileSync(__dirname + '/../sql/rank_open_snapshots.sql', 'utf8');
 } catch (e) {
     console.log('Error:', e.stack);
 }
 
-var get_open_snapshots = "";
+let get_open_snapshots = "";
 try {
     get_open_snapshots = fs.readFileSync(__dirname + '/../sql/get_open_snapshots.sql', 'utf8');
 } catch (e) {
     console.log('Error:', e.stack);
 }
 
-var lockFlag = 0;
+let lockFlag = 0;
 
 
 function isEmpty(str) {
@@ -41,16 +40,16 @@ function parseDate(str) {
 
 exports.getNewSnapshotInstruments = async function (endTime) {
 
-    var upToDateFrom = new Date(endTime.getTime() - config.snapshot_valid_seconds * 1000);
+    const upToDateFrom = new Date(endTime.getTime() - config.snapshot_valid_seconds * 1000);
 
     if (await model.instrument.count({}) == 0) {
         return [];
     }
 
-    var maxCapitalization = await model.instrument.max('Capitalization');
+    let maxCapitalization = await model.instrument.max('Capitalization');
     maxCapitalization = Math.max(maxCapitalization, 1);
 
-    var args = {
+    const args = {
         "@validFromDateTime": upToDateFrom,
         "@maxCapitalization": maxCapitalization,
         "@maxStrikes": config.max_strikes,
@@ -61,9 +60,9 @@ exports.getNewSnapshotInstruments = async function (endTime) {
         "@staticWeight": config.static_weight
     };
 
-    var rows = await sql.query(rank_instruments, args);
+    const rows = await sql.query(rank_instruments, args);
 
-    var instrumentIds = rows.sort((a, b) => b.Order - a.Order);
+    const instrumentIds = rows.sort((a, b) => b.Order - a.Order);
     return instrumentIds;
 }
 
@@ -74,17 +73,17 @@ Gets an index from gaussian normal distribution
 @return An index within [0..count-1].
 */
 function getRandomIndex(count, randomRange) {
-    var u1 = 1.0 - Math.random();
-    var u2 = 1.0 - Math.random();
+    const u1 = 1.0 - Math.random();
+    const u2 = 1.0 - Math.random();
 
     // gaussian normal distribution around 0 with standard deviation of 1
-    var randStdNormal = Math.sqrt(-2.0 * Math.log(u1)) * Math.sin(2.0 * Math.PI * u2);
+    const randStdNormal = Math.sqrt(-2.0 * Math.log(u1)) * Math.sin(2.0 * Math.PI * u2);
 
     // roughly within [0..1] where 0 has the highest probability and 1+ the lowest.
     // values are <1 with probability 99,73% but can be larger
-    var randNormal = Math.abs(randStdNormal) / 3.0;
+    const randNormal = Math.abs(randStdNormal) / 3.0;
 
-    var index = Math.floor(randNormal * count * randomRange) % count;
+    const index = Math.floor(randNormal * count * randomRange) % count;
     return index;
 }
 
@@ -93,7 +92,7 @@ exports.minDays = 5 * (config.chart_period_seconds / 60 / 60 / 24 / 7) - config.
 exports.isAutoWait = async function (newSnapshot) {
     if (newSnapshot.PreviousDecision == "buy") {
         if (newSnapshot.Rates && newSnapshot.Rates.length > 0 && newSnapshot.PreviousBuyRate != null) {
-            var lastRate = newSnapshot.Rates[newSnapshot.Rates.length - 1];
+            const lastRate = newSnapshot.Rates[newSnapshot.Rates.length - 1];
             if (lastRate.C < newSnapshot.PreviousBuyRate && lastRate.C > 0.9 * newSnapshot.PreviousBuyRate) {
                 return true;
             }
@@ -102,22 +101,22 @@ exports.isAutoWait = async function (newSnapshot) {
         return false;
     }
 
-    var endTime = new Date();
+    const endTime = new Date();
     endTime.setHours(0, 0, 0, 0);
-    var startTime = new Date(endTime.getTime() - config.chart_period_seconds * 1000);
+    const startTime = new Date(endTime.getTime() - config.chart_period_seconds * 1000);
 
-    var firstRatesUntil = new Date(startTime.getTime() + 1000 * (config.chart_period_seconds * 0.2));
-    var lastRatesFrom = new Date(endTime.getTime() - 1000 * (config.chart_period_seconds * 0.2));
+    const firstRatesUntil = new Date(startTime.getTime() + 1000 * (config.chart_period_seconds * 0.2));
+    const lastRatesFrom = new Date(endTime.getTime() - 1000 * (config.chart_period_seconds * 0.2));
 
-    var firstRates = newSnapshot.Rates.filter(x => x.Time < firstRatesUntil);
-    var lastRates = newSnapshot.Rates.filter(x => x.Time > lastRatesFrom);
+    const firstRates = newSnapshot.Rates.filter(x => x.Time < firstRatesUntil);
+    const lastRates = newSnapshot.Rates.filter(x => x.Time > lastRatesFrom);
 
     if (firstRates.length == 0 || lastRates.length == 0) {
         return false;
     }
 
-    var firstAverage = firstRates.map(x => x.Close).reduce((a, b) => a + b) / firstRates.length;
-    var lastAverage = lastRates.map(x => x.Close).reduce((a, b) => a + b) / lastRates.length;
+    const firstAverage = firstRates.map(x => x.Close).reduce((a, b) => a + b) / firstRates.length;
+    const lastAverage = lastRates.map(x => x.Close).reduce((a, b) => a + b) / lastRates.length;
 
     // overall bearish trend
     return lastAverage < firstAverage;
@@ -125,8 +124,8 @@ exports.isAutoWait = async function (newSnapshot) {
 
 async function handleRateProviderError(instrument, source, error) {
     if (error.message == ratesProvider.market_not_found) {
-        var strikes = config.max_strikes + 12;
-        var reason = "the market id " + source.MarketId + " does not exist";
+        const strikes = config.max_strikes + 12;
+        const reason = "the market id " + source.MarketId + " does not exist";
         //console.log("Setting " + strikes + " strikes on instrument " + instrument.InstrumentName + " (" + source.SourceId + " on " + source.SourceType + ") because " + reason);
         await source.update({
             Strikes: strikes,
@@ -137,7 +136,7 @@ async function handleRateProviderError(instrument, source, error) {
         await increaseMonitor("preload_missing", source.SourceType, source.MarketId || 'null');
     }
     else if (error.message == ratesProvider.invalid_response) {
-        var reason = "the server returned an unexpected response for market id " + source.MarketId;
+        const reason = "the server returned an unexpected response for market id " + source.MarketId;
         //console.log("Adding 5 strikes to instrument " + instrument.InstrumentName + " (" + source.SourceId + " on " + source.SourceType + ") because " + reason);
         await source.update({
             Strikes: source.Strikes + 5,
@@ -149,7 +148,7 @@ async function handleRateProviderError(instrument, source, error) {
     }
     else {
         console.log(error.message + "\n" + error.stack);
-        var reason = "it caused an exception: " + error;
+        const reason = "it caused an exception: " + error;
         //console.log("Adding 1 strike to instrument " + instrument.InstrumentName + " (" + source.SourceId + " on " + source.SourceType + ") because " + reason);
         await source.update({
             Strikes: source.Strikes + 1,
@@ -162,8 +161,8 @@ async function handleRateProviderError(instrument, source, error) {
 }
 
 async function updateIsinWkn(instrument, isin, wkn) {
-    var updated = false;
-    var fields = {};
+    let updated = false;
+    const fields = {};
     if (isEmpty(instrument.Isin) && !isEmpty(isin)) {
         fields.Isin = isin;
         updated = true;
@@ -181,8 +180,8 @@ async function updateIsinWkn(instrument, isin, wkn) {
 
 exports.checkRates = function (rates, startTime, endTime, source) {
 
-    var minRateTime = new Date(startTime.getTime() + 1000 * config.discard_threshold_seconds);
-    var maxRateTime = new Date(endTime.getTime() - 1000 * config.discard_threshold_seconds);
+    const minRateTime = new Date(startTime.getTime() + 1000 * config.discard_threshold_seconds);
+    const maxRateTime = new Date(endTime.getTime() - 1000 * config.discard_threshold_seconds);
 
     if (rates == null || rates.length == 0) {
         return {
@@ -217,7 +216,7 @@ async function updateMarket(source, marketId) {
 }
 
 async function findSimilarSnapshot(instrumentId, startTime, endDate) {
-    var snapshot = await model.snapshot.findAll({
+    const snapshot = await model.snapshot.findAll({
         include: [{
             model: model.instrument
         }, {
@@ -244,18 +243,18 @@ async function findSimilarSnapshot(instrumentId, startTime, endDate) {
 }
 
 exports.createNewSnapshotFromRandomInstrument = async function (instrumentIds) {
-    var endTime = new Date();
-    var endDate = new Date(endTime.getTime());
+    const endTime = new Date();
+    const endDate = new Date(endTime.getTime());
     endDate.setHours(0, 0, 0, 0);
-    var startTime = new Date(endDate.getTime() - config.chart_period_seconds * 1000);
+    const startTime = new Date(endDate.getTime() - config.chart_period_seconds * 1000);
 
     // try to load rates of a random instrument. 
     // if rates can not be loaded, try another random instrument. 
     // try for a fixed number of times to avoid infinite loop.
-    for (var i = 0; i < Math.min(instrumentIds.length, 10); ++i) {
-        var index = getRandomIndex(instrumentIds.length, config.random_order_weight);
+    for (let i = 0; i < Math.min(instrumentIds.length, 10); ++i) {
+        const index = getRandomIndex(instrumentIds.length, config.random_order_weight);
 
-        var instrument = await model.instrument.findOne({
+        const instrument = await model.instrument.findOne({
             where: {
                 ID: instrumentIds[index].ID,
             },
@@ -265,37 +264,37 @@ exports.createNewSnapshotFromRandomInstrument = async function (instrumentIds) {
         });
 
         try {
-            var sortedSources = instrument.sources
+            const sortedSources = instrument.sources
                 .filter(x => x.Status == "ACTIVE")
                 .filter(x => x.Strikes < config.max_strikes)
                 .filter(x => ratesProvider.sources.indexOf(x.SourceType) >= 0);
             sortedSources.sort(function (a, b) {
-                var aIndex = ratesProvider.sources.indexOf(a.SourceType);
-                var bIndex = ratesProvider.sources.indexOf(b.SourceType);
+                const aIndex = ratesProvider.sources.indexOf(a.SourceType);
+                const bIndex = ratesProvider.sources.indexOf(b.SourceType);
                 return aIndex - bIndex;
             });
 
-            for (var s = 0; s < sortedSources.length; ++s) {
-                var source = sortedSources[s];
+            for (let s = 0; s < sortedSources.length; ++s) {
+                const source = sortedSources[s];
                 try {
 
-                    var problem = null;
+                    let problem = null;
                     async function checkRatesCallback(rates) {
                         problem = exports.checkRates(rates, startTime, endTime, source);
                         return problem == null;
                     }
 
-                    var ratesResponse = await ratesProvider.getRates(source.SourceType, source.SourceId, source.MarketId, startTime, endTime, checkRatesCallback);
+                    const ratesResponse = await ratesProvider.getRates(source.SourceType, source.SourceId, source.MarketId, startTime, endTime, checkRatesCallback);
 
                     if (ratesResponse && ratesResponse.Rates && ratesResponse.Rates.length > 0) {
 
-                        var rates = ratesResponse.Rates;
+                        const rates = ratesResponse.Rates;
 
                         await updateIsinWkn(instrument, ratesResponse.Isin, ratesResponse.Wkn);
 
                         await updateMarket(source, ratesResponse.MarketId);
 
-                        var similar = await findSimilarSnapshot(instrument.ID, startTime, endDate);
+                        const similar = await findSimilarSnapshot(instrument.ID, startTime, endDate);
 
                         if (similar != null && similar.length > 0) {
                             return similar[0];
@@ -303,7 +302,7 @@ exports.createNewSnapshotFromRandomInstrument = async function (instrumentIds) {
 
                         await increaseMonitor("preload_ok", source.SourceType, ratesResponse.MarketId || 'null');
 
-                        var snapshot = await model.snapshot.create(
+                        const snapshot = await model.snapshot.create(
                             {
                                 StartTime: startTime,
                                 Time: endTime,
@@ -358,7 +357,7 @@ exports.createNewSnapshotFromRandomInstrument = async function (instrumentIds) {
 }
 
 async function increaseMonitor(name, sourceType, marketId) {
-    var monitors = await sql.query("select id, value from monitors as m where m.`key` = @key and m.createdAt > CURDATE()",
+    const monitors = await sql.query("select id, value from monitors as m where m.`key` = @key and m.createdAt > CURDATE()",
         {
             "@key": name
         });
@@ -421,28 +420,28 @@ async function handleNewRandomSnapshot(req, res, allowConfirm) {
     try {
         if (req.isAuthenticated()) {
 
-            var endTime = new Date();
+            const endTime = new Date();
             endTime.setHours(0, 0, 0, 0);
 
-            var hours = config.max_unused_snapshot_age_hours;
+            let hours = config.max_unused_snapshot_age_hours;
             if (req.query.max_age) {
                 hours = parseFloat(req.query.max_age);
             }
 
-            var forgotten = await sql.query(rank_open_snapshots, {
+            const forgotten = await sql.query(rank_open_snapshots, {
                 "@userName": req.user.email,
                 "@hours": hours
             });
 
-            var confirm = Math.random() < config.check_rate;
+            const confirm = Math.random() < config.check_rate;
             if ((allowConfirm && confirm) || !(forgotten && forgotten.length > 0)) {
-                var toCheck = await sql.query("SELECT ID, Snapshot_ID, Confirmed FROM usersnapshots WHERE User = @userName AND Decision = 'buy' ORDER BY ABS(Confirmed), ModifiedTime", {
+                const toCheck = await sql.query("SELECT ID, Snapshot_ID, Confirmed FROM usersnapshots WHERE User = @userName AND Decision = 'buy' ORDER BY ABS(Confirmed), ModifiedTime", {
                     "@userName": req.user.email
                 });
 
                 if (toCheck && toCheck.length > 0) {
-                    var index = getRandomIndex(toCheck.length, config.random_order_weight);
-                    var viewModel = await snapshotController.getSnapshot(toCheck[index].Snapshot_ID, req.user.email);
+                    const index = getRandomIndex(toCheck.length, config.random_order_weight);
+                    const viewModel = await snapshotController.getSnapshot(toCheck[index].Snapshot_ID, req.user.email);
                     viewModel.ConfirmDecision = toCheck[index].ID;
                     viewModel.Confirmed = toCheck[index].Confirmed;
                     res.json({ snapshot: viewModel });
@@ -451,8 +450,8 @@ async function handleNewRandomSnapshot(req, res, allowConfirm) {
             }
 
             if (forgotten && forgotten.length > 0) {
-                // var index = getRandomIndex(forgotten.length, config.random_order_weight);
-                var viewModel = await snapshotController.getSnapshot(forgotten[0].ID, req.user.email);
+                // const index = getRandomIndex(forgotten.length, config.random_order_weight);
+                const viewModel = await snapshotController.getSnapshot(forgotten[0].ID, req.user.email);
                 res.json({ snapshot: viewModel });
                 return;
             }
@@ -469,29 +468,29 @@ async function handleNewRandomSnapshot(req, res, allowConfirm) {
         res.status(500);
         res.json({ error: error.message });
     }
-};
+}
 
 async function handleGetOpenSnapshots(req, res) {
     try {
         if (req.isAuthenticated()) {
 
-            var endTime = new Date();
+            const endTime = new Date();
             endTime.setHours(0, 0, 0, 0);
 
-            var count = 1;
+            let count = 1;
             if (req.query.count) {
                 count = parseInt(req.query.count);
             }
 
-            var forgotten = await sql.query(get_open_snapshots, {
+            const forgotten = await sql.query(get_open_snapshots, {
                 "@userName": req.user.email,
                 "@maxCount": count
             });
 
             if (forgotten && forgotten.length > 0) {
-                var results = [];
-                for (var i = 0; i < count && i < forgotten.length; ++i) {
-                    var viewModel = await snapshotController.getSnapshot(forgotten[i].ID, req.user.email);
+                const results = [];
+                for (let i = 0; i < count && i < forgotten.length; ++i) {
+                    const viewModel = await snapshotController.getSnapshot(forgotten[i].ID, req.user.email);
                     results.push(viewModel);
                 }
                 res.json(results);
@@ -510,7 +509,7 @@ async function handleGetOpenSnapshots(req, res) {
         res.status(500);
         res.json({ error: error.message });
     }
-};
+}
 
 exports.createNewRandomSnapshot = async function (req, res) {
     await handleNewRandomSnapshot(req, res, false);
@@ -528,8 +527,8 @@ exports.createNewSnapshotByInstrumentId = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
 
-            var upToDateFrom = new Date(new Date().getTime() - config.snapshot_valid_seconds * 1000);
-            var existing = await sql.query("SELECT s.ID FROM snapshots AS s \
+            const upToDateFrom = new Date(new Date().getTime() - config.snapshot_valid_seconds * 1000);
+            const existing = await sql.query("SELECT s.ID FROM snapshots AS s \
                 WHERE s.Instrument_ID = @instrumentId AND s.Time >= @time \
                 AND NOT EXISTS (SELECT 1 FROM usersnapshots AS nu WHERE nu.Snapshot_ID = s.ID AND nu.User = @user) \
                 ORDER BY s.Time ASC", {
@@ -539,17 +538,17 @@ exports.createNewSnapshotByInstrumentId = async function (req, res) {
                 });
 
             if (existing && existing.length > 0) {
-                var viewModel = await snapshotController.getSnapshot(existing[0].ID, req.user.email);
+                const viewModel = await snapshotController.getSnapshot(existing[0].ID, req.user.email);
                 res.json({ snapshot: viewModel });
                 return;
             }
 
-            var instrumentIds = [{ ID: req.params.instrumentId, Order: 1 }];
+            const instrumentIds = [{ ID: req.params.instrumentId, Order: 1 }];
 
-            var newSnapshot = await exports.createNewSnapshotFromRandomInstrument(instrumentIds);
+            const newSnapshot = await exports.createNewSnapshotFromRandomInstrument(instrumentIds);
             if (newSnapshot != null) {
-                var previous = await snapshotController.getPreviousDecisionAndBuyRate(newSnapshot.ID, req.user.email);
-                var viewModel = snapshotController.getSnapshotViewModel(newSnapshot, previous, req.user.email);
+                const previous = await snapshotController.getPreviousDecisionAndBuyRate(newSnapshot.ID, req.user.email);
+                const viewModel = snapshotController.getSnapshotViewModel(newSnapshot, previous, req.user.email);
                 res.json({ snapshot: viewModel });
                 return;
             }

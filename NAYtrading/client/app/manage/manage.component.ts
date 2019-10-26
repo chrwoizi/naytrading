@@ -36,14 +36,14 @@ export class ManageComponent implements OnInit, OnDestroy {
     private manageService: ManageService,
     private spinner: NgxSpinnerService
   ) {
-    var self = this;
+    const self = this;
     self.currentUserSubscription = self.authenticationService.currentUser.subscribe(user => {
       self.currentUser = user;
     });
   }
 
   ngOnInit() {
-    var self = this;
+    const self = this;
 
     const currentUser = self.authenticationService.currentUserValue;
     self.isAdmin = currentUser && currentUser.isAdmin;
@@ -74,7 +74,7 @@ export class ManageComponent implements OnInit, OnDestroy {
   }
 
   onDeleteUser() {
-    var self = this;
+    const self = this;
 
     self.spinner.show();
     self.authenticationService.delete(self.deleteUser)
@@ -97,7 +97,7 @@ export class ManageComponent implements OnInit, OnDestroy {
   }
 
   onClearDecisions() {
-    var self = this;
+    const self = this;
 
     self.spinner.show();
     self.manageService.clearDecisions()

@@ -1,4 +1,3 @@
-var exports = module.exports = {}
 const fs = require('fs');
 const model = require('../models/index');
 const sql = require('../sql/sql');
@@ -10,7 +9,7 @@ const instrumentController = require('../controllers/instrument_controller');
 const consolidateJob = require('./consolidate');
 const cleanupJob = require('./cleanup');
 
-var split_adjust_sql = "";
+let split_adjust_sql = "";
 try {
     split_adjust_sql = fs.readFileSync(__dirname + '/../sql/split_adjust_newest.sql', 'utf8');
 } catch (e) {
@@ -18,10 +17,10 @@ try {
 }
 
 
-var previousTime = new Date();
+let previousTime = new Date();
 function logVerbose(message) {
     if (config.env == "development") {
-        var now = new Date();
+        const now = new Date();
         if (now.getTime() - previousTime.getTime() > 1000) {
             previousTime = now;
             console.log(message);
@@ -63,19 +62,19 @@ function addDays(date, days) {
 }
 
 function getDay(date) {
-    var day = new Date(date.getTime());
+    const day = new Date(date.getTime());
     day.setHours(0, 0, 0, 0);
     return day;
 }
 
 exports.getError = function (rates1, rates2, getMedian) {
-    var factors = [];
-    var errorSum = 0;
-    var errorCount = 0;
-    var i = 0;
-    for (var s = 0; s < rates1.length; ++s) {
-        var rate1 = rates1[s];
-        var rate1Time = parseDate(rate1.Time);
+    const factors = [];
+    let errorSum = 0;
+    let errorCount = 0;
+    let i = 0;
+    for (let s = 0; s < rates1.length; ++s) {
+        const rate1 = rates1[s];
+        const rate1Time = parseDate(rate1.Time);
         while (i < rates2.length && parseDate(rates2[i].Time) < rate1Time) {
             i++;
         }
@@ -85,7 +84,7 @@ exports.getError = function (rates1, rates2, getMedian) {
         if (daysBetween(parseDate(rates2[i].Time), rate1Time) >= 1) {
             continue;
         }
-        var error = (rates2[i].Close - rate1.Close) / rate1.Close;
+        const error = (rates2[i].Close - rate1.Close) / rate1.Close;
         errorSum += Math.abs(error);
         errorCount++;
         if (getMedian) {
@@ -115,7 +114,7 @@ function isBigChange(ratio) {
 }
 
 function getCandidates(prePre, pre, rate) {
-    var candidates = [];
+    const candidates = [];
 
     //candidates.push({ preTime: rate.Time, curTime: rate.Time, preOpen: true, curOpen: false, preRate: rate.Open, curRate: rate.Close });
     //candidates.push({ preTime: pre.Time, curTime: rate.Time, preOpen: false, curOpen: true, preRate: pre.Close, curRate: rate.Open });
@@ -127,8 +126,8 @@ function getCandidates(prePre, pre, rate) {
     //candidates.push({ preTime: prePre.Time, curTime: rate.Time, preOpen: true, curOpen: true, preRate: prePre.Open, curRate: rate.Open });
     //candidates.push({ preTime: prePre.Time, curTime: rate.Time, preOpen: true, curOpen: false, preRate: prePre.Open, curRate: rate.Close });
 
-    for (var c = 0; c < candidates.length; ++c) {
-        var candidate = candidates[c];
+    for (let c = 0; c < candidates.length; ++c) {
+        const candidate = candidates[c];
         candidate.ratio = candidate.curRate / candidate.preRate;
     }
 
@@ -136,10 +135,10 @@ function getCandidates(prePre, pre, rate) {
 }
 
 function getDistinctFindings(findings, days) {
-    var prevFinding = null;
-    var distinct = [];
-    for (var f = 0; f < findings.length; ++f) {
-        var finding = findings[f];
+    let prevFinding = null;
+    const distinct = [];
+    for (let f = 0; f < findings.length; ++f) {
+        const finding = findings[f];
         if (prevFinding == null) {
             // first
             distinct.push(finding);
@@ -158,31 +157,31 @@ function getDistinctFindings(findings, days) {
 }
 
 function getHunchFromRates(rates) {
-    var status = "NO";
+    let status = "NO";
 
     if (rates && rates.length) {
-        var findings = [];
+        const findings = [];
 
-        var prePre = rates[0];
-        var pre = rates[0];
-        for (var r = 0; r < rates.length; ++r) {
-            var rate = rates[r];
+        const prePre = rates[0];
+        const pre = rates[0];
+        for (let r = 0; r < rates.length; ++r) {
+            const rate = rates[r];
             rate.Time = parseDate(rate.Time);
 
-            var candidates = getCandidates(prePre, pre, rate);
-            for (var c = 0; c < candidates.length; ++c) {
-                var candidate = candidates[c];
+            const candidates = getCandidates(prePre, pre, rate);
+            for (let c = 0; c < candidates.length; ++c) {
+                const candidate = candidates[c];
                 if (isBigChange(candidate.ratio)) {
                     findings.push(candidate);
                     break;
                 }
             }
 
-            var prePre = pre;
-            var pre = rate;
+            const prePre = pre;
+            const pre = rate;
         }
 
-        var detections = getDistinctFindings(findings, 5);
+        const detections = getDistinctFindings(findings, 5);
         if (detections.length > 0) {
             status = "HUNCH";
         }
@@ -192,19 +191,19 @@ function getHunchFromRates(rates) {
 }
 
 async function getSnapshotHunches() {
-    var ids = await sql.query("SELECT s.ID FROM snapshots AS s WHERE s.Split IS NULL OR (s.Split IN ('NODIFF', 'NOSOURCE', 'FIXED') AND s.updatedAt < NOW() - INTERVAL @minDaysSinceRefresh DAY)", {
+    const ids = await sql.query("SELECT s.ID FROM snapshots AS s WHERE s.Split IS NULL OR (s.Split IN ('NODIFF', 'NOSOURCE', 'FIXED') AND s.updatedAt < NOW() - INTERVAL @minDaysSinceRefresh DAY)", {
         "@minDaysSinceRefresh": config.job_split_hunch_min_days_since_refresh
     });
 
-    for (var i = 0; i < ids.length; ++i) {
-        var snapshotId = ids[i].ID;
+    for (let i = 0; i < ids.length; ++i) {
+        const snapshotId = ids[i].ID;
 
         try {
-            var rates = await sql.query("SELECT r.Time, r.Open, r.Close FROM snapshotrates AS r WHERE r.Snapshot_ID = @snapshotId", {
+            const rates = await sql.query("SELECT r.Time, r.Open, r.Close FROM snapshotrates AS r WHERE r.Snapshot_ID = @snapshotId", {
                 "@snapshotId": snapshotId
             });
 
-            var status = getHunchFromRates(rates);
+            const status = getHunchFromRates(rates);
 
             await sql.query("UPDATE snapshots AS s SET s.Split = @status WHERE s.ID = @snapshotId", {
                 "@snapshotId": snapshotId,
@@ -220,19 +219,19 @@ async function getSnapshotHunches() {
 }
 
 async function getInstrumentHunches() {
-    var ids = await sql.query("SELECT i.ID FROM instruments AS i WHERE i.Split IS NULL OR (i.Split IN ('NODIFF', 'NOSOURCE', 'FIXED') AND i.SplitUpdatedAt < NOW() - INTERVAL @minDaysSinceRefresh DAY)", {
+    const ids = await sql.query("SELECT i.ID FROM instruments AS i WHERE i.Split IS NULL OR (i.Split IN ('NODIFF', 'NOSOURCE', 'FIXED') AND i.SplitUpdatedAt < NOW() - INTERVAL @minDaysSinceRefresh DAY)", {
         "@minDaysSinceRefresh": config.job_split_hunch_min_days_since_refresh
     });
 
-    for (var i = 0; i < ids.length; ++i) {
-        var instrumentId = ids[i].ID;
+    for (let i = 0; i < ids.length; ++i) {
+        const instrumentId = ids[i].ID;
 
         try {
-            var rates = await sql.query("SELECT r.Time, r.Open, r.Close FROM instrumentrates AS r WHERE r.Instrument_ID = @instrumentId", {
+            const rates = await sql.query("SELECT r.Time, r.Open, r.Close FROM instrumentrates AS r WHERE r.Instrument_ID = @instrumentId", {
                 "@instrumentId": instrumentId
             });
 
-            var status = getHunchFromRates(rates);
+            const status = getHunchFromRates(rates);
 
             if (status == "HUNCH") {
                 await sql.query("UPDATE instruments AS i SET i.Split = @status WHERE i.ID = @instrumentId", {
@@ -255,9 +254,9 @@ async function getInstrumentHunches() {
 }
 
 async function fixSnapshotHunches() {
-    var items = await sql.query("SELECT s.ID, s.SourceType, s.Instrument_ID, s.StartTime, s.Time FROM snapshots AS s WHERE s.Split = 'HUNCH' ORDER BY s.Time DESC");
+    const items = await sql.query("SELECT s.ID, s.SourceType, s.Instrument_ID, s.StartTime, s.Time FROM snapshots AS s WHERE s.Split = 'HUNCH' ORDER BY s.Time DESC");
 
-    for (var i = 0; i < items.length; ++i) {
+    for (let i = 0; i < items.length; ++i) {
         try {
             await fixSnapshotSplit(items[i].ID, items[i].SourceType, items[i].Instrument_ID, parseDate(items[i].StartTime), parseDate(items[i].Time));
         }
@@ -270,9 +269,9 @@ async function fixSnapshotHunches() {
 }
 
 async function fixInstrumentHunchesAndDiffs() {
-    var items = await sql.query("SELECT i.ID FROM instruments AS i WHERE i.Split = 'HUNCH' OR i.Split = 'DIFF' ORDER BY i.SplitUpdatedAt ASC");
+    const items = await sql.query("SELECT i.ID FROM instruments AS i WHERE i.Split = 'HUNCH' OR i.Split = 'DIFF' ORDER BY i.SplitUpdatedAt ASC");
 
-    for (var i = 0; i < items.length; ++i) {
+    for (let i = 0; i < items.length; ++i) {
         try {
             await exports.fixInstrumentSplit(items[i].ID);
         }
@@ -287,25 +286,25 @@ async function fixInstrumentHunchesAndDiffs() {
 async function refreshRates(snapshotId, newSource, newMarketId, instrumentId, startTime, endTime) {
 
     async function checkRatesCallback(rates) {
-        problem = newSnapshotController.checkRates(rates, startTime, endTime, newSource);
+        let problem = newSnapshotController.checkRates(rates, startTime, endTime, newSource);
         return problem == null;
     }
 
-    var sources = await model.source.findAll({
+    const sources = await model.source.findAll({
         where: {
             Instrument_ID: instrumentId,
             SourceType: newSource
         }
     });
 
-    var sourceInfo = sources[0];
+    const sourceInfo = sources[0];
 
-    var status = "NOSOURCE";
+    let status = "NOSOURCE";
 
     try {
-        var ratesResponse = await ratesProvider.getRates(newSource, sourceInfo.SourceId, newMarketId, startTime, endTime, checkRatesCallback);
+        const ratesResponse = await ratesProvider.getRates(newSource, sourceInfo.SourceId, newMarketId, startTime, endTime, checkRatesCallback);
         if (ratesResponse && ratesResponse.Rates) {
-            var newRates = ratesResponse.Rates;
+            const newRates = ratesResponse.Rates;
 
             status = "FIXED";
             await snapshotController.setRates(snapshotId, ratesResponse.Source, ratesResponse.MarketId, newRates, endTime);
@@ -330,21 +329,21 @@ async function refreshRates(snapshotId, newSource, newMarketId, instrumentId, st
 }
 
 async function fixPriceDifferences() {
-    var items = await sql.query(split_adjust_sql, {
+    const items = await sql.query(split_adjust_sql, {
         "@minDiffRatio": config.job_split_min_diff_ratio,
         "@minDaysSinceRefresh": config.job_split_diff_min_days_since_refresh
     });
 
-    for (var i = 0; i < items.length; ++i) {
+    for (let i = 0; i < items.length; ++i) {
 
-        var item = items[i];
+        const item = items[i];
 
         try {
-            var snapshots = await sql.query("SELECT s.ID, s.StartTime, s.Time FROM snapshots AS s WHERE s.Instrument_ID = @instrumentId AND EXISTS (SELECT 1 FROM snapshotrates AS r WHERE r.Snapshot_ID = s.ID)", {
+            const snapshots = await sql.query("SELECT s.ID, s.StartTime, s.Time FROM snapshots AS s WHERE s.Instrument_ID = @instrumentId AND EXISTS (SELECT 1 FROM snapshotrates AS r WHERE r.Snapshot_ID = s.ID)", {
                 "@instrumentId": item.Instrument_ID
             });
 
-            for (var s = 0; s < snapshots.length; ++s) {
+            for (let s = 0; s < snapshots.length; ++s) {
                 try {
                     await refreshRates(snapshots[s].ID, item.NewSourceType, item.NewMarketId, item.Instrument_ID, parseDate(snapshots[s].StartTime), parseDate(snapshots[s].Time));
                 }
@@ -364,7 +363,7 @@ async function fixPriceDifferences() {
 }
 
 async function fixSnapshotSplit(snapshotId, knownSource, instrumentId, startTime, endTime) {
-    var knownRates = await model.snapshotrate.findAll({
+    const knownRates = await model.snapshotrate.findAll({
         where: {
             Snapshot_ID: snapshotId
         },
@@ -380,33 +379,33 @@ async function fixSnapshotSplit(snapshotId, knownSource, instrumentId, startTime
         return;
     }
 
-    var newSources = ratesProvider.sources.slice();
+    const newSources = ratesProvider.sources.slice();
 
     // ignore old source
-    var knownSourceIndex = newSources.indexOf(knownSource);
+    const knownSourceIndex = newSources.indexOf(knownSource);
     if (knownSourceIndex >= 0) {
         newSources.splice(knownSourceIndex, 1);
     }
 
     // keep only configured sources
-    for (var i = 0; i < newSources.length; ++i) {
-        var newSource = newSources[i];
+    for (let i = 0; i < newSources.length; ++i) {
+        const newSource = newSources[i];
         if (config.job_split_sources.indexOf(newSource) == -1) {
             newSources.splice(i, 1);
             --i;
         }
     }
 
-    var sources = await model.source.findAll({
+    const sources = await model.source.findAll({
         where: {
             Instrument_ID: instrumentId
         }
     });
 
     // keep only available sources
-    var availableSources = sources.map(x => x.SourceType);
-    for (var i = 0; i < newSources.length; ++i) {
-        var newSource = newSources[i];
+    const availableSources = sources.map(x => x.SourceType);
+    for (let i = 0; i < newSources.length; ++i) {
+        const newSource = newSources[i];
         if (availableSources.indexOf(newSource) == -1) {
             newSources.splice(i, 1);
             --i;
@@ -420,30 +419,30 @@ async function fixSnapshotSplit(snapshotId, knownSource, instrumentId, startTime
         return;
     }
 
-    var status = "NOSOURCE";
-    for (var i = 0; i < newSources.length; ++i) {
-        var newSource = newSources[i];
+    let status = "NOSOURCE";
+    for (let i = 0; i < newSources.length; ++i) {
+        const newSource = newSources[i];
 
         async function checkRatesCallback(rates) {
-            problem = newSnapshotController.checkRates(rates, startTime, endTime, newSource);
+            let problem = newSnapshotController.checkRates(rates, startTime, endTime, newSource);
             return problem == null;
         }
 
-        var sourceInfo = sources.filter(x => x.SourceType == newSource)[0];
+        const sourceInfo = sources.filter(x => x.SourceType == newSource)[0];
         try {
-            var ratesResponse = await ratesProvider.getRates(sourceInfo.SourceType, sourceInfo.SourceId, sourceInfo.MarketId, startTime, endTime, checkRatesCallback);
+            const ratesResponse = await ratesProvider.getRates(sourceInfo.SourceType, sourceInfo.SourceId, sourceInfo.MarketId, startTime, endTime, checkRatesCallback);
             if (ratesResponse && ratesResponse.Rates) {
-                var newRates = ratesResponse.Rates;
+                const newRates = ratesResponse.Rates;
 
                 status = "NODIFF";
 
-                var diffs = [];
-                for (var k = 0, n = 0; k < knownRates.length && n < newRates.length; ++k) {
-                    var knownRate = knownRates[k];
+                const diffs = [];
+                for (let k = 0, n = 0; k < knownRates.length && n < newRates.length; ++k) {
+                    const knownRate = knownRates[k];
                     while (n < newRates.length && getDay(newRates[n].Time) < getDay(parseDate(knownRate.Time)))++n;
                     if (n < newRates.length) {
-                        var newRate = newRates[n];
-                        var diff = (newRate.Close - knownRate.Close) / knownRate.Close;
+                        const newRate = newRates[n];
+                        const diff = (newRate.Close - knownRate.Close) / knownRate.Close;
                         if (Math.abs(diff) > config.job_split_min_diff_ratio) {
                             diffs.push(diff);
                         }
@@ -478,7 +477,7 @@ async function fixSnapshotSplit(snapshotId, knownSource, instrumentId, startTime
 
 exports.fixInstrumentSplit = async function (instrumentId) {
 
-    var instrument = await model.instrument.findOne({ where: { ID: instrumentId } });
+    const instrument = await model.instrument.findOne({ where: { ID: instrumentId } });
     if (!instrument) {
         return;
     }
@@ -487,7 +486,7 @@ exports.fixInstrumentSplit = async function (instrumentId) {
         return;
     }
 
-    var rateTimes = await sql.query("SELECT MIN(r.Time) AS startTime, MAX(r.Time) AS endTime FROM instrumentrates r WHERE r.Instrument_ID = @instrumentId GROUP BY r.Instrument_ID", {
+    const rateTimes = await sql.query("SELECT MIN(r.Time) AS startTime, MAX(r.Time) AS endTime FROM instrumentrates r WHERE r.Instrument_ID = @instrumentId GROUP BY r.Instrument_ID", {
         "@instrumentId": instrumentId
     });
 
@@ -495,31 +494,31 @@ exports.fixInstrumentSplit = async function (instrumentId) {
         return;
     }
 
-    var oldRates = await model.instrumentrate.findAll({ where: { Instrument_ID: instrumentId }, orderBy: [["Time", "ASC"]] }).map(x => x.get({ plain: true }));
+    const oldRates = await model.instrumentrate.findAll({ where: { Instrument_ID: instrumentId }, orderBy: [["Time", "ASC"]] }).map(x => x.get({ plain: true }));
 
-    var startTime = parseDate(rateTimes[0].startTime);
-    var endTime = parseDate(rateTimes[0].endTime);
+    const startTime = parseDate(rateTimes[0].startTime);
+    const endTime = parseDate(rateTimes[0].endTime);
 
-    var getStartTime = new Date(endTime.getTime() - config.chart_period_seconds * 1000);
+    const getStartTime = new Date(endTime.getTime() - config.chart_period_seconds * 1000);
 
-    var sources = await model.source.findAll({
+    const sources = await model.source.findAll({
         where: {
             Instrument_ID: instrumentId
         }
     });
 
-    var status = "NOSOURCE";
+    let status = "NOSOURCE";
 
     if (sources && sources.length) {
-        for (var sourceInfo of sources) {
+        for (let sourceInfo of sources) {
 
             async function checkRatesCallback(rates) {
                 if (rates.length < newSnapshotController.minDays) {
                     return false;
                 }
 
-                var firstRate = parseDate(rates[0].Time);
-                var lastRate = parseDate(rates[rates.length - 1].Time);
+                const firstRate = parseDate(rates[0].Time);
+                const lastRate = parseDate(rates[rates.length - 1].Time);
 
                 if (lastRate < endTime) {
                     return false;
@@ -549,10 +548,10 @@ exports.fixInstrumentSplit = async function (instrumentId) {
             }
 
             if (ratesResponse && ratesResponse.Rates) {
-                var newRates = ratesResponse.Rates;
+                const newRates = ratesResponse.Rates;
 
-                var firstRate = parseDate(newRates[0].Time);
-                var lastRate = parseDate(newRates[newRates.length - 1].Time);
+                const firstRate = parseDate(newRates[0].Time);
+                const lastRate = parseDate(newRates[newRates.length - 1].Time);
 
                 if (lastRate < endTime) {
                     continue;
@@ -562,7 +561,7 @@ exports.fixInstrumentSplit = async function (instrumentId) {
                     continue;
                 }
 
-                var error = exports.getError(oldRates, newRates, firstRate > startTime);
+                const error = exports.getError(oldRates, newRates, firstRate > startTime);
                 if (error.count < newSnapshotController.minDays * config.job_consolidate_min_match) {
                     continue;
                 }
@@ -576,12 +575,12 @@ exports.fixInstrumentSplit = async function (instrumentId) {
                 if (firstRate > startTime) {
                     // modify old rates and replace new rates
 
-                    var factor = error.factorMedian;
+                    let factor = error.factorMedian;
                     if (Math.abs(factor - Math.round(factor)) < 0.01) {
                         factor = Math.round(factor);
                     }
 
-                    for (var rate of oldRates) {
+                    for (let rate of oldRates) {
                         if (rate.Open) {
                             rate.Open *= error.errorMedian;
                         }

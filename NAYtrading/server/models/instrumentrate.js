@@ -1,6 +1,6 @@
 'use strict';
 module.exports = (sequelize, DataTypes) => {
-    var instrumentrate = sequelize.define('instrumentrate', {
+    const instrumentrate = sequelize.define('instrumentrate', {
 
         ID: {
             allowNull: false,

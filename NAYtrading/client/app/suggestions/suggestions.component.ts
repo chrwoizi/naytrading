@@ -26,7 +26,7 @@ export class SuggestionsComponent extends ListBase<Suggestion> implements OnInit
 
   ngOnInit() {
 
-    var self = this;
+    const self = this;
 
     self.orderProp = "-TS";
 
@@ -72,8 +72,9 @@ export class SuggestionsComponent extends ListBase<Suggestion> implements OnInit
   formatCurrency(n) {
     if (typeof (n) === 'undefined')
       return undefined;
-    var abbrv = ["", "T", "M"];
-    for (var i = 0; i < abbrv.length - 1 && Math.abs(n) >= 1000; ++i) {
+    const abbrv = ["", "T", "M"];
+    let i;
+    for (i = 0; i < abbrv.length - 1 && Math.abs(n) >= 1000; ++i) {
       n /= 1000.0;
     }
     return n.toFixed(2) + abbrv[i];

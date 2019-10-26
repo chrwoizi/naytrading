@@ -97,7 +97,7 @@ export class MonitorComponent implements OnInit {
   }
 
   ngOnInit() {
-    var self = this;
+    const self = this;
 
     self.spinner.show();
     self.loading = true;
@@ -118,8 +118,8 @@ export class MonitorComponent implements OnInit {
       return v.T.substr(4, 2) + "." + v.T.substr(2, 2) + "." + v.T.substr(0, 2);
     });
 
-    var sourceTypes = [];
-    for (var monitor of monitors) {
+    const sourceTypes = [];
+    for (const monitor of monitors) {
       this.collect(sourceTypes, monitor.preload_ok);
       this.collect(sourceTypes, monitor.preload_rates);
       this.collect(sourceTypes, monitor.preload_missing);
@@ -142,7 +142,7 @@ export class MonitorComponent implements OnInit {
     }
 
     this.lineChartData = sourceTypes.map(sourceType => {
-      var dataSets: ChartDataSets[] = [
+      const dataSets: ChartDataSets[] = [
         {
           data: monitors.map(function (v, i) {
             return getSum(v.preload_ok, sourceType);
@@ -193,7 +193,7 @@ export class MonitorComponent implements OnInit {
 
   collect(sourceTypes, key) {
     if (key) {
-      for (var sourceType of Object.getOwnPropertyNames(key.sources)) {
+      for (const sourceType of Object.getOwnPropertyNames(key.sources)) {
         if (sourceTypes.indexOf(sourceType) == -1) {
           sourceTypes.push(sourceType);
         }

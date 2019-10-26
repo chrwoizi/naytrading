@@ -1,12 +1,11 @@
-var exports = module.exports = {}
 
 const config = require('../config/envconfig');
 
-var sources = Object.keys(config.rates_providers);
-var providers = {};
-for (var i = 0; i < sources.length; ++i) {
-    var source = sources[i];
-    var provider = require(config.rates_providers[source]);
+const sources = Object.keys(config.rates_providers);
+const providers = {};
+for (let i = 0; i < sources.length; ++i) {
+    const source = sources[i];
+    const provider = require(config.rates_providers[source]);
     if (provider) {
         providers[source] = provider;
     }
@@ -20,10 +19,10 @@ exports.invalid_response = "invalid response";
 exports.getRates = async function (source, instrumentId, preferredMarketId, startTime, endTime, checkRates) {
     if (providers[source]) {
 
-        var marketIds = providers[source].markets;
+        let marketIds = providers[source].markets;
         if (preferredMarketId != null && typeof (preferredMarketId) === 'string' && preferredMarketId.length > 0) {
 
-            var index = marketIds.indexOf(preferredMarketId);
+            const index = marketIds.indexOf(preferredMarketId);
             if (index > -1) {
                 // remove known market from list
                 marketIds.splice(index, 1);
@@ -33,17 +32,17 @@ exports.getRates = async function (source, instrumentId, preferredMarketId, star
             marketIds.unshift(preferredMarketId);
         }
 
-        var ratesResponse = null;
+        let ratesResponse = null;
 
-        for (var m = 0; m < marketIds.length; ++m) {
-            var marketId = marketIds[m];
+        for (let m = 0; m < marketIds.length; ++m) {
+            const marketId = marketIds[m];
 
             ratesResponse = await providers[source].getRates(source, instrumentId, marketId, startTime, endTime);
 
             if (ratesResponse.Rates && ratesResponse.Rates.length > 0 && await checkRates(ratesResponse.Rates)) {
 
-                for (var r = 0; r < ratesResponse.Rates.length; ++r) {
-                    var time = ratesResponse.Rates[r].Time;
+                for (let r = 0; r < ratesResponse.Rates.length; ++r) {
+                    let time = ratesResponse.Rates[r].Time;
                     if (time.getHours() > 12) {
                         time = new Date(time.getTime() + 12 * 60 * 60 * 1000);
                     }

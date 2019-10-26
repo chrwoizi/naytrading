@@ -1,6 +1,6 @@
 'use strict';
 module.exports = (sequelize, DataTypes) => {
-    var Whitelist = sequelize.define('whitelist', {
+    const Whitelist = sequelize.define('whitelist', {
 
         id: {
             allowNull: false,

@@ -1,6 +1,6 @@
 'use strict';
 module.exports = (sequelize, DataTypes) => {
-    var userinstrument = sequelize.define('userinstrument', {
+    const userinstrument = sequelize.define('userinstrument', {
 
         ID: {
             allowNull: false,
