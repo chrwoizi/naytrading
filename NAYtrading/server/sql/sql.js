@@ -12,7 +12,7 @@ exports.query = async function (sql, args) {
     const regex = /(@\w+)/g;
     const params = [];
     let matches;
-    while ((matches = regex.exec(sql)) == true) {
+    while ((matches = regex.exec(sql)).length) {
         params.push(matches[1]);
     }
 
