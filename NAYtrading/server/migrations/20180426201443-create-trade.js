@@ -53,7 +53,7 @@ module.exports = {
         }).then(() => {
             return queryInterface.sequelize.query("SELECT CONSTRAINT_NAME AS name FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS WHERE TABLE_NAME = 'trades' AND CONSTRAINT_TYPE='FOREIGN KEY'")
             .then(names => {
-                var name = "trades_ibfk_1";
+                let name = "trades_ibfk_1";
 
                 function create() {
                     console.log("Create " + name);

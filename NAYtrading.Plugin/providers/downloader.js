@@ -1,12 +1,10 @@
-var exports = module.exports = {}
-
 const config = require('../config/envconfig');
 const request = config.require('request');
 const parse5 = config.require('parse5');
 const xmlser = config.require('xmlserializer');
 const dom = config.require('xmldom').DOMParser;
 
-var requestTimes = {};
+const requestTimes = {};
 
 function sleep(millis) {
     return new Promise(function (resolve, reject) {
@@ -15,19 +13,19 @@ function sleep(millis) {
 }
 
 async function getLock(sourceType) {
-    var interval = 1000 * config.downloader_throttle_seconds;
+    const interval = 1000 * config.downloader_throttle_seconds;
     if(!(sourceType in requestTimes)) {
         requestTimes[sourceType] = [];
     }
 
-    var now = new Date().getTime();
+    const now = new Date().getTime();
 
-    var intervalStart = now - interval;
+    const intervalStart = now - interval;
     while (requestTimes[sourceType].length > 0 && requestTimes[sourceType][0] < intervalStart) {
         requestTimes[sourceType] = requestTimes[sourceType].slice(1);
     }
 
-    var count = requestTimes[sourceType].length;
+    const count = requestTimes[sourceType].length;
 
     if (count < config.downloader_throttle_requests) {
         requestTimes[sourceType].push(now);
@@ -43,9 +41,9 @@ async function getLock(sourceType) {
 
 exports.download = async function (sourceType, url, isJson, customRequest, form) {
 
-    var start = new Date().getTime();
+    const start = new Date().getTime();
     while (true) {
-        var lock = await getLock(sourceType);
+        const lock = await getLock(sourceType);
         if (lock)
             break;
 
@@ -56,16 +54,16 @@ exports.download = async function (sourceType, url, isJson, customRequest, form)
         await sleep(500);
     }
 
-    var options = {
+    const options = {
         url: url,
         proxy: config.proxy,
         timeout: config.downloader_timeout_milliseconds,
         followAllRedirects: true
     };
 
-    var doc = await new Promise(function (resolve, reject) {
+    let doc = await new Promise(function (resolve, reject) {
 
-        var usingRequest = customRequest || request;
+        const usingRequest = customRequest || request;
 
         if (form) {
             options.form = form;
@@ -101,13 +99,13 @@ exports.download = async function (sourceType, url, isJson, customRequest, form)
 }
 
 function parseDoc(html) {
-    var document = parse5.parse(html);
-    var xhtml = xmlser.serializeToString(document);
-    var doc = new dom().parseFromString(xhtml);
+    const document = parse5.parse(html);
+    const xhtml = xmlser.serializeToString(document);
+    const doc = new dom().parseFromString(xhtml);
     return doc;
 }
 
 exports.downloadHtml = async function (sourceType, url, isJson, customRequest, form) {
-    var body = await exports.download(sourceType, url, isJson, customRequest, form);
+    const body = await exports.download(sourceType, url, isJson, customRequest, form);
     return parseDoc(body);
 }

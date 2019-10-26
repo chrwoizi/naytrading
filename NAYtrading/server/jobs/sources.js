@@ -1,4 +1,3 @@
-var exports = module.exports = {}
 const model = require('../models/index');
 const sql = require('../sql/sql');
 const instrumentsProvider = require('../providers/instruments_provider');
@@ -8,19 +7,19 @@ const config = require('../config/envconfig');
 exports.run = async function () {
     try {
 
-        for (var s = 0; s < instrumentsProvider.sources.length; ++s) {
-            var sourceType = instrumentsProvider.sources[s];
-            var instruments = await sql.query("SELECT i.ID, i.Isin, i.Wkn FROM instruments AS i \
+        for (let s = 0; s < instrumentsProvider.sources.length; ++s) {
+            const sourceType = instrumentsProvider.sources[s];
+            const instruments = await sql.query("SELECT i.ID, i.Isin, i.Wkn FROM instruments AS i \
                 WHERE (i.Isin IS NOT NULL OR i.Wkn IS NOT NULL) \
                 AND NOT EXISTS (SELECT 1 FROM sources AS s WHERE s.SourceType = @sourceType AND s.Instrument_ID = i.ID) \
                 ORDER BY (SELECT MAX(s.Time) FROM snapshots AS s where s.Instrument_ID = i.ID) DESC", {
                     "@sourceType": sourceType
                 });
 
-            for (var i = 0; i < instruments.length && i < config.job_sources_batch_size; ++i) {
-                var instrument = instruments[i];
-                var sourceId = await instrumentsProvider.getInstrumentId(sourceType, instrument.Isin, instrument.Wkn);
-                var newSource = {
+            for (let i = 0; i < instruments.length && i < config.job_sources_batch_size; ++i) {
+                const instrument = instruments[i];
+                const sourceId = await instrumentsProvider.getInstrumentId(sourceType, instrument.Isin, instrument.Wkn);
+                const newSource = {
                     Instrument_ID: instrument.ID,
                     SourceType: sourceType,
                     SourceId: sourceId || '',

@@ -1,6 +1,6 @@
 'use strict';
 module.exports = (sequelize, DataTypes) => {
-    var weight = sequelize.define('weight', {
+    const weight = sequelize.define('weight', {
 
         ID: {
             allowNull: false,

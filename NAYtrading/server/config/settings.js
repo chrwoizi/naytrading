@@ -1,16 +1,14 @@
-var exports = module.exports = {};
-
 const model = require('../models/index');
 const config = require('./envconfig');
 
-var values = {};
+let values = {};
 
 exports.get = function (key) {
     return values[key];
 };
 
 exports.set = async function (key, value) {
-    var existing = await model.setting.findOne({
+    const existing = await model.setting.findOne({
         where: {
             key: key
         }
@@ -36,15 +34,15 @@ exports.set = async function (key, value) {
 };
 
 async function update() {
-    var items = await model.setting.findAll({});
+    const items = await model.setting.findAll({});
     values = {};
-    for (var i = 0; i < items.length; ++i) {
+    for (let i = 0; i < items.length; ++i) {
         values[items[i].key] = items[i].value;
     }
 }
 
 function run() {
-    new Promise(async function (resolve, reject) {
+    new Promise(async function () {
         try {
             await update();
         }

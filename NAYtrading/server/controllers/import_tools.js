@@ -1,14 +1,13 @@
-var exports = module.exports = {}
 const JSONStream = require('JSONStream');
 const multiparty = require('multiparty');
 const stream = require('stream');
 const fs = require('fs');
 
 exports.importFromFormSubmit = async function (req, res, getExistingEntities, getEntityKeys, createEntity, updateEntity, destroyEntity, prepareEntity) {
-    var filePath = undefined;
+    let filePath = undefined;
 
     try {
-        var form = new multiparty.Form();
+        const form = new multiparty.Form();
 
         form.parse(req, async (error, fields, files) => {
 
@@ -20,29 +19,29 @@ exports.importFromFormSubmit = async function (req, res, getExistingEntities, ge
 
             filePath = files.file[0].path;
 
-            var existing = await getExistingEntities();
-            var remaining = Object.assign({}, existing);
-            var remainingById = {};
-            for (var key in remaining) {
+            const existing = await getExistingEntities();
+            const remaining = Object.assign({}, existing);
+            const remainingById = {};
+            for (const key in remaining) {
                 if (remaining.hasOwnProperty(key)) {
                     remainingById[remaining[key].ID] = remaining[key];
                 }
             }
 
-            var addedCount = 0;
-            var removedCount = 0;
-            var errors = [];
+            let addedCount = 0;
+            let removedCount = 0;
+            const errors = [];
 
-            var processor = new stream.Transform({ objectMode: true });
+            const processor = new stream.Transform({ objectMode: true });
             processor._transform = function (data, encoding, onDone) {
                 try {
                     if (prepareEntity) {
                         prepareEntity(data);
                     }
-                    var keys = getEntityKeys(data);
+                    const keys = getEntityKeys(data);
                     console.log("importing " + keys.join(", "));
-                    var value = null;
-                    for (var k = 0; k < keys.length; ++k) {
+                    let value = null;
+                    for (let k = 0; k < keys.length; ++k) {
                         value = existing[keys[k]];
                         if (value) {
                             break;
@@ -50,7 +49,7 @@ exports.importFromFormSubmit = async function (req, res, getExistingEntities, ge
                     }
                     if (value) {
                         updateEntity(data, value).then(() => {
-                            for (var k = 0; k < keys.length; ++k) {
+                            for (let k = 0; k < keys.length; ++k) {
                                 delete remaining[keys[k]];
                             }
                             onDone();
@@ -80,8 +79,8 @@ exports.importFromFormSubmit = async function (req, res, getExistingEntities, ge
                     try {
                         if (errors.length == 0) {
                             if (fields.delete && fields.delete.length == 1 && fields.delete[0] == "on") {
-                                for (var key in remaining) {
-                                    var item = remaining[key];
+                                for (const key in remaining) {
+                                    const item = remaining[key];
                                     console.log("deleting " + item.ID);
                                     removedCount += await destroyEntity(item);
                                 }
@@ -125,11 +124,11 @@ exports.importFromFormSubmit = async function (req, res, getExistingEntities, ge
 };
 
 exports.toDictionary = function (existing, getKey) {
-    var dict = {};
-    for (var i = 0; i < existing.length; ++i) {
-        var item = existing[i];
-        var key = getKey(item);
+    const dict = {};
+    for (let i = 0; i < existing.length; ++i) {
+        const item = existing[i];
+        const key = getKey(item);
         dict[key] = item;
-    };
+    }
     return dict;
 };

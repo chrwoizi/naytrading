@@ -1,8 +1,8 @@
 'use strict';
 
-var fs = require('fs');
+const fs = require('fs');
 
-var insert_sql = "";
+let insert_sql = "";
 try {
     insert_sql = fs.readFileSync(__dirname + '/sql/insert_usersnapshots.sql', 'utf8');
 } catch (e) {

@@ -25,7 +25,7 @@ export class InstrumentsComponent extends ListBase<Instrument> implements OnInit
 
   ngOnInit() {
 
-    var self = this;
+    const self = this;
 
     self.orderProp = "-Capitalization";
 

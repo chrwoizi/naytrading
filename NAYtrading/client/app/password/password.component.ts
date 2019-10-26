@@ -36,7 +36,7 @@ export class PasswordComponent implements OnInit {
   get f() { return this.passwordForm.controls; }
 
   onSubmit() {
-    var self = this;
+    const self = this;
     self.submitted = true;
 
     // stop here if form is invalid

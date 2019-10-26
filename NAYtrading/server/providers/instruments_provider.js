@@ -1,12 +1,11 @@
-var exports = module.exports = {}
 
 const config = require('../config/envconfig');
 
-var sources = Object.keys(config.instruments_providers);
-var providers = {};
-for (var i = 0; i < sources.length; ++i) {
-    var source = sources[i];
-    var provider = require(config.instruments_providers[source]);
+const sources = Object.keys(config.instruments_providers);
+const providers = {};
+for (let i = 0; i < sources.length; ++i) {
+    const source = sources[i];
+    const provider = require(config.instruments_providers[source]);
     if (provider) {
         providers[source] = provider;
     }
@@ -27,11 +26,11 @@ exports.getAllInstruments = async function (source, minCapitalization) {
         }
     }
     else {
-        var result = [];
-        for (var i = 0; i < sources.length; ++i) {
-            var instruments = await providers[sources[i]].getAllInstruments(sources[i], minCapitalization);
+        const result = [];
+        for (let i = 0; i < sources.length; ++i) {
+            const instruments = await providers[sources[i]].getAllInstruments(sources[i], minCapitalization);
             if (instruments && instruments.length > 0) {
-                for (var k = 0; k < instruments.length; ++k) {
+                for (let k = 0; k < instruments.length; ++k) {
                     result.push(instruments[k]);
                 }
             }
@@ -50,8 +49,8 @@ exports.getInstrumentByUrl = async function (source, url) {
         }
     }
     else {
-        for (var i = 0; i < sources.length; ++i) {
-            var instrument = await providers[sources[i]].getInstrumentByUrl(sources[i], url);
+        for (let i = 0; i < sources.length; ++i) {
+            const instrument = await providers[sources[i]].getInstrumentByUrl(sources[i], url);
             if (instrument) {
                 return instrument;
             }

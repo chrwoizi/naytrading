@@ -23,32 +23,32 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     function formatDate(date) {
-      var y = date.getYear() + 1900;
-      var m = date.getMonth() + 1;
-      var d = date.getDate();
-      var mm = m < 10 ? '0' + m : m;
-      var dd = d < 10 ? '0' + d : d;
+      const y = date.getYear() + 1900;
+      const m = date.getMonth() + 1;
+      const d = date.getDate();
+      const mm = m < 10 ? '0' + m : m;
+      const dd = d < 10 ? '0' + d : d;
       return '' + dd + '.' + mm + '.' + y;
     }
 
-    var dates = [];
-    var rates = [];
-    var r1 = Math.random();
-    var r2 = Math.random();
-    var r3 = Math.random();
-    for (var i = -365 * 5, j = 0; i <= 0; ++i, ++j) {
-      var date = new Date(new Date().getTime() + i * 24 * 60 * 60 * 1000);
+    const dates = [];
+    const rates = [];
+    const r1 = Math.random();
+    const r2 = Math.random();
+    const r3 = Math.random();
+    for (let i = -365 * 5, j = 0; i <= 0; ++i, ++j) {
+      const date = new Date(new Date().getTime() + i * 24 * 60 * 60 * 1000);
       dates.push(formatDate(date));
-      var oct1 = 1.5 * Math.sin(i / 65 - 0.5 * Math.PI);
-      var oct2 = 0.4 * Math.sin(i / 19 - r1 * Math.PI);
-      var oct3 = 0.3 * Math.sin(i / 5 - r2 * Math.PI);
-      var oct4 = 0.2 * Math.sin(i / 3 - r3 * Math.PI);
-      var r = j / (365 * 5);
-      var rate = 2 + 8 * Math.pow(r, 1.2) + 10 + oct1 + oct2 + oct3 + oct4;
+      const oct1 = 1.5 * Math.sin(i / 65 - 0.5 * Math.PI);
+      const oct2 = 0.4 * Math.sin(i / 19 - r1 * Math.PI);
+      const oct3 = 0.3 * Math.sin(i / 5 - r2 * Math.PI);
+      const oct4 = 0.2 * Math.sin(i / 3 - r3 * Math.PI);
+      const r = j / (365 * 5);
+      const rate = 2 + 8 * Math.pow(r, 1.2) + 10 + oct1 + oct2 + oct3 + oct4;
       rates.push(Math.round(rate * 100) / 100);
     }
 
-    var config: Chart.ChartConfiguration = {
+    const config: Chart.ChartConfiguration = {
       type: 'line',
       data: {
         labels: dates,
@@ -89,7 +89,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     };
 
     setTimeout(function () {
-      var ctx = (document.getElementById('canvas') as any).getContext('2d');
+      const ctx = (document.getElementById('canvas') as any).getContext('2d');
       new Chart(ctx, config);
     }, 1);
   }

@@ -117,7 +117,7 @@ export class StatsComponent extends ListBase<Sale> implements OnInit {
   }
 
   load(user) {
-    var self = this;
+    const self = this;
     self.spinner.show();
     self.loading = true;
     self.statsService.get(user)
@@ -157,8 +157,9 @@ export class StatsComponent extends ListBase<Sale> implements OnInit {
   formatCurrency(n) {
     if (typeof (n) === 'undefined')
       return undefined;
-    var abbrv = ["", "T", "M"];
-    for (var i = 0; i < abbrv.length - 1 && Math.abs(n) >= 1000; ++i) {
+    const abbrv = ["", "T", "M"];
+    let i;
+    for (i = 0; i < abbrv.length - 1 && Math.abs(n) >= 1000; ++i) {
       n /= 1000.0;
     }
     return n.toFixed(2) + abbrv[i];
@@ -171,7 +172,7 @@ export class StatsComponent extends ListBase<Sale> implements OnInit {
   }
 
   setStats(user, stats) {
-    var self = this;
+    const self = this;
 
     self.setItems(stats.Sales);
 
@@ -208,9 +209,9 @@ export class StatsComponent extends ListBase<Sale> implements OnInit {
       complete: stats.CompleteCount
     };
 
-    for (var i = 0; i < stats.Sales.length; i++) {
-      var sale = stats.Sales[i];
-      var currentStats = self.completeStats;
+    for (let i = 0; i < stats.Sales.length; i++) {
+      const sale = stats.Sales[i];
+      let currentStats = self.completeStats;
       if (sale.S == 'c') {
         currentStats = self.completeStats;
       } else if (sale.S == 'o') {

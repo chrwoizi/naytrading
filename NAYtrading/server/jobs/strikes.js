@@ -1,4 +1,3 @@
-var exports = module.exports = {}
 const sql = require('../sql/sql');
 const config = require('../config/envconfig');
 

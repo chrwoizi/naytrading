@@ -1,5 +1,3 @@
-var exports = module.exports = {}
-
 const config = require('../../config/envconfig');
 const downloader = require('../downloader');
 
@@ -12,7 +10,7 @@ exports.getRates = async function (source, instrumentId, marketId, startTime, en
     if (source != exports.source)
         throw new Error("invalid source");
 
-    var response = {
+    const response = {
         "markets": {
             "1": {
                 "marketId": "1",
@@ -41,13 +39,13 @@ exports.getRates = async function (source, instrumentId, marketId, startTime, en
     if (response && response.markets) {
         if (response.markets[marketId] && response.markets[marketId].marketId == marketId) {
 
-            var isin = response.markets[marketId].isin;
-            var wkn = response.markets[marketId].wkn;
+            const isin = response.markets[marketId].isin;
+            const wkn = response.markets[marketId].wkn;
 
             function toSnapshotRate(data) {
 
                 // TODO map json to naytrading format
-                var result = {
+                const result = {
                     Open: data.Open,
                     Close: data.Close,
                     High: data.High,
@@ -58,18 +56,18 @@ exports.getRates = async function (source, instrumentId, marketId, startTime, en
                 return result;
             }
 
-            var rates = response.rates
+            const rates = response.rates
                 .map(x => toSnapshotRate(x))
                 .filter(x => x.Time >= startTime)
                 .filter(x => typeof (x.Close) !== 'undefined' && x.Close != null);
 
             rates.sort(function (a, b) { return a.Time.getTime() - b.Time.getTime() });
 
-            var distinctDays = [];
-            var lastDate = undefined;
-            for (var i = 0; i < rates.length; ++i) {
-                var rate = rates[i];
-                var date = new Date(rate.Time.getYear(), rate.Time.getMonth(), rate.Time.getDate());
+            const distinctDays = [];
+            let lastDate = undefined;
+            for (let i = 0; i < rates.length; ++i) {
+                const rate = rates[i];
+                const date = new Date(rate.Time.getYear(), rate.Time.getMonth(), rate.Time.getDate());
                 if (i == 0) {
                     distinctDays.push(rate);
                     lastDate = date;

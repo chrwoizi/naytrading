@@ -1,4 +1,3 @@
-var exports = module.exports = {}
 const model = require('../models/index');
 const sql = require('../sql/sql');
 const config = require('../config/envconfig');
@@ -32,13 +31,13 @@ function parseDate(dateString) {
 }
 
 async function processSnapshots() {
-    var rows = await sql.query("SELECT s.ID, s.Instrument_ID, s.Time FROM snapshots s WHERE EXISTS (SELECT 1 FROM snapshotrates r WHERE r.Snapshot_ID = s.ID) ORDER BY s.Time", {});
+    const rows = await sql.query("SELECT s.ID, s.Instrument_ID, s.Time FROM snapshots s WHERE EXISTS (SELECT 1 FROM snapshotrates r WHERE r.Snapshot_ID = s.ID) ORDER BY s.Time", {});
     console.log("consolidate job will process " + rows.length + " snapshots.");
 
-    var splitCandidates = [];
+    const splitCandidates = [];
 
-    for (var row of rows) {
-        var snapshotRates = await model.snapshotrate.findAll({
+    for (const row of rows) {
+        let snapshotRates = await model.snapshotrate.findAll({
             where: {
                 Snapshot_ID: row.ID
             },
@@ -48,7 +47,7 @@ async function processSnapshots() {
         });
         snapshotRates = snapshotRates.map(x => x.get({ plain: true }));
 
-        var instrumentRates = await model.instrumentrate.findAll({
+        let instrumentRates = await model.instrumentrate.findAll({
             where: {
                 Instrument_ID: row.Instrument_ID
             },
@@ -58,10 +57,10 @@ async function processSnapshots() {
         });
         instrumentRates = instrumentRates.map(x => x.get({ plain: true }));
 
-        var newRates = [];
+        let newRates = [];
         if (instrumentRates.length) {
 
-            var error = splitJob.getError(snapshotRates, instrumentRates);
+            const error = splitJob.getError(snapshotRates, instrumentRates);
             if (error.count < newSnapshotController.minDays * config.job_consolidate_min_match) {
                 continue;
             }
@@ -73,12 +72,12 @@ async function processSnapshots() {
                 continue;
             }
 
-            var firstTime = parseDate(instrumentRates[0].Time);
-            var lastTime = parseDate(instrumentRates[instrumentRates.length - 1].Time);
-            var rates = [];
-            for (var s = 0; s < snapshotRates.length; ++s) {
-                var snapshotRate = snapshotRates[s];
-                var snapshotRateTime = parseDate(snapshotRate.Time);
+            const firstTime = parseDate(instrumentRates[0].Time);
+            const lastTime = parseDate(instrumentRates[instrumentRates.length - 1].Time);
+            const rates = [];
+            for (let s = 0; s < snapshotRates.length; ++s) {
+                const snapshotRate = snapshotRates[s];
+                const snapshotRateTime = parseDate(snapshotRate.Time);
                 if (snapshotRateTime > lastTime || snapshotRateTime < firstTime) {
                     delete snapshotRate.createdAt;
                     delete snapshotRate.updatedAt;
@@ -91,8 +90,8 @@ async function processSnapshots() {
             newRates = rates;
         }
         else {
-            for (var s = 0; s < snapshotRates.length; ++s) {
-                var snapshotRate = snapshotRates[s];
+            for (let s = 0; s < snapshotRates.length; ++s) {
+                const snapshotRate = snapshotRates[s];
                 delete snapshotRate.createdAt;
                 delete snapshotRate.updatedAt;
                 delete snapshotRate.ID;
@@ -112,15 +111,15 @@ async function processSnapshots() {
                     transaction: transaction
                 });
 
-                var firstRateDate = parseDate(newRates[0].Time);
-                var lastRateDate = parseDate(newRates[newRates.length - 1].Time);
+                let firstRateDate = parseDate(newRates[0].Time);
+                let lastRateDate = parseDate(newRates[newRates.length - 1].Time);
 
-                var rateTimes = await sql.query("SELECT MIN(r.Time) AS startTime, MAX(r.Time) AS endTime FROM instrumentrates r WHERE r.Instrument_ID = @instrumentId GROUP BY r.Instrument_ID", {
+                const rateTimes = await sql.query("SELECT MIN(r.Time) AS startTime, MAX(r.Time) AS endTime FROM instrumentrates r WHERE r.Instrument_ID = @instrumentId GROUP BY r.Instrument_ID", {
                     "@instrumentId": row.Instrument_ID
                 });
                 if (rateTimes && rateTimes.length) {
-                    var existingFirst = parseDate(rateTimes[0].startTime);
-                    var existingLast = parseDate(rateTimes[0].endTime);
+                    const existingFirst = parseDate(rateTimes[0].startTime);
+                    const existingLast = parseDate(rateTimes[0].endTime);
 
                     firstRateDate = firstRateDate < existingFirst ? firstRateDate : existingFirst;
                     lastRateDate = lastRateDate < existingLast ? lastRateDate : existingLast;
@@ -162,9 +161,9 @@ exports.run = async function () {
 
         exports.isRunning = true;
 
-        var splitCandidates = await processSnapshots();
+        const splitCandidates = await processSnapshots();
 
-        for (var instrumentId of splitCandidates) {
+        for (const instrumentId of splitCandidates) {
             await model.instrument.update({
                 Split: "DIFF"
             }, {

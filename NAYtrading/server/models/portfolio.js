@@ -1,6 +1,6 @@
 'use strict';
 module.exports = (sequelize, DataTypes) => {
-    var portfolio = sequelize.define('portfolio', {
+    const portfolio = sequelize.define('portfolio', {
 
         ID: {
             allowNull: false,

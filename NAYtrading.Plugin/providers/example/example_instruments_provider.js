@@ -1,5 +1,3 @@
-var exports = module.exports = {}
-
 const config = require('../../config/envconfig');
 const downloader = require('../downloader');
 
@@ -31,11 +29,11 @@ exports.getInstrumentByUrl = async function (source, url) {
     if (source != exports.source)
         throw new Error("invalid source");
 
-    var doc = await downloader.downloadHtml(source, url);
+    const doc = await downloader.downloadHtml(source, url);
 
     // TODO extract values from doc
 
-    var instrument = {
+    const instrument = {
         sources: [{
             SourceType: exports.source,
             SourceId: "example_1",

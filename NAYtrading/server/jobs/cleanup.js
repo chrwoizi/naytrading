@@ -1,4 +1,3 @@
-var exports = module.exports = {}
 const model = require('../models/index');
 const sql = require('../sql/sql');
 const fs = require('fs');
@@ -7,21 +6,21 @@ const splitJob = require('./split');
 const consolidateJob = require('./consolidate');
 const newSnapshotController = require('../controllers/new_snapshot_controller');
 
-var duplicates_sql = "";
+let duplicates_sql = "";
 try {
     duplicates_sql = fs.readFileSync(__dirname + '/../sql/duplicates.sql', 'utf8');
 } catch (e) {
     console.log('Error:', e.stack);
 }
 
-var missing_rates_sql = "";
+let missing_rates_sql = "";
 try {
     missing_rates_sql = fs.readFileSync(__dirname + '/../sql/missing_rates.sql', 'utf8');
 } catch (e) {
     console.log('Error:', e.stack);
 }
 
-var late_rates_sql = "";
+let late_rates_sql = "";
 try {
     late_rates_sql = fs.readFileSync(__dirname + '/../sql/late_rates.sql', 'utf8');
 } catch (e) {
@@ -53,9 +52,9 @@ function groupBy(xs, key, equals) {
 }
 
 async function cleanupDuplicates() {
-    var rows = await sql.query(duplicates_sql, {});
+    const rows = await sql.query(duplicates_sql, {});
 
-    var groups = groupBy(rows, x => {
+    const groups = groupBy(rows, x => {
         return {
             Instrument_ID: x.Instrument_ID,
             Time: x.Time
@@ -64,11 +63,11 @@ async function cleanupDuplicates() {
         return a.Instrument_ID == b.Instrument_ID && a.Time.substr(0, 10) == b.Time.substr(0, 10);
     });
 
-    for (var i = 0; i < groups.length; ++i) {
+    for (let i = 0; i < groups.length; ++i) {
 
-        var snapshots = groups[i].values;
+        const snapshots = groups[i].values;
 
-        for (var i = 1; i < snapshots.length; ++i) {
+        for (let i = 1; i < snapshots.length; ++i) {
             console.log("deleting duplicate snapshot " + snapshots[i].ID + " for instrument " + snapshots[i].Instrument_ID);
             await model.usersnapshot.update(
                 {
@@ -99,11 +98,11 @@ async function cleanupDuplicates() {
 
 async function cleanupMissingRates() {
     return;
-    var rows = await sql.query(missing_rates_sql, {
+    const rows = await sql.query(missing_rates_sql, {
         "@minRates": newSnapshotController.minDays - 1
     });
 
-    for (var i = 0; i < rows.length; ++i) {
+    for (let i = 0; i < rows.length; ++i) {
         console.log("snapshot " + rows[i].ID + " for instrument " + rows[i].Instrument_ID + " has missing rates in time span");
         /*await model.snapshot.destroy({
             where: {
@@ -115,11 +114,11 @@ async function cleanupMissingRates() {
 
 async function cleanupLateBegin() {
     return;
-    var rows = await sql.query(late_rates_sql, {
+    const rows = await sql.query(late_rates_sql, {
         "@minDays": (config.chart_period_seconds - config.discard_threshold_seconds) / 60 / 60 / 24 - 1
     });
 
-    for (var i = 0; i < rows.length; ++i) {
+    for (let i = 0; i < rows.length; ++i) {
         console.log("snapshot " + rows[i].ID + " for instrument " + rows[i].Instrument_ID + " first rate is late");
         /*await model.snapshot.destroy({
             where: {
@@ -130,7 +129,7 @@ async function cleanupLateBegin() {
 }
 
 async function cleanupOldUnseen() {
-    var result = await sql.query("DELETE FROM s USING snapshots AS s WHERE NOT EXISTS (SELECT 1 FROM usersnapshots AS u WHERE u.Snapshot_ID = s.ID) AND s.Time < NOW() - INTERVAL @hours HOUR", {
+    const result = await sql.query("DELETE FROM s USING snapshots AS s WHERE NOT EXISTS (SELECT 1 FROM usersnapshots AS u WHERE u.Snapshot_ID = s.ID) AND s.Time < NOW() - INTERVAL @hours HOUR", {
         "@hours": config.max_unused_snapshot_age_hours + 1
     });
 
@@ -140,7 +139,7 @@ async function cleanupOldUnseen() {
 }
 
 async function cleanupDuplicateInstruments() {
-    var items = await sql.query('select i.ID as dup, i2.ID as orig \
+    const items = await sql.query('select i.ID as dup, i2.ID as orig \
         from instruments i \
         inner join instruments i2 on i2.ID<i.ID \
         inner join sources s on s.Instrument_ID=i.ID and s.SourceType=\'w\' \
@@ -151,7 +150,7 @@ async function cleanupDuplicateInstruments() {
     if (items.length > 0) {
         console.log("Cleanup job will delete " + items.length + " duplicate instruments...");
 
-        for (var item of items) {
+        for (const item of items) {
             await sql.query('delete from userinstruments where Instrument_ID = @oldId', {
                 '@oldId': item.dup
             });

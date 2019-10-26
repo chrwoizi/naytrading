@@ -1,4 +1,3 @@
-var exports = module.exports = {}
 const model = require('../models/index');
 const sequelize = require('sequelize');
 const sql = require('../sql/sql');
@@ -7,6 +6,11 @@ const config = require('../config/envconfig');
 const newSnapshotController = require('./new_snapshot_controller');
 const ratesProvider = require('../providers/rates_provider');
 
+
+function return500(res, e) {
+    res.status(500);
+    res.json({ error: e.message });
+}
 
 function parseDate(dateString) {
     return new Date(Date.UTC(
@@ -61,12 +65,18 @@ exports.ensureRates = async function (snapshot) {
         snapshot.snapshotrates = await model.instrumentrate.findAll({
             where: {
                 Instrument_ID: snapshot.Instrument_ID,
-                Time: {
-                    [sequelize.Op.gte]: snapshot.FirstPriceTime
-                },
-                Time: {
-                    [sequelize.Op.lte]: snapshot.PriceTime
-                }
+                [sequelize.Op.and]: [
+                    {
+                        Time: {
+                            [sequelize.Op.gte]: snapshot.FirstPriceTime
+                        }
+                    },
+                    {
+                        Time: {
+                            [sequelize.Op.lte]: snapshot.PriceTime
+                        }
+                    }
+                ]
             },
             orderBy: [
                 ["Time", "ASC"]
@@ -86,7 +96,7 @@ exports.countSnapshots = async function (req, res) {
                 return;
             }
 
-            var fromDate = new Date(Date.UTC(1970, 0, 1));
+            let fromDate = new Date(Date.UTC(1970, 0, 1));
             if (req.params.fromDate.length == 8) {
                 fromDate = new Date(Date.UTC(req.params.fromDate.substr(0, 4), parseInt(req.params.fromDate.substr(4, 2)) - 1, req.params.fromDate.substr(6, 2)));
             }
@@ -95,7 +105,7 @@ exports.countSnapshots = async function (req, res) {
                     req.params.fromDate.substr(8, 2), parseInt(req.params.fromDate.substr(10, 2)), req.params.fromDate.substr(12, 2)));
             }
 
-            var result = await model.usersnapshot.count({
+            const result = await model.usersnapshot.count({
                 where: {
                     User: req.user.email,
                     ModifiedTime: {
@@ -125,7 +135,7 @@ exports.snapshots = async function (req, res) {
             let snapshots;
 
             if (req.params.instrument) {
-                var instrumentId = parseInt(req.params.instrument);
+                const instrumentId = parseInt(req.params.instrument);
                 snapshots = await sql.query("SELECT s.ID, s.Time, i.InstrumentName, u.Decision, u.ModifiedTime FROM snapshots AS s \
                         INNER JOIN instruments AS i ON i.ID = s.Instrument_ID INNER JOIN usersnapshots AS u ON u.Snapshot_ID = s.ID WHERE u.User = @user AND s.Instrument_ID = @instrument", {
                         "@user": req.user.email,
@@ -139,7 +149,7 @@ exports.snapshots = async function (req, res) {
                     });
             }
 
-            var viewModels = snapshots.map(snapshot => exports.getSnapshotListViewModel(snapshot));
+            const viewModels = snapshots.map(snapshot => exports.getSnapshotListViewModel(snapshot));
             res.json({ snapshots: viewModels });
 
         }
@@ -156,13 +166,13 @@ exports.snapshots = async function (req, res) {
 
 exports.getSnapshot = async function (id, user) {
 
-    var snapshots = await sql.query("SELECT s.ID, s.Time, s.Instrument_ID, i.InstrumentName, s.FirstPriceTime, s.PriceTime FROM snapshots AS s INNER JOIN instruments AS i ON i.ID = s.Instrument_ID WHERE s.ID = @id", {
+    const snapshots = await sql.query("SELECT s.ID, s.Time, s.Instrument_ID, i.InstrumentName, s.FirstPriceTime, s.PriceTime FROM snapshots AS s INNER JOIN instruments AS i ON i.ID = s.Instrument_ID WHERE s.ID = @id", {
         "@id": id,
         "@user": user
     });
 
     if (snapshots && snapshots.length == 1) {
-        var snapshot = snapshots[0];
+        const snapshot = snapshots[0];
 
         snapshot.instrument = {
             ID: snapshot.Instrument_ID,
@@ -181,8 +191,8 @@ exports.getSnapshot = async function (id, user) {
             });
         }
 
-        var previous = await exports.getPreviousDecisionAndBuyRate(snapshot.ID, user);
-        var viewModel = exports.getSnapshotViewModel(snapshot, previous, user);
+        const previous = await exports.getPreviousDecisionAndBuyRate(snapshot.ID, user);
+        const viewModel = exports.getSnapshotViewModel(snapshot, previous, user);
         return viewModel;
     }
     else {
@@ -194,7 +204,7 @@ exports.snapshot = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
 
-            var viewModel = await exports.getSnapshot(req.params.id, req.user.email);
+            const viewModel = await exports.getSnapshot(req.params.id, req.user.email);
 
             if (req.params.decision && req.params.decision > 0) {
                 viewModel.ConfirmDecision = req.params.decision;
@@ -222,7 +232,7 @@ exports.snapshot = async function (req, res) {
 
 exports.getPreviousDecision = async function (snapshotId, user) {
 
-    var previous = await sql.query("SELECT s.ID, u.Decision \
+    const previous = await sql.query("SELECT s.ID, u.Decision \
         FROM usersnapshots AS u\
         INNER JOIN snapshots AS s ON u.Snapshot_ID = s.ID\
         INNER JOIN snapshots AS cs ON cs.ID = @snapshotId\
@@ -235,7 +245,7 @@ exports.getPreviousDecision = async function (snapshotId, user) {
             "@snapshotId": snapshotId
         });
 
-    var result = {};
+    const result = {};
 
     if (previous && previous.length == 1) {
         result.PreviousDecision = previous[0].Decision;
@@ -246,7 +256,7 @@ exports.getPreviousDecision = async function (snapshotId, user) {
 
 exports.getPreviousDecisionAndBuyRate = async function (snapshotId, user) {
 
-    var previous = await sql.query("SELECT s.ID, u.Decision, s.Price, s.PriceTime \
+    const previous = await sql.query("SELECT s.ID, u.Decision, s.Price, s.PriceTime \
         FROM usersnapshots AS u\
         INNER JOIN snapshots AS s ON u.Snapshot_ID = s.ID\
         INNER JOIN snapshots AS cs ON cs.ID = @snapshotId\
@@ -259,7 +269,7 @@ exports.getPreviousDecisionAndBuyRate = async function (snapshotId, user) {
             "@snapshotId": snapshotId
         });
 
-    var result = {};
+    const result = {};
 
     if (previous && previous.length == 1) {
         result.PreviousDecision = previous[0].Decision;
@@ -274,7 +284,7 @@ exports.getPreviousDecisionAndBuyRate = async function (snapshotId, user) {
 
 exports.isLongWait = async function (snapshotId, user) {
 
-    var previous = await sql.query("SELECT s.ID, u.Decision, s.Price, s.PriceTime \
+    const previous = await sql.query("SELECT s.ID, u.Decision, s.Price, s.PriceTime \
         FROM usersnapshots AS u\
         INNER JOIN snapshots AS s ON u.Snapshot_ID = s.ID\
         INNER JOIN snapshots AS cs ON cs.ID = @snapshotId\
@@ -297,7 +307,7 @@ exports.isLongWait = async function (snapshotId, user) {
 
 exports.getNextDecision = async function (snapshotId, user) {
 
-    var next = await sql.query("SELECT s.ID, u.Decision \
+    const next = await sql.query("SELECT s.ID, u.Decision \
         FROM usersnapshots AS u\
         INNER JOIN snapshots AS s ON u.Snapshot_ID = s.ID\
         INNER JOIN snapshots AS cs ON cs.ID = @snapshotId\
@@ -310,7 +320,7 @@ exports.getNextDecision = async function (snapshotId, user) {
             "@snapshotId": snapshotId
         });
 
-    var result = {};
+    const result = {};
 
     if (next && next.length == 1) {
         result.NextDecision = next[0].Decision;
@@ -325,14 +335,14 @@ exports.setDecision = async function (req, res) {
 
             if (req.body.confirm && req.body.confirm > 1) {
 
-                var toCheck = await sql.query("SELECT ID, Decision, Confirmed FROM usersnapshots WHERE User = @userName AND ID = @id AND Snapshot_ID = @snapshotId", {
+                const toCheck = await sql.query("SELECT ID, Decision, Confirmed FROM usersnapshots WHERE User = @userName AND ID = @id AND Snapshot_ID = @snapshotId", {
                     "@userName": req.user.email,
                     "@id": req.body.confirm,
                     "@snapshotId": req.body.id
                 });
 
                 if (toCheck && toCheck.length > 0) {
-                    var confirmation = toCheck[0].Decision == req.body.decision ? 1 : -1;
+                    const confirmation = toCheck[0].Decision == req.body.decision ? 1 : -1;
 
                     await model.usersnapshot.update(
                         {
@@ -353,7 +363,7 @@ exports.setDecision = async function (req, res) {
             }
 
             if (req.body.decision == "buy" || req.body.decision == "sell") {
-                var previous = await exports.getPreviousDecision(req.body.id, req.user.email);
+                const previous = await exports.getPreviousDecision(req.body.id, req.user.email);
                 if (previous.PreviousDecision) {
                     if (previous.PreviousDecision == "buy") {
                         if (req.body.decision == "buy") {
@@ -367,7 +377,7 @@ exports.setDecision = async function (req, res) {
                     }
                 }
 
-                var next = await exports.getNextDecision(req.body.id, req.user.email);
+                const next = await exports.getNextDecision(req.body.id, req.user.email);
                 if (next.NextDecision) {
                     if (next.NextDecision == "buy") {
                         if (req.body.decision == "buy") {
@@ -382,14 +392,14 @@ exports.setDecision = async function (req, res) {
                 }
             }
 
-            var usersnapshot = await model.usersnapshot.findOne({
+            const usersnapshot = await model.usersnapshot.findOne({
                 where: {
                     User: req.user.email,
                     Snapshot_ID: req.body.id
                 }
             });
 
-            var deletePortfolio = false;
+            let deletePortfolio = false;
 
             if (usersnapshot) {
                 if (usersnapshot.Decision != req.body.decision) {
@@ -411,13 +421,13 @@ exports.setDecision = async function (req, res) {
                 }
 
                 if (deletePortfolio) {
-                    var snapshot = await model.snapshot.findOne({
+                    const snapshot = await model.snapshot.findOne({
                         where: {
                             ID: req.body.id
                         }
                     });
 
-                    var fromTime = new Date(snapshot.Time);
+                    let fromTime = new Date(snapshot.Time);
 
                     await model.portfolio.destroy({
                         where: {
@@ -428,7 +438,7 @@ exports.setDecision = async function (req, res) {
                         }
                     });
 
-                    var latest = await model.portfolio.findOne({
+                    const latest = await model.portfolio.findOne({
                         where: {
                             User: req.user.email
                         },
@@ -473,13 +483,13 @@ exports.setDecision = async function (req, res) {
 };
 
 exports.resetStats = async function (snapshotId, endTime) {
-    var users = await sql.query("SELECT u.User FROM usersnapshots AS u WHERE u.Snapshot_ID = @snapshotId", {
+    const users = await sql.query("SELECT u.User FROM usersnapshots AS u WHERE u.Snapshot_ID = @snapshotId", {
         "@snapshotId": snapshotId
     });
 
-    for (var u = 0; u < users.length; ++u) {
+    for (let u = 0; u < users.length; ++u) {
 
-        var fromTime = new Date(endTime);
+        let fromTime = new Date(endTime);
 
         await model.portfolio.destroy({
             where: {
@@ -490,7 +500,7 @@ exports.resetStats = async function (snapshotId, endTime) {
             }
         });
 
-        var latest = await model.portfolio.findOne({
+        const latest = await model.portfolio.findOne({
             where: {
                 User: users[u].User
             },
@@ -580,11 +590,11 @@ exports.refreshSnapshotRates = async function (req, res) {
     try {
         if (req.isAuthenticated() && req.user.email == config.admin_user) {
 
-            var snapshotId = req.body.id;
-            var newSource = req.body.source;
-            var newMarketId = req.body.market;
+            const snapshotId = req.body.id;
+            let newSource = req.body.source;
+            let newMarketId = req.body.market;
 
-            var snapshots = await sql.query("SELECT s.StartTime, s.Time, s.Instrument_ID, s.SourceType, s.MarketId FROM snapshots AS s WHERE s.ID = @id", {
+            const snapshots = await sql.query("SELECT s.StartTime, s.Time, s.Instrument_ID, s.SourceType, s.MarketId FROM snapshots AS s WHERE s.ID = @id", {
                 "@id": snapshotId
             });
 
@@ -593,9 +603,9 @@ exports.refreshSnapshotRates = async function (req, res) {
                 return;
             }
 
-            var startTime = parseDate(snapshots[0].StartTime);
-            var endTime = parseDate(snapshots[0].Time);
-            var instrumentId = snapshots[0].Instrument_ID;
+            const startTime = parseDate(snapshots[0].StartTime);
+            const endTime = parseDate(snapshots[0].Time);
+            const instrumentId = snapshots[0].Instrument_ID;
 
             if (!newSource) {
                 newSource = snapshots[0].SourceType;
@@ -609,7 +619,7 @@ exports.refreshSnapshotRates = async function (req, res) {
                 return;
             }
 
-            var sources = await model.source.findAll({
+            let sources = await model.source.findAll({
                 where: {
                     Instrument_ID: instrumentId,
                     SourceType: newSource
@@ -633,21 +643,21 @@ exports.refreshSnapshotRates = async function (req, res) {
                 }
             }
 
-            var sourceInfo = sources[0];
+            const sourceInfo = sources[0];
 
             if (!newMarketId) {
                 newMarketId = sourceInfo.MarketId;
             }
 
             async function checkRatesCallback(rates) {
-                problem = newSnapshotController.checkRates(rates, startTime, endTime, newSource);
+                let problem = newSnapshotController.checkRates(rates, startTime, endTime, newSource);
                 return problem == null;
             }
 
             try {
-                var ratesResponse = await ratesProvider.getRates(newSource, sourceInfo.SourceId, newMarketId, startTime, endTime, checkRatesCallback);
+                const ratesResponse = await ratesProvider.getRates(newSource, sourceInfo.SourceId, newMarketId, startTime, endTime, checkRatesCallback);
                 if (ratesResponse && ratesResponse.Rates) {
-                    var newRates = ratesResponse.Rates;
+                    const newRates = ratesResponse.Rates;
 
                     await exports.setRates(snapshotId, ratesResponse.Source, ratesResponse.MarketId, newRates, endTime);
 

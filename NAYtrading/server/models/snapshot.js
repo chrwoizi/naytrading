@@ -1,6 +1,6 @@
 'use strict';
 module.exports = (sequelize, DataTypes) => {
-    var snapshot = sequelize.define('snapshot', {
+    const snapshot = sequelize.define('snapshot', {
 
         ID: {
             allowNull: false,

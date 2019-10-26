@@ -49,7 +49,7 @@ export class AlertService {
     }
 
     error(error: any, keepAfterNavigationChange = false) {
-        var message = this.getText(error);
+        const message = this.getText(error);
         this.keepAfterNavigationChange = keepAfterNavigationChange;
         this.subject.next({ type: 'error', text: message });
 

@@ -8,8 +8,8 @@ const ExtractJWT = passportJWT.ExtractJwt;
 
 module.exports = function (passport, user) {
 
-    var User = user;
-    var LocalStrategy = require('passport-local').Strategy;
+    const User = user;
+    const LocalStrategy = require('passport-local').Strategy;
 
     function isValidPasswordFormat(password) {
         if (typeof (password) === 'string') {
@@ -27,7 +27,7 @@ module.exports = function (passport, user) {
 
         function (req, email, password, done) {
 
-            var generateHash = function (password) {
+            const generateHash = function (password) {
 
                 return bCrypt.hashSync(password, bCrypt.genSaltSync(8), null);
 
@@ -70,9 +70,9 @@ module.exports = function (passport, user) {
 
                         }
 
-                        var userPassword = generateHash(password);
+                        const userPassword = generateHash(password);
 
-                        var data =
+                        const data =
                         {
                             email: email,
 
@@ -116,9 +116,9 @@ module.exports = function (passport, user) {
 
         function (req, email, password, done) {
 
-            var User = user;
+            const User = user;
 
-            var isValidPassword = function (userpass, password) {
+            const isValidPassword = function (userpass, password) {
 
                 return bCrypt.compareSync(password, userpass);
 
@@ -148,7 +148,7 @@ module.exports = function (passport, user) {
 
                 }
 
-                var userinfo = user.get();
+                const userinfo = user.get();
                 return done(null, userinfo);
 
             }).catch(function (err) {
@@ -174,13 +174,13 @@ module.exports = function (passport, user) {
 
         function (req, email, password, done) {
 
-            var generateHash = function (password) {
+            const generateHash = function (password) {
 
                 return bCrypt.hashSync(password, bCrypt.genSaltSync(8), null);
 
             };
 
-            var isValidPassword = function (userpass, password) {
+            const isValidPassword = function (userpass, password) {
 
                 return bCrypt.compareSync(password, userpass);
 
@@ -235,12 +235,12 @@ module.exports = function (passport, user) {
 
                 }
 
-                var userPassword = generateHash(req.body.newPassword);
+                const userPassword = generateHash(req.body.newPassword);
 
                 user.password = userPassword;
 
                 user.save().then(function () {
-                    var userinfo = user.get();
+                    const userinfo = user.get();
                     return done(null, userinfo, {
                         hasError: false,
                         message: 'Password changed'

@@ -75,7 +75,7 @@ export class SnapshotComponent implements OnInit {
       return;
     }
 
-    var message = "unknown error";
+    let message = "unknown error";
     if (typeof (error) === 'string') {
       message = error;
     }
@@ -96,10 +96,10 @@ export class SnapshotComponent implements OnInit {
   }
 
   load() {
-    var self = this;
-    var currentLocation = window.location.href;
+    const self = this;
+    const currentLocation = window.location.href;
 
-    var service: () => Observable<GetSnapshotResponse>;
+    let service: () => Observable<GetSnapshotResponse>;
     if (self.route.snapshot.queryParamMap.has('instrument')) {
       service = () => self.snapshotService.create(self.route.snapshot.queryParamMap.get('instrument'));
     } else if (self.route.snapshot.queryParamMap.has('action')) {
@@ -121,7 +121,7 @@ export class SnapshotComponent implements OnInit {
           self.handleError(response.error);
         }
         else {
-          var snapshot = response.snapshot;
+          const snapshot = response.snapshot;
           if (snapshot.ConfirmDecision && snapshot.ConfirmDecision > 0) {
             self.router.navigate(
               [],
@@ -157,7 +157,7 @@ export class SnapshotComponent implements OnInit {
 
   setRates(snapshot) {
 
-    var self = this;
+    const self = this;
 
     self.snapshot = snapshot;
 
@@ -195,11 +195,11 @@ export class SnapshotComponent implements OnInit {
     }
 
     function yymmdd(date) {
-      var y = date.getYear();
-      var m = date.getMonth() + 1;
-      var d = date.getDate();
-      var mm = m < 10 ? '0' + m : m;
-      var dd = d < 10 ? '0' + d : d;
+      const y = date.getYear();
+      const m = date.getMonth() + 1;
+      const d = date.getDate();
+      const mm = m < 10 ? '0' + m : m;
+      const dd = d < 10 ? '0' + d : d;
       return '' + (y % 100) + mm + dd;
     }
 
@@ -227,8 +227,8 @@ export class SnapshotComponent implements OnInit {
           }
         ];
       } else {
-        var previousSnapshotIndex = rates.length - 1;
-        for (var i = 0; i < rates.length; i++) {
+        let previousSnapshotIndex = rates.length - 1;
+        for (let i = 0; i < rates.length; i++) {
           if (rates[i].T >= snapshot.PreviousTime) {
             previousSnapshotIndex = i;
             break;
@@ -274,11 +274,11 @@ export class SnapshotComponent implements OnInit {
               rates.map(function (v, i) {
                 if (i >= previousSnapshotIndex) {
                   if (i < rates.length - 1 && i > 0) {
-                    var previousRate = rates[i - 1];
-                    var nextRate = rates[i + 1];
-                    var sgn1 = Math.sign(previousRate.C - snapshot.PreviousBuyRate);
-                    var sgn2 = Math.sign(v.C - snapshot.PreviousBuyRate);
-                    var sgn3 = Math.sign(nextRate.C - snapshot.PreviousBuyRate);
+                    const previousRate = rates[i - 1];
+                    const nextRate = rates[i + 1];
+                    const sgn1 = Math.sign(previousRate.C - snapshot.PreviousBuyRate);
+                    const sgn2 = Math.sign(v.C - snapshot.PreviousBuyRate);
+                    const sgn3 = Math.sign(nextRate.C - snapshot.PreviousBuyRate);
                     if (sgn1 != sgn2 || sgn2 != sgn3)
                       return v.C;
                   }
@@ -306,12 +306,12 @@ export class SnapshotComponent implements OnInit {
 
     self.lineChart5Data = GetData(snapshot.Rates);
 
-    var endDate = parseDate(snapshot.Date);
-    var startDate = yymmdd(new Date(endDate.setMonth(endDate.getMonth() - 12)));
+    const endDate = parseDate(snapshot.Date);
+    const startDate = yymmdd(new Date(endDate.setMonth(endDate.getMonth() - 12)));
 
-    var startDateIndex = snapshot.Rates.length - 1;
+    let startDateIndex = snapshot.Rates.length - 1;
     for (; startDateIndex >= 0; --startDateIndex) {
-      var rateDate = snapshot.Rates[startDateIndex].T;
+      const rateDate = snapshot.Rates[startDateIndex].T;
       if (rateDate == startDate) {
         break;
       }
@@ -348,7 +348,7 @@ export class SnapshotComponent implements OnInit {
   }
 
   setDecision(decision) {
-    var self = this;
+    const self = this;
 
     self.spinner.show();
     self.loading = true;

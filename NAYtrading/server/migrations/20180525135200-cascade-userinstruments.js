@@ -4,7 +4,7 @@ module.exports = {
         return queryInterface.sequelize.query("SELECT CONSTRAINT_NAME AS name FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS WHERE TABLE_NAME = 'userinstruments' AND CONSTRAINT_TYPE='FOREIGN KEY'")
             .then(names => {
 
-                var name = "userinstruments_ibfk_1";
+                let name = "userinstruments_ibfk_1";
 
                 function create() {
                     console.log("Create " + name);
@@ -27,7 +27,7 @@ module.exports = {
         return queryInterface.sequelize.query("SELECT CONSTRAINT_NAME AS name FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS WHERE TABLE_NAME = 'userinstruments' AND CONSTRAINT_TYPE='FOREIGN KEY'")
             .then(names => {
 
-                var name = "userinstruments_ibfk_1";
+                let name = "userinstruments_ibfk_1";
 
                 function create() {
                     console.log("Create " + name);
