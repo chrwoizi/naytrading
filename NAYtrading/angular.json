@@ -36,8 +36,7 @@
             ],
             "scripts": [
               "./node_modules/jquery/dist/jquery.min.js",
-              "./node_modules/startbootstrap-landing-page/vendor/bootstrap/js/bootstrap.min.js",
-              "./node_modules/phaser/dist/phaser-arcade-physics.js"
+              "./node_modules/startbootstrap-landing-page/vendor/bootstrap/js/bootstrap.min.js"
             ]
           },
           "configurations": {
