@@ -33,6 +33,37 @@ function load() {
         }
     }
 
+    config.admin_user = process.env.naytrading_admin_user || config.admin_user;
+    config.jwt_secret = process.env.naytrading_jwt_secret || config.jwt_secret;
+    config.jwt_secret = process.env.naytrading_jwt_secret || config.jwt_secret;
+    config.python = process.env.naytrading_python || config.python;
+
+    if (process.env.naytrading_instruments_providers) {
+        config.instruments_providers = {};
+        const providers = process.env.naytrading_instruments_providers.split(';');
+        for (const providerStr of providers) {
+            const provider = providerStr.split(':');
+            config.instruments_providers[provider[0]] = provider[1];
+        }
+    }
+    
+    if (process.env.naytrading_rates_providers) {
+        config.rates_providers = {};
+        const providers = process.env.naytrading_rates_providers.split(';');
+        for (const providerStr of providers) {
+            const provider = providerStr.split(':');
+            config.rates_providers[provider[0]] = provider[1];
+        }
+    }
+
+    if (process.env.naytrading_job_split_sources) {
+        config.job_split_sources = process.env.naytrading_job_split_sources.split(';');
+    }
+
+    database.username = process.env.naytrading_database_username || database.username;
+    database.password = process.env.naytrading_database_password || database.password;
+    database.host = process.env.naytrading_database_host || database.host;
+
     addProperties(default_config, config);
     addProperties(default_database, database);
 

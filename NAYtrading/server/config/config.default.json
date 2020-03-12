@@ -137,6 +137,6 @@
     "strikes_order_weight": 0.1,
     "trader_max_retry_count": 100,
     "trader_max_suggestion_age_seconds": 604800,
-    "whitelist": true
+    "whitelist": false
   }
 }
