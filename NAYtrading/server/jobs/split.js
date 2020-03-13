@@ -162,8 +162,8 @@ function getHunchFromRates(rates) {
     if (rates && rates.length) {
         const findings = [];
 
-        const prePre = rates[0];
-        const pre = rates[0];
+        let prePre = rates[0];
+        let pre = rates[0];
         for (let r = 0; r < rates.length; ++r) {
             const rate = rates[r];
             rate.Time = parseDate(rate.Time);
@@ -177,8 +177,8 @@ function getHunchFromRates(rates) {
                 }
             }
 
-            const prePre = pre;
-            const pre = rate;
+            prePre = pre;
+            pre = rate;
         }
 
         const detections = getDistinctFindings(findings, 5);
