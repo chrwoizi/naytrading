@@ -69,7 +69,7 @@ function load() {
     function configureDatabase(config, database) {
         database.user = database.user || database.username;
 
-        database.timezone = database.timezone || "Europe/Berlin";
+        database.timezone = database.timezone || "+01:00";
 
         database.dialectOptions = {
             decimalNumbers: true,
