@@ -12,7 +12,8 @@
       "acquire": 120000,
       "evict": 120000
     },
-    "logging": null
+    "logging": null,
+    "timezone": "Europe/Berlin"
   },
   "production": {
     "username": "naytrading",
@@ -27,6 +28,7 @@
       "acquire": 120000,
       "evict": 120000
     },
-    "logging": null
+    "logging": null,
+    "timezone": "Europe/Berlin"
   }
 }
