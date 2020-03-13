@@ -13,7 +13,7 @@
       "evict": 120000
     },
     "logging": null,
-    "timezone": "Europe/Berlin"
+    "timezone": "+01:00"
   },
   "production": {
     "username": "naytrading",
@@ -29,6 +29,6 @@
       "evict": 120000
     },
     "logging": null,
-    "timezone": "Europe/Berlin"
+    "timezone": "+01:00"
   }
 }
