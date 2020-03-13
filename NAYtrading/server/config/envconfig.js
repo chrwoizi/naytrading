@@ -1,6 +1,5 @@
 require('sequelize'); // must be loaded before envconfig
 const path = require('path');
-const moment = require('moment');
 
 const env = process.env.NODE_ENV || 'development';
 
@@ -70,9 +69,11 @@ function load() {
     function configureDatabase(config, database) {
         database.user = database.user || database.username;
 
+        database.timezone = database.timezone || "Europe/Berlin";
+
         database.dialectOptions = {
             decimalNumbers: true,
-            timezone: moment.tz.guess(),
+            timezone: database.timezone,
             dateStrings: true,
             typeCast: function (field, next) {
                 if (field.type === 'DATETIME') {
@@ -81,8 +82,6 @@ function load() {
                 return next()
             }
         }
-
-        database.timezone = moment.tz.guess();
 
         config.database = database;
 
