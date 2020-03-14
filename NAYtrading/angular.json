@@ -28,7 +28,7 @@
             ],
             "styles": [
               "./node_modules/startbootstrap-landing-page/vendor/bootstrap/css/bootstrap.min.css",
-              "./node_modules/startbootstrap-landing-page/vendor/fontawesome-free/css/fontawesome.min.css",
+              "./node_modules/startbootstrap-landing-page/vendor/fontawesome-free/css/all.min.css",
               "./node_modules/startbootstrap-landing-page/vendor/simple-line-icons/css/simple-line-icons.css",
               "./node_modules/startbootstrap-landing-page/css/landing-page.min.css",
               "./node_modules/glyphicons-only-bootstrap/css/bootstrap.min.css",
