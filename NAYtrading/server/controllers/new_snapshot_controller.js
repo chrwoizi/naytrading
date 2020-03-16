@@ -474,7 +474,7 @@ async function handleNewRandomSnapshot(req, res, allowConfirm) {
             }
 
             if (forgotten && forgotten.length > 0) {
-                // const index = getRandomIndex(forgotten.length, config.random_order_weight);
+                const index = getRandomIndex(forgotten.length, config.random_order_weight);
                 const viewModel = await snapshotController.getSnapshot(forgotten[0].ID, req.user.email);
                 res.json({ snapshot: viewModel });
                 return;
