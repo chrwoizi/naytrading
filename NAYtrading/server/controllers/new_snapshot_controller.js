@@ -19,9 +19,16 @@ try {
     console.log('Error:', e.stack);
 }
 
-let rank_open_snapshots = "";
+let rank_open_snapshots_new = "";
 try {
-    rank_open_snapshots = fs.readFileSync(__dirname + '/../sql/rank_open_snapshots.sql', 'utf8');
+    rank_open_snapshots_new = fs.readFileSync(__dirname + '/../sql/rank_open_snapshots_new.sql', 'utf8');
+} catch (e) {
+    console.log('Error:', e.stack);
+}
+
+let rank_open_snapshots_old = "";
+try {
+    rank_open_snapshots_old = fs.readFileSync(__dirname + '/../sql/rank_open_snapshots_old.sql', 'utf8');
 } catch (e) {
     console.log('Error:', e.stack);
 }
@@ -438,10 +445,17 @@ async function handleNewRandomSnapshot(req, res, allowConfirm) {
                 hours = parseFloat(req.query.max_age);
             }
 
-            const forgotten = await sql.query(rank_open_snapshots, {
+            let forgotten = await sql.query(rank_open_snapshots_new, {
                 "@userName": req.user.email,
                 "@hours": hours
             });
+
+            if (!(forgotten && forgotten.length > 0)) {
+                forgotten = await sql.query(rank_open_snapshots_old, {
+                    "@userName": req.user.email,
+                    "@hours": hours
+                });
+            }
 
             const confirm = Math.random() < config.check_rate;
             if ((allowConfirm && confirm) || !(forgotten && forgotten.length > 0)) {
@@ -542,10 +556,10 @@ exports.createNewSnapshotByInstrumentId = async function (req, res) {
                 WHERE s.Instrument_ID = @instrumentId AND s.Time >= @time \
                 AND NOT EXISTS (SELECT 1 FROM usersnapshots AS nu WHERE nu.Snapshot_ID = s.ID AND nu.User = @user) \
                 ORDER BY s.Time ASC", {
-                    "@instrumentId": req.params.instrumentId,
-                    "@time": upToDateFrom,
-                    "@user": req.user.email
-                });
+                "@instrumentId": req.params.instrumentId,
+                "@time": upToDateFrom,
+                "@user": req.user.email
+            });
 
             if (existing && existing.length > 0) {
                 const viewModel = await snapshotController.getSnapshot(existing[0].ID, req.user.email);
