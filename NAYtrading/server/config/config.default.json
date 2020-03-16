@@ -74,7 +74,7 @@
     "bought_order_weight": 0.3,
     "capitalization_order_weight": 0.15,
     "chart_period_seconds": 157680000,
-    "check_rate": 0.1,
+    "check_rate": 0.05,
     "discard_threshold_missing_workdays": 120,
     "discard_threshold_seconds": 2592000,
     "https_ca": "../../keys/chain.pem",
