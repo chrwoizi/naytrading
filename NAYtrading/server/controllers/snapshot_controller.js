@@ -23,11 +23,18 @@ function parseDate(dateString) {
     ));
 }
 
+function formatRateDate(d) {
+    const year = d.getFullYear();
+    const month = d.getMonth();
+    const day = d.getDate();
+    return year.toString().substr(2) + (month + 101).toString().substr(2) + (day + 100).toString().substr(2);
+}
+
 exports.getSnapshotViewModel = function (snapshot, previous) {
 
     function getSnapshotRateViewModel(snapshotRate) {
         return {
-            T: dateFormat(snapshotRate.Time, "yymmdd"),
+            T: formatRateDate(snapshotRate.Time),
             C: snapshotRate.Close
         };
     }
@@ -138,15 +145,15 @@ exports.snapshots = async function (req, res) {
                 const instrumentId = parseInt(req.params.instrument);
                 snapshots = await sql.query("SELECT s.ID, s.Time, i.InstrumentName, u.Decision, u.ModifiedTime FROM snapshots AS s \
                         INNER JOIN instruments AS i ON i.ID = s.Instrument_ID INNER JOIN usersnapshots AS u ON u.Snapshot_ID = s.ID WHERE u.User = @user AND s.Instrument_ID = @instrument", {
-                        "@user": req.user.email,
-                        "@instrument": instrumentId
-                    });
+                    "@user": req.user.email,
+                    "@instrument": instrumentId
+                });
             }
             else {
                 snapshots = await sql.query("SELECT s.ID, s.Time, i.InstrumentName, u.Decision, u.ModifiedTime FROM snapshots AS s \
                     INNER JOIN instruments AS i ON i.ID = s.Instrument_ID INNER JOIN usersnapshots AS u ON u.Snapshot_ID = s.ID WHERE u.User = @user", {
-                        "@user": req.user.email
-                    });
+                    "@user": req.user.email
+                });
             }
 
             const viewModels = snapshots.map(snapshot => exports.getSnapshotListViewModel(snapshot));
@@ -548,8 +555,8 @@ exports.setRates = async function (snapshotId, source, marketId, rates, endTime)
                     Time: r.Time
                 };
             }), {
-                transaction: transaction
-            });
+            transaction: transaction
+        });
 
         await model.snapshot.update(
             {
