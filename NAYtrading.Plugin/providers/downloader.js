@@ -71,7 +71,7 @@ exports.download = async function (sourceType, url, isJson, customRequest, form)
             usingRequest.post(options, function (err, resp, body) {
                 if (err || (resp && resp.statusCode != 200)) {
                     console.log((resp ? "HTTP " + resp.statusCode : "Error") + " in downloader: " + err + " - " + url);
-                    reject(err || new Error("HTTP " + resp.statusCode + ": " + JSON.stringify(body)));
+                    reject(err || new Error("HTTP " + resp.statusCode + ": " + JSON.stringify(body).substr(0, 500)));
                 } else {
                     resolve(body);
                 }
@@ -81,7 +81,7 @@ exports.download = async function (sourceType, url, isJson, customRequest, form)
             usingRequest.get(options, function (err, resp, body) {
                 if (err || (resp && resp.statusCode != 200)) {
                     console.log((resp ? "HTTP " + resp.statusCode : "Error") + " in downloader: " + err + " - " + url);
-                    reject(err || new Error("HTTP " + resp.statusCode + ": " + JSON.stringify(body)));
+                    reject(err || new Error("HTTP " + resp.statusCode + ": " + JSON.stringify(body).substr(0, 500)));
                 } else {
                     resolve(body);
                 }
