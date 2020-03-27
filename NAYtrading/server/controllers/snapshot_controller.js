@@ -27,7 +27,7 @@ function formatRateDate(d) {
     const year = d.getFullYear();
     const month = d.getMonth();
     const day = d.getDate();
-    return year.toString().substr(2) + (month + 101).toString().substr(2) + (day + 100).toString().substr(2);
+    return year.toString().substr(2) + (month + 101).toString().substr(1) + (day + 100).toString().substr(1);
 }
 
 exports.getSnapshotViewModel = function (snapshot, previous) {
