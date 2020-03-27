@@ -464,6 +464,10 @@ async function fixSnapshotSplit(snapshotId, knownSource, instrumentId, startTime
                 // expected
             }
             else {
+                await sql.query("UPDATE snapshots AS s SET s.Split = @status, s.updatedAt = NOW() WHERE s.ID = @snapshotId", {
+                    "@status": "NOSOURCE",
+                    "@snapshotId": snapshotId
+                });
                 throw e;
             }
         }
