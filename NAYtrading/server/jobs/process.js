@@ -441,7 +441,7 @@ exports.run = async function () {
         }
     }
     catch (error) {
-        logError("error in process job: " + error.message + "\n" + error.stack);
+        logError("error in process job: " + (error && error.message ? (error.message + "\n" + error.stack) : error));
     }
 
     setTimeout(exports.run, config.job_process_interval_seconds * 1000);
