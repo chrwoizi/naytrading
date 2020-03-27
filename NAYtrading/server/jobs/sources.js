@@ -23,7 +23,7 @@ exports.run = async function () {
                     sourceId = await instrumentsProvider.getInstrumentId(sourceType, instrument.Isin, instrument.Wkn);
                 }
                 catch (error) {
-                    console.log("Error while adding instrument source: " + error.message + "\n" + error.stack + "\n" + JSON.stringify(newSource));
+                    console.log("Error while adding instrument source: " + error.message + "\n" + error.stack + "\n" + instrument.ID + " " + sourceType);
                 }
 
                 const newSource = {
