@@ -18,23 +18,24 @@ exports.run = async function () {
 
             for (let i = 0; i < instruments.length && i < config.job_sources_batch_size; ++i) {
                 const instrument = instruments[i];
-                let newSource;
+                let sourceId;
                 try {
-                    const sourceId = await instrumentsProvider.getInstrumentId(sourceType, instrument.Isin, instrument.Wkn);
-                    newSource = {
-                        Instrument_ID: instrument.ID,
-                        SourceType: sourceType,
-                        SourceId: sourceId || '',
-                        Strikes: 0,
-                        LastStrikeTime: new Date(),
-                        StrikeReason: '',
-                        Status: (sourceId && sourceId.length > 0) ? 'ACTIVE' : 'NOTFOUND'
-                    };
-                    await model.source.create(newSource);
+                    sourceId = await instrumentsProvider.getInstrumentId(sourceType, instrument.Isin, instrument.Wkn);
                 }
                 catch (error) {
                     console.log("Error while adding instrument source: " + error.message + "\n" + error.stack + "\n" + JSON.stringify(newSource));
                 }
+
+                const newSource = {
+                    Instrument_ID: instrument.ID,
+                    SourceType: sourceType,
+                    SourceId: sourceId || '',
+                    Strikes: 0,
+                    LastStrikeTime: new Date(),
+                    StrikeReason: '',
+                    Status: (sourceId && sourceId.length > 0) ? 'ACTIVE' : 'NOTFOUND'
+                };
+                await model.source.create(newSource);
             }
 
             await instrumentsProvider.updateInstruments(sourceType, sql);
