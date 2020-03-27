@@ -136,7 +136,7 @@ exports.isAutoWait = async function (newSnapshot) {
 }
 
 async function handleRateProviderError(instrument, source, error) {
-    if (error.message == ratesProvider.market_not_found) {
+    if (error && error.message && error.message == ratesProvider.market_not_found) {
         const strikes = config.max_strikes + 12;
         const reason = "the market id " + source.MarketId + " does not exist";
         logVerbose("Setting " + strikes + " strikes on instrument " + instrument.InstrumentName + " (" + source.SourceId + " on " + source.SourceType + ") because " + reason);
@@ -148,7 +148,7 @@ async function handleRateProviderError(instrument, source, error) {
 
         await increaseMonitor("preload_missing", source.SourceType, source.MarketId || 'null');
     }
-    else if (error.message == ratesProvider.invalid_response) {
+    else if (error && error.message && error.message == ratesProvider.invalid_response) {
         const reason = "the server returned an unexpected response for market id " + source.MarketId;
         logVerbose("Adding 5 strikes to instrument " + instrument.InstrumentName + " (" + source.SourceId + " on " + source.SourceType + ") because " + reason);
         await source.update({
@@ -160,10 +160,15 @@ async function handleRateProviderError(instrument, source, error) {
         await increaseMonitor("preload_invalid", source.SourceType, source.MarketId || 'null');
     }
     else {
-        console.log(error.message + "\n" + error.stack);
+        if (error && error.message) {
+            console.log(error.message + "\n" + error.stack);
+        }
+        else {
+            console.log("unknown error type: " + error);
+        }
         const reason = "it caused an exception: " + error;
         let inc = 1;
-        if (error.message.contains("HTTP 410")) {
+        if (error && error.message && error.message.contains("HTTP 410")) {
             inc = 5;
         }
         logVerbose("Adding " + inc + " strike to instrument " + instrument.InstrumentName + " (" + source.SourceId + " on " + source.SourceType + ") because " + reason);
