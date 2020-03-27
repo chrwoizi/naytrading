@@ -168,7 +168,7 @@ async function handleRateProviderError(instrument, source, error) {
         }
         const reason = "it caused an exception: " + error;
         let inc = 1;
-        if (error && error.message && error.message.contains("HTTP 410")) {
+        if (error && error.message && error.message.contains && error.message.contains("HTTP 410")) {
             inc = 5;
         }
         logVerbose("Adding " + inc + " strike to instrument " + instrument.InstrumentName + " (" + source.SourceId + " on " + source.SourceType + ") because " + reason);
