@@ -32,11 +32,10 @@ function load() {
         }
     }
 
-    config.admin_user = process.env.naytrading_admin_user || config.admin_user;
-    config.jwt_secret = process.env.naytrading_jwt_secret || config.jwt_secret;
-    config.jwt_secret = process.env.naytrading_jwt_secret || config.jwt_secret;
-    config.python = process.env.naytrading_python || config.python;
-
+    for(const key of Object.getOwnPropertyNames(config)) {
+        config[key] = process.env["naytrading_" + key] || config[key];
+    }
+    
     if (process.env.naytrading_instruments_providers) {
         config.instruments_providers = {};
         const providers = process.env.naytrading_instruments_providers.split(';');
