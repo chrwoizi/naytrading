@@ -62,7 +62,12 @@ function load() {
     }
 
     if (process.env.naytrading_job_alive_source_ids) {
-        config.job_alive_source_ids = process.env.naytrading_job_alive_source_ids.split(';');
+        config.job_alive_source_ids = {};
+        const providers = process.env.naytrading_job_alive_source_ids.split(';');
+        for (const providerStr of providers) {
+            const provider = providerStr.split(':');
+            config.job_alive_source_ids[provider[0]] = provider[1];
+        }
     }
 
     database.username = process.env.naytrading_database_username || database.username;
