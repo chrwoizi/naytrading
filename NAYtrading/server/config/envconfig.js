@@ -32,10 +32,13 @@ function load() {
         }
     }
 
-    for(const key of Object.getOwnPropertyNames(config)) {
-        config[key] = process.env["naytrading_" + key] || config[key];
+    for (const key of Object.getOwnPropertyNames(process.env)) {
+        if (key.toLowerCase().startsWith('naytrading_')) {
+            const configKey = key.substr('naytrading_'.length).toLowerCase();
+            config[configKey] = process.env[key];
+        }
     }
-    
+
     if (process.env.naytrading_instruments_providers) {
         config.instruments_providers = {};
         const providers = process.env.naytrading_instruments_providers.split(';');
@@ -44,7 +47,7 @@ function load() {
             config.instruments_providers[provider[0]] = provider[1];
         }
     }
-    
+
     if (process.env.naytrading_rates_providers) {
         config.rates_providers = {};
         const providers = process.env.naytrading_rates_providers.split(';');
