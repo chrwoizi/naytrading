@@ -273,6 +273,7 @@ function isAlive(sourceType) {
         if (date.isValid()) {
             const seconds = moment(new Date()).diff(date, 'seconds');
             if (seconds < 2 * config.job_alive_interval_seconds) {
+                console.log("Skipping source type " + sourceType + " because the alive test failed");
                 return false;
             }
         }
