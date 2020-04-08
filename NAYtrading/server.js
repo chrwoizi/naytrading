@@ -12,6 +12,7 @@ require('dotenv').load();
 require('sequelize'); // must be loaded before envconfig
 const config = require('./server/config/envconfig');
 
+const aliveJob = require('./server/jobs/alive');
 const splitJob = require('./server/jobs/split');
 const instrumentsJob = require('./server/jobs/instruments');
 const cleanupJob = require('./server/jobs/cleanup');
@@ -117,16 +118,22 @@ const consolidateJob = require('./server/jobs/consolidate');
             }, 8000);
         }
 
-        if (config.job_preload_enabled) {
-            setTimeout(function () {
-                new Promise(function () { preloadJob.run(); });
-            }, 10000);
-        }
-
         if (config.job_process_enabled) {
             setTimeout(function () {
                 new Promise(function () { processJob.run(); });
             }, 12000);
+        }
+
+        if (config.job_alive_enabled) {
+            setTimeout(function () {
+                new Promise(function () { aliveJob.run(); });
+            }, 10000);
+        }
+
+        if (config.job_preload_enabled) {
+            setTimeout(function () {
+                new Promise(function () { preloadJob.run(); });
+            }, 14000);
         }
 
     }).catch(function (err) {

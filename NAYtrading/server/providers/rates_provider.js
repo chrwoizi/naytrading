@@ -39,7 +39,7 @@ exports.getRates = async function (source, instrumentId, preferredMarketId, star
 
             ratesResponse = await providers[source].getRates(source, instrumentId, marketId, startTime, endTime);
 
-            if (ratesResponse.Rates && ratesResponse.Rates.length > 0 && await checkRates(ratesResponse.Rates)) {
+            if (await checkRates(ratesResponse.Rates, marketId)) {
 
                 for (let r = 0; r < ratesResponse.Rates.length; ++r) {
                     let time = ratesResponse.Rates[r].Time;

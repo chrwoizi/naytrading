@@ -5,6 +5,8 @@ const snapshotController = require('./snapshot_controller');
 const sequelize = require('sequelize');
 const fs = require('fs');
 const config = require('../config/envconfig');
+const settings = require('../config/settings');
+const moment = require('moment');
 
 function logVerbose(message) {
     if (config.env == "development") {
@@ -214,13 +216,13 @@ exports.checkRates = function (rates, startTime, endTime, source) {
     else if (rates[0].Time > minRateTime || rates[rates.length - 1].Time < maxRateTime) {
         return {
             Strikes: config.max_strikes + 6,
-            Reason: "the rates are not available for the full time span"
+            Reason: "the rates are not available for the full time span. min: " + rates[0].Time + ", max: " + rates[rates.length - 1].Time
         };
     }
     else if (rates.length < exports.minDays) {
         return {
             Strikes: config.max_strikes + 6,
-            Reason: "too many rates are missing within time span"
+            Reason: "too many rates are missing within time span. length: " + rates.length
         };
     }
 
@@ -264,6 +266,20 @@ async function findSimilarSnapshot(instrumentId, startTime, endDate) {
     }
 }
 
+function isAlive(sourceType) {
+    const alive = settings.get("alive_failure_" + sourceType);
+    if (alive && alive.length > 0) {
+        const date = moment(alive);
+        if (date.isValid()) {
+            const seconds = moment(new Date()).diff(date, 'seconds');
+            if (seconds < 2 * config.job_alive_interval_seconds) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
 exports.createNewSnapshotFromRandomInstrument = async function (instrumentIds) {
     const endTime = new Date();
     const endDate = new Date(endTime.getTime());
@@ -289,7 +305,8 @@ exports.createNewSnapshotFromRandomInstrument = async function (instrumentIds) {
             const sortedSources = instrument.sources
                 .filter(x => x.Status == "ACTIVE")
                 .filter(x => x.Strikes < config.max_strikes)
-                .filter(x => ratesProvider.sources.indexOf(x.SourceType) >= 0);
+                .filter(x => ratesProvider.sources.indexOf(x.SourceType) >= 0)
+                .filter(x => isAlive(x.SourceType));
             sortedSources.sort(function (a, b) {
                 const aIndex = ratesProvider.sources.indexOf(a.SourceType);
                 const bIndex = ratesProvider.sources.indexOf(b.SourceType);
