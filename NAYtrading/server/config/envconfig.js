@@ -61,6 +61,10 @@ function load() {
         config.job_split_sources = process.env.naytrading_job_split_sources.split(';');
     }
 
+    if (process.env.naytrading_job_alive_source_ids) {
+        config.job_alive_source_ids = process.env.naytrading_job_alive_source_ids.split(';');
+    }
+
     database.username = process.env.naytrading_database_username || database.username;
     database.password = process.env.naytrading_database_password || database.password;
     database.host = process.env.naytrading_database_host || database.host;
