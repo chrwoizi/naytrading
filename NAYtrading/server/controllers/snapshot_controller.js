@@ -5,22 +5,12 @@ const dateFormat = require('dateformat');
 const config = require('../config/envconfig');
 const newSnapshotController = require('./new_snapshot_controller');
 const ratesProvider = require('../providers/rates_provider');
+const { parseDate } = require('../tools');
 
 
 function return500(res, e) {
     res.status(500);
     res.json({ error: e.message });
-}
-
-function parseDate(dateString) {
-    return new Date(Date.UTC(
-        dateString.substr(0, 4),
-        dateString.substr(5, 2) - 1,
-        dateString.substr(8, 2),
-        dateString.substr(11, 2),
-        dateString.substr(14, 2),
-        dateString.substr(17, 2)
-    ));
 }
 
 function formatRateDate(d) {

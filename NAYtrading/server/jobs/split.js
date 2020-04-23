@@ -8,6 +8,7 @@ const snapshotController = require('../controllers/snapshot_controller');
 const instrumentController = require('../controllers/instrument_controller');
 const consolidateJob = require('./consolidate');
 const cleanupJob = require('./cleanup');
+const { parseDate } = require('../tools');
 
 let split_adjust_sql = "";
 try {
@@ -37,20 +38,6 @@ function sleep(ms) {
             reject(e);
         }
     });
-}
-
-function parseDate(dateString) {
-    if (dateString instanceof Date) {
-        return dateString;
-    }
-    return new Date(Date.UTC(
-        dateString.substr(0, 4),
-        dateString.substr(5, 2) - 1,
-        dateString.substr(8, 2),
-        dateString.substr(11, 2),
-        dateString.substr(14, 2),
-        dateString.substr(17, 2)
-    ));
 }
 
 function daysBetween(one, another) {

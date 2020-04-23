@@ -4,6 +4,7 @@ const config = require('../config/envconfig');
 const newSnapshotController = require('../controllers/new_snapshot_controller');
 const splitJob = require('./split');
 const cleanupJob = require('./cleanup');
+const { parseDate } = require('../tools');
 
 function sleep(ms) {
     return new Promise((resolve, reject) => {
@@ -14,20 +15,6 @@ function sleep(ms) {
             reject(e);
         }
     });
-}
-
-function parseDate(dateString) {
-    if (dateString instanceof Date) {
-        return dateString;
-    }
-    return new Date(Date.UTC(
-        dateString.substr(0, 4),
-        dateString.substr(5, 2) - 1,
-        dateString.substr(8, 2),
-        dateString.substr(11, 2),
-        dateString.substr(14, 2),
-        dateString.substr(17, 2)
-    ));
 }
 
 async function processSnapshots() {
