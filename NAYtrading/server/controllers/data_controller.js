@@ -6,6 +6,7 @@ const ratesProvider = require('../providers/rates_provider');
 const portfoliosJob = require('../jobs/portfolios.js');
 const config = require('../config/envconfig.js');
 const path = require('path');
+const { parseDate } = require('../tools');
 
 let stats_sql = "";
 try {
@@ -28,17 +29,6 @@ try {
     console.log('Error:', e.stack);
 }
 
-
-function parseDate(dateString) {
-    return new Date(Date.UTC(
-        dateString.substr(0, 4),
-        dateString.substr(5, 2) - 1,
-        dateString.substr(8, 2),
-        dateString.substr(11, 2),
-        dateString.substr(14, 2),
-        dateString.substr(17, 2)
-    ));
-}
 
 function return500(res, e) {
     res.status(500);
@@ -373,11 +363,13 @@ exports.monitor = async function (req, res) {
 
             const result = {};
             for (const monitor of monitors) {
-                const date = dateFormat(parseDate(monitor.createdAt), "yymmdd");
-                if (!result[date]) {
-                    result[date] = {};
+                if (monitor.createdAt) {
+                    const date = dateFormat(parseDate(monitor.createdAt), "yymmdd");
+                    if (!result[date]) {
+                        result[date] = {};
+                    }
+                    result[date][monitor.key] = JSON.parse(monitor.value);
                 }
-                result[date][monitor.key] = JSON.parse(monitor.value);
             }
 
             const list = [];
