@@ -99,28 +99,28 @@ async function checkRates() {
 
 async function checkProcessing() {
     let processingExists = false;
+    let maxTimestamp;
     const timeoutDate = new Date(new Date().getTime() - config.job_alive_processing_timeout_days * 1000 * 60 * 60 * 24);
     const processingDirs = fs.readdirSync(config.processing_dir);
-    for (const dir of processingDirs) {
-        const userDir = path.join(config.processing_dir, dir);
-        const files = fs.readdirSync(userDir);
+    for (const userDir of processingDirs) {
+        const userDirPath = path.join(config.processing_dir, userDir);
+        const files = fs.readdirSync(userDirPath);
         for (const file of files) {
             const extension = path.extname(file);
             if (extension.toLowerCase() === '.meta') {
-                const lastMeta = JSON.parse(fs.readFileSync(path.join(config.processing_dir, dir, file), 'utf8'));
-                if (lastMeta.time >= dateFormat(timeoutDate, "yyyymmddHHMMss")) {
-                    console.log(file + " is within tolerance with timestamp " + lastMeta.time);
-                    processingExists = true;
+                const lastMeta = JSON.parse(fs.readFileSync(path.join(userDirPath, file), 'utf8'));
+                if (!maxTimestamp || lastMeta.time > maxTimestamp) {
+                    maxTimestamp = lastMeta.time;
                 }
-                else {
-                    console.log(file + " has timed out with timestamp " + lastMeta.time);
+                if (lastMeta.time >= dateFormat(timeoutDate, "yyyymmddHHMMss")) {
+                    processingExists = true;
                 }
             }
         }
     }
     if (!processingExists) {
         await settings.set("alive_failure_processing", new Date().toISOString());
-        const text = 'No processing since ' + config.job_alive_processing_timeout_days + ' days.';
+        const text = 'No processing since ' + maxTimestamp + '. Expected maximum age is ' + config.job_alive_processing_timeout_days + ' days.';
         console.log(text);
         await sendEmail(text);
     }
