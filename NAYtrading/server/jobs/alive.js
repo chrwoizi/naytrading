@@ -1,11 +1,11 @@
-const model = require('../models/index');
-const sql = require('../sql/sql');
-const snapshotController = require('../controllers/snapshot_controller');
 const newSnapshotController = require('../controllers/new_snapshot_controller');
 const config = require('../config/envconfig');
 const settings = require('../config/settings');
 const ratesProvider = require('../providers/rates_provider');
 const nodemailer = require('nodemailer');
+const fs = require('fs');
+const path = require('path');
+const dateFormat = require('dateformat');
 
 function sleep(ms) {
     return new Promise((resolve, reject) => {
@@ -18,7 +18,7 @@ function sleep(ms) {
     });
 }
 
-function sendEmail(sourceType, problem) {
+async function sendEmail(text) {
     if (config.email_host) {
         const transporter = nodemailer.createTransport({
             host: config.email_host,
@@ -33,7 +33,6 @@ function sendEmail(sourceType, problem) {
             }
         });
 
-        const text = 'Cannot get rates from ' + sourceType + '. Reason: ' + (problem ? (problem.Reason ? problem.Reason : problem) : 'unknown');
         let mailOptions = {
             from: config.email_from,
             to: config.email_to,
@@ -42,25 +41,26 @@ function sendEmail(sourceType, problem) {
             html: text
         };
 
-        transporter.sendMail(mailOptions, (error, response) => {
-            if (error) {
-                if (error.message) {
-                    console.log("error in alive: " + error.message + "\n" + error.stack);
+        return new Promise((resolve) => {
+            transporter.sendMail(mailOptions, (error, response) => {
+                if (error) {
+                    if (error.message) {
+                        console.log("error in alive: " + error.message + "\n" + error.stack);
+                    }
+                    else {
+                        console.log("error in alive: " + error);
+                    }
                 }
-                else {
-                    console.log("error in alive: " + error);
-                }
-            }
 
-            console.log(response);
-            console.log(error);
+                console.log(response);
+                console.log(error);
+                resolve();
+            });
         });
     }
 }
 
-exports.run = async function () {
-    await sleep(3000 + Math.floor(Math.random() * 7000));
-
+async function checkRates() {
     const endTime = new Date();
     const endDate = new Date(endTime.getTime());
     endDate.setHours(0, 0, 0, 0);
@@ -81,9 +81,10 @@ exports.run = async function () {
                 const ratesResponse = await ratesProvider.getRates(sourceType, sourceId, null, startTime, endTime, checkRatesCallback);
 
                 if (!ratesResponse || !ratesResponse.Rates || !(ratesResponse.Rates.length > 0)) {
-                    console.log('Cannot get rates from ' + sourceType + '. Reason: ' + (problem ? problem.Reason : 'unknown'));
                     await settings.set("alive_failure_" + sourceType, new Date().toISOString());
-                    sendEmail(sourceType, problem);
+                    const text = 'Cannot get rates from ' + sourceType + '. Reason: ' + (problem ? (problem.Reason ? problem.Reason : problem) : 'unknown');
+                    console.log(text);
+                    await sendEmail(text);
                 }
                 else {
                     await settings.set("alive_failure_" + sourceType, '');
@@ -94,6 +95,40 @@ exports.run = async function () {
             console.log("error in alive for source type " + sourceType + ": " + error.message + "\n" + error.stack);
         }
     }
+}
+
+async function checkProcessing() {
+    let processingExists = false;
+    const timeoutDate = new Date(new Date().getTime() - config.job_alive_processing_timeout_days * 1000 * 60 * 60 * 24);
+    const processingDirs = fs.readdirSync(config.processing_dir);
+    for (const dir of processingDirs) {
+        const files = fs.readdirSync(path.join(config.processing_dir, dir));
+        for (const file of files) {
+            if (path.extname(file).toLowerCase() === 'meta') {
+                const lastMeta = JSON.parse(fs.readFileSync(path.join(config.processing_dir, dir, file), 'utf8'));
+                if (lastMeta.time < dateFormat(timeoutDate, "yyyymmddHHMMss")) {
+                    processingExists = true;
+                }
+            }
+        }
+    }
+    if (!processingExists) {
+        await settings.set("alive_failure_processing", new Date().toISOString());
+        const text = 'No processing since ' + config.job_alive_processing_timeout_days + ' days.';
+        console.log(text);
+        await sendEmail(text);
+    }
+    else {
+        await settings.set("alive_failure_processing");
+    }
+}
+
+exports.run = async function () {
+    await sleep(3000 + Math.floor(Math.random() * 7000));
+
+    await checkRates();
+
+    await checkProcessing();
 
     setTimeout(exports.run, config.job_alive_interval_seconds * 1000);
 };
