@@ -102,12 +102,18 @@ async function checkProcessing() {
     const timeoutDate = new Date(new Date().getTime() - config.job_alive_processing_timeout_days * 1000 * 60 * 60 * 24);
     const processingDirs = fs.readdirSync(config.processing_dir);
     for (const dir of processingDirs) {
-        const files = fs.readdirSync(path.join(config.processing_dir, dir));
+        const userDir = path.join(config.processing_dir, dir);
+        const files = fs.readdirSync(userDir);
         for (const file of files) {
-            if (path.extname(file).toLowerCase() === 'meta') {
+            const extension = path.extname(file);
+            if (extension.toLowerCase() === '.meta') {
                 const lastMeta = JSON.parse(fs.readFileSync(path.join(config.processing_dir, dir, file), 'utf8'));
-                if (lastMeta.time < dateFormat(timeoutDate, "yyyymmddHHMMss")) {
+                if (lastMeta.time >= dateFormat(timeoutDate, "yyyymmddHHMMss")) {
+                    console.log(file + " is within tolerance with timestamp " + lastMeta.time);
                     processingExists = true;
+                }
+                else {
+                    console.log(file + " has timed out with timestamp " + lastMeta.time);
                 }
             }
         }
@@ -126,9 +132,19 @@ async function checkProcessing() {
 exports.run = async function () {
     await sleep(3000 + Math.floor(Math.random() * 7000));
 
-    await checkRates();
+    try {
+        await checkRates();
+    }
+    catch (e) {
+        console.log("error in alive checkRates: " + error.message + "\n" + error.stack);
+    }
 
-    await checkProcessing();
+    try {
+        await checkProcessing();
+    }
+    catch (e) {
+        console.log("error in alive checkProcessing: " + error.message + "\n" + error.stack);
+    }
 
     setTimeout(exports.run, config.job_alive_interval_seconds * 1000);
 };
