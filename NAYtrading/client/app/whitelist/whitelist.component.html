@@ -1,36 +1,47 @@
 <section class="policy bg-light">
-    <div class="container">
-        <div class="row">
-            <div class="col-12">
-                <h2>Whitelist</h2>
-                <div class="row row-spacer">
-                </div>
+  <div class="container">
+    <div class="row">
+      <div class="col-12">
+        <h2>Whitelist</h2>
+        <div class="row row-spacer"></div>
 
-                <div class="row row-spacer">
-                    <form [formGroup]="addForm" (ngSubmit)="onSubmit()">
-                        <div class="form-group">
-                            <label for="username">Email</label>
-                            <input type="text" formControlName="username" class="form-control" [ngClass]="{ 'is-invalid': submitted && f.username.errors }" />
-                            <div *ngIf="submitted && f.username.errors" class="invalid-feedback">
-                                <div *ngIf="f.username.errors.required">Email is required</div>
-                            </div>
-                            <input class="btn btn-info" type="submit" value="Add">
-                        </div>
-                    </form>
-                </div>
-
-                <div class="row row-spacer">
-                </div>
-
-                <div *ngFor="let whitelist of whitelists" class="row">
-                    <div class="col-2">
-                        <button class="btn btn-info list-button" (click)="delete(whitelist.username)">delete</button>
-                    </div>
-                    <div class="col-9">
-                        <span>{{whitelist.username}}</span>
-                    </div>
-                </div>
+        <div class="row row-spacer">
+          <form [formGroup]="addForm" (ngSubmit)="onSubmit()">
+            <div class="form-group">
+              <label for="username">Email</label>
+              <input
+                type="text"
+                formControlName="username"
+                class="form-control"
+                [ngClass]="{ 'is-invalid': submitted && f.username.errors }"
+              />
+              <div
+                *ngIf="submitted && f.username.errors"
+                class="invalid-feedback"
+              >
+                <div *ngIf="f.username.errors.required">Email is required</div>
+              </div>
+              <input class="btn btn-info" type="submit" value="Add" />
             </div>
+          </form>
         </div>
+
+        <div class="row row-spacer"></div>
+
+        <div *ngFor="let whitelist of whitelists" class="row">
+          <div class="col-2">
+            <button
+              class="btn btn-info list-button"
+              (click)="delete(whitelist.username)"
+            >
+              delete
+            </button>
+          </div>
+          <div class="col-9">
+            <span>{{ whitelist.username }}</span>
+          </div>
+        </div>
+      </div>
     </div>
+  </div>
 </section>
