@@ -80,7 +80,7 @@ function load() {
     function configureDatabase(config, database) {
         database.user = database.user || database.username;
 
-        database.timezone = database.timezone || "+01:00";
+        database.timezone = database.timezone || "+00:00";
 
         database.dialectOptions = {
             decimalNumbers: true,
