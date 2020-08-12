@@ -36,10 +36,11 @@ function load() {
         if (key.toLowerCase().startsWith('naytrading_')) {
             const configKey = key.substr('naytrading_'.length).toLowerCase();
             let value = process.env[key];
-            if (typeof config[configKey] === 'boolean') {
+            const originalValue = config[configKey] || default_config[configKey];
+            if (typeof originalValue === 'boolean') {
                 value = value === 'true';
             }
-            if (typeof config[configKey] === 'number') {
+            if (typeof originalValue === 'number') {
                 value = parseFloat(value);
             }
             config[configKey] = value;
