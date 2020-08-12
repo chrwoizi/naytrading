@@ -136,14 +136,14 @@ exports.run = async function () {
         await checkRates();
     }
     catch (e) {
-        console.log("error in alive checkRates: " + error.message + "\n" + error.stack);
+        console.log("error in alive checkRates: " + e.message + "\n" + e.stack);
     }
 
     try {
         await checkProcessing();
     }
     catch (e) {
-        console.log("error in alive checkProcessing: " + error.message + "\n" + error.stack);
+        console.log("error in alive checkProcessing: " + e.message + "\n" + e.stack);
     }
 
     setTimeout(exports.run, config.job_alive_interval_seconds * 1000);
