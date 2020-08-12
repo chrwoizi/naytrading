@@ -118,12 +118,6 @@ exports.updateUser = async function (user) {
                 });
 
                 const value = balance + await getOpenValues(user, fromTime);
-                if (user === 'christian@woizischke.de') {
-                    console.log('time: ' + fromTime);
-                    console.log('deposit: ' + deposit);
-                    console.log('balance: ' + balance);
-                    console.log('value: ' + value);
-                }
                 await model.portfolio.create({
                     User: user,
                     Time: fromTime,
@@ -179,12 +173,6 @@ exports.updateUser = async function (user) {
     fromTime.setHours(23, 59, 59);
 
     const value = balance + await getOpenValues(user, fromTime);
-    if (user === 'christian@woizischke.de') {
-        console.log('time: ' + fromTime);
-        console.log('deposit: ' + deposit);
-        console.log('balance: ' + balance);
-        console.log('value: ' + value);
-    }
     await model.portfolio.create({
         User: user,
         Time: fromTime,
