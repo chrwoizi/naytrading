@@ -240,7 +240,7 @@ async function updateMarket(source, marketId) {
 }
 
 async function findSimilarSnapshot(instrumentId, startTime, endDate) {
-    const snapshot = await model.snapshot.findAll({
+    const snapshot = await model.snapshot.findOne({
         include: [{
             model: model.instrument
         }, {
