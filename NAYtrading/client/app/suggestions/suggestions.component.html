@@ -1,58 +1,70 @@
-<section class="policy bg-light app">
-    <div class="container">
-        <div class="row row-spacer">
-        </div>
+<section class="policy bg-light">
+  <div class="container">
+    <div class="row row-spacer"></div>
 
-        <div class="row row-spacer">
-            <div class="col-12">
-                <a routerLink="/snapshot" [queryParams]="{action:'random_or_confirm'}" class="btn btn-info btn-block"
-                    role="button">New decision on
-                    random stock</a>
-            </div>
-        </div>
-
-        <div *ngIf="!loading">
-            <div class="row">
-                <div class="col-12">
-                    <p>
-                        Search:
-                        <input [(ngModel)]="query" (ngModelChange)="onQueryChanged()">
-                    </p>
-                    <p>
-                        Sort by:
-                        <select [(ngModel)]="orderProp" (ngModelChange)="onOrderChanged()">
-                            <option value="I">Alphabetical</option>
-                            <option value="-TS">Newest</option>
-                            <option value="TS">Oldest</option>
-                            <option value="S">Completed</option>
-                            <option value="-S">Open</option>
-                        </select>
-                    </p>
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="col-12">
-                    <p>
-                        Count: {{items.length}}
-                    </p>
-                </div>
-            </div>
-
-            <div infiniteScroll [infiniteScrollDistance]="2" [infiniteScrollThrottle]="50" (scrolled)="loadMore()">
-                <a *ngFor="let suggestion of pagedItems" class="row" routerLink="/suggestion"
-                    [queryParams]="{id:suggestion.id}">
-                    <div class="col-2 suggestion-time">{{suggestion.T}}</div>
-                    <div class="col-6 suggestion-name">{{suggestion.I}}</div>
-                    <div class="col-2 suggestion-price">{{formatCurrency(suggestion.P)}}</div>
-                    <div class="col-1 suggestion-action">
-                        <span [ngClass]="['glyphicon', getActionIcon(suggestion.A)]"></span>
-                    </div>
-                    <div class="col-1 suggestion-status">
-                        <span [ngClass]="['glyphicon', getStatusIcon(suggestion.S)]"></span>
-                    </div>
-                </a>
-            </div>
-        </div>
+    <div class="row row-spacer">
+      <div class="col-12">
+        <a
+          routerLink="/snapshot"
+          [queryParams]="{ action: 'random_or_confirm' }"
+          class="btn btn-info btn-block"
+          role="button"
+          >New decision on random stock</a
+        >
+      </div>
     </div>
+
+    <div *ngIf="!loading">
+      <div class="row">
+        <div class="col-12">
+          <p>
+            Search:
+            <input [(ngModel)]="query" (ngModelChange)="onQueryChanged()" />
+          </p>
+          <p>
+            Sort by:
+            <select [(ngModel)]="orderProp" (ngModelChange)="onOrderChanged()">
+              <option value="I">Alphabetical</option>
+              <option value="-TS">Newest</option>
+              <option value="TS">Oldest</option>
+              <option value="S">Completed</option>
+              <option value="-S">Open</option>
+            </select>
+          </p>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-12">
+          <p>Count: {{ items.length }}</p>
+        </div>
+      </div>
+
+      <div
+        infiniteScroll
+        [infiniteScrollDistance]="2"
+        [infiniteScrollThrottle]="50"
+        (scrolled)="loadMore()"
+      >
+        <a
+          *ngFor="let suggestion of pagedItems"
+          class="row"
+          routerLink="/suggestion"
+          [queryParams]="{ id: suggestion.id }"
+        >
+          <div class="col-2 suggestion-time">{{ suggestion.T }}</div>
+          <div class="col-6 suggestion-name">{{ suggestion.I }}</div>
+          <div class="col-2 suggestion-price">
+            {{ formatCurrency(suggestion.P) }}
+          </div>
+          <div class="col-1 suggestion-action">
+            <span [ngClass]="['glyphicon', getActionIcon(suggestion.A)]"></span>
+          </div>
+          <div class="col-1 suggestion-status">
+            <span [ngClass]="['glyphicon', getStatusIcon(suggestion.S)]"></span>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
 </section>
