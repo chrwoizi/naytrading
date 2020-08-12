@@ -125,7 +125,7 @@ async function checkProcessing() {
         await sendEmail(text);
     }
     else {
-        await settings.set("alive_failure_processing");
+        await settings.set("alive_failure_processing", "");
     }
 }
 
