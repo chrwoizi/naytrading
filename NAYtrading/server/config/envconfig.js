@@ -35,7 +35,14 @@ function load() {
     for (const key of Object.getOwnPropertyNames(process.env)) {
         if (key.toLowerCase().startsWith('naytrading_')) {
             const configKey = key.substr('naytrading_'.length).toLowerCase();
-            config[configKey] = process.env[key];
+            let value = process.env[key];
+            if (typeof config[configKey] === 'boolean') {
+                value = value === 'true';
+            }
+            if (typeof config[configKey] === 'number') {
+                value = parseFloat(value);
+            }
+            config[configKey] = value;
         }
     }
 
