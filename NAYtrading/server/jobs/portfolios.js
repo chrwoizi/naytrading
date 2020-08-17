@@ -136,7 +136,7 @@ exports.updateUser = async function (user) {
         if (trade.Decision == "buy") {
             quantity = Math.floor(config.job_portfolios_trade_volume / trade.Price);
             balance -= quantity * trade.Price;
-            balance -= config.job_portfolios_fee;
+            balance -= config.job_portfolios_trade_fee;
             if (balance < 0) {
                 deposit -= balance;
                 balance = 0;
@@ -157,7 +157,7 @@ exports.updateUser = async function (user) {
 
             quantity = -previousTrades[0].Quantity;
             balance -= quantity * trade.Price;
-            balance -= config.job_portfolios_fee;
+            balance -= config.job_portfolios_trade_fee;
             if (balance < 0) {
                 deposit -= balance;
                 balance = 0;
