@@ -9,7 +9,8 @@
     "build": "ng build",
     "lint": "ng lint",
     "start-client": "ng serve --live-reload false",
-    "start-server": "node server.js"
+    "start-server": "node server.js",
+    "debug:alive": "node --inspect run-job.js alive"
   },
   "engines": {
     "node": ">=12.0.0"
