@@ -21,7 +21,7 @@
     "include": [],
     "instruments_providers": {},
     "job_alive_enabled": true,
-    "job_alive_interval_seconds": 3600,
+    "job_alive_interval_seconds": 86400,
     "job_alive_processing_timeout_days": 7,
     "job_alive_source_ids": {},
     "job_cleanup_enabled": true,
