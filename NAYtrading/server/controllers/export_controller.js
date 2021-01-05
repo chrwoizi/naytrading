@@ -3,6 +3,8 @@ const authController = require('./auth_controller');
 
 exports.exportLog = async function (req, res) {
     try {
+        if (typeof req.query.token !== 'string') throw new Error('bad request');
+
         const tokenUser = authController.getTokenUser(req.query.token);
         if (tokenUser && tokenUser == config.admin_user) {
             res.download(__dirname + '/../../' + config.log_path);

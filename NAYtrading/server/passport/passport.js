@@ -27,6 +27,9 @@ module.exports = function (passport, user) {
 
         function (req, email, password, done) {
 
+            if (typeof email !== 'string') throw new Error('bad request');
+            if (typeof password !== 'string') throw new Error('bad request');
+
             const generateHash = function (password) {
 
                 return bCrypt.hashSync(password, bCrypt.genSaltSync(8), null);

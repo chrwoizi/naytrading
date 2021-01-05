@@ -19,10 +19,10 @@ exports.getOpenSuggestions = async function (req, res) {
                 AND (NOT EXISTS (SELECT 1 FROM tradelogs l WHERE l.Snapshot_ID = s.ID) \
                     OR (SELECT l.Status FROM tradelogs l WHERE l.Snapshot_ID = s.ID ORDER BY l.Time DESC LIMIT 1) IN ('Initial', 'TemporaryError')) \
                 ORDER BY s.Time DESC", {
-                    "@user": req.user.email,
-                    "@oldestSuggestionTime": oldestSuggestionTime,
-                    "@maxRetryCount": config.trader_max_retry_count
-                });
+                "@user": req.user.email,
+                "@oldestSuggestionTime": oldestSuggestionTime,
+                "@maxRetryCount": config.trader_max_retry_count
+            });
 
             const viewModels = suggestions;
             res.json(viewModels);
@@ -42,13 +42,14 @@ exports.getOpenSuggestions = async function (req, res) {
 exports.hasNewerSuggestion = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
+            if (typeof req.params.id !== 'number') throw new Error('bad request');
 
             const suggestions = await sql.query("SELECT s.Instrument_ID, s.Time FROM snapshots s \
                 INNER JOIN usersnapshots u ON s.ID = u.Snapshot_ID \
                 WHERE u.User = @user AND s.ID = @id", {
-                    "@user": req.user.email,
-                    "@id": req.params.id
-                });
+                "@user": req.user.email,
+                "@id": req.params.id
+            });
 
             if (suggestions && suggestions.length) {
                 const suggestion = suggestions[0];
@@ -58,11 +59,11 @@ exports.hasNewerSuggestion = async function (req, res) {
                     WHERE s.Instrument_ID = @instrumentId \
                     AND s.Time > @time AND s.ID <> @id \
                     AND u.User = @user AND (u.Decision = 'buy' OR u.Decision = 'sell')", {
-                        "@instrumentId": suggestion.Instrument_ID,
-                        "@time": suggestion.Time,
-                        "@id": req.params.id,
-                        "@user": req.user.email
-                    });
+                    "@instrumentId": suggestion.Instrument_ID,
+                    "@time": suggestion.Time,
+                    "@id": req.params.id,
+                    "@user": req.user.email
+                });
 
                 const viewModel = {};
                 viewModel.hasNewerSuggestion = (newerSuggestions && newerSuggestions.length && newerSuggestions[0].c) ? true : false;
@@ -91,29 +92,38 @@ exports.saveTradeLog = async function (req, res) {
 
             const log = req.body;
 
+            if (log.Snapshot_ID && typeof log.Snapshot_ID !== 'number') throw new Error('bad request');
+            if (log.Time && typeof log.Time !== 'string') throw new Error('bad request');
+            if (log.Quantity && typeof log.Quantity !== 'number') throw new Error('bad request');
+            if (log.Price && typeof log.Price !== 'number') throw new Error('bad request');
+            if (log.Status && typeof log.Status !== 'string') throw new Error('bad request');
+            if (log.Message && typeof log.Message !== 'string') throw new Error('bad request');
+
             const suggestions = await sql.query("SELECT s.ID FROM snapshots s \
                 INNER JOIN usersnapshots u ON u.Snapshot_ID = s.ID \
                 WHERE u.User = @user AND s.ID = @id", {
-                    "@user": req.user.email,
-                    "@id": log.Snapshot_ID
-                });
+                "@user": req.user.email,
+                "@id": log.Snapshot_ID
+            });
 
             if (suggestions && suggestions.length) {
 
                 if (log.ID >= 0) {
+                    if (typeof log.ID !== 'number') throw new Error('bad request');
+
                     await model.tradelog.update({
                         Snapshot_ID: log.Snapshot_ID,
-                        Time: log.Time,
+                        Time: new Date(log.Time),
                         Quantity: log.Quantity,
                         Price: log.Price,
                         Status: log.Status,
                         Message: log.Message,
                         User: req.user.email
                     }, {
-                            where: {
-                                ID: log.ID
-                            }
-                        });
+                        where: {
+                            ID: log.ID
+                        }
+                    });
 
                     const viewModel = {
                         ID: log.ID
@@ -123,7 +133,7 @@ exports.saveTradeLog = async function (req, res) {
                 else {
                     const newLog = await model.tradelog.create({
                         Snapshot_ID: log.Snapshot_ID,
-                        Time: log.Time,
+                        Time: new Date(log.Time),
                         Quantity: log.Quantity,
                         Price: log.Price,
                         Status: log.Status,
@@ -165,8 +175,8 @@ exports.getSuggestions = async function (req, res) {
                 INNER JOIN usersnapshots u ON s.ID = u.Snapshot_ID \
                 INNER JOIN instruments i ON i.ID = s.Instrument_ID \
                 WHERE u.User = @user AND (u.Decision = 'buy' OR u.Decision = 'sell')", {
-                    "@user": req.user.email
-                });
+                "@user": req.user.email
+            });
 
             const result = rows.map(item => {
                 return {
@@ -213,9 +223,9 @@ exports.getSuggestion = async function (req, res) {
                 INNER JOIN usersnapshots u ON s.ID = u.Snapshot_ID \
                 INNER JOIN instruments i ON i.ID = s.Instrument_ID \
                 WHERE s.ID = @id AND u.User = @user", {
-                    "@user": req.user.email,
-                    "@id": req.params.id
-                });
+                "@user": req.user.email,
+                "@id": req.params.id
+            });
             if (rows && rows.length) {
                 const suggestion = rows[0];
 

@@ -52,6 +52,7 @@ exports.addDefault = async function (req, res) {
 exports.addUrl = async function (req, res) {
     try {
         if (req.isAuthenticated() && req.user.email == config.admin_user) {
+            if (typeof req.body.url !== 'string') throw new Error('bad request');
 
             const instrument = await instrumentsProvider.getInstrumentByUrl(null, req.body.url);
 
@@ -144,6 +145,8 @@ exports.instrument = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
 
+            if (typeof req.params.id !== 'number') throw new Error('bad request');
+
             const instrument = await model.instrument.findOne({
                 where: {
                     ID: req.params.id
@@ -172,6 +175,9 @@ exports.instrument = async function (req, res) {
 exports.getWeight = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
+
+            if (typeof req.params.instrumentId !== 'string') throw new Error('bad request');
+            if (typeof req.params.type !== 'string') throw new Error('bad request');
 
             const instrument = await model.instrument.findOne({
                 where: {
@@ -219,6 +225,9 @@ exports.getWeight = async function (req, res) {
 exports.setWeight = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
+            if (typeof req.params.instrumentId !== 'string') throw new Error('bad request');
+            if (typeof req.params.type !== 'string') throw new Error('bad request');
+            if (typeof req.params.weight !== 'number') throw new Error('bad request');
 
             const instrument = await model.instrument.findOne({
                 where: {
@@ -335,8 +344,8 @@ exports.setInstrumentRates = async function (instrumentId, rates) {
                     Time: r.Time
                 };
             }), {
-                transaction: transaction
-            });
+            transaction: transaction
+        });
 
         await model.instrument.update(
             {

@@ -114,11 +114,12 @@ exports.exportUserSnapshotsGeneric = async function (fromTimeUTC, user, stream, 
 
 exports.exportUserTrades = async function (req, res) {
     try {
+        if (typeof req.query.token !== 'string') throw new Error('bad request');
+
         const tokenUser = authController.getTokenUser(req.query.token);
         if (tokenUser) {
 
             if (typeof (req.params.fromDate) !== 'string' || !(req.params.fromDate.length == 8 || req.params.fromDate.length == 14)) {
-
                 return500(res, { message: 'invalid date format' });
                 return;
             }
@@ -186,11 +187,12 @@ exports.exportUserTrades = async function (req, res) {
 
 exports.exportUserTradelogs = async function (req, res) {
     try {
+        if (typeof req.query.token !== 'string') throw new Error('bad request');
+
         const tokenUser = authController.getTokenUser(req.query.token);
         if (tokenUser) {
 
             if (typeof (req.params.fromDate) !== 'string' || !(req.params.fromDate.length == 8 || req.params.fromDate.length == 14)) {
-
                 return500(res, { message: 'invalid date format' });
                 return;
             }
@@ -255,6 +257,8 @@ exports.exportUserTradelogs = async function (req, res) {
 
 function downloadFile(req, res, filename) {
     try {
+        if (typeof req.query.token !== 'string') throw new Error('bad request');
+
         const tokenUser = authController.getTokenUser(req.query.token);
         if (tokenUser) {
 
