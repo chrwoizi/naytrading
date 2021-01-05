@@ -88,7 +88,6 @@ exports.countSnapshots = async function (req, res) {
         if (req.isAuthenticated()) {
 
             if (typeof (req.params.fromDate) !== 'string' || !(req.params.fromDate.length == 8 || req.params.fromDate.length == 14)) {
-
                 return500(res, { message: 'invalid date format' });
                 return;
             }
@@ -128,6 +127,7 @@ exports.countSnapshots = async function (req, res) {
 exports.snapshots = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
+            if (typeof req.params.instrument !== 'number') throw new Error('bad request');
 
             let snapshots;
 
@@ -200,10 +200,14 @@ exports.getSnapshot = async function (id, user) {
 exports.snapshot = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
+            if (typeof req.params.id !== 'number') throw new Error('bad request');
 
             const viewModel = await exports.getSnapshot(req.params.id, req.user.email);
 
             if (req.params.decision && req.params.decision > 0) {
+                if (typeof req.params.decision !== 'string') throw new Error('bad request');
+                if (typeof req.params.confirmed !== 'number') throw new Error('bad request');
+
                 viewModel.ConfirmDecision = req.params.decision;
                 viewModel.Confirmed = req.params.confirmed;
             }
@@ -330,20 +334,30 @@ exports.setDecision = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
 
-            if (req.body.confirm && req.body.confirm > 1) {
+            const snapshotId = req.body.id;
+            const confirm = req.body.confirm;
+            const confirmed = req.body.confirmed;
+            const decision = req.body.decision;
+
+            if (typeof snapshotId !== 'number') throw new Error('bad request');
+            if (confirm && typeof confirm !== 'number') throw new Error('bad request');
+            if (confirmed && typeof confirmed !== 'number') throw new Error('bad request');
+            if (typeof decision !== 'string') throw new Error('bad request');
+
+            if (confirm && confirm >= 1) {
 
                 const toCheck = await sql.query("SELECT ID, Decision, Confirmed FROM usersnapshots WHERE User = @userName AND ID = @id AND Snapshot_ID = @snapshotId", {
                     "@userName": req.user.email,
-                    "@id": req.body.confirm,
-                    "@snapshotId": req.body.id
+                    "@id": confirm,
+                    "@snapshotId": snapshotId
                 });
 
                 if (toCheck && toCheck.length > 0) {
-                    const confirmation = toCheck[0].Decision == req.body.decision ? 1 : -1;
+                    const confirmation = toCheck[0].Decision == decision ? 1 : -1;
 
                     await model.usersnapshot.update(
                         {
-                            Confirmed: parseInt(req.body.confirmed) + confirmation,
+                            Confirmed: parseInt(confirmed) + confirmation,
                             ModifiedTime: new Date()
                         },
                         {
@@ -359,30 +373,30 @@ exports.setDecision = async function (req, res) {
                 }
             }
 
-            if (req.body.decision == "buy" || req.body.decision == "sell") {
-                const previous = await exports.getPreviousDecision(req.body.id, req.user.email);
+            if (decision == "buy" || decision == "sell") {
+                const previous = await exports.getPreviousDecision(snapshotId, req.user.email);
                 if (previous.PreviousDecision) {
                     if (previous.PreviousDecision == "buy") {
-                        if (req.body.decision == "buy") {
+                        if (decision == "buy") {
                             throw new Error("Conflicting buy decision in the past");
                         }
                     }
                     else if (previous.PreviousDecision == "sell") {
-                        if (req.body.decision == "sell") {
+                        if (decision == "sell") {
                             throw new Error("Conflicting sell decision in the past");
                         }
                     }
                 }
 
-                const next = await exports.getNextDecision(req.body.id, req.user.email);
+                const next = await exports.getNextDecision(snapshotId, req.user.email);
                 if (next.NextDecision) {
                     if (next.NextDecision == "buy") {
-                        if (req.body.decision == "buy") {
+                        if (decision == "buy") {
                             throw new Error("Conflicting buy decision in the future");
                         }
                     }
                     else if (next.NextDecision == "sell") {
-                        if (req.body.decision == "sell") {
+                        if (decision == "sell") {
                             throw new Error("Conflicting sell decision in the future");
                         }
                     }
@@ -392,26 +406,26 @@ exports.setDecision = async function (req, res) {
             const usersnapshot = await model.usersnapshot.findOne({
                 where: {
                     User: req.user.email,
-                    Snapshot_ID: req.body.id
+                    Snapshot_ID: snapshotId
                 }
             });
 
             let deletePortfolio = false;
 
             if (usersnapshot) {
-                if (usersnapshot.Decision != req.body.decision) {
+                if (usersnapshot.Decision != decision) {
 
                     deletePortfolio = true;
 
                     await model.usersnapshot.update(
                         {
-                            Decision: req.body.decision,
+                            Decision: decision,
                             ModifiedTime: new Date()
                         },
                         {
                             where: {
                                 User: req.user.email,
-                                Snapshot_ID: req.body.id
+                                Snapshot_ID: snapshotId
                             }
                         }
                     );
@@ -420,7 +434,7 @@ exports.setDecision = async function (req, res) {
                 if (deletePortfolio) {
                     const snapshot = await model.snapshot.findOne({
                         where: {
-                            ID: req.body.id
+                            ID: snapshotId
                         }
                     });
 
@@ -459,9 +473,9 @@ exports.setDecision = async function (req, res) {
             }
             else {
                 await model.usersnapshot.create({
-                    Snapshot_ID: req.body.id,
+                    Snapshot_ID: snapshotId,
                     User: req.user.email,
-                    Decision: req.body.decision,
+                    Decision: decision,
                     ModifiedTime: new Date()
                 });
             }
@@ -590,6 +604,10 @@ exports.refreshSnapshotRates = async function (req, res) {
             const snapshotId = req.body.id;
             let newSource = req.body.source;
             let newMarketId = req.body.market;
+
+            if (typeof snapshotId !== 'number') throw new Error('bad request');
+            if (typeof newSource !== 'string') throw new Error('bad request');
+            if (typeof newMarketId !== 'string') throw new Error('bad request');
 
             const snapshots = await sql.query("SELECT s.StartTime, s.Time, s.Instrument_ID, s.SourceType, s.MarketId FROM snapshots AS s WHERE s.ID = @id", {
                 "@id": snapshotId

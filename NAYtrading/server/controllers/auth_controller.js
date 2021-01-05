@@ -216,6 +216,8 @@ exports.whitelist = async function (req, res) {
 exports.addWhitelist = async function (req, res) {
     try {
         if (req.isAuthenticated() && req.user.email == config.admin_user) {
+            if (typeof req.body.username !== 'string') throw new Error('bad request');
+
             await model.whitelist.create({
                 email: req.body.username
             });
@@ -236,6 +238,8 @@ exports.addWhitelist = async function (req, res) {
 exports.removeWhitelist = async function (req, res) {
     try {
         if (req.isAuthenticated() && req.user.email == config.admin_user) {
+            if (typeof req.body.username !== 'string') throw new Error('bad request');
+
             await model.whitelist.destroy({
                 where: {
                     email: req.body.username
@@ -258,6 +262,8 @@ exports.removeWhitelist = async function (req, res) {
 exports.deleteAccount = async function (req, res) {
     try {
         if (req.isAuthenticated() && req.user.email) {
+            if (typeof req.body.email !== 'string') throw new Error('bad request');
+
             if (req.body.email && req.user.email == req.body.email) {
                 await sql.query("DELETE FROM users where email = @user", { "@user": req.user.email });
                 await sql.query("DELETE FROM userinstruments where User = @user", { "@user": req.user.email });

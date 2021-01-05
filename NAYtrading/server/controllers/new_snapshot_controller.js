@@ -464,7 +464,7 @@ async function handleNewRandomSnapshot(req, res, allowConfirm) {
             endTime.setHours(0, 0, 0, 0);
 
             let hours = config.max_unused_snapshot_age_hours;
-            if (req.query.max_age) {
+            if (typeof req.query.max_age === 'number') {
                 hours = parseFloat(req.query.max_age);
             }
 
@@ -525,7 +525,7 @@ async function handleGetOpenSnapshots(req, res) {
             endTime.setHours(0, 0, 0, 0);
 
             let count = 1;
-            if (req.query.count) {
+            if (typeof req.query.count === 'number') {
                 count = parseInt(req.query.count);
             }
 
@@ -573,6 +573,10 @@ exports.getOpenSnapshots = async function (req, res) {
 exports.createNewSnapshotByInstrumentId = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
+
+            if (typeof req.params.instrumentId !== 'number') {
+                throw new Error('bad request');
+            }
 
             const upToDateFrom = new Date(new Date().getTime() - config.snapshot_valid_seconds * 1000);
             const existing = await sql.query("SELECT s.ID FROM snapshots AS s \
