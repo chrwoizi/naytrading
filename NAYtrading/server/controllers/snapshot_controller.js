@@ -337,14 +337,14 @@ exports.setDecision = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
 
-            const snapshotId = parseInt(req.body.id);
-            if (Number.isNaN(snapshotId)) throw new Error('bad request');
+            const snapshotId = req.body.id;
+            if (typeof snapshotId !== 'number') throw new Error('bad request');
 
-            const confirm = typeof req.body.confirm === 'string' && req.body.confirm.length > 0 ? parseInt(req.body.confirm) : undefined;
-            if (Number.isNaN(confirm)) throw new Error('bad request');
+            const confirm = req.body.confirm;
+            if (confirm && typeof confirm !== 'number') throw new Error('bad request');
 
-            const confirmed = typeof req.body.confirmed === 'string' && req.body.confirmed.length > 0 ? parseInt(req.body.confirmed) : undefined;
-            if (Number.isNaN(confirmed)) throw new Error('bad request');
+            const confirmed = req.body.confirmed;
+            if (confirmed && typeof confirmed !== 'number') throw new Error('bad request');
 
             const decision = req.body.decision;
             if (typeof decision !== 'string') throw new Error('bad request');
@@ -606,12 +606,11 @@ exports.refreshSnapshotRates = async function (req, res) {
     try {
         if (req.isAuthenticated() && req.user.email == config.admin_user) {
 
+            const snapshotId = req.body.id;
             let newSource = req.body.source;
             let newMarketId = req.body.market;
 
-            const snapshotId = parseInt(req.body.id);
-            if (Number.isNaN(snapshotId)) throw new Error('bad request');
-
+            if (typeof snapshotId !== 'number') throw new Error('bad request');
             if (typeof newSource !== 'string') throw new Error('bad request');
             if (typeof newMarketId !== 'string') throw new Error('bad request');
 

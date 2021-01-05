@@ -93,15 +93,9 @@ exports.saveTradeLog = async function (req, res) {
 
             const log = req.body;
 
-            log.Snapshot_ID = parseInt(log.Snapshot_ID);
-            if (Number.isNaN(log.Snapshot_ID)) throw new Error('bad request');
-
-            log.Quantity = parseInt(log.Quantity);
-            if (Number.isNaN(log.Quantity)) throw new Error('bad request');
-
-            log.Price = parseFloat(log.Price);
-            if (Number.isNaN(log.Price)) throw new Error('bad request');
-
+            if (log.Snapshot_ID && typeof log.Snapshot_ID !== 'number') throw new Error('bad request');
+            if (log.Quantity && typeof log.Quantity !== 'number') throw new Error('bad request');
+            if (log.Price && typeof log.Price !== 'number') throw new Error('bad request');
             if (log.Time && typeof log.Time !== 'string') throw new Error('bad request');
             if (log.Status && typeof log.Status !== 'string') throw new Error('bad request');
             if (log.Message && typeof log.Message !== 'string') throw new Error('bad request');
@@ -116,8 +110,7 @@ exports.saveTradeLog = async function (req, res) {
             if (suggestions && suggestions.length) {
 
                 if (log.ID >= 0) {
-                    log.ID = parseInt(log.ID);
-                    if (Number.isNaN(log.ID)) throw new Error('bad request');
+                    if (typeof log.ID !== 'number') throw new Error('bad request');
 
                     await model.tradelog.update({
                         Snapshot_ID: log.Snapshot_ID,
