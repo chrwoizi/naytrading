@@ -464,8 +464,9 @@ async function handleNewRandomSnapshot(req, res, allowConfirm) {
             endTime.setHours(0, 0, 0, 0);
 
             let hours = config.max_unused_snapshot_age_hours;
-            if (typeof req.query.max_age === 'number') {
+            if (typeof req.query.max_age === 'string') {
                 hours = parseFloat(req.query.max_age);
+                if (Number.isNaN(hours)) throw new Error('bad request');
             }
 
             let forgotten = await sql.query(rank_open_snapshots_new, {
@@ -525,8 +526,9 @@ async function handleGetOpenSnapshots(req, res) {
             endTime.setHours(0, 0, 0, 0);
 
             let count = 1;
-            if (typeof req.query.count === 'number') {
+            if (typeof req.query.count === 'string') {
                 count = parseInt(req.query.count);
+                if (Number.isNaN(count)) throw new Error('bad request');
             }
 
             const forgotten = await sql.query(get_open_snapshots, {
@@ -574,16 +576,15 @@ exports.createNewSnapshotByInstrumentId = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
 
-            if (typeof req.params.instrumentId !== 'number') {
-                throw new Error('bad request');
-            }
+            const instrumentId = parseInt(req.params.instrumentId);
+            if (Number.isNaN(instrumentId)) throw new Error('bad request');
 
             const upToDateFrom = new Date(new Date().getTime() - config.snapshot_valid_seconds * 1000);
             const existing = await sql.query("SELECT s.ID FROM snapshots AS s \
                 WHERE s.Instrument_ID = @instrumentId AND s.Time >= @time \
                 AND NOT EXISTS (SELECT 1 FROM usersnapshots AS nu WHERE nu.Snapshot_ID = s.ID AND nu.User = @user) \
                 ORDER BY s.Time ASC", {
-                "@instrumentId": req.params.instrumentId,
+                "@instrumentId": instrumentId,
                 "@time": upToDateFrom,
                 "@user": req.user.email
             });
@@ -594,7 +595,7 @@ exports.createNewSnapshotByInstrumentId = async function (req, res) {
                 return;
             }
 
-            const instrumentIds = [{ ID: req.params.instrumentId, Order: 1 }];
+            const instrumentIds = [{ ID: instrumentId, Order: 1 }];
 
             const newSnapshot = await exports.createNewSnapshotFromRandomInstrument(instrumentIds);
             if (newSnapshot != null) {

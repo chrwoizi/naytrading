@@ -145,11 +145,12 @@ exports.instrument = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
 
-            if (typeof req.params.id !== 'number') throw new Error('bad request');
+            const id = parseInt(req.params.id);
+            if (Number.isNaN(id)) throw new Error('bad request');
 
             const instrument = await model.instrument.findOne({
                 where: {
-                    ID: req.params.id
+                    ID: id
                 }
             });
 
@@ -227,7 +228,9 @@ exports.setWeight = async function (req, res) {
         if (req.isAuthenticated()) {
             if (typeof req.params.instrumentId !== 'string') throw new Error('bad request');
             if (typeof req.params.type !== 'string') throw new Error('bad request');
-            if (typeof req.params.weight !== 'number') throw new Error('bad request');
+
+            const weightValue = parseFloat(req.params.weight);
+            if (Number.isNaN(weightValue)) throw new Error('bad request');
 
             const instrument = await model.instrument.findOne({
                 where: {
@@ -248,15 +251,13 @@ exports.setWeight = async function (req, res) {
                     }
                 });
 
-                const value = parseFloat(req.params.weight);
-
                 if (weight) {
 
-                    if (weight.Weight != value) {
+                    if (weight.Weight != weightValue) {
 
                         await model.weight.update(
                             {
-                                Weight: value
+                                Weight: weightValue
                             },
                             {
                                 where: {
@@ -275,7 +276,7 @@ exports.setWeight = async function (req, res) {
                             User: req.user.email,
                             Instrument_ID: instrument.ID,
                             Type: req.params.type,
-                            Weight: value
+                            Weight: weightValue
                         }
                     );
                 }

@@ -42,13 +42,14 @@ exports.getOpenSuggestions = async function (req, res) {
 exports.hasNewerSuggestion = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
-            if (typeof req.params.id !== 'number') throw new Error('bad request');
+            const snapshotId = parseInt(req.params.id);
+            if (Number.isNaN(snapshotId)) throw new Error('bad request');
 
             const suggestions = await sql.query("SELECT s.Instrument_ID, s.Time FROM snapshots s \
                 INNER JOIN usersnapshots u ON s.ID = u.Snapshot_ID \
                 WHERE u.User = @user AND s.ID = @id", {
                 "@user": req.user.email,
-                "@id": req.params.id
+                "@id": snapshotId
             });
 
             if (suggestions && suggestions.length) {
@@ -61,7 +62,7 @@ exports.hasNewerSuggestion = async function (req, res) {
                     AND u.User = @user AND (u.Decision = 'buy' OR u.Decision = 'sell')", {
                     "@instrumentId": suggestion.Instrument_ID,
                     "@time": suggestion.Time,
-                    "@id": req.params.id,
+                    "@id": snapshotId,
                     "@user": req.user.email
                 });
 
@@ -92,10 +93,16 @@ exports.saveTradeLog = async function (req, res) {
 
             const log = req.body;
 
-            if (log.Snapshot_ID && typeof log.Snapshot_ID !== 'number') throw new Error('bad request');
+            log.Snapshot_ID = parseInt(log.Snapshot_ID);
+            if (Number.isNaN(log.Snapshot_ID)) throw new Error('bad request');
+
+            log.Quantity = parseInt(log.Quantity);
+            if (Number.isNaN(log.Quantity)) throw new Error('bad request');
+
+            log.Price = parseFloat(log.Price);
+            if (Number.isNaN(log.Price)) throw new Error('bad request');
+
             if (log.Time && typeof log.Time !== 'string') throw new Error('bad request');
-            if (log.Quantity && typeof log.Quantity !== 'number') throw new Error('bad request');
-            if (log.Price && typeof log.Price !== 'number') throw new Error('bad request');
             if (log.Status && typeof log.Status !== 'string') throw new Error('bad request');
             if (log.Message && typeof log.Message !== 'string') throw new Error('bad request');
 
@@ -109,7 +116,8 @@ exports.saveTradeLog = async function (req, res) {
             if (suggestions && suggestions.length) {
 
                 if (log.ID >= 0) {
-                    if (typeof log.ID !== 'number') throw new Error('bad request');
+                    log.ID = parseInt(log.ID);
+                    if (Number.isNaN(log.ID)) throw new Error('bad request');
 
                     await model.tradelog.update({
                         Snapshot_ID: log.Snapshot_ID,

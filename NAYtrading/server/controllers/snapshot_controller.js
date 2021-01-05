@@ -127,12 +127,12 @@ exports.countSnapshots = async function (req, res) {
 exports.snapshots = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
-            if (typeof req.params.instrument !== 'number') throw new Error('bad request');
-
             let snapshots;
 
-            if (req.params.instrument) {
+            if (typeof req.params.instrument === 'string') {
                 const instrumentId = parseInt(req.params.instrument);
+                if (Number.isNaN(instrumentId)) throw new Error('bad request');
+
                 snapshots = await sql.query("SELECT s.ID, s.Time, i.InstrumentName, u.Decision, u.ModifiedTime FROM snapshots AS s \
                         INNER JOIN instruments AS i ON i.ID = s.Instrument_ID INNER JOIN usersnapshots AS u ON u.Snapshot_ID = s.ID WHERE u.User = @user AND s.Instrument_ID = @instrument", {
                     "@user": req.user.email,
@@ -200,16 +200,19 @@ exports.getSnapshot = async function (id, user) {
 exports.snapshot = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
-            if (typeof req.params.id !== 'number') throw new Error('bad request');
+            const id = parseInt(req.params.id);
+            if (Number.isNaN(id)) throw new Error('bad request');
 
-            const viewModel = await exports.getSnapshot(req.params.id, req.user.email);
+            const viewModel = await exports.getSnapshot(id, req.user.email);
 
             if (req.params.decision && req.params.decision > 0) {
                 if (typeof req.params.decision !== 'string') throw new Error('bad request');
-                if (typeof req.params.confirmed !== 'number') throw new Error('bad request');
+
+                const confirmed = parseInt(req.params.confirmed);
+                if (Number.isNaN(confirmed)) throw new Error('bad request');
 
                 viewModel.ConfirmDecision = req.params.decision;
-                viewModel.Confirmed = req.params.confirmed;
+                viewModel.Confirmed = confirmed;
             }
 
             if (viewModel != null) {
@@ -334,14 +337,16 @@ exports.setDecision = async function (req, res) {
     try {
         if (req.isAuthenticated()) {
 
-            const snapshotId = req.body.id;
-            const confirm = req.body.confirm;
-            const confirmed = req.body.confirmed;
-            const decision = req.body.decision;
+            const snapshotId = parseInt(req.body.id);
+            if (Number.isNaN(snapshotId)) throw new Error('bad request');
 
-            if (typeof snapshotId !== 'number') throw new Error('bad request');
-            if (confirm && typeof confirm !== 'number') throw new Error('bad request');
-            if (confirmed && typeof confirmed !== 'number') throw new Error('bad request');
+            const confirm = typeof req.body.confirm === 'string' && req.body.confirm.length > 0 ? parseInt(req.body.confirm) : undefined;
+            if (Number.isNaN(confirm)) throw new Error('bad request');
+
+            const confirmed = typeof req.body.confirmed === 'string' && req.body.confirmed.length > 0 ? parseInt(req.body.confirmed) : undefined;
+            if (Number.isNaN(confirmed)) throw new Error('bad request');
+
+            const decision = req.body.decision;
             if (typeof decision !== 'string') throw new Error('bad request');
 
             if (confirm && confirm >= 1) {
@@ -601,11 +606,12 @@ exports.refreshSnapshotRates = async function (req, res) {
     try {
         if (req.isAuthenticated() && req.user.email == config.admin_user) {
 
-            const snapshotId = req.body.id;
             let newSource = req.body.source;
             let newMarketId = req.body.market;
 
-            if (typeof snapshotId !== 'number') throw new Error('bad request');
+            const snapshotId = parseInt(req.body.id);
+            if (Number.isNaN(snapshotId)) throw new Error('bad request');
+
             if (typeof newSource !== 'string') throw new Error('bad request');
             if (typeof newMarketId !== 'string') throw new Error('bad request');
 
