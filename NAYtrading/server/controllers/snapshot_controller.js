@@ -340,8 +340,8 @@ exports.setDecision = async function (req, res) {
             const snapshotId = req.body.id;
             if (typeof snapshotId !== 'number') throw new Error('bad request');
 
-            const confirm = req.body.confirm;
-            if (confirm && typeof confirm !== 'number') throw new Error('bad request');
+            const confirm = typeof req.body.confirm === 'string' && req.body.confirm ? parseInt(req.body.confirm) : undefined;
+            if (confirm && Number.isNaN(confirm)) throw new Error('bad request');
 
             const confirmed = req.body.confirmed;
             if (confirmed && typeof confirmed !== 'number') throw new Error('bad request');
