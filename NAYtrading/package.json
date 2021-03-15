@@ -66,7 +66,7 @@
     "sequelize": "^6.3.3",
     "startbootstrap-landing-page": "^5.0.8",
     "tslib": "^1.10.0",
-    "xmldom": "^0.1.27",
+    "xmldom": "^0.5.0",
     "xmlserializer": "^0.6.1",
     "xpath": "0.0.27",
     "zone.js": "~0.8.26"
