@@ -1,0 +1,90 @@
+<section class="policy bg-light naytradingapp">
+  <div class="container">
+    <div *ngIf="!loading">
+      <div class="row">
+        <canvas
+          baseChart
+          [datasets]="lineChart5Data"
+          [labels]="lineChart5Labels"
+          [options]="lineChartOptions"
+          [legend]="lineChartLegend"
+          [type]="lineChartType"
+          [plugins]="lineChartPlugins"
+        ></canvas>
+      </div>
+
+      <div class="row">
+        <canvas
+          baseChart
+          [datasets]="lineChart1Data"
+          [labels]="lineChart1Labels"
+          [options]="lineChartOptions"
+          [legend]="lineChartLegend"
+          [type]="lineChartType"
+          [plugins]="lineChartPlugins"
+        ></canvas>
+      </div>
+
+      <div class="row">
+        <div class="col-4">
+          <button
+            [hidden]="snapshot.PreviousDecision == 'buy'"
+            (click)="setDecision('buy')"
+            class="btn btn-info btn-block"
+          >
+            BUY
+          </button>
+        </div>
+        <div class="col-4">
+          <button (click)="setDecision('wait')" class="btn btn-info btn-block">
+            WAIT<br /><small>1 WEEK</small>
+          </button>
+        </div>
+        <div class="col-4">
+          <button
+            [hidden]="!(snapshot.PreviousDecision == 'buy')"
+            (click)="setDecision('sell')"
+            class="btn btn-info btn-block"
+          >
+            SELL
+          </button>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top: 30px">
+        <div class="col-4"></div>
+        <div class="col-2" style="padding-right: 5px">
+          <button
+            (click)="setDecision('wait2mo')"
+            class="btn btn-info btn-block"
+          >
+            <small>2 MONTH</small>
+          </button>
+        </div>
+        <div class="col-2" style="padding-left: 5px">
+          <button
+            [hidden]="snapshot.PreviousDecision == 'buy'"
+            (click)="setDecision('wait1yr')"
+            class="btn btn-info btn-block"
+          >
+            <small>1 YEAR</small>
+          </button>
+        </div>
+        <div class="col-4"></div>
+      </div>
+
+      <div class="row" style="margin-top: 30px">
+        <div class="col-4"></div>
+        <div class="col-4">
+          <a
+            routerLink="/snapshots"
+            [queryParams]="{ instrument: snapshot.Instrument.ID }"
+            class="btn btn-secondary btn-block"
+            >HISTORY</a
+          >
+        </div>
+        <div class="col-4"></div>
+      </div>
+    </div>
+  </div>
+</section>

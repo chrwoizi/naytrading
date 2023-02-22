@@ -1,0 +1,7 @@
+/dist
+/node_modules
+/processing
+/src/config/database.json
+/src/config/config.json
+/src/processor/__pycache__
+/plugins/plugin

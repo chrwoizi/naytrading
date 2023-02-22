@@ -1,13 +1,1 @@
-/NAYtrading/.env
-/NAYtrading/*.log
-/NAYtrading/app/config/config.json
-/NAYtrading/app/config/database.json
-/NAYtrading/node_modules
-/NAYtrading/processing
-/NAYtrading/dist
-/NAYtrading/server/config/database.json
-/NAYtrading/server/config/config.json
-/NAYtrading/keys
-/NAYtrading/letsencrypt
-/NAYtrading/processor/__pycache__
 NAYtrading2

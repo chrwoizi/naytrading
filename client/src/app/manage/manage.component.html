@@ -1,0 +1,276 @@
+<section class="policy bg-light">
+  <div class="container">
+    <div *ngIf="!loading" class="row">
+      <div class="col-12">
+        <h2>Account</h2>
+        <dl class="dl-horizontal">
+          <dt>
+            Export preprocessed training data for artifical intelligence
+            training:
+          </dt>
+          <dd>
+            <div *ngIf="processings.hasProcessedData">
+              <div *ngIf="processings.buyingTrain">
+                <a
+                  href="/api/export/user/train/buying/{{
+                    processings.buyingTrain.time
+                  }}?token={{ token }}"
+                  class="btn btn-secondary"
+                  role="button"
+                  >Download Buy-Training</a
+                >
+                <table>
+                  <tbody>
+                    <tr>
+                      <th>Time:</th>
+                      <td>{{ processings.buyingTrain.timeStr }}</td>
+                    </tr>
+                    <tr>
+                      <th>Datasets:</th>
+                      <td>
+                        {{ processings.buyingTrain.lines }} ({{
+                          processings.buyingTrain.dataRatioPercent
+                        }}%)
+                      </td>
+                    </tr>
+                    <tr>
+                      <th>Days:</th>
+                      <td>{{ processings.buyingTrain.days }}</td>
+                    </tr>
+                    <tr>
+                      <th>Allow missing days:</th>
+                      <td>{{ processings.buyingTrain.max_missing_days }}</td>
+                    </tr>
+                    <tr>
+                      <th>Keep evaluation datasets:</th>
+                      <td>{{ processings.buyingTrain.preserve_test_ids }}</td>
+                    </tr>
+                    <tr>
+                      <th>Augmentation:</th>
+                      <td>{{ processings.buyingTrain.augment_factor }}x</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div *ngIf="!processings.buyingTrain">
+                <button class="btn btn-secondary" disabled>
+                  Download Buy-Training
+                </button>
+                <div>Not available yet.</div>
+              </div>
+              <br />
+              <div *ngIf="processings.buyingTest">
+                <a
+                  href="/api/export/user/test/buying/{{
+                    processings.buyingTest.time
+                  }}?token={{ token }}"
+                  class="btn btn-secondary"
+                  role="button"
+                  >Download Buy-Evaluation</a
+                >
+                <table>
+                  <tbody>
+                    <tr>
+                      <th>Time:</th>
+                      <td>{{ processings.buyingTest.timeStr }}</td>
+                    </tr>
+                    <tr>
+                      <th>Datasets:</th>
+                      <td>
+                        {{ processings.buyingTest.lines }} ({{
+                          processings.buyingTest.dataRatioPercent
+                        }}%)
+                      </td>
+                    </tr>
+                    <tr>
+                      <th>Days:</th>
+                      <td>{{ processings.buyingTest.days }}</td>
+                    </tr>
+                    <tr>
+                      <th>Allow missing days:</th>
+                      <td>{{ processings.buyingTest.max_missing_days }}</td>
+                    </tr>
+                    <tr>
+                      <th>Keep evaluation datasets:</th>
+                      <td>{{ processings.buyingTest.preserve_test_ids }}</td>
+                    </tr>
+                    <tr>
+                      <th>Augmentation:</th>
+                      <td>{{ processings.buyingTest.augment_factor }}x</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div *ngIf="!processings.buyingTest">
+                <button class="btn btn-secondary" disabled>
+                  Download Buy-Evaluation
+                </button>
+                <div>Not available yet.</div>
+              </div>
+              <br />
+              <div *ngIf="processings.sellingTrain">
+                <a
+                  href="/api/export/user/train/selling/{{
+                    processings.sellingTrain.time
+                  }}?token={{ token }}"
+                  class="btn btn-secondary"
+                  role="button"
+                  >Download Sell-Training</a
+                >
+                <table>
+                  <tbody>
+                    <tr>
+                      <th>Time:</th>
+                      <td>{{ processings.sellingTrain.timeStr }}</td>
+                    </tr>
+                    <tr>
+                      <th>Datasets:</th>
+                      <td>
+                        {{ processings.sellingTrain.lines }} ({{
+                          processings.sellingTrain.dataRatioPercent
+                        }}%)
+                      </td>
+                    </tr>
+                    <tr>
+                      <th>Days:</th>
+                      <td>{{ processings.sellingTrain.days }}</td>
+                    </tr>
+                    <tr>
+                      <th>Allow missing days:</th>
+                      <td>{{ processings.sellingTrain.max_missing_days }}</td>
+                    </tr>
+                    <tr>
+                      <th>Keep evaluation datasets:</th>
+                      <td>{{ processings.sellingTrain.preserve_test_ids }}</td>
+                    </tr>
+                    <tr>
+                      <th>Augmentation:</th>
+                      <td>{{ processings.sellingTrain.augment_factor }}x</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div *ngIf="!processings.sellingTrain">
+                <button class="btn btn-secondary" disabled>
+                  Download Sell-Training
+                </button>
+                <div>Not available yet.</div>
+              </div>
+              <br />
+              <div *ngIf="processings.sellingTest">
+                <a
+                  href="/api/export/user/test/selling/{{
+                    processings.sellingTest.time
+                  }}?token={{ token }}"
+                  class="btn btn-secondary"
+                  role="button"
+                  >Download Sell-Evaluation</a
+                >
+                <table>
+                  <tbody>
+                    <tr>
+                      <th>Time:</th>
+                      <td>{{ processings.sellingTest.timeStr }}</td>
+                    </tr>
+                    <tr>
+                      <th>Datasets:</th>
+                      <td>
+                        {{ processings.sellingTest.lines }} ({{
+                          processings.sellingTest.dataRatioPercent
+                        }}%)
+                      </td>
+                    </tr>
+                    <tr>
+                      <th>Days:</th>
+                      <td>{{ processings.sellingTest.days }}</td>
+                    </tr>
+                    <tr>
+                      <th>Allow missing days:</th>
+                      <td>{{ processings.sellingTest.max_missing_days }}</td>
+                    </tr>
+                    <tr>
+                      <th>Keep evaluation datasets:</th>
+                      <td>{{ processings.sellingTest.preserve_test_ids }}</td>
+                    </tr>
+                    <tr>
+                      <th>Augmentation:</th>
+                      <td>{{ processings.sellingTest.augment_factor }}x</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div *ngIf="!processings.sellingTest">
+                <button class="btn btn-secondary" disabled>
+                  Download Sell-Evaluation
+                </button>
+                <div>Not available yet.</div>
+              </div>
+            </div>
+            <div *ngIf="!processings.hasProcessedData">
+              <span
+                >The processing job runs periodically. Please wait until the
+                data becomes available.</span
+              >
+            </div>
+          </dd>
+          <dt>Export:</dt>
+          <dd>
+            <div class="export-button">
+              <a
+                href="/api/export/user/trades/19700101?token={{ token }}"
+                class="btn btn-secondary"
+                role="button"
+                >Export buy/sell decisions with ISIN/WKN</a
+              >
+            </div>
+            <div class="export-button">
+              <a
+                href="/api/export/user/tradelogs/19700101?token={{ token }}"
+                class="btn btn-secondary"
+                role="button"
+                >Export Trader logs</a
+              >
+            </div>
+          </dd>
+          <div *ngIf="isAi">
+            <dt>Clear decisions:</dt>
+            <dd>
+              <button class="btn btn-danger" (click)="onClearDecisions()">
+                Delete all snapshot decisions
+              </button>
+            </dd>
+          </div>
+          <dt>Password:</dt>
+          <dd>
+            <a routerLink="/password" class="btn btn-secondary" role="button"
+              >Change</a
+            >
+          </dd>
+          <dt>Delete my account:</dt>
+          <dd>
+            <div class="form-group">
+              <p>
+                Type your email address into this field and click the button to
+                permanently delete your account. This action is final and cannot
+                be undone. All your data will be lost forever.
+              </p>
+            </div>
+            <div class="form-group">
+              <label for="username">Account emal address to delete:</label>
+              <input
+                type="text"
+                [(ngModel)]="deleteUser"
+                class="form-control"
+              />
+            </div>
+            <div class="form-group">
+              <button (click)="onDeleteUser()" class="btn btn-danger">
+                Delete
+              </button>
+            </div>
+          </dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+</section>

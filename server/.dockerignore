@@ -1,0 +1,4 @@
+/dist
+/node_modules
+/processing
+/src/processor/__pycache__

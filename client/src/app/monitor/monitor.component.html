@@ -1,0 +1,18 @@
+<section class="policy bg-light naytradingapp">
+  <div class="container">
+    <div *ngIf="!loading">
+      <div class="row" *ngFor="let item of lineChartData">
+        <h2>{{ item.sourceType }}:</h2>
+        <canvas
+          baseChart
+          [datasets]="item.dataSets"
+          [labels]="lineChartLabels"
+          [options]="lineChartOptions"
+          [legend]="lineChartLegend"
+          [type]="lineChartType"
+          [plugins]="lineChartPlugins"
+        ></canvas>
+      </div>
+    </div>
+  </div>
+</section>

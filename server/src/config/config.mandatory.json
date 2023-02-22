@@ -1,0 +1,26 @@
+{
+  "development": {
+    "admin_user": "enter admin user email here",
+    "instruments_providers": {
+      "e": "__workdir__/plugins/plugin/providers/example/example_instruments_provider"
+    },
+    "job_split_sources": ["enter source type of split-corrected sources here"],
+    "jwt_secret": "enter session cookie secret here",
+    "python": "C:\\Program Files\\Python\\Python36\\python.exe",
+    "rates_providers": {
+      "e": "__workdir__/plugins/plugin/providers/example/example_rates_provider"
+    }
+  },
+  "production": {
+    "admin_user": "enter admin user email here",
+    "instruments_providers": {
+      "e": "__workdir__/plugins/example/NAYtrading.Plugin/providers/example/example_instruments_provider"
+    },
+    "job_split_sources": ["enter source type of split-corrected sources here"],
+    "jwt_secret": "enter session cookie secret here",
+    "python": "C:\\Program Files\\Python\\Python36\\python.exe",
+    "rates_providers": {
+      "e": "__workdir__/plugins/example/providers/example/example_rates_provider"
+    }
+  }
+}

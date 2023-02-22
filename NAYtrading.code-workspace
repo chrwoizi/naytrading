@@ -1,10 +1,10 @@
 {
 	"folders": [
 		{
-			"path": "NAYtrading"
-		},
+			"path": "."
+		}
 		{
-			"path": "NAYtrading.Plugin"
+			"path": "NAYtrading2"
 		}
 	],
 	"settings": {}
